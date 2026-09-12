@@ -239,7 +239,9 @@ export default function ReglagesPage() {
               <TextField
                 label="Nom du site"
                 value={form.siteName}
-                onChange={(event) => updateField("siteName", event.target.value)}
+                onChange={(event) =>
+                  updateField("siteName", event.target.value)
+                }
                 required
               />
               <TextField
@@ -361,7 +363,8 @@ export default function ReglagesPage() {
                 {!agentsData.keyConfigured && (
                   <div className="rounded-md border border-warning-token/40 bg-warning-token/10 p-4">
                     <p className="type-small text-foreground">
-                      La clé <code className="font-mono">ANTHROPIC_API_KEY</code>{" "}
+                      La clé{" "}
+                      <code className="font-mono">ANTHROPIC_API_KEY</code>{" "}
                       n&apos;est pas renseignée sur le déploiement Convex : les
                       sept agents tournent donc en <strong>mode simulé</strong>{" "}
                       (propositions produites par des règles maison, clairement
@@ -394,16 +397,17 @@ export default function ReglagesPage() {
                 {agentsData.stopped ? (
                   <div className="rounded-md border border-destructive/40 bg-destructive/10 p-4">
                     <p className="type-small font-semibold text-destructive">
-                      Plafond atteint : tous les agents sont arrêtés jusqu&apos;au
-                      mois prochain. Chaque tâche reste faisable à la main.
+                      Plafond atteint : tous les agents sont arrêtés
+                      jusqu&apos;au mois prochain. Chaque tâche reste faisable à
+                      la main.
                     </p>
                   </div>
                 ) : agentsData.alerting ? (
                   <div className="rounded-md border border-warning-token/40 bg-warning-token/10 p-4">
                     <p className="type-small font-semibold text-warning-token">
-                      Le budget mensuel des agents approche du plafond ; au-delà,
-                      ils s&apos;arrêteront automatiquement jusqu&apos;au mois
-                      prochain.
+                      Le budget mensuel des agents approche du plafond ;
+                      au-delà, ils s&apos;arrêteront automatiquement
+                      jusqu&apos;au mois prochain.
                     </p>
                   </div>
                 ) : null}
@@ -451,7 +455,10 @@ export default function ReglagesPage() {
                         >
                           Coût
                         </th>
-                        <th scope="col" className="py-2 type-small font-semibold">
+                        <th
+                          scope="col"
+                          className="py-2 type-small font-semibold"
+                        >
                           <span className="inline-flex items-center gap-1">
                             <Power aria-hidden="true" className="size-4" />
                             Actif
@@ -465,7 +472,7 @@ export default function ReglagesPage() {
                           key={agent.key}
                           className="border-b border-border align-top"
                         >
-                          <td className="py-3 pr-4 type-small tabular-nums text-muted-foreground">
+                          <td className="py-3 pr-4 type-small text-muted-foreground tabular-nums">
                             {agent.number}
                           </td>
                           <td className="max-w-xs py-3 pr-4">
@@ -484,7 +491,9 @@ export default function ReglagesPage() {
                           <td className="py-3 pr-4 type-small text-muted-foreground">
                             {agent.trigger}
                           </td>
-                          <td className="py-3 pr-4 type-small">{agent.model}</td>
+                          <td className="py-3 pr-4 type-small">
+                            {agent.model}
+                          </td>
                           <td className="py-3 pr-4 type-small tabular-nums">
                             {formatNumber(agent.runs)}
                           </td>
@@ -575,7 +584,9 @@ export default function ReglagesPage() {
             ) : (
               <div className="mt-4 overflow-x-auto">
                 <table className="w-full min-w-[38rem] border-collapse text-left">
-                  <caption className="sr-only">Redirections enregistrées</caption>
+                  <caption className="sr-only">
+                    Redirections enregistrées
+                  </caption>
                   <thead>
                     <tr className="border-b border-border">
                       <th
@@ -619,7 +630,10 @@ export default function ReglagesPage() {
                       </tr>
                     ) : (
                       redirects.map((redirect) => (
-                        <tr key={redirect._id} className="border-b border-border">
+                        <tr
+                          key={redirect._id}
+                          className="border-b border-border"
+                        >
                           <td className="py-3 pr-4 font-mono type-small">
                             {redirect.from}
                           </td>
@@ -704,7 +718,11 @@ export default function ReglagesPage() {
               } le ${formatDateTime(settings.updatedAt)}.`
             : null}
         </p>
-        <ActionButton type="button" onClick={handleSave} disabled={!form || saving}>
+        <ActionButton
+          type="button"
+          onClick={handleSave}
+          disabled={!form || saving}
+        >
           <Save aria-hidden="true" className="size-4" />
           {saving ? "Enregistrement…" : "Enregistrer les réglages"}
         </ActionButton>

@@ -462,7 +462,9 @@ export default defineSchema({
     readingSeconds: v.number(),
     readingSamples: v.number(),
     shares: v.number(),
-    sharesByChannel: v.array(v.object({ channel: v.string(), count: v.number() })),
+    sharesByChannel: v.array(
+      v.object({ channel: v.string(), count: v.number() })
+    ),
     updatedAt: v.number(),
   }).index("by_slug", ["slug"]),
 

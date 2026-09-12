@@ -134,8 +134,8 @@ export default function NewsroomDashboard() {
           <h3 className="mt-6 font-serif type-h3">Les plus lus</h3>
           {data.audience.topArticles.length === 0 ? (
             <p className="mt-2 type-small text-muted-foreground">
-              Aucune vue enregistrée. Les compteurs se remplissent à la
-              première visite d&apos;un article publié.
+              Aucune vue enregistrée. Les compteurs se remplissent à la première
+              visite d&apos;un article publié.
             </p>
           ) : (
             <ol className="mt-2 grid gap-1">
@@ -145,7 +145,7 @@ export default function NewsroomDashboard() {
                   className="flex items-baseline justify-between gap-3 type-small"
                 >
                   <span className="min-w-0 truncate">{item.title}</span>
-                  <span className="shrink-0 tabular-nums text-muted-foreground">
+                  <span className="shrink-0 text-muted-foreground tabular-nums">
                     {formatNumber(item.views)}
                   </span>
                 </li>

@@ -91,8 +91,7 @@ export const ACCESS_MESSAGE: Record<string, string> = {
   TWO_FACTOR_REQUIRED:
     "La double authentification est obligatoire pour ce rôle : activez-la depuis votre compte.",
   FORBIDDEN: "Vous n'avez pas accès à cet élément.",
-  ORGANIZATION_REQUIRED:
-    "Aucune entreprise n'est rattachée à ce compte.",
+  ORGANIZATION_REQUIRED: "Aucune entreprise n'est rattachée à ce compte.",
   ORGANIZATION_PENDING:
     "Votre espace entreprise attend la validation d'un administrateur.",
 };

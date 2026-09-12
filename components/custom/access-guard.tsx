@@ -3,7 +3,12 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Authenticated, AuthLoading, Unauthenticated, useQuery } from "convex/react";
+import {
+  Authenticated,
+  AuthLoading,
+  Unauthenticated,
+  useQuery,
+} from "convex/react";
 import { Lock } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { ACCESS_MESSAGE } from "@/lib/private";

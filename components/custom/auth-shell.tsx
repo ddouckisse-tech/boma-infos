@@ -52,7 +52,9 @@ export function AuthShell({
             <div className="mt-6">{children}</div>
           </div>
           {footer && (
-            <div className="mt-4 type-small text-muted-foreground">{footer}</div>
+            <div className="mt-4 type-small text-muted-foreground">
+              {footer}
+            </div>
           )}
         </div>
       </main>

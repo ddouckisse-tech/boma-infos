@@ -7,11 +7,7 @@ import {
 } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
-import {
-  accessError,
-  PERMISSIONS,
-  requirePermission,
-} from "./model/access";
+import { accessError, PERMISSIONS, requirePermission } from "./model/access";
 import { recordAudit } from "./model/audit";
 import { agentKey, AGENTS, AGENT_MODELS } from "./model/agents";
 import { readingMinutes, searchText, slugify, periodOf } from "./model/text";
@@ -288,7 +284,10 @@ export const decide = mutation({
     const suggestion = await ctx.db.get(id);
     if (!suggestion) throw accessError("FORBIDDEN");
     if (suggestion.status !== "pending") {
-      return { applied: false, message: "Cette proposition a déjà été tranchée." };
+      return {
+        applied: false,
+        message: "Cette proposition a déjà été tranchée.",
+      };
     }
 
     await ctx.db.patch(id, {

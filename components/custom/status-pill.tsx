@@ -1,9 +1,5 @@
 import { cn } from "@/lib/utils";
-import {
-  STATUS_LABEL,
-  STATUS_TONE,
-  type WorkflowStatus,
-} from "@/lib/private";
+import { STATUS_LABEL, STATUS_TONE, type WorkflowStatus } from "@/lib/private";
 
 const TONE_CLASS = {
   neutral: "border-border bg-surface-muted text-muted-foreground",

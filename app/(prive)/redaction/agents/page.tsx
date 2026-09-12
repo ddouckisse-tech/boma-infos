@@ -167,9 +167,9 @@ export default function AgentsPage() {
         <strong className="font-semibold">
           « Un agent propose, un humain dispose. »
         </strong>{" "}
-        Aucun agent ne publie, ne refuse ni ne modifie un contenu&nbsp;:
-        chaque proposition est acceptée ou rejetée à la main, et une
-        proposition rejetée n&apos;est jamais re-proposée.
+        Aucun agent ne publie, ne refuse ni ne modifie un contenu&nbsp;: chaque
+        proposition est acceptée ou rejetée à la main, et une proposition
+        rejetée n&apos;est jamais re-proposée.
       </p>
 
       {overview === undefined ? (
@@ -188,10 +188,9 @@ export default function AgentsPage() {
                 La clé <code className="font-mono">ANTHROPIC_API_KEY</code>{" "}
                 n&apos;est pas posée sur le déploiement Convex&nbsp;: les sept
                 agents tournent donc en mode simulé (règles typographiques et
-                heuristiques maison, jamais présentées comme un modèle).
-                Poser la clé (
-                <code className="font-mono">bun run agents:cle</code>) suffit
-                à passer sur l&apos;API Claude, sans changement de code.
+                heuristiques maison, jamais présentées comme un modèle). Poser
+                la clé (<code className="font-mono">bun run agents:cle</code>)
+                suffit à passer sur l&apos;API Claude, sans changement de code.
               </p>
             </div>
           )}
@@ -222,8 +221,8 @@ export default function AgentsPage() {
               />
               <p className="type-small text-destructive">
                 Plafond de dépense mensuel atteint&nbsp;: tous les agents sont
-                arrêtés jusqu&apos;au mois prochain. Chaque tâche reste
-                faisable à la main.
+                arrêtés jusqu&apos;au mois prochain. Chaque tâche reste faisable
+                à la main.
               </p>
             </div>
           )}
@@ -295,8 +294,8 @@ export default function AgentsPage() {
             Activer ou désactiver un agent
           </Link>
           <p className="mt-1 type-small text-muted-foreground">
-            L&apos;interrupteur de chaque agent vit dans les réglages,
-            réservés à l&apos;administrateur.
+            L&apos;interrupteur de chaque agent vit dans les réglages, réservés
+            à l&apos;administrateur.
           </p>
         </>
       )}
@@ -413,46 +412,25 @@ export default function AgentsPage() {
             </caption>
             <thead>
               <tr className="border-b border-border">
-                <th
-                  scope="col"
-                  className="py-2 pr-4 type-small font-semibold"
-                >
+                <th scope="col" className="py-2 pr-4 type-small font-semibold">
                   Date
                 </th>
-                <th
-                  scope="col"
-                  className="py-2 pr-4 type-small font-semibold"
-                >
+                <th scope="col" className="py-2 pr-4 type-small font-semibold">
                   Agent
                 </th>
-                <th
-                  scope="col"
-                  className="py-2 pr-4 type-small font-semibold"
-                >
+                <th scope="col" className="py-2 pr-4 type-small font-semibold">
                   Cible
                 </th>
-                <th
-                  scope="col"
-                  className="py-2 pr-4 type-small font-semibold"
-                >
+                <th scope="col" className="py-2 pr-4 type-small font-semibold">
                   État
                 </th>
-                <th
-                  scope="col"
-                  className="py-2 pr-4 type-small font-semibold"
-                >
+                <th scope="col" className="py-2 pr-4 type-small font-semibold">
                   Mode
                 </th>
-                <th
-                  scope="col"
-                  className="py-2 pr-4 type-small font-semibold"
-                >
+                <th scope="col" className="py-2 pr-4 type-small font-semibold">
                   Déclencheur
                 </th>
-                <th
-                  scope="col"
-                  className="py-2 pr-4 type-small font-semibold"
-                >
+                <th scope="col" className="py-2 pr-4 type-small font-semibold">
                   Jetons
                 </th>
                 <th scope="col" className="py-2 type-small font-semibold">
@@ -519,11 +497,11 @@ export default function AgentsPage() {
                   <td className="py-2 pr-4 align-top type-small">
                     {run.triggeredBy}
                   </td>
-                  <td className="py-2 pr-4 align-top type-small tabular-nums whitespace-nowrap">
+                  <td className="py-2 pr-4 align-top type-small whitespace-nowrap tabular-nums">
                     {formatNumber(run.inputTokens)} /{" "}
                     {formatNumber(run.outputTokens)}
                   </td>
-                  <td className="py-2 align-top type-small tabular-nums whitespace-nowrap">
+                  <td className="py-2 align-top type-small whitespace-nowrap tabular-nums">
                     {formatCost(run.costMicros)}
                   </td>
                 </tr>
@@ -539,9 +517,7 @@ export default function AgentsPage() {
             Propositions de cette exécution
           </h2>
           {detail === undefined ? (
-            <p className="mt-3 type-body text-muted-foreground">
-              Chargement…
-            </p>
+            <p className="mt-3 type-body text-muted-foreground">Chargement…</p>
           ) : detail === null ? (
             <p className="mt-3 type-body text-muted-foreground">
               Cette exécution est introuvable.

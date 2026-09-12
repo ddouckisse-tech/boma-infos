@@ -1,4 +1,8 @@
-import { NextResponse, type NextRequest, type NextFetchEvent } from "next/server";
+import {
+  NextResponse,
+  type NextRequest,
+  type NextFetchEvent,
+} from "next/server";
 import {
   DATA_SAVER_COOKIE,
   DATA_SAVER_MAX_WIDTH,

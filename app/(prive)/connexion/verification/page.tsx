@@ -62,6 +62,7 @@ export default function TwoFactorPage() {
           name="code"
           inputMode={backup ? "text" : "numeric"}
           autoComplete="one-time-code"
+          spellCheck={false}
           autoFocus
           required
           value={code}

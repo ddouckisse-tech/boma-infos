@@ -503,7 +503,9 @@ export const reject = mutation({
     // CDC §4.4 : « refuser (motif obligatoire) ». Obligatoire, donc refusé
     // côté serveur si absent — pas seulement marqué `required` dans le HTML.
     if (text.length < 10) {
-      throw new Error("Le motif de refus est obligatoire (dix caractères au moins).");
+      throw new Error(
+        "Le motif de refus est obligatoire (dix caractères au moins)."
+      );
     }
     const row = await ctx.db.get(id);
     if (!row) throw accessError("FORBIDDEN");
@@ -575,7 +577,9 @@ export const publishSubmission = mutation({
 
     const now = Date.now();
     const publishedAt = args.publishAt ?? row.requestedPublishAt ?? now;
-    const status = args.schedule ? ("scheduled" as const) : ("published" as const);
+    const status = args.schedule
+      ? ("scheduled" as const)
+      : ("published" as const);
 
     let slug = row.publishedArticleSlug ?? slugify(row.title);
     let existing = await ctx.db

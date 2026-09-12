@@ -35,7 +35,9 @@ function env(name: string): string | undefined {
 }
 
 function arg(name: string): string | undefined {
-  const entry = process.argv.slice(2).find((item) => item.startsWith(`--${name}=`));
+  const entry = process.argv
+    .slice(2)
+    .find((item) => item.startsWith(`--${name}=`));
   return entry?.slice(name.length + 3);
 }
 
@@ -47,7 +49,7 @@ const authorSlug = arg("signature");
 
 if (!email || !name || !password) {
   console.error(
-    "Usage : bun run compte -- --email=… --nom=\"…\" --motdepasse=… [--role=administrateur] [--signature=slug]"
+    'Usage : bun run compte -- --email=… --nom="…" --motdepasse=… [--role=administrateur] [--signature=slug]'
   );
   process.exit(1);
 }
@@ -78,7 +80,9 @@ if (!response.ok) {
   const detail = await response.text();
   // Un compte déjà présent n'est pas une erreur : on rattache le profil.
   if (!/already exists|USER_ALREADY_EXISTS/i.test(detail)) {
-    console.error(`Création du compte refusée (${response.status}) : ${detail}`);
+    console.error(
+      `Création du compte refusée (${response.status}) : ${detail}`
+    );
     process.exit(1);
   }
   console.log("Compte déjà existant — mise à jour du profil applicatif.");

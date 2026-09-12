@@ -49,9 +49,7 @@ export function StatsTile({
       >
         {value}
       </p>
-      {hint && (
-        <p className="mt-1 type-small text-muted-foreground">{hint}</p>
-      )}
+      {hint && <p className="mt-1 type-small text-muted-foreground">{hint}</p>}
     </div>
   );
 }

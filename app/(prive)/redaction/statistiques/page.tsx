@@ -223,9 +223,7 @@ function SectionBreakdown({ bySection }: { bySection: SectionRow[] }) {
       {bySection.map((section) => (
         <li key={section.name}>
           <div className="flex items-center justify-between type-small">
-            <span className="font-medium text-foreground">
-              {section.name}
-            </span>
+            <span className="font-medium text-foreground">{section.name}</span>
             <span className="text-muted-foreground tabular-nums">
               {formatNumber(section.views)}
             </span>

@@ -158,14 +158,19 @@ export function PrivateShell({
   return (
     <div className="flex min-h-dvh flex-col bg-surface-muted">
       <header className="border-b border-border bg-background">
-        <Container width="wide" className="flex flex-wrap items-center gap-4 py-3">
+        <Container
+          width="wide"
+          className="flex flex-wrap items-center gap-4 py-3"
+        >
           <BrandWordmark />
           <span
             aria-hidden="true"
             className="hidden h-6 w-px bg-border sm:block"
           />
           <p className="type-small font-semibold text-muted-foreground">
-            {area === "newsroom" ? "Back-office rédaction" : "Espace entreprise"}
+            {area === "newsroom"
+              ? "Back-office rédaction"
+              : "Espace entreprise"}
           </p>
           <div className="ms-auto flex items-center gap-2">
             <ThemeToggle />
@@ -254,7 +259,11 @@ export function PrivateShell({
           </ul>
         </nav>
 
-        <main id="contenu" tabIndex={-1} className="min-w-0 flex-1 focus-visible:outline-none">
+        <main
+          id="contenu"
+          tabIndex={-1}
+          className="min-w-0 flex-1 focus-visible:outline-none"
+        >
           {children}
         </main>
       </Container>

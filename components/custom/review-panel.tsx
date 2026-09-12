@@ -83,20 +83,17 @@ export function ReviewPanel({
         <section className="rounded-md border border-border bg-card p-4">
           <h3 className="font-serif type-h3">Prendre en charge</h3>
           <p className="mt-1 type-small text-muted-foreground">
-            Passe le dépôt en revue et prévient l&apos;entreprise que quelqu&apos;un
-            s&apos;en occupe.
+            Passe le dépôt en revue et prévient l&apos;entreprise que
+            quelqu&apos;un s&apos;en occupe.
           </p>
           <ActionButton
             type="button"
             className="mt-3"
             disabled={busy}
             onClick={() =>
-              run(
-                async () => {
-                  await startReview({ id: submissionId });
-                },
-                "Dépôt pris en charge."
-              )
+              run(async () => {
+                await startReview({ id: submissionId });
+              }, "Dépôt pris en charge.")
             }
           >
             <PencilLine aria-hidden="true" className="size-4" />
@@ -109,8 +106,7 @@ export function ReviewPanel({
         <section className="rounded-md border border-border bg-card p-4">
           <h3 className="font-serif type-h3">Rouvrir</h3>
           <p className="mt-1 type-small text-muted-foreground">
-            Remet le dépôt entre les mains de l&apos;entreprise pour
-            retravail.
+            Remet le dépôt entre les mains de l&apos;entreprise pour retravail.
           </p>
           <ActionButton
             type="button"

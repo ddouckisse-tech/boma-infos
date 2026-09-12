@@ -21,7 +21,11 @@ import {
   ROLE_LIST,
   roleOf,
 } from "./model/access";
-import { recordAnonymousAudit, recordAudit, queueNotification } from "./model/audit";
+import {
+  recordAnonymousAudit,
+  recordAudit,
+  queueNotification,
+} from "./model/audit";
 
 /**
  * Accounts, roles and company registration — CDC §4.3 and §4.4.
@@ -247,7 +251,10 @@ export const setRole = mutation({
 
     // Se retirer soi-même les droits d'administration ferme la porte de
     // l'intérieur : le dernier administrateur ne peut pas se rétrograder.
-    if (target.authSubject === viewer.subject && roleSlug !== "administrateur") {
+    if (
+      target.authSubject === viewer.subject &&
+      roleSlug !== "administrateur"
+    ) {
       const admins = await ctx.db
         .query("users")
         .withIndex("by_role", (q) => q.eq("roleSlug", "administrateur"))
@@ -344,7 +351,9 @@ export const rejectOrganization = mutation({
     const viewer = await requirePermission(ctx, PERMISSIONS.accountsManage);
     const trimmed = reason.trim();
     if (trimmed.length < 10) {
-      throw new Error("Le motif de refus est obligatoire (dix caractères au moins).");
+      throw new Error(
+        "Le motif de refus est obligatoire (dix caractères au moins)."
+      );
     }
     const organization = await ctx.db.get(id);
     if (!organization) throw accessError("FORBIDDEN");

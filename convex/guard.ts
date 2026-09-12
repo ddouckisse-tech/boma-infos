@@ -1,10 +1,6 @@
 import { v } from "convex/values";
 import { internalQuery } from "./_generated/server";
-import {
-  loadViewer,
-  type Permission,
-  roleOf,
-} from "./model/access";
+import { loadViewer, type Permission, roleOf } from "./model/access";
 
 /**
  * Permission check for Convex **actions**.

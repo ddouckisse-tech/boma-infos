@@ -180,7 +180,8 @@ export const dashboard = query({
         dek: row.dek,
         status: row.status,
         categorySlug: row.categorySlug,
-        categoryName: lookup.categories.get(row.categorySlug)?.name ?? row.categorySlug,
+        categoryName:
+          lookup.categories.get(row.categorySlug)?.name ?? row.categorySlug,
         subCategorySlug: row.subCategorySlug,
         authorSlug: row.authorSlug,
         authorName: lookup.authors.get(row.authorSlug)?.name ?? row.authorSlug,
@@ -258,9 +259,12 @@ export const list = query({
     return rows
       .filter((row) => !filters.status || row.status === filters.status)
       .filter(
-        (row) => !filters.categorySlug || row.categorySlug === filters.categorySlug
+        (row) =>
+          !filters.categorySlug || row.categorySlug === filters.categorySlug
       )
-      .filter((row) => !filters.authorSlug || row.authorSlug === filters.authorSlug)
+      .filter(
+        (row) => !filters.authorSlug || row.authorSlug === filters.authorSlug
+      )
       .filter((row) => !filters.origin || row.origin === filters.origin)
       .filter(
         (row) =>
@@ -527,7 +531,14 @@ export const save = mutation({
     });
 
     if (!args.auto) {
-      await recordAudit(ctx, viewer, "article.update", "article", args.id, title);
+      await recordAudit(
+        ctx,
+        viewer,
+        "article.update",
+        "article",
+        args.id,
+        title
+      );
     }
     return { slug, updatedAt: now };
   },
@@ -550,7 +561,9 @@ export const setStatus = mutation({
       throw new Error("Un article publié doit porter un chapô.");
     }
     if (status === "published" && plainText(row.body).trim().length < 200) {
-      throw new Error("Le corps de l'article est trop court pour une publication.");
+      throw new Error(
+        "Le corps de l'article est trop court pour une publication."
+      );
     }
 
     await snapshot(ctx, row, viewer, `Passage en « ${status} »`);

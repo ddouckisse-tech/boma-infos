@@ -108,7 +108,10 @@ export const save = mutation({
     const payload = {
       key: "site",
       ...args,
-      agentsMonthlyCapMicros: Math.max(0, Math.round(args.agentsMonthlyCapMicros)),
+      agentsMonthlyCapMicros: Math.max(
+        0,
+        Math.round(args.agentsMonthlyCapMicros)
+      ),
       agentsAlertRatio: Math.min(1, Math.max(0.1, args.agentsAlertRatio)),
       updatedAt: Date.now(),
       updatedBy: viewer.name,
@@ -120,7 +123,14 @@ export const save = mutation({
     if (row) await ctx.db.patch(row._id, payload);
     else await ctx.db.insert("settings", payload);
 
-    await recordAudit(ctx, viewer, "settings.update", "settings", "site", "Réglages du site");
+    await recordAudit(
+      ctx,
+      viewer,
+      "settings.update",
+      "settings",
+      "site",
+      "Réglages du site"
+    );
     return null;
   },
 });

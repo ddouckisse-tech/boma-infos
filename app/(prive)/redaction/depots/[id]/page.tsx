@@ -141,8 +141,8 @@ export default function SubmissionReviewPage({
             </h2>
             <p className="mt-2 type-small text-muted-foreground">
               Produite par l&apos;agent de modération (agent 5). Elle conseille,
-              elle ne décide pas&nbsp;: aucune de ces lignes ne change le
-              statut du dépôt.
+              elle ne décide pas&nbsp;: aucune de ces lignes ne change le statut
+              du dépôt.
             </p>
 
             {moderationRun ? (
@@ -159,8 +159,8 @@ export default function SubmissionReviewPage({
             ) : (
               <p className="mt-3 type-small text-muted-foreground">
                 Aucune fiche pour ce dépôt — l&apos;agent est peut-être
-                désactivé, ou le plafond mensuel atteint. La revue se fait
-                sans, comme avant.
+                désactivé, ou le plafond mensuel atteint. La revue se fait sans,
+                comme avant.
               </p>
             )}
 

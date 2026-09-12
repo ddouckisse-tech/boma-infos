@@ -74,7 +74,8 @@ export default function SubmissionPage({
         <StatusPill status={submission.status} />
       </div>
       <p className="mt-1 type-small text-muted-foreground">
-        {submission.kindLabel} · déposé le {formatDateTime(submission.createdAt)}
+        {submission.kindLabel} · déposé le{" "}
+        {formatDateTime(submission.createdAt)}
         {submission.submittedAt
           ? ` · transmis le ${formatDateTime(submission.submittedAt)}`
           : ""}

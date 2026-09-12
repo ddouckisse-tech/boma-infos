@@ -66,8 +66,9 @@ export default function CompanyRegistrationPage() {
   const [done, setDone] = useState(false);
   const [pending, setPending] = useState(false);
 
-  const set = (key: keyof typeof form) => (event: { target: { value: string } }) =>
-    setForm((current) => ({ ...current, [key]: event.target.value }));
+  const set =
+    (key: keyof typeof form) => (event: { target: { value: string } }) =>
+      setForm((current) => ({ ...current, [key]: event.target.value }));
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -167,10 +168,7 @@ export default function CompanyRegistrationPage() {
         />
 
         <div className="grid gap-2">
-          <label
-            htmlFor="secteur"
-            className="type-small font-medium"
-          >
+          <label htmlFor="secteur" className="type-small font-medium">
             Secteur d&apos;activité<span className="text-destructive">*</span>
           </label>
           <select
@@ -178,7 +176,7 @@ export default function CompanyRegistrationPage() {
             required
             value={form.sector}
             onChange={set("sector")}
-            className="h-11 w-full rounded-lg border border-input bg-transparent px-2.5 type-body outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+            className="h-11 w-full rounded-lg border border-input bg-background px-2.5 type-body text-foreground outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
           >
             {SECTORS.map((sector) => (
               <option key={sector} value={sector}>
@@ -268,8 +266,8 @@ export default function CompanyRegistrationPage() {
 
         <p className="type-small text-muted-foreground">
           Les informations transmises servent à instruire la demande et à vous
-          joindre au sujet de vos dépôts. Elles ne sont ni cédées ni utilisées
-          à d&apos;autres fins.
+          joindre au sujet de vos dépôts. Elles ne sont ni cédées ni utilisées à
+          d&apos;autres fins.
         </p>
       </form>
     </AuthShell>

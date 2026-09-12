@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useCallback, useEffect, useRef, useState } from "react";
+import { use, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAction, useMutation, useQuery } from "convex/react";
@@ -119,14 +119,22 @@ export default function ArticleEditorPage({
   const [preview, setPreview] = useState(false);
   const [savedAt, setSavedAt] = useState(0);
   const [busy, setBusy] = useState(false);
-  const loaded = useRef<string>("");
-  const dirty = useRef(false);
+  const [dirty, setDirty] = useState(false);
+  const [loadedStamp, setLoadedStamp] = useState(-1);
 
-  // Charge une fois ; ensuite l'état local fait foi, sinon chaque
-  // enregistrement automatique réécraserait la frappe en cours.
-  useEffect(() => {
-    if (!article || loaded.current === article._id) return;
-    loaded.current = article._id;
+  /**
+   * Synchronisation avec le serveur, faite au rendu plutôt que dans un effet.
+   *
+   * Deux exigences contradictoires à tenir ensemble : ne **jamais** écraser
+   * une frappe en cours (garde-fou `dirty`), et recharger quand le document
+   * a changé côté serveur — ce qui arrive chaque fois qu'on accepte une
+   * proposition d'agent, puisque c'est une mutation Convex qui réécrit
+   * l'article. Sans ce rechargement, l'éditeur garderait l'ancienne valeur à
+   * l'écran et le prochain enregistrement automatique l'écrirait par-dessus
+   * la correction acceptée.
+   */
+  if (article && !dirty && loadedStamp !== article.updatedAt) {
+    setLoadedStamp(article.updatedAt);
     setForm({
       title: article.title,
       slug: article.slug,
@@ -143,7 +151,7 @@ export default function ArticleEditorPage({
       feature: article.feature,
       tags: article.tags.join(", "),
     });
-  }, [article]);
+  }
 
   const persist = useCallback(
     async (auto: boolean) => {
@@ -176,7 +184,7 @@ export default function ArticleEditorPage({
         auto,
       });
       setSavedAt(result.updatedAt);
-      dirty.current = false;
+      setDirty(false);
       return result;
     },
     [articleId, form, save]
@@ -184,20 +192,32 @@ export default function ArticleEditorPage({
 
   // Enregistrement automatique après quatre secondes de calme.
   useEffect(() => {
-    if (!form || !dirty.current) return;
+    if (!form || !dirty) return;
     const timer = setTimeout(() => {
       void persist(true).catch(() => {
         // Silencieux : l'enregistrement manuel affiche l'erreur.
       });
     }, AUTOSAVE_MS);
     return () => clearTimeout(timer);
-  }, [form, persist]);
+  }, [form, dirty, persist]);
+
+  /**
+   * Garde-fou de fermeture : l'enregistrement automatique attend quatre
+   * secondes, et personne ne doit perdre un paragraphe parce qu'il a fermé
+   * l'onglet trois secondes trop tôt.
+   */
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (event: BeforeUnloadEvent) => event.preventDefault();
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty]);
 
   const update = <Key extends keyof NonNullable<typeof form>>(
     key: Key,
     value: NonNullable<typeof form>[Key]
   ) => {
-    dirty.current = true;
+    setDirty(true);
     setForm((current) => (current ? { ...current, [key]: value } : current));
   };
 
@@ -257,7 +277,8 @@ export default function ArticleEditorPage({
         {savedAt > 0
           ? `Enregistré à ${formatDateTime(savedAt)}`
           : `Dernière modification le ${formatDateTime(article.updatedAt)}`}
-        {!article.editable && " · lecture seule (rubrique hors de votre périmètre)"}
+        {!article.editable &&
+          " · lecture seule (rubrique hors de votre périmètre)"}
       </p>
 
       <div className="mt-6 flex flex-wrap gap-2">
@@ -323,7 +344,7 @@ export default function ArticleEditorPage({
       </div>
 
       <div className="mt-8 grid gap-8 xl:grid-cols-[minmax(0,1fr)_24rem]">
-        <div className="min-w-0 grid gap-6">
+        <div className="grid min-w-0 gap-6">
           <section className="rounded-lg border border-border bg-card p-6">
             <h2 className="font-serif type-h2">Contenu</h2>
             <div className="mt-4 grid gap-5">
@@ -387,7 +408,9 @@ export default function ArticleEditorPage({
                 }}
                 options={parents.map((row) => ({
                   value: row.slug,
-                  label: row.allowed ? row.name : `${row.name} (hors périmètre)`,
+                  label: row.allowed
+                    ? row.name
+                    : `${row.name} (hors périmètre)`,
                   disabled: !row.allowed,
                 }))}
               />
@@ -417,9 +440,7 @@ export default function ArticleEditorPage({
               <SelectField
                 label="Média principal"
                 value={form.heroMediaKey}
-                onChange={(event) =>
-                  update("heroMediaKey", event.target.value)
-                }
+                onChange={(event) => update("heroMediaKey", event.target.value)}
                 options={[
                   { value: "", label: "— aucun" },
                   ...media.map((item) => ({
@@ -458,6 +479,7 @@ export default function ArticleEditorPage({
             <div className="mt-4 grid gap-5">
               <TextField
                 label="Slug"
+                spellCheck={false}
                 hint="Change l'adresse publique de l'article. Ajoutez une redirection si l'ancienne est déjà en ligne."
                 value={form.slug}
                 onChange={(event) => update("slug", event.target.value)}
@@ -486,7 +508,7 @@ export default function ArticleEditorPage({
           </section>
         </div>
 
-        <aside className="min-w-0 grid gap-6">
+        <aside className="grid min-w-0 gap-6">
           <section className="rounded-lg border border-border bg-card p-4">
             <h2 className="flex items-center gap-2 font-serif type-h3">
               <Sparkles
@@ -530,10 +552,13 @@ export default function ArticleEditorPage({
                 }
                 className="rounded-md border border-border p-2 text-start type-small hover:bg-surface-muted disabled:opacity-50"
               >
-                <span className="font-semibold">Transcription d&apos;interview</span>
+                <span className="font-semibold">
+                  Transcription d&apos;interview
+                </span>
                 <span className="block text-muted-foreground">
                   Passe le corps en texte horodaté puis en trame
-                  questions/réponses. Traitement différé par l&apos;ordonnanceur.
+                  questions/réponses. Traitement différé par
+                  l&apos;ordonnanceur.
                 </span>
               </button>
             </div>
@@ -595,7 +620,6 @@ export default function ArticleEditorPage({
                     onClick={() =>
                       act(async () => {
                         await restore({ id: version._id });
-                        loaded.current = "";
                       }, "Version restaurée.")
                     }
                     className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 type-small hover:bg-surface-muted disabled:opacity-50"

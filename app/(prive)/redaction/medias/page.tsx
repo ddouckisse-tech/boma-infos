@@ -87,11 +87,10 @@ export default function MediaLibraryPage() {
         <p className="mt-3 max-w-3xl type-body text-muted-foreground">
           Les photographies sont pré-encodées hors ligne en AVIF et WebP à
           quatre largeurs par{" "}
-          <code className="font-mono">scripts/fetch-media.ts</code>
-          {" "}— c&apos;est ce qui rend le budget de performance calculable à
-          la compilation. Cette page gère la partie éditoriale de chaque
-          image&nbsp;: texte alternatif, légende et crédit. Le texte
-          alternatif est obligatoire.
+          <code className="font-mono">scripts/fetch-media.ts</code> — c&apos;est
+          ce qui rend le budget de performance calculable à la compilation.
+          Cette page gère la partie éditoriale de chaque image&nbsp;: texte
+          alternatif, légende et crédit. Le texte alternatif est obligatoire.
         </p>
       </div>
 

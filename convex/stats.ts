@@ -164,9 +164,7 @@ export const overview = query({
     totalShares: v.number(),
     averageReadingSeconds: v.number(),
     byDay: v.array(v.object({ day: v.string(), views: v.number() })),
-    bySection: v.array(
-      v.object({ name: v.string(), views: v.number() })
-    ),
+    bySection: v.array(v.object({ name: v.string(), views: v.number() })),
     articles: v.array(articleStatShape),
   }),
   handler: async (ctx) => {

@@ -81,7 +81,8 @@ export function AgentSuggestionCard({
         <div className="min-w-0 flex-1">
           <h3 className="type-small font-semibold">{suggestion.label}</h3>
           <p className="type-small text-muted-foreground">
-            Agent {suggestion.agentName} · {formatDateTime(suggestion.createdAt)}
+            Agent {suggestion.agentName} ·{" "}
+            {formatDateTime(suggestion.createdAt)}
           </p>
         </div>
         {suggestion.mode === "simulated" && (
@@ -99,7 +100,7 @@ export function AgentSuggestionCard({
         </p>
       )}
 
-      <p className="mt-2 rounded-xs border border-border bg-background px-2 py-1.5 font-mono type-small whitespace-pre-wrap break-words">
+      <p className="mt-2 rounded-xs border border-border bg-background px-2 py-1.5 font-mono type-small break-words whitespace-pre-wrap">
         <span className="sr-only">Proposition&nbsp;: </span>
         {suggestion.proposed.slice(0, 1200)}
       </p>

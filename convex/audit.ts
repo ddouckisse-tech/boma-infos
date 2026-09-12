@@ -36,7 +36,11 @@ export const list = query({
           .withIndex("by_action", (q) => q.eq("action", action))
           .order("desc")
           .take(take)
-      : await ctx.db.query("auditLog").withIndex("by_at").order("desc").take(take);
+      : await ctx.db
+          .query("auditLog")
+          .withIndex("by_at")
+          .order("desc")
+          .take(take);
     return rows.map((row) => ({
       _id: row._id,
       at: row.at,
@@ -56,7 +60,11 @@ export const actions = query({
   returns: v.array(v.string()),
   handler: async (ctx) => {
     await requirePermission(ctx, PERMISSIONS.auditRead);
-    const rows = await ctx.db.query("auditLog").withIndex("by_at").order("desc").take(500);
+    const rows = await ctx.db
+      .query("auditLog")
+      .withIndex("by_at")
+      .order("desc")
+      .take(500);
     return [...new Set(rows.map((row) => row.action))].sort();
   },
 });

@@ -42,11 +42,10 @@ export default function OrganizationStatisticsPage() {
     <>
       <h1 className="font-serif type-h1">Statistiques de diffusion</h1>
       <p className="mt-4 max-w-reading type-body text-muted-foreground">
-        Ces chiffres ne concernent que les publications de votre entreprise.
-        Le périmètre est calculé côté serveur à partir de votre
-        session&nbsp;: aucune donnée d&apos;une autre entreprise n&apos;est
-        lue, même en appelant l&apos;API directement. Mesure sans traqueur
-        tiers ni cookie.
+        Ces chiffres ne concernent que les publications de votre entreprise. Le
+        périmètre est calculé côté serveur à partir de votre session&nbsp;:
+        aucune donnée d&apos;une autre entreprise n&apos;est lue, même en
+        appelant l&apos;API directement. Mesure sans traqueur tiers ni cookie.
       </p>
 
       {data === undefined ? (
@@ -165,7 +164,7 @@ export default function OrganizationStatisticsPage() {
                       <td className="py-3 pr-4 align-top type-small tabular-nums">
                         {formatNumber(article.views)}
                       </td>
-                      <td className="py-3 pr-4 align-top type-small tabular-nums whitespace-nowrap">
+                      <td className="py-3 pr-4 align-top type-small whitespace-nowrap tabular-nums">
                         {formatDuration(article.averageReadingSeconds)}
                       </td>
                       <td className="py-3 pr-4 align-top type-small tabular-nums">
@@ -177,10 +176,7 @@ export default function OrganizationStatisticsPage() {
                         ) : (
                           <ul className="grid gap-0.5">
                             {article.sharesByChannel.map((entry) => (
-                              <li
-                                key={entry.channel}
-                                className="tabular-nums"
-                              >
+                              <li key={entry.channel} className="tabular-nums">
                                 {CHANNEL_LABEL[entry.channel] ?? entry.channel}
                                 &nbsp;: {formatNumber(entry.count)}
                               </li>

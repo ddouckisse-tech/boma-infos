@@ -176,9 +176,7 @@ export default function CategoriesPage() {
             const children = byOrder(
               rows.filter((c) => c.parentSlug === parent.slug)
             );
-            const parentIndex = topLevel.findIndex(
-              (c) => c._id === parent._id
-            );
+            const parentIndex = topLevel.findIndex((c) => c._id === parent._id);
             return (
               <li key={parent._id} className="grid gap-3">
                 <CategoryRow
@@ -436,10 +434,7 @@ function EditCategoryForm({
         options={VISIBILITY_OPTIONS}
       />
       <div className="flex flex-wrap gap-3">
-        <ActionButton
-          type="submit"
-          disabled={saving || name.trim().length < 2}
-        >
+        <ActionButton type="submit" disabled={saving || name.trim().length < 2}>
           Enregistrer
         </ActionButton>
         <ActionButton

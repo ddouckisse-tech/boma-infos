@@ -83,7 +83,8 @@ export const create = mutation({
   handler: async (ctx, args) => {
     const viewer = await requirePermission(ctx, PERMISSIONS.categoriesWrite);
     const name = args.name.trim();
-    if (name.length < 2) throw new Error("Le nom de la rubrique est trop court.");
+    if (name.length < 2)
+      throw new Error("Le nom de la rubrique est trop court.");
     const accent = (ACCENTS as readonly string[]).includes(args.accent)
       ? args.accent
       : "navy-900";

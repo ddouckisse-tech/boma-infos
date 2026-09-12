@@ -61,7 +61,10 @@ export const list = query({
     const suggestions = await ctx.db.query("agentSuggestions").collect();
     const pending = new Map<string, number>();
     for (const suggestion of suggestions) {
-      if (suggestion.targetType !== "media" || suggestion.status !== "pending") {
+      if (
+        suggestion.targetType !== "media" ||
+        suggestion.status !== "pending"
+      ) {
         continue;
       }
       pending.set(

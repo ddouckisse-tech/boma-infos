@@ -189,7 +189,7 @@ export function Editor({
                     level: Number(event.target.value) === 3 ? 3 : 2,
                   })
                 }
-                className="h-11 w-40 rounded-lg border border-input bg-transparent px-2.5 type-small"
+                className="h-11 w-40 rounded-lg border border-input bg-background px-2.5 type-small text-foreground"
               >
                 <option value="2">Intertitre (h2)</option>
                 <option value="3">Sous-section (h3)</option>
@@ -224,7 +224,7 @@ export function Editor({
                     attribution: event.target.value || undefined,
                   })
                 }
-                className="h-11 w-full rounded-lg border border-input bg-transparent px-2.5 type-small"
+                className="h-11 w-full rounded-lg border border-input bg-background px-2.5 type-small text-foreground"
               />
             )}
 
@@ -270,7 +270,7 @@ export function Editor({
                   onChange={(event) =>
                     replace(index, { ...block, mediaKey: event.target.value })
                   }
-                  className="h-11 w-full rounded-lg border border-input bg-transparent px-2.5 type-small"
+                  className="h-11 w-full rounded-lg border border-input bg-background px-2.5 type-small text-foreground"
                 >
                   <option value="">— choisir une photographie</option>
                   {media.map((item) => (
@@ -289,7 +289,7 @@ export function Editor({
                       caption: event.target.value || undefined,
                     })
                   }
-                  className="h-11 w-full rounded-lg border border-input bg-transparent px-2.5 type-small"
+                  className="h-11 w-full rounded-lg border border-input bg-background px-2.5 type-small text-foreground"
                 />
               </>
             )}
@@ -303,7 +303,7 @@ export function Editor({
                   onChange={(event) =>
                     replace(index, { ...block, value: event.target.value })
                   }
-                  className="h-11 rounded-lg border border-input bg-transparent px-2.5 type-small"
+                  className="h-11 rounded-lg border border-input bg-background px-2.5 type-small text-foreground"
                 />
                 <input
                   aria-label="Libellé du chiffre-clé"
@@ -312,7 +312,7 @@ export function Editor({
                   onChange={(event) =>
                     replace(index, { ...block, label: event.target.value })
                   }
-                  className="h-11 rounded-lg border border-input bg-transparent px-2.5 type-small"
+                  className="h-11 rounded-lg border border-input bg-background px-2.5 type-small text-foreground"
                 />
                 <input
                   aria-label="Source du chiffre-clé"
@@ -324,7 +324,7 @@ export function Editor({
                       source: event.target.value || undefined,
                     })
                   }
-                  className="h-11 rounded-lg border border-input bg-transparent px-2.5 type-small"
+                  className="h-11 rounded-lg border border-input bg-background px-2.5 type-small text-foreground"
                 />
               </div>
             )}
@@ -338,7 +338,7 @@ export function Editor({
                   onChange={(event) =>
                     replace(index, { ...block, title: event.target.value })
                   }
-                  className="h-11 rounded-lg border border-input bg-transparent px-2.5 type-small"
+                  className="h-11 rounded-lg border border-input bg-background px-2.5 type-small text-foreground"
                 />
                 <input
                   aria-label="Adresse de la vidéo"
@@ -347,7 +347,7 @@ export function Editor({
                   onChange={(event) =>
                     replace(index, { ...block, src: event.target.value })
                   }
-                  className="h-11 rounded-lg border border-input bg-transparent px-2.5 type-small"
+                  className="h-11 rounded-lg border border-input bg-background px-2.5 type-small text-foreground"
                 />
                 <select
                   aria-label="Vignette de la vidéo"
@@ -358,7 +358,7 @@ export function Editor({
                       posterMediaKey: event.target.value,
                     })
                   }
-                  className="h-11 rounded-lg border border-input bg-transparent px-2.5 type-small"
+                  className="h-11 rounded-lg border border-input bg-background px-2.5 type-small text-foreground"
                 >
                   <option value="">— vignette</option>
                   {media.map((item) => (

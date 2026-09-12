@@ -90,9 +90,7 @@ export default function AccountsPage() {
   const setActive = useMutation(api.accounts.setActive);
   const approveOrganization = useMutation(api.accounts.approveOrganization);
 
-  const [busyAccountId, setBusyAccountId] = useState<Id<"users"> | null>(
-    null
-  );
+  const [busyAccountId, setBusyAccountId] = useState<Id<"users"> | null>(null);
   const [approvingId, setApprovingId] = useState<Id<"organizations"> | null>(
     null
   );
@@ -154,8 +152,8 @@ export default function AccountsPage() {
     <>
       <h1 className="font-serif type-h1">Comptes et entreprises</h1>
       <p className="mt-2 max-w-reading type-body text-muted-foreground">
-        Écran réservé à l&apos;administrateur&nbsp;: le serveur refuse les
-        mêmes appels à un éditeur, y compris depuis l&apos;API.
+        Écran réservé à l&apos;administrateur&nbsp;: le serveur refuse les mêmes
+        appels à un éditeur, y compris depuis l&apos;API.
       </p>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
@@ -217,8 +215,7 @@ export default function AccountsPage() {
           <div className="mt-4 overflow-x-auto rounded-md border border-border bg-card">
             <table className="w-full min-w-[40rem] border-collapse">
               <caption className="sr-only">
-                Entreprises enregistrées, de la plus récente à la plus
-                ancienne
+                Entreprises enregistrées, de la plus récente à la plus ancienne
               </caption>
               <thead>
                 <tr className="border-b border-border text-start">

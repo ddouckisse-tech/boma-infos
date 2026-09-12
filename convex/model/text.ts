@@ -84,7 +84,9 @@ export function plainText(body: readonly Block[]): string {
         parts.push(`## ${block.text}`);
         break;
       case "quote":
-        parts.push(`« ${block.text} »${block.attribution ? ` — ${block.attribution}` : ""}`);
+        parts.push(
+          `« ${block.text} »${block.attribution ? ` — ${block.attribution}` : ""}`
+        );
         break;
       case "list":
         parts.push(block.items.map((item) => `- ${item}`).join("\n"));

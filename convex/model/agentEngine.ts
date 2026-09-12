@@ -140,7 +140,10 @@ export function frenchTypography(input: string): string {
   text = text.replace(/\.{3}/g, "…");
 
   // Espace insécable devant les unités monétaires et les pourcentages.
-  text = text.replace(/(\d)\s+(%|€|\$|FCFA|milliards?|millions?)/g, `$1${NBSP}$2`);
+  text = text.replace(
+    /(\d)\s+(%|€|\$|FCFA|milliards?|millions?)/g,
+    `$1${NBSP}$2`
+  );
 
   for (const [pattern, replacement] of ACCENTED_CAPS) {
     text = text.replace(pattern, replacement);
@@ -229,7 +232,9 @@ export function buildPrompt(
       // composer l'hebdomadaire. La présence de `weekArticles` tranche.
       if (context.weekArticles && context.weekArticles.length > 0) {
         const week = context.weekArticles
-          .map((item) => `- ${item.title} (/article/${item.slug}) — ${item.dek}`)
+          .map(
+            (item) => `- ${item.title} (/article/${item.slug}) — ${item.dek}`
+          )
           .join("\n");
         return {
           system: `${HOUSE_STYLE}\nSchéma : ${JSON_SHAPE}\nChamps autorisés : "newsletter.subject", "newsletter.intro", et "newsletter.item.<slug>" pour chaque article retenu.\nL'objet fait au plus 70 caractères. Le chapeau fait trois lignes.`,
@@ -321,11 +326,64 @@ const firstSentence = (value: string): string => {
 };
 
 const STOPWORDS = new Set([
-  "le","la","les","de","des","du","un","une","et","en","à","au","aux","pour",
-  "par","sur","dans","que","qui","est","sont","ce","cette","ces","son","sa",
-  "ses","avec","plus","dont","ne","pas","se","il","elle","nous","vous","ils",
-  "leur","leurs","mais","ou","où","comme","tout","tous","toute","toutes",
-  "entre","sans","été","être","avoir","fait","faire","dit","selon","depuis",
+  "le",
+  "la",
+  "les",
+  "de",
+  "des",
+  "du",
+  "un",
+  "une",
+  "et",
+  "en",
+  "à",
+  "au",
+  "aux",
+  "pour",
+  "par",
+  "sur",
+  "dans",
+  "que",
+  "qui",
+  "est",
+  "sont",
+  "ce",
+  "cette",
+  "ces",
+  "son",
+  "sa",
+  "ses",
+  "avec",
+  "plus",
+  "dont",
+  "ne",
+  "pas",
+  "se",
+  "il",
+  "elle",
+  "nous",
+  "vous",
+  "ils",
+  "leur",
+  "leurs",
+  "mais",
+  "ou",
+  "où",
+  "comme",
+  "tout",
+  "tous",
+  "toute",
+  "toutes",
+  "entre",
+  "sans",
+  "été",
+  "être",
+  "avoir",
+  "fait",
+  "faire",
+  "dit",
+  "selon",
+  "depuis",
 ]);
 
 function keywords(text: string, count: number): string[] {
@@ -344,9 +402,20 @@ function keywords(text: string, count: number): string[] {
 }
 
 const PROMOTIONAL = [
-  "leader incontesté","numéro un","meilleur","révolutionnaire","incontournable",
-  "exceptionnel","unique en son genre","inégalé","le plus grand","excellence",
-  "partenaire de choix","solution idéale","à la pointe","fleuron",
+  "leader incontesté",
+  "numéro un",
+  "meilleur",
+  "révolutionnaire",
+  "incontournable",
+  "exceptionnel",
+  "unique en son genre",
+  "inégalé",
+  "le plus grand",
+  "excellence",
+  "partenaire de choix",
+  "solution idéale",
+  "à la pointe",
+  "fleuron",
 ];
 
 const slugifyLocal = (value: string): string =>
@@ -362,10 +431,7 @@ const slugifyLocal = (value: string): string =>
 export const SIMULATION_NOTE =
   "Proposition produite hors ligne (aucune clé d'API Claude configurée) : règles typographiques et heuristiques maison, pas un modèle.";
 
-export function simulate(
-  agent: AgentKey,
-  context: AgentContext
-): AgentOutcome {
+export function simulate(agent: AgentKey, context: AgentContext): AgentOutcome {
   switch (agent) {
     case "relecture": {
       const proposals: AgentProposal[] = [];
@@ -416,15 +482,15 @@ export function simulate(
       const lead = firstSentence(context.bodyText);
       const key = keywords(`${context.title} ${context.bodyText}`, 3);
       const titles = [
-        context.title.replace(/\s*[:–—-]\s*.*$/, "").trim() ||
-          context.title,
+        context.title.replace(/\s*[:–—-]\s*.*$/, "").trim() || context.title,
         `${context.categoryName} : ${key.slice(0, 2).join(" et ") || context.title.toLowerCase()}`,
         lead.length > 20 && lead.length < 90
           ? lead.replace(/\.$/, "")
           : `${context.title} — ce qu'il faut retenir`,
       ];
       return {
-        summary: "Trois titres, un chapô, une accroche et une méta-description.",
+        summary:
+          "Trois titres, un chapô, une accroche et une méta-description.",
         proposals: [
           ...titles.map((proposed, index) => ({
             field: "title",
@@ -490,10 +556,9 @@ export function simulate(
           label: "Méta-description",
           rationale: "Le chapô, ramené à 155 caractères.",
           current: context.metaDescription,
-          proposed: stripMarkup(context.dek || firstSentence(context.bodyText)).slice(
-            0,
-            155
-          ),
+          proposed: stripMarkup(
+            context.dek || firstSentence(context.bodyText)
+          ).slice(0, 155),
         },
         {
           field: "seo.keywords",
@@ -556,7 +621,11 @@ export function simulate(
       const text = `${context.title} ${context.dek} ${context.bodyText}`;
       const lower = text.toLowerCase();
       const found = PROMOTIONAL.filter((term) => lower.includes(term));
-      const figures = [...text.matchAll(/(\d[\d\s.,]{2,})\s*(%|milliards?|millions?|FCFA|€|\$)/g)]
+      const figures = [
+        ...text.matchAll(
+          /(\d[\d\s.,]{2,})\s*(%|milliards?|millions?|FCFA|€|\$)/g
+        ),
+      ]
         .map((match) => match[0].trim())
         .slice(0, 6);
       const sourced = /(selon|d'après|source\s*:|communiqué de|rapport)/i.test(
@@ -729,7 +798,8 @@ export function composeNewsletter(
       {
         field: "newsletter.subject",
         label: "Objet",
-        rationale: "Le titre le plus lu de la semaine, puis le nombre de sujets.",
+        rationale:
+          "Le titre le plus lu de la semaine, puis le nombre de sujets.",
         proposed:
           items.length > 0
             ? `${items[0].title} — et ${Math.max(items.length - 1, 0)} autres sujets`

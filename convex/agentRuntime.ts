@@ -2,11 +2,7 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { v } from "convex/values";
-import {
-  action,
-  internalAction,
-  type ActionCtx,
-} from "./_generated/server";
+import { action, internalAction, type ActionCtx } from "./_generated/server";
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { accessError, PERMISSIONS } from "./model/access";
@@ -179,7 +175,10 @@ async function execute(
 export const runOnArticle = action({
   args: { articleId: v.id("articles"), agent: agentKey },
   returns: v.union(v.id("agentRuns"), v.null()),
-  handler: async (ctx, { articleId, agent }): Promise<Id<"agentRuns"> | null> => {
+  handler: async (
+    ctx,
+    { articleId, agent }
+  ): Promise<Id<"agentRuns"> | null> => {
     const viewer = await ctx.runQuery(internal.guard.check, {
       permission: PERMISSIONS.agentsRun,
     });
@@ -375,7 +374,10 @@ export const composeWeeklyNewsletter = internalAction({
   returns: v.null(),
   handler: async (ctx) => {
     const week = isoWeek(Date.now());
-    const articles = await ctx.runQuery(internal.newsletterDraft.weekArticles, {});
+    const articles = await ctx.runQuery(
+      internal.newsletterDraft.weekArticles,
+      {}
+    );
     if (articles.length === 0) return null;
 
     const runId = await execute(ctx, {

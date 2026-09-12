@@ -225,7 +225,10 @@ export default function ArticlesPage() {
             </thead>
             <tbody>
               {rows.map((row) => (
-                <tr key={row._id} className="border-b border-border last:border-0">
+                <tr
+                  key={row._id}
+                  className="border-b border-border last:border-0"
+                >
                   <td className="p-3">
                     <input
                       type="checkbox"

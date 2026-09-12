@@ -55,7 +55,11 @@ export function TextField({
         </p>
       )}
       {error && (
-        <p id={`${id}-error`} role="alert" className="type-small text-destructive">
+        <p
+          id={`${id}-error`}
+          role="alert"
+          className="type-small text-destructive"
+        >
           {error}
         </p>
       )}
@@ -95,7 +99,11 @@ export function TextAreaField({
         </p>
       )}
       {error && (
-        <p id={`${id}-error`} role="alert" className="type-small text-destructive">
+        <p
+          id={`${id}-error`}
+          role="alert"
+          className="type-small text-destructive"
+        >
           {error}
         </p>
       )}
@@ -132,7 +140,10 @@ export function SelectField({
         required={required}
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy || undefined}
-        className="h-11 w-full rounded-lg border border-input bg-transparent px-2.5 type-body transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive"
+        // `bg-background text-foreground` explicites : un `<select>` natif laissé
+        // transparent rend sa liste d'options en blanc sur blanc dans le thème
+        // sombre de Windows.
+        className="h-11 w-full rounded-lg border border-input bg-background px-2.5 type-body text-foreground transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive"
         {...props}
       >
         {options.map((option) => (
@@ -151,7 +162,11 @@ export function SelectField({
         </p>
       )}
       {error && (
-        <p id={`${id}-error`} role="alert" className="type-small text-destructive">
+        <p
+          id={`${id}-error`}
+          role="alert"
+          className="type-small text-destructive"
+        >
           {error}
         </p>
       )}

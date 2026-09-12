@@ -289,7 +289,7 @@ export default function AccountPage() {
                   height={220}
                   className="rounded-md border border-border bg-white p-2"
                 />
-                <div className="min-w-0 grid gap-3">
+                <div className="grid min-w-0 gap-3">
                   <p className="type-small">
                     Scannez ce code, ou saisissez l&apos;adresse ci-dessous à la
                     main dans votre application d&apos;authentification.
@@ -329,6 +329,7 @@ export default function AccountPage() {
                   label="Code à six chiffres"
                   inputMode="numeric"
                   autoComplete="one-time-code"
+                  spellCheck={false}
                   value={code}
                   onChange={(event) => setCode(event.target.value)}
                 />

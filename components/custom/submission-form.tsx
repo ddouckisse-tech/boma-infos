@@ -64,9 +64,7 @@ export function SubmissionForm({
 
   const [title, setTitle] = useState(draft?.title ?? "");
   const [dek, setDek] = useState(draft?.dek ?? "");
-  const [body, setBody] = useState(
-    draft ? blocksToText(draft.body) : ""
-  );
+  const [body, setBody] = useState(draft ? blocksToText(draft.body) : "");
   const [kind, setKind] = useState<Kind>(
     (draft?.kind as Kind | undefined) ?? "communique"
   );
@@ -200,9 +198,7 @@ export function SubmissionForm({
           value={categorySlug || options[0]?.value || ""}
           onChange={(event) => setCategorySlug(event.target.value)}
           options={
-            options.length > 0
-              ? options
-              : [{ value: "", label: "Chargement…" }]
+            options.length > 0 ? options : [{ value: "", label: "Chargement…" }]
           }
           hint="La rédaction reste libre du placement final."
         />
