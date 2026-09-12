@@ -27,7 +27,7 @@ export function BrandWordmark({
         className
       )}
     >
-      <span>Le&nbsp;Corporate</span>
+      <span translate="no">Le&nbsp;Corporate</span>
       <span aria-hidden="true" className="text-brand-magenta dark:hidden">
         .
       </span>

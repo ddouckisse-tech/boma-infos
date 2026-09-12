@@ -16,7 +16,7 @@ export const revalidate = 300;
 export const metadata: Metadata = {
   title: "Docuthèque",
   description:
-    "Rapports, textes réglementaires, guides et études à télécharger : la documentation économique gabonaise rassemblée par la rédaction.",
+    "Rapports, textes réglementaires, guides et études à télécharger : la documentation économique gabonaise rassemblée par la rédaction.",
   alternates: { canonical: "/docutheque" },
   openGraph: {
     type: "website",
@@ -102,14 +102,14 @@ export default async function DocuthequePage() {
 
                   <dl className="mt-4 flex flex-wrap gap-x-6 gap-y-1 type-small text-muted-foreground">
                     <div className="flex gap-1">
-                      <dt>Format :</dt>
+                      <dt>Format :</dt>
                       <dd className="font-medium text-foreground">
                         {document.fileFormat}
                       </dd>
                     </div>
                     {document.pages && (
                       <div className="flex gap-1">
-                        <dt>Pages :</dt>
+                        <dt>Pages :</dt>
                         <dd
                           data-numeric
                           className="font-medium text-foreground"
@@ -119,13 +119,13 @@ export default async function DocuthequePage() {
                       </div>
                     )}
                     <div className="flex gap-1">
-                      <dt>Poids :</dt>
+                      <dt>Poids :</dt>
                       <dd data-numeric className="font-medium text-foreground">
                         {formatBytes(document.fileBytes)}
                       </dd>
                     </div>
                     <div className="flex gap-1">
-                      <dt>Publié le :</dt>
+                      <dt>Publié le :</dt>
                       <dd>
                         <time dateTime={isoDate(document.publishedAt)}>
                           {formatDate(document.publishedAt)}

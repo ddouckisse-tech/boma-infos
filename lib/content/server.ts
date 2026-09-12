@@ -123,12 +123,7 @@ export const searchArticles = (
   term: string,
   categorySlug: string | undefined,
   limit: number
-) =>
-  run(
-    api.journal.search,
-    { term, categorySlug, limit },
-    "journal.search"
-  );
+) => run(api.journal.search, { term, categorySlug, limit }, "journal.search");
 
 /* ------------------------------------------------------------------ écriture */
 

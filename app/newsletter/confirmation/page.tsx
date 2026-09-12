@@ -74,9 +74,9 @@ export default async function ConfirmationPage({
                 {result.status === "confirmed" &&
                   "Votre adresse est désormais inscrite. Chaque envoi comportera un lien de désinscription en un clic."}
                 {result.status === "already_confirmed" &&
-                  "Cette adresse était déjà inscrite : rien n'a changé."}
+                  "Cette adresse était déjà inscrite : rien n'a changé."}
                 {result.status === "unknown" &&
-                  "Reprenez l'inscription depuis la page de la newsletter ; un nouveau lien de confirmation vous sera proposé."}
+                  "Reprenez l'inscription depuis la page de la newsletter ; un nouveau lien de confirmation vous sera proposé."}
               </p>
 
               {ok && result.unsubscribeToken && (

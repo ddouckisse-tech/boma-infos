@@ -17,7 +17,7 @@ export const revalidate = 300;
 export const metadata: Metadata = {
   title: "À propos",
   description:
-    "Le Corporate, magazine économique gabonais édité par Up Concept : ligne éditoriale, équipe, méthode et règles de transparence.",
+    "Le Corporate, magazine économique gabonais édité par Up Concept : ligne éditoriale, équipe, méthode et règles de transparence.",
   alternates: { canonical: "/a-propos" },
   openGraph: {
     type: "website",
@@ -51,7 +51,7 @@ export default async function AboutPage() {
         <div className="article-body type-body">
           <h2 className="font-serif type-h2">Ce que nous publions</h2>
           <p>
-            Le Corporate couvre l&apos;économie réelle : opérations
+            Le Corporate couvre l&apos;économie réelle : opérations
             d&apos;entreprise, filières extractives, logistique et
             infrastructures, réglementation, financement, formation. Nous
             écrivons pour des lecteurs qui décident — dirigeants, cadres,
@@ -155,7 +155,7 @@ export default async function AboutPage() {
             </p>
             <dl className="mt-4 grid gap-2 type-body">
               <div className="flex flex-wrap gap-2">
-                <dt className="text-muted-foreground">Courriel :</dt>
+                <dt className="text-muted-foreground">Courriel :</dt>
                 <dd>
                   <a
                     href={`mailto:${SITE.email}`}
@@ -166,7 +166,7 @@ export default async function AboutPage() {
                 </dd>
               </div>
               <div className="flex flex-wrap gap-2">
-                <dt className="text-muted-foreground">Téléphone :</dt>
+                <dt className="text-muted-foreground">Téléphone :</dt>
                 <dd>
                   <a
                     href={SITE.phoneHref}
@@ -177,7 +177,7 @@ export default async function AboutPage() {
                 </dd>
               </div>
               <div className="flex flex-wrap gap-2">
-                <dt className="text-muted-foreground">Adresse :</dt>
+                <dt className="text-muted-foreground">Adresse :</dt>
                 <dd>{SITE.address}</dd>
               </div>
             </dl>

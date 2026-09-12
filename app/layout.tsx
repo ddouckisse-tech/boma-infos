@@ -106,7 +106,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <PreferencesScript />
       </head>
       <body className="flex min-h-full flex-col">
-        {/* Ni Toaster ni TooltipProvider ici : `sonner` et le survol Radix
+        {/* Ni Toaster ni TooltipProvider ici : `sonner` et le survol Radix
             pèsent une trentaine de kilo-octets de JavaScript sur *chaque*
             page pour des retours que le journal public rend en ligne, dans
             le contrôle lui-même. Le budget du §5.4 ne les finance pas. La

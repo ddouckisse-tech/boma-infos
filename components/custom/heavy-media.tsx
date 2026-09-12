@@ -36,7 +36,7 @@ export function HeavyMedia({
   if (playing) {
     return (
       <figure className="not-prose">
-        {/* La piste de sous-titres viendra de la rédaction au lot 3 ; la
+        {/* La piste de sous-titres viendra de la rédaction au lot 3 ; la
             vidéo n'est jamais lue automatiquement. */}
         <video
           src={src}
@@ -97,7 +97,7 @@ export function HeavyMedia({
         </span>
       </button>
       <figcaption className="mt-2 type-small text-muted-foreground">
-        La vidéo n&apos;est téléchargée qu&apos;après un clic : aucune donnée
+        La vidéo n&apos;est téléchargée qu&apos;après un clic : aucune donnée
         n&apos;est consommée tant que vous ne la demandez pas.
       </figcaption>
     </figure>

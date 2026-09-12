@@ -131,7 +131,7 @@ export default async function ArticlePage({
 
   return (
     <>
-      {/* Filet de progression : piloté par `animation-timeline: scroll()`,
+      {/* Filet de progression : piloté par `animation-timeline: scroll()`,
           donc sans une ligne de JavaScript (CDC §5.4). */}
       <div
         aria-hidden="true"
@@ -318,7 +318,7 @@ export default async function ArticlePage({
               </aside>
             </div>
 
-            {/* Sommaire seulement : les articles liés sont en fin de page,
+            {/* Sommaire seulement : les articles liés sont en fin de page,
                 les répéter ici les faisait apparaître deux fois. */}
             <aside className="min-w-0 lg:sticky lg:top-32 lg:self-start">
               <TableOfContents blocks={article.body} />
@@ -333,7 +333,7 @@ export default async function ArticlePage({
           title="Dans la même rubrique"
           description="Trois articles choisis pour leur proximité de sujet."
         >
-          {/* Variante en ligne : la vignette de 160 px coûte 6 Ko contre 25
+          {/* Variante en ligne : la vignette de 160 px coûte 6 Ko contre 25
               pour une carte pleine largeur, et trois cartes en fin
               d'article ne méritent pas un dixième du budget de la page. */}
           <ul className="grid gap-x-8 sm:grid-cols-2 lg:grid-cols-3">

@@ -48,7 +48,7 @@ export function DataSaverToggle({
           htmlFor={id}
           className="flex min-h-11 cursor-pointer items-center gap-3 type-small font-medium text-foreground"
         >
-          {/* La case elle-même occupe 44 x 44 px et reste transparente ;
+          {/* La case elle-même occupe 44 x 44 px et reste transparente ;
               la piste et le curseur sont dessinés par les deux spans, que la
               case pilote via `peer-checked`. La cible tactile vaut donc bien
               44 px, sans que la bascule n'en ait l'air (§3.5). */}

@@ -54,7 +54,7 @@ export default async function HomePage() {
     <>
       <SiteStructuredData />
 
-      {/* Bandeau de une : porte l'unique <h1> de la page. */}
+      {/* Bandeau de une : porte l'unique <h1> de la page. */}
       <div className="border-b border-border bg-surface-subtle py-4">
         <Container className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
           <h1 className="font-serif type-h3 text-foreground">{SITE.tagline}</h1>
@@ -183,7 +183,7 @@ export default async function HomePage() {
           {/* Un article illustré par rubrique — en vignette, pas en grande
               carte — et les suivants en titres seuls. Vingt-et-une photos
               pleine largeur sur une page d'accueil, c'est un mur d'images et,
-              sur un téléphone haute densité, un demi-mégaoctet : le §5.4 en
+              sur un téléphone haute densité, un demi-mégaoctet : le §5.4 en
               plafonne 600 Ko pour la page entière. La densité d'images
               décroît donc en descendant, comme sur une une imprimée. */}
           <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr] lg:gap-10">
@@ -253,7 +253,7 @@ export default async function HomePage() {
           <div className="min-w-0">
             <h2 className="font-serif type-h2">La lettre hebdomadaire</h2>
             <p className="mt-2 max-w-reading type-body text-muted-foreground">
-              Un courriel par semaine : les articles à retenir, les échéances
+              Un courriel par semaine : les articles à retenir, les échéances
               réglementaires, les appels d&apos;offres ouverts. Inscription
               confirmée par courriel, désinscription en un clic.
             </p>

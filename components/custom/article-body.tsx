@@ -29,7 +29,7 @@ function PullQuote({
         aria-hidden="true"
         className="mb-2 size-5 text-brand-magenta-600 dark:text-brand-magenta-dark"
       />
-      {/* Droit, pas italique : la fonte italique de Source Serif pèse 47 Ko
+      {/* Droit, pas italique : la fonte italique de Source Serif pèse 47 Ko
           sur chaque page du site. Le filet, le guillemet et le corps
           suffisent à détacher la citation (CDC §5.4). */}
       <blockquote className="font-serif type-h3 leading-snug text-foreground">
@@ -64,7 +64,7 @@ function StatBlock({
       <p className="mt-2 type-body text-foreground">{label}</p>
       {source && (
         <p className="mt-1 type-small text-muted-foreground">
-          Source : {source}
+          Source : {source}
         </p>
       )}
     </div>

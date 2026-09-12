@@ -1,4 +1,8 @@
-import { MEDIA, type MediaAsset, type MediaVariant } from "@/convex/mediaManifest";
+import {
+  MEDIA,
+  type MediaAsset,
+  type MediaVariant,
+} from "@/convex/mediaManifest";
 
 /**
  * Image plumbing — the single heaviest item of the performance budget.
@@ -17,8 +21,9 @@ import { MEDIA, type MediaAsset, type MediaVariant } from "@/convex/mediaManifes
 
 export type { MediaAsset, MediaVariant };
 
-export const getMediaAsset = (key: string | undefined): MediaAsset | undefined =>
-  key ? MEDIA[key] : undefined;
+export const getMediaAsset = (
+  key: string | undefined
+): MediaAsset | undefined => (key ? MEDIA[key] : undefined);
 
 export const mediaUrl = (key: string, width: number, format: "avif" | "webp") =>
   `/medias/${key}-${width}.${format}`;

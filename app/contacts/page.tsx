@@ -11,7 +11,7 @@ import { SITE } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Contacts",
   description:
-    "Joindre la rédaction du Corporate : formulaire, adresse électronique, téléphone. Information, communiqué, droit de réponse, proposition de tribune.",
+    "Joindre la rédaction du Corporate : formulaire, adresse électronique, téléphone. Information, communiqué, droit de réponse, proposition de tribune.",
   alternates: { canonical: "/contacts" },
   openGraph: {
     type: "website",

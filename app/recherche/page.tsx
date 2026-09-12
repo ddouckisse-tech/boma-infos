@@ -10,7 +10,7 @@ import { getLatest, searchArticles } from "@/lib/content/server";
 export const metadata: Metadata = {
   title: "Recherche",
   description:
-    "Rechercher dans les articles publiés par Le Corporate : titres, chapôs et corps de texte.",
+    "Rechercher dans les articles publiés par Le Corporate : titres, chapôs et corps de texte.",
   // Un espace infini de chaînes de requête n'a rien à faire dans un index.
   robots: { index: false, follow: true },
 };

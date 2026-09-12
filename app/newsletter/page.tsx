@@ -9,7 +9,7 @@ import { Section } from "@/components/custom/section";
 export const metadata: Metadata = {
   title: "Newsletter",
   description:
-    "La lettre hebdomadaire du Corporate : les articles à retenir, les échéances réglementaires et les appels d'offres ouverts. Inscription à double confirmation.",
+    "La lettre hebdomadaire du Corporate : les articles à retenir, les échéances réglementaires et les appels d'offres ouverts. Inscription à double confirmation.",
   alternates: { canonical: "/newsletter" },
   robots: { index: true, follow: true },
 };

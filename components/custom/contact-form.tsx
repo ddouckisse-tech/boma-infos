@@ -33,6 +33,21 @@ export function ContactForm() {
     if (openedAt.current) openedAt.current.value = String(Date.now());
   }, []);
 
+  // Le serveur a refusé un champ : on y ramène le focus. Sans cela, le
+  // message d'erreur est en bas du formulaire et la personne qui navigue au
+  // clavier ou au lecteur d'écran doit le chercher.
+  const formRef = useRef<HTMLFormElement | null>(null);
+  const lastFocused = useRef<string | null>(null);
+  useEffect(() => {
+    if (state.status !== "error" || !state.field) return;
+    const key = `${state.field}:${state.message}`;
+    if (lastFocused.current === key) return;
+    lastFocused.current = key;
+    formRef.current
+      ?.querySelector<HTMLElement>(`[name="${state.field}"]`)
+      ?.focus();
+  }, [state]);
+
   if (state.status === "sent") {
     return (
       <div
@@ -59,7 +74,7 @@ export function ContactForm() {
     state.status === "error" && state.field === field;
 
   return (
-    <form action={action} className="grid gap-5">
+    <form ref={formRef} action={action} className="grid gap-5">
       <input
         ref={openedAt}
         type="hidden"
@@ -105,6 +120,7 @@ export function ContactForm() {
             inputMode="email"
             required
             autoComplete="email"
+            spellCheck={false}
             aria-invalid={invalid("email") || undefined}
             className="h-11 type-body"
           />
@@ -188,8 +204,8 @@ export function ContactForm() {
             id={`${id}-finalite`}
             className="mt-1 type-small text-muted-foreground"
           >
-            Finalité : répondre à votre message. Destinataire : la rédaction du
-            Corporate, elle seule. Conservation : douze mois. Vous pouvez
+            Finalité : répondre à votre message. Destinataire : la rédaction du
+            Corporate, elle seule. Conservation : douze mois. Vous pouvez
             demander l&apos;accès, la rectification ou la suppression de vos
             données en écrivant à la rédaction.
           </p>

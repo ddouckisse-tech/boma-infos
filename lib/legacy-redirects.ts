@@ -29,6 +29,16 @@ import type { Redirect } from "next/dist/lib/load-custom-routes";
  * exists, and lets the 404 stand otherwise.
  */
 
+/**
+ * 301 et non 308.
+ *
+ * `permanent: true` produit un 308, que Google traite à l'identique — mais
+ * le §5.6 demande un 301, et une partie de l'outillage de recette (crawlers,
+ * vérificateurs de liens, anciens proxys) ne reconnaît que celui-là. Le
+ * code est donc posé explicitement.
+ */
+const PERMANENT = 301;
+
 type Mapping = { from: string; to: string };
 
 /** Legacy section slug → new section path. Both spellings are accepted. */
@@ -149,40 +159,56 @@ export function legacyRedirects(): Redirect[] {
 
   // Rubriques : /category/<slug> et /category/<slug>/page/<n>.
   for (const [slug, destination] of Object.entries(LEGACY_CATEGORY_SLUGS)) {
-    redirects.push({ source: `/category/${slug}`, destination, permanent: true });
+    redirects.push({
+      source: `/category/${slug}`,
+      destination,
+      statusCode: PERMANENT,
+    });
     redirects.push({
       source: `/category/${slug}/page/:page`,
       destination,
-      permanent: true,
+      statusCode: PERMANENT,
     });
   }
 
   for (const { from, to } of STATIC_MAPPINGS) {
-    redirects.push({ source: from, destination: to, permanent: true });
+    redirects.push({ source: from, destination: to, statusCode: PERMANENT });
   }
 
   // Archives d'auteur : le fonds est signé « admin », qui n'existe plus.
-  redirects.push({ source: "/author/admin", destination: "/a-propos", permanent: true });
-  redirects.push({ source: "/author/:slug", destination: "/auteur/:slug", permanent: true });
+  redirects.push({
+    source: "/author/admin",
+    destination: "/a-propos",
+    statusCode: PERMANENT,
+  });
+  redirects.push({
+    source: "/author/:slug",
+    destination: "/auteur/:slug",
+    statusCode: PERMANENT,
+  });
 
   // Étiquettes : pas de page de tag dans le nouveau site, la recherche les
   // couvre et conserve l'intention du lien entrant.
   redirects.push({
     source: "/tag/:slug",
     destination: "/recherche?q=:slug",
-    permanent: true,
+    statusCode: PERMANENT,
   });
 
   // Archives par date : elles n'existent plus, l'accueil les remplace.
-  redirects.push({ source: "/:year(\\d{4})", destination: "/", permanent: true });
+  redirects.push({
+    source: "/:year(\\d{4})",
+    destination: "/",
+    statusCode: PERMANENT,
+  });
   redirects.push({
     source: "/:year(\\d{4})/:month(\\d{2})",
     destination: "/",
-    permanent: true,
+    statusCode: PERMANENT,
   });
 
   for (const source of CLOSED_ENDPOINTS) {
-    redirects.push({ source, destination: "/", permanent: true });
+    redirects.push({ source, destination: "/", statusCode: PERMANENT });
   }
 
   return redirects;

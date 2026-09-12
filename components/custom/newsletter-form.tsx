@@ -61,7 +61,7 @@ export function NewsletterForm({
         </p>
         {state.status === "pending" && (
           <p className="mt-2 type-small text-muted-foreground">
-            Il reste une étape : confirmer l&apos;inscription. Le service
+            Il reste une étape : confirmer l&apos;inscription. Le service
             d&apos;envoi de courriels n&apos;étant pas encore branché, le lien
             de confirmation est affiché ici.
           </p>
@@ -94,7 +94,7 @@ export function NewsletterForm({
         name={antiRobot.timestampField}
         defaultValue="0"
       />
-      {/* Piège à robots : hors écran, hors ordre de tabulation, hors arbre
+      {/* Piège à robots : hors écran, hors ordre de tabulation, hors arbre
           d'accessibilité. Un lecteur d'écran ne le rencontre jamais. */}
       <div aria-hidden="true" className="sr-only">
         <label htmlFor={`${id}-hp`}>Ne pas remplir</label>
@@ -107,7 +107,7 @@ export function NewsletterForm({
         />
       </div>
 
-      {/* `flex-1` sur le champ ne vaut qu'en ligne : dans un conteneur en
+      {/* `flex-1` sur le champ ne vaut qu'en ligne : dans un conteneur en
           colonne, il s'applique à la hauteur et écrase les 44 px de la
           cible tactile (§3.5). D'où la grille en dessous de `sm`. */}
       <div
@@ -122,6 +122,7 @@ export function NewsletterForm({
           name="email"
           inputMode="email"
           autoComplete="email"
+          spellCheck={false}
           required
           placeholder="vous@exemple.ga"
           aria-invalid={hasError || undefined}
