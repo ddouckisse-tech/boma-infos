@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AdminEntry } from "@/components/custom/admin-entry";
 import { Mail, Phone, Rss } from "lucide-react";
 import {
   FacebookIcon,
@@ -158,10 +159,13 @@ export function Footer({ sections }: { sections: readonly Section[] }) {
               <ThemeToggle />
             </div>
           </div>
-          <p className="type-small text-muted-foreground">
-            © {new Date().getFullYear()} {SITE.name} — {SITE.publisher}. Tous
-            droits réservés.
-          </p>
+          <div className="flex items-center gap-1">
+            <p className="type-small text-muted-foreground">
+              © {new Date().getFullYear()} {SITE.name} — {SITE.publisher}. Tous
+              droits réservés.
+            </p>
+            <AdminEntry />
+          </div>
         </div>
 
         <p className="mt-4 rounded-md border border-dashed border-border-strong px-4 py-3 type-small text-muted-foreground">

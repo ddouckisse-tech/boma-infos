@@ -46,11 +46,15 @@ const MINIMUM = 12;
 export function CompanyRegistrationForm({
   onDone,
   onSwitchToSignIn,
+  compact = false,
 }: {
   /** Told when the request goes through, so the frame can retitle itself. */
   onDone?: () => void;
   /** In the floating card, swaps to sign-in instead of navigating. */
   onSwitchToSignIn?: () => void;
+  /** In the floating card: the switch above already offers sign-in, and
+   *  the eleven fields must fit a desktop screen without scrolling. */
+  compact?: boolean;
 }) {
   const register = useAction(api.accounts.registerCompany);
   const openedAt = useRef(0);
@@ -138,7 +142,10 @@ export function CompanyRegistrationForm({
   }
 
   return (
-    <form onSubmit={submit} className="grid gap-5">
+    <form
+      onSubmit={submit}
+      className={compact ? "@container grid gap-3" : "@container grid gap-4"}
+    >
       <FormError>{error}</FormError>
 
       <div aria-hidden="true" className="sr-only">
@@ -153,68 +160,70 @@ export function CompanyRegistrationForm({
         />
       </div>
 
-      <TextField
-        label="Raison sociale"
-        required
-        autoComplete="organization"
-        value={form.name}
-        onChange={set("name")}
-      />
-
-      <div className="grid gap-2">
-        <label htmlFor="secteur" className="type-small font-medium">
-          Secteur d&apos;activité<span className="text-destructive">*</span>
-        </label>
-        <select
-          id="secteur"
+      <div className="grid gap-4 @xl:grid-cols-2">
+        <TextField
+          label="Raison sociale"
           required
-          value={form.sector}
-          onChange={set("sector")}
-          className="h-11 w-full rounded-lg border border-input bg-background px-2.5 type-body text-foreground outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-        >
-          {SECTORS.map((sector) => (
-            <option key={sector} value={sector}>
-              {sector}
-            </option>
-          ))}
-        </select>
+          autoComplete="organization"
+          value={form.name}
+          onChange={set("name")}
+        />
+
+        <div className="grid gap-2">
+          <label htmlFor="secteur" className="type-small font-medium">
+            Secteur d&apos;activité<span className="text-destructive">*</span>
+          </label>
+          <select
+            id="secteur"
+            required
+            value={form.sector}
+            onChange={set("sector")}
+            className="h-11 w-full rounded-lg border border-input bg-background px-2.5 type-body text-foreground outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+          >
+            {SECTORS.map((sector) => (
+              <option key={sector} value={sector}>
+                {sector}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
-      <div className="grid gap-5 sm:grid-cols-2">
+      <div className="grid gap-4 @md:grid-cols-2">
         <TextField
-          label="NIF"
-          hint="Numéro d'identification fiscale."
+          label="NIF (identification fiscale)"
           value={form.taxId}
           onChange={set("taxId")}
         />
         <TextField
-          label="RCCM"
-          hint="Registre du commerce."
+          label="RCCM (registre du commerce)"
           value={form.registrationId}
           onChange={set("registrationId")}
         />
       </div>
 
-      <TextField
-        label="Contact — nom et prénom"
-        required
-        autoComplete="name"
-        value={form.contactName}
-        onChange={set("contactName")}
-      />
+      <div className="grid gap-4 @xl:grid-cols-2">
+        <TextField
+          label="Contact — nom et prénom"
+          required
+          autoComplete="name"
+          value={form.contactName}
+          onChange={set("contactName")}
+        />
 
-      <TextField
-        label="Adresse électronique du contact"
-        type="email"
-        inputMode="email"
-        autoComplete="email"
-        required
-        hint="C'est aussi l'identifiant de connexion."
-        value={form.contactEmail}
-        onChange={set("contactEmail")}
-      />
+        <TextField
+          label="Adresse électronique du contact"
+          type="email"
+          inputMode="email"
+          autoComplete="email"
+          required
+          hint="C'est aussi l'identifiant de connexion."
+          value={form.contactEmail}
+          onChange={set("contactEmail")}
+        />
+      </div>
 
-      <div className="grid gap-5 sm:grid-cols-2">
+      <div className="grid gap-4 @md:grid-cols-2">
         <TextField
           label="Téléphone"
           type="tel"
@@ -227,63 +236,74 @@ export function CompanyRegistrationForm({
           label="WhatsApp"
           type="tel"
           inputMode="tel"
-          hint="Renseigné, il reçoit aussi les changements de statut."
+          hint="Reçoit aussi les changements de statut."
           value={form.whatsapp}
           onChange={set("whatsapp")}
         />
       </div>
 
-      <TextField
-        label="Mot de passe"
-        type="password"
-        autoComplete="new-password"
-        required
-        minLength={MINIMUM}
-        hint="Douze caractères au minimum."
-        value={form.password}
-        onChange={set("password")}
-      />
+      <div className="grid gap-4 @xl:grid-cols-2">
+        <TextField
+          label="Mot de passe"
+          type="password"
+          autoComplete="new-password"
+          required
+          minLength={MINIMUM}
+          hint="Douze caractères au minimum."
+          value={form.password}
+          onChange={set("password")}
+        />
 
-      <TextField
-        label="Confirmation du mot de passe"
-        type="password"
-        autoComplete="new-password"
-        required
-        value={form.confirmation}
-        onChange={set("confirmation")}
-      />
+        <TextField
+          label="Confirmation du mot de passe"
+          type="password"
+          autoComplete="new-password"
+          required
+          value={form.confirmation}
+          onChange={set("confirmation")}
+        />
+      </div>
 
       <ActionButton type="submit" disabled={pending} className="w-full">
         <Building2 aria-hidden="true" className="size-4" />
         {pending ? "Envoi…" : "Transmettre la demande"}
       </ActionButton>
 
-      <p className="type-small text-muted-foreground">
-        Vous avez déjà un compte&nbsp;?{" "}
-        {onSwitchToSignIn ? (
-          <button
-            type="button"
-            onClick={onSwitchToSignIn}
-            className="font-semibold text-accent underline underline-offset-2"
-          >
-            Se connecter
-          </button>
-        ) : (
-          <Link
-            href="/connexion"
-            className="font-semibold text-accent underline underline-offset-2"
-          >
-            Se connecter
-          </Link>
-        )}
-        .
-      </p>
+      {!compact && (
+        <p className="type-small text-muted-foreground">
+          Vous avez déjà un compte&nbsp;?{" "}
+          {onSwitchToSignIn ? (
+            <button
+              type="button"
+              onClick={onSwitchToSignIn}
+              className="font-semibold text-accent underline underline-offset-2"
+            >
+              Se connecter
+            </button>
+          ) : (
+            <Link
+              href="/connexion"
+              className="font-semibold text-accent underline underline-offset-2"
+            >
+              Se connecter
+            </Link>
+          )}
+          .
+        </p>
+      )}
 
-      <p className="type-small text-muted-foreground">
-        Les informations transmises servent à instruire la demande et à vous
-        joindre au sujet de vos dépôts. Elles ne sont ni cédées ni utilisées à
-        d&apos;autres fins.
-      </p>
+      {compact ? (
+        <p className="type-small text-muted-foreground">
+          Informations utilisées pour instruire la demande et vous joindre —
+          jamais cédées.
+        </p>
+      ) : (
+        <p className="type-small text-muted-foreground">
+          Les informations transmises servent à instruire la demande et à vous
+          joindre au sujet de vos dépôts. Elles ne sont ni cédées ni utilisées à
+          d&apos;autres fins.
+        </p>
+      )}
     </form>
   );
 }

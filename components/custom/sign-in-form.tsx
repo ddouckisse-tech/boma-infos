@@ -30,9 +30,12 @@ import { authClient } from "@/lib/auth-client";
  */
 export function SignInForm({
   onSwitchToRegister,
+  variant = "default",
 }: {
   /** In the floating card, swaps to registration instead of navigating. */
   onSwitchToRegister?: () => void;
+  /** `admin` lands on the newsroom after sign-in and drops the company line. */
+  variant?: "default" | "admin";
 }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -60,7 +63,7 @@ export function SignInForm({
         router.push("/connexion/verification");
         return;
       }
-      router.push("/compte");
+      router.push(variant === "admin" ? "/redaction" : "/compte");
       router.refresh();
     } catch {
       setError("Identifiants incorrects.");
@@ -107,26 +110,28 @@ export function SignInForm({
         </Link>
       </p>
 
-      <p className="type-small text-muted-foreground">
-        Votre entreprise n&apos;a pas encore d&apos;espace&nbsp;?{" "}
-        {onSwitchToRegister ? (
-          <button
-            type="button"
-            onClick={onSwitchToRegister}
-            className="font-semibold text-accent underline underline-offset-2"
-          >
-            Demander l&apos;ouverture d&apos;un compte
-          </button>
-        ) : (
-          <Link
-            href="/inscription-entreprise"
-            className="font-semibold text-accent underline underline-offset-2"
-          >
-            Demander l&apos;ouverture d&apos;un compte
-          </Link>
-        )}
-        .
-      </p>
+      {variant !== "admin" && (
+        <p className="type-small text-muted-foreground">
+          Votre entreprise n&apos;a pas encore d&apos;espace&nbsp;?{" "}
+          {onSwitchToRegister ? (
+            <button
+              type="button"
+              onClick={onSwitchToRegister}
+              className="font-semibold text-accent underline underline-offset-2"
+            >
+              Demander l&apos;ouverture d&apos;un compte
+            </button>
+          ) : (
+            <Link
+              href="/inscription-entreprise"
+              className="font-semibold text-accent underline underline-offset-2"
+            >
+              Demander l&apos;ouverture d&apos;un compte
+            </Link>
+          )}
+          .
+        </p>
+      )}
     </form>
   );
 }

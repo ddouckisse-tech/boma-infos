@@ -87,7 +87,7 @@ export function AccessMenu() {
         className="hidden items-center gap-1.5 rounded-md px-2.5 type-small font-semibold text-muted-foreground transition-colors touch-target hover:text-foreground md:inline-flex"
       >
         <Building2 aria-hidden="true" className="size-4" />
-        Espace entreprise
+        Inscription entreprise
       </Link>
 
       <Link
@@ -100,7 +100,9 @@ export function AccessMenu() {
         Connexion
       </Link>
 
-      {tab && <AuthCard tab={tab} onTabChange={setTab} onClose={() => setTab(null)} />}
+      {tab && (
+        <AuthCard tab={tab} onTabChange={setTab} onClose={() => setTab(null)} />
+      )}
     </>
   );
 }

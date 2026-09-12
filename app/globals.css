@@ -649,11 +649,13 @@ dialog.lc-auth {
   position: fixed;
   inset: 0;
   margin: auto;
-  inline-size: min(34rem, calc(100vw - 2rem));
+  inline-size: min(48rem, calc(100vw - 2rem));
   block-size: fit-content;
-  max-block-size: min(
-    calc(100dvh - 2rem - env(safe-area-inset-top) - env(safe-area-inset-bottom)),
-    46rem
+  /* Pas de plafond en rem : sur un écran de bureau la carte doit contenir
+     l'inscription entreprise (onze champs, sur deux colonnes à cette largeur)
+     sans défilement. Seule la hauteur de l'écran la borne. */
+  max-block-size: calc(
+    100dvh - 2rem - env(safe-area-inset-top) - env(safe-area-inset-bottom)
   );
   background-color: var(--popover);
   border: 1px solid var(--border);
