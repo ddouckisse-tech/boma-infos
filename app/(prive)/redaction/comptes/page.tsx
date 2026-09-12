@@ -85,6 +85,7 @@ export default function AccountsPage() {
   const accounts = useQuery(api.accounts.directory, {});
   const roles = useQuery(api.accounts.roles, {});
   const organizations = useQuery(api.accounts.organizations, {});
+  const categories = useQuery(api.taxonomy.list, {});
 
   const setRole = useMutation(api.accounts.setRole);
   const setActive = useMutation(api.accounts.setActive);
@@ -101,6 +102,7 @@ export default function AccountsPage() {
   const accountRows = accounts ?? [];
   const roleRows = roles ?? [];
   const organizationRows = organizations ?? [];
+  const sections = (categories ?? []).filter((row) => !row.parentSlug);
 
   const pendingOrganizations = organizationRows.filter(
     (organization) => organization.reviewState === "pending"
@@ -131,6 +133,29 @@ export default function AccountsPage() {
     try {
       await setRole({ id: account._id, roleSlug });
       toast.success("Rôle mis à jour.");
+    } catch (error) {
+      toast.error(humanError(error));
+    }
+    setBusyAccountId(null);
+  };
+
+  /** Périmètre d'un Éditeur (CDC §4.3 : « ses rubriques autorisées »). */
+  const handleSectionsChange = async (
+    account: Account,
+    sectionSlugs: string[]
+  ) => {
+    setBusyAccountId(account._id);
+    try {
+      await setRole({
+        id: account._id,
+        roleSlug: account.roleSlug,
+        sectionSlugs,
+      });
+      toast.success(
+        sectionSlugs.length === 0
+          ? "Périmètre ouvert à toutes les rubriques."
+          : "Périmètre mis à jour."
+      );
     } catch (error) {
       toast.error(humanError(error));
     }
@@ -297,9 +322,13 @@ export default function AccountsPage() {
                 <AccountRow
                   account={account}
                   roles={roleRows}
+                  sections={sections}
                   busy={busyAccountId === account._id}
                   onRoleChange={(roleSlug) =>
                     handleRoleChange(account, roleSlug)
+                  }
+                  onSectionsChange={(slugs) =>
+                    handleSectionsChange(account, slugs)
                   }
                   onToggleActive={() => handleToggleActive(account)}
                 />
@@ -417,16 +446,21 @@ function AccountRow({
   account,
   roles,
   busy,
+  sections,
   onRoleChange,
+  onSectionsChange,
   onToggleActive,
 }: {
   account: Account;
   roles: Role[];
+  sections: { slug: string; name: string }[];
   busy: boolean;
   onRoleChange: (roleSlug: string) => void;
+  onSectionsChange: (sectionSlugs: string[]) => void;
   onToggleActive: () => void;
 }) {
   const currentRole = roles.find((role) => role.slug === account.roleSlug);
+  const scoped = account.sectionSlugs;
 
   return (
     <div className="rounded-md border border-border bg-card p-4">
@@ -487,6 +521,42 @@ function AccountRow({
           </p>
         )}
       </div>
+
+      {account.roleSlug === "editeur" && sections.length > 0 && (
+        <fieldset className="mt-4 rounded-md border border-border p-3">
+          <legend className="px-1 type-small font-medium">
+            Rubriques autorisées
+          </legend>
+          <p className="type-small text-muted-foreground">
+            Aucune case cochée&nbsp;: toutes les rubriques. Sinon, le serveur
+            refuse toute écriture hors de cette liste — y compris par
+            l&apos;API.
+          </p>
+          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+            {sections.map((section) => (
+              <label
+                key={section.slug}
+                className="flex items-center gap-2 type-small touch-target"
+              >
+                <input
+                  type="checkbox"
+                  className="size-4"
+                  disabled={busy}
+                  checked={scoped.includes(section.slug)}
+                  onChange={(event) =>
+                    onSectionsChange(
+                      event.target.checked
+                        ? [...scoped, section.slug]
+                        : scoped.filter((slug) => slug !== section.slug)
+                    )
+                  }
+                />
+                {section.name}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      )}
     </div>
   );
 }
