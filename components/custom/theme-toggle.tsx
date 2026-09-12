@@ -48,7 +48,7 @@ export function ThemeToggle({
             aria-pressed={active}
             title={THEME_LABELS[value]}
             className={cn(
-              "inline-flex items-center justify-center gap-2 rounded-xs px-2 text-small font-medium transition-colors touch-target",
+              "inline-flex items-center justify-center gap-2 rounded-xs px-2 type-small font-medium transition-colors touch-target",
               "hover:bg-surface-muted hover:text-foreground",
               active
                 ? "bg-primary text-primary-foreground hover:bg-primary"

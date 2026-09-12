@@ -24,7 +24,7 @@ export function ActionButton({
     <Button
       size={size ?? (shape === "icon" ? "icon-lg" : "lg")}
       className={cn(
-        "rounded-md text-small font-semibold touch-target",
+        "rounded-md type-small font-semibold touch-target",
         shape === "text" ? "px-4" : "p-0",
         className
       )}

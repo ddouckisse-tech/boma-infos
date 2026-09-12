@@ -9,7 +9,7 @@
    ========================================================================== */
 
 /* Le thème sombre est piloté par la classe `.dark` posée sur <html> par le
-   script anti-clignotement (components/custom/theme-script.tsx).
+   script anti-clignotement (components/custom/preferences-script.tsx).
    `:where(.dark, .dark *)` — et non `.dark *` — pour que l'élément racine
    lui-même soit ciblé. */
 @custom-variant dark (&:where(.dark, .dark *));
@@ -241,7 +241,26 @@
 }
 
 /* --------------------------------------------------------------------------
-   5. Typographie, rayons, espacements, ruptures
+   4 bis. Échelle typographique fluide (§3.2)
+   320 px → 1280 px, base 16 px, ratio 1,25 (major third).
+
+   Volontairement hors de `@theme` : une police déclarée en `--text-*` y
+   génère des utilitaires `text-display`, `text-small`… que le fusionneur de
+   classes (tailwind-merge, via `cn`) prend pour des COULEURS de texte et qui
+   évincent alors silencieusement `text-primary-foreground` et consorts. Les
+   tailles s'appliquent donc par les utilitaires `type-*` définis §7.
+   -------------------------------------------------------------------------- */
+:root {
+  --text-display: clamp(2rem, 1.5rem + 2.5vw, 3.5rem); /* 32 → 56 */
+  --text-h1: clamp(1.75rem, 1.5rem + 1.25vw, 2.5rem); /* 28 → 40 */
+  --text-h2: clamp(1.375rem, 1.25rem + 0.625vw, 1.75rem); /* 22 → 28 */
+  --text-h3: clamp(1.1875rem, 1.125rem + 0.3125vw, 1.375rem); /* 19 → 22 */
+  --text-body: clamp(1.0625rem, 1.0208rem + 0.2083vw, 1.1875rem); /* 17 → 19 */
+  --text-small: clamp(0.875rem, 0.8542rem + 0.1042vw, 0.9375rem); /* 14 → 15 */
+}
+
+/* --------------------------------------------------------------------------
+   5. Familles, rayons, espacements, ruptures
    -------------------------------------------------------------------------- */
 @theme {
   /* Deux familles seulement (§3.2), auto-hébergées via next/font. */
@@ -254,37 +273,16 @@
   --font-mono:
     ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 
-  /* Échelle fluide 320 px → 1280 px, base 16 px, ratio 1,25 (§3.2). */
-  --text-display: clamp(2rem, 1.5rem + 2.5vw, 3.5rem); /* 32 → 56 */
-  --text-display--line-height: 1.15;
-  --text-display--letter-spacing: -0.02em;
-  --text-display--font-weight: 600;
-
-  --text-h1: clamp(1.75rem, 1.5rem + 1.25vw, 2.5rem); /* 28 → 40 */
-  --text-h1--line-height: 1.15;
-  --text-h1--letter-spacing: -0.015em;
-  --text-h1--font-weight: 600;
-
-  --text-h2: clamp(1.375rem, 1.25rem + 0.625vw, 1.75rem); /* 22 → 28 */
-  --text-h2--line-height: 1.15;
-  --text-h2--letter-spacing: -0.01em;
-  --text-h2--font-weight: 600;
-
-  --text-h3: clamp(1.1875rem, 1.125rem + 0.3125vw, 1.375rem); /* 19 → 22 */
-  --text-h3--line-height: 1.2;
-  --text-h3--font-weight: 600;
-
-  --text-body: clamp(1.0625rem, 1.0208rem + 0.2083vw, 1.1875rem); /* 17 → 19 */
-  --text-body--line-height: 1.7;
-
-  --text-small: clamp(0.875rem, 0.8542rem + 0.1042vw, 0.9375rem); /* 14 → 15 */
-  --text-small--line-height: 1.5;
-
   --leading-body: 1.7;
   --leading-title: 1.15;
 
-  /* Colonne de lecture : 65–75 caractères (§3.2). */
-  --container-reading: 68ch;
+  /* Colonne de lecture — §3.2 : « 65 à 75 caractères ».
+     La valeur littérale `68ch` du cahier des charges donne 86 caractères par
+     ligne avec Inter, dont le glyphe « 0 » (qui définit l'unité `ch`) est
+     large. On conserve la règle qui compte — la mesure en caractères — avec
+     un plafond de 39rem : mesuré à 65–74 caractères entre 768 et 1440 px, et
+     sous les 680 px de colonne de lecture du §3.3. */
+  --container-reading: min(68ch, 39rem);
   /* Largeur maximale du contenu (§3.3). */
   --container-page: 1280px;
 
@@ -355,13 +353,6 @@
     text-wrap: balance;
   }
 
-  /* Focus toujours visible, 2 px (§3.5). */
-  :focus-visible {
-    outline: 2px solid var(--ring);
-    outline-offset: 2px;
-    border-radius: 2px;
-  }
-
   /* Chiffres tabulaires pour les données économiques (§3.2). */
   table,
   time,
@@ -395,6 +386,45 @@
    7. Utilitaires maison
    -------------------------------------------------------------------------- */
 
+/* Échelle typographique — un utilitaire par jeton du §3.2.
+   Nommés `type-*` et non `text-*` : voir la note du §4 bis. */
+@utility type-display {
+  font-size: var(--text-display);
+  line-height: var(--leading-title);
+  letter-spacing: -0.02em;
+  font-weight: 600;
+}
+
+@utility type-h1 {
+  font-size: var(--text-h1);
+  line-height: var(--leading-title);
+  letter-spacing: -0.015em;
+  font-weight: 600;
+}
+
+@utility type-h2 {
+  font-size: var(--text-h2);
+  line-height: var(--leading-title);
+  letter-spacing: -0.01em;
+  font-weight: 600;
+}
+
+@utility type-h3 {
+  font-size: var(--text-h3);
+  line-height: 1.2;
+  font-weight: 600;
+}
+
+@utility type-body {
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+}
+
+@utility type-small {
+  font-size: var(--text-small);
+  line-height: 1.5;
+}
+
 /* Cible tactile ≥ 44 × 44 px (§3.5). */
 @utility touch-target {
   min-block-size: var(--size-touch);
@@ -424,7 +454,7 @@
 /* Lien d'évitement : hors écran jusqu'au focus clavier. */
 @utility skip-link {
   position: absolute;
-  inset-inline-start: var(--spacing-4, 1rem);
+  inset-inline-start: 1rem;
   inset-block-start: -100%;
   z-index: 100;
   display: inline-flex;
@@ -435,9 +465,23 @@
   background-color: var(--primary);
   color: var(--primary-foreground);
   font-weight: 600;
-  transition: inset-block-start 150ms ease;
+  /* Aucune transition : le lien doit être visible dès la première pression
+     sur Tab, pas 150 ms plus tard. */
 
   &:focus-visible {
-    inset-block-start: var(--spacing-2, 0.5rem);
+    inset-block-start: 0.5rem;
   }
+}
+
+/* --------------------------------------------------------------------------
+   8. Focus clavier — hors couche (§3.5)
+   Volontairement NON encapsulé dans `@layer base` : plusieurs primitives
+   shadcn portent `outline-none` dans la couche `utilities`, qui l'emporterait
+   sur une règle de base. Une règle hors couche gagne sur toutes les couches,
+   ce qui garantit un contour de 2 px visible sur *tout* élément focalisé au
+   clavier, en plus de l'anneau propre aux composants.
+   -------------------------------------------------------------------------- */
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
 }

@@ -10,8 +10,9 @@
     "typecheck": "next typegen && tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "convex:dev": "convex dev",
-    "verify": "bun run typecheck && bun run lint && bun run build"
+    "convex:dev": "convex dev --tail-logs disable",
+    "verify": "bun run typecheck && bun run lint && bun run build",
+    "dev:full": "convex dev --tail-logs disable --start 'next dev'"
   },
   "dependencies": {
     "@convex-dev/better-auth": "^0.12.5",

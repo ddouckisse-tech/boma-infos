@@ -43,15 +43,15 @@ demande explicite.
 
 ### Scripts
 
-| Script | Effet |
-|---|---|
-| `bun run dev` | Serveur de développement Next.js (port 3000) |
-| `bun run build` | Compilation de production |
-| `bun run start` | Serveur de production |
-| `bun run typecheck` | `next typegen` puis `tsc --noEmit` |
-| `bun run lint` | ESLint |
-| `bun run format` | Prettier (écriture) |
-| `bun run verify` | typecheck + lint + build |
+| Script              | Effet                                        |
+| ------------------- | -------------------------------------------- |
+| `bun run dev`       | Serveur de développement Next.js (port 3000) |
+| `bun run build`     | Compilation de production                    |
+| `bun run start`     | Serveur de production                        |
+| `bun run typecheck` | `next typegen` puis `tsc --noEmit`           |
+| `bun run lint`      | ESLint                                       |
+| `bun run format`    | Prettier (écriture)                          |
+| `bun run verify`    | typecheck + lint + build                     |
 
 `.claude/launch.json` déclare la configuration `dev` pour démarrer le serveur
 en un appel depuis l'outillage.
@@ -63,12 +63,12 @@ en un appel depuis l'outillage.
 `.env.local` est généré par `convex dev` et **n'est pas versionné**. Le
 gabarit versionné est [`.env.example`](./.env.example).
 
-| Variable | Où | Rôle |
-|---|---|---|
-| `CONVEX_DEPLOYMENT` | `.env.local` | Déploiement visé par la CLI Convex |
-| `NEXT_PUBLIC_CONVEX_URL` | `.env.local` | URL client du déploiement (WebSocket + HTTP) |
-| `NEXT_PUBLIC_CONVEX_SITE_URL` | `.env.local` | URL des actions HTTP (routes Better Auth) |
-| `SITE_URL` | **sur le déploiement Convex** | URL publique du site, utilisée par Better Auth |
+| Variable                      | Où                            | Rôle                                           |
+| ----------------------------- | ----------------------------- | ---------------------------------------------- |
+| `CONVEX_DEPLOYMENT`           | `.env.local`                  | Déploiement visé par la CLI Convex             |
+| `NEXT_PUBLIC_CONVEX_URL`      | `.env.local`                  | URL client du déploiement (WebSocket + HTTP)   |
+| `NEXT_PUBLIC_CONVEX_SITE_URL` | `.env.local`                  | URL des actions HTTP (routes Better Auth)      |
+| `SITE_URL`                    | **sur le déploiement Convex** | URL publique du site, utilisée par Better Auth |
 
 Les deux URL Convex sont automatiquement autorisées dans la directive
 `connect-src` de la politique de sécurité du contenu (voir `proxy.ts`).

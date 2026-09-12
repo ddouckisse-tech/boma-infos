@@ -19,7 +19,7 @@ export function BrandWordmark({
       href={href}
       className={cn(
         "inline-flex items-baseline gap-1 font-serif leading-none font-semibold tracking-tight text-foreground",
-        size === "large" ? "text-h1" : "text-h3",
+        size === "large" ? "type-h1" : "type-h3",
         className
       )}
     >

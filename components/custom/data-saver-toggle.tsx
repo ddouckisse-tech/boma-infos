@@ -40,7 +40,7 @@ export function DataSaverToggle({
       <div className="min-w-0 flex-1">
         <label
           htmlFor={id}
-          className="flex min-h-[44px] cursor-pointer items-center gap-3 text-small font-medium text-foreground"
+          className="flex min-h-[44px] cursor-pointer items-center gap-3 type-small font-medium text-foreground"
         >
           <Switch
             id={id}
@@ -52,7 +52,7 @@ export function DataSaverToggle({
           <span>Économie de données</span>
         </label>
         {variant === "block" && (
-          <p id={`${id}-help`} className="text-small text-muted-foreground">
+          <p id={`${id}-help`} className="type-small text-muted-foreground">
             Images en basse définition et vidéos jamais préchargées. Utile sur
             forfait limité ou réseau lent.
           </p>

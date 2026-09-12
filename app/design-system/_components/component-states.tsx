@@ -83,8 +83,8 @@ function StateCell({
   return (
     <div className="flex min-w-0 flex-col gap-3 rounded-md border border-border bg-card p-4">
       <div>
-        <p className="text-small font-semibold text-foreground">{label}</p>
-        {hint && <p className="text-small text-muted-foreground">{hint}</p>}
+        <p className="type-small font-semibold text-foreground">{label}</p>
+        {hint && <p className="type-small text-muted-foreground">{hint}</p>}
       </div>
       <div className="flex flex-wrap items-center gap-3">{children}</div>
     </div>
@@ -108,9 +108,9 @@ function Block({
 }) {
   return (
     <div className="mt-10">
-      <h3 className="font-serif text-h3 text-foreground">{title}</h3>
+      <h3 className="font-serif type-h3 text-foreground">{title}</h3>
       {description && (
-        <p className="mt-1 max-w-reading text-small text-muted-foreground">
+        <p className="mt-1 max-w-reading type-small text-muted-foreground">
           {description}
         </p>
       )}
@@ -230,7 +230,7 @@ export function ComponentStates() {
               <p
                 id="ds-champ-erreur-msg"
                 role="alert"
-                className="text-small text-destructive"
+                className="type-small text-destructive"
               >
                 Cette adresse électronique n&apos;est pas valide.
               </p>
@@ -263,7 +263,7 @@ export function ComponentStates() {
       <Block title="Contrôles binaires">
         <StateGrid>
           <StateCell label="Case à cocher">
-            <label className="flex min-h-[44px] cursor-pointer items-center gap-3 text-small">
+            <label className="flex min-h-[44px] cursor-pointer items-center gap-3 type-small">
               <Checkbox
                 checked={checked}
                 onCheckedChange={(value) => setChecked(value === true)}
@@ -272,25 +272,25 @@ export function ComponentStates() {
             </label>
           </StateCell>
           <StateCell label="Case à cocher désactivée">
-            <label className="flex min-h-[44px] items-center gap-3 text-small opacity-70">
+            <label className="flex min-h-[44px] items-center gap-3 type-small opacity-70">
               <Checkbox disabled checked />
               Mention « Communiqué » (non contournable)
             </label>
           </StateCell>
           <StateCell label="Case à cocher en erreur">
-            <label className="flex min-h-[44px] items-center gap-3 text-small">
+            <label className="flex min-h-[44px] items-center gap-3 type-small">
               <Checkbox aria-invalid />
               J&apos;accepte la charte éditoriale
             </label>
           </StateCell>
           <StateCell label="Interrupteur">
-            <label className="flex min-h-[44px] cursor-pointer items-center gap-3 text-small">
+            <label className="flex min-h-[44px] cursor-pointer items-center gap-3 type-small">
               <Switch checked={switched} onCheckedChange={setSwitched} />
               Programmer la publication
             </label>
           </StateCell>
           <StateCell label="Interrupteur désactivé">
-            <label className="flex min-h-[44px] items-center gap-3 text-small opacity-70">
+            <label className="flex min-h-[44px] items-center gap-3 type-small opacity-70">
               <Switch disabled />
               Agent Diffusion (activé au lot 3)
             </label>
@@ -326,7 +326,7 @@ export function ComponentStates() {
               <AvatarFallback className="rounded-md">AM</AvatarFallback>
             </Avatar>
             <Separator orientation="vertical" className="h-10" />
-            <span className="text-small text-muted-foreground">
+            <span className="type-small text-muted-foreground">
               Aline&nbsp;Mba, rédactrice en chef
             </span>
           </StateCell>
@@ -422,10 +422,10 @@ export function ComponentStates() {
                   Agents
                 </TabsTrigger>
               </TabsList>
-              <TabsContent value="apercu" className="pt-2 text-small">
+              <TabsContent value="apercu" className="pt-2 type-small">
                 Le contenu de l&apos;onglet actif.
               </TabsContent>
-              <TabsContent value="seo" className="pt-2 text-small">
+              <TabsContent value="seo" className="pt-2 type-small">
                 Slug, méta-description et données structurées.
               </TabsContent>
             </Tabs>
@@ -464,7 +464,7 @@ export function ComponentStates() {
               </DialogTrigger>
               <DialogContent showCloseButton={false}>
                 <DialogHeader className="pr-12">
-                  <DialogTitle className="font-serif text-h3">
+                  <DialogTitle className="font-serif type-h3">
                     Dépublier l&apos;article ?
                   </DialogTitle>
                   <DialogDescription>
@@ -497,7 +497,7 @@ export function ComponentStates() {
               <SheetContent side="right" showCloseButton={false}>
                 <SheetHeader className="flex-row items-start justify-between">
                   <div>
-                    <SheetTitle className="font-serif text-h3">
+                    <SheetTitle className="font-serif type-h3">
                       Filtres
                     </SheetTitle>
                     <SheetDescription>
@@ -518,7 +518,7 @@ export function ComponentStates() {
                 <AccordionTrigger className="min-h-[44px]">
                   Sous-rubriques d&apos;Espace pro
                 </AccordionTrigger>
-                <AccordionContent className="text-small">
+                <AccordionContent className="type-small">
                   Docuthèques · Formation · Opportunités · Réglementations ·
                   Séminaires
                 </AccordionContent>

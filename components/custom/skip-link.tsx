@@ -4,7 +4,7 @@
  */
 export function SkipLink() {
   return (
-    <a href="#contenu" className="skip-link text-small">
+    <a href="#contenu" className="skip-link type-small">
       Aller au contenu principal
     </a>
   );

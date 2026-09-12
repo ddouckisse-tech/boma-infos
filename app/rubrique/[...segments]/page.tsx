@@ -123,7 +123,7 @@ export default async function SectionPage({
               <li key={item.slug}>
                 <Link
                   href={subSectionHref(section.slug, item.slug)}
-                  className="inline-flex items-center rounded-md border border-border px-4 text-small transition-colors touch-target hover:bg-surface-muted"
+                  className="inline-flex items-center rounded-md border border-border px-4 type-small transition-colors touch-target hover:bg-surface-muted"
                 >
                   {item.label}
                 </Link>

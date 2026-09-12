@@ -30,10 +30,10 @@ export function Footer() {
       <Container className="py-12">
         <div className="grid gap-10 lg:grid-cols-[1.2fr_1fr_1fr]">
           <div className="min-w-0">
-            <p className="font-serif text-h3 font-semibold text-foreground">
+            <p className="font-serif type-h3 font-semibold text-foreground">
               Le Corporate
             </p>
-            <p className="mt-2 max-w-[38ch] text-small text-muted-foreground">
+            <p className="mt-2 max-w-[38ch] type-small text-muted-foreground">
               Magazine économique gabonais, édité par Up Concept.
               L&apos;économie du Gabon et de la zone CEMAC, vérifiée et mise en
               perspective.
@@ -49,7 +49,7 @@ export function Footer() {
                     className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-3 text-foreground transition-colors touch-target hover:border-border-strong"
                   >
                     <Icon aria-hidden="true" className="size-4 shrink-0" />
-                    <span className="text-small">{label}</span>
+                    <span className="type-small">{label}</span>
                     <span className="sr-only">(nouvelle fenêtre)</span>
                   </a>
                 </li>
@@ -60,7 +60,7 @@ export function Footer() {
                   className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-3 text-foreground transition-colors touch-target hover:border-border-strong"
                 >
                   <Rss aria-hidden="true" className="size-4 shrink-0" />
-                  <span className="text-small">Flux RSS</span>
+                  <span className="type-small">Flux RSS</span>
                 </a>
               </li>
             </ul>
@@ -69,7 +69,7 @@ export function Footer() {
           <nav aria-labelledby="pied-rubriques" className="min-w-0">
             <h2
               id="pied-rubriques"
-              className="font-serif text-small font-semibold tracking-wide text-foreground uppercase"
+              className="font-serif type-small font-semibold tracking-wide text-foreground uppercase"
             >
               Rubriques
             </h2>
@@ -78,7 +78,7 @@ export function Footer() {
                 <li key={section.slug}>
                   <Link
                     href={sectionHref(section.slug)}
-                    className="flex min-h-[44px] items-center text-small text-muted-foreground hover:text-foreground"
+                    className="flex min-h-[44px] items-center type-small text-muted-foreground hover:text-foreground"
                   >
                     {section.label}
                   </Link>
@@ -91,7 +91,7 @@ export function Footer() {
             <nav aria-labelledby="pied-journal">
               <h2
                 id="pied-journal"
-                className="font-serif text-small font-semibold tracking-wide text-foreground uppercase"
+                className="font-serif type-small font-semibold tracking-wide text-foreground uppercase"
               >
                 Le journal
               </h2>
@@ -100,7 +100,7 @@ export function Footer() {
                   <li key={page.href}>
                     <Link
                       href={page.href}
-                      className="flex min-h-[44px] items-center text-small text-muted-foreground hover:text-foreground"
+                      className="flex min-h-[44px] items-center type-small text-muted-foreground hover:text-foreground"
                     >
                       {page.label}
                     </Link>
@@ -117,13 +117,13 @@ export function Footer() {
           <div className="flex flex-wrap items-center gap-6">
             <DataSaverToggle />
             <div className="flex items-center gap-3">
-              <span className="text-small text-muted-foreground">Thème</span>
+              <span className="type-small text-muted-foreground">Thème</span>
               <ThemeToggle />
             </div>
           </div>
           <div className="flex flex-col items-start gap-1">
             <ConvexStatus />
-            <p className="text-small text-muted-foreground">
+            <p className="type-small text-muted-foreground">
               © {new Date().getFullYear()} Le Corporate — Up Concept. Tous
               droits réservés.
             </p>

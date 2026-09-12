@@ -63,7 +63,7 @@ export function NewsletterForm({ className }: { className?: string }) {
       noValidate
       className={cn("grid gap-2", className)}
     >
-      <Label htmlFor={id} className="text-small font-medium">
+      <Label htmlFor={id} className="type-small font-medium">
         Recevoir la lettre hebdomadaire
       </Label>
       <div className="flex flex-wrap gap-2">
@@ -84,11 +84,11 @@ export function NewsletterForm({ className }: { className?: string }) {
         </ActionButton>
       </div>
       {errors.email && (
-        <p id={errorId} role="alert" className="text-small text-destructive">
+        <p id={errorId} role="alert" className="type-small text-destructive">
           {errors.email.message}
         </p>
       )}
-      <p className="text-small text-muted-foreground">
+      <p className="type-small text-muted-foreground">
         Un courriel par semaine. Désinscription en un clic.
       </p>
     </form>

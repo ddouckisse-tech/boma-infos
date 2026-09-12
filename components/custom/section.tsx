@@ -44,10 +44,10 @@ export function Section({
         <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
           <div className="min-w-0">
             {title && (
-              <h2 className="font-serif text-h2 text-foreground">{title}</h2>
+              <h2 className="font-serif type-h2 text-foreground">{title}</h2>
             )}
             {description && (
-              <p className="mt-2 max-w-reading text-small text-muted-foreground">
+              <p className="mt-2 max-w-reading type-small text-muted-foreground">
                 {description}
               </p>
             )}

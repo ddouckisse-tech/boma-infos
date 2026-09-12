@@ -44,14 +44,14 @@ function SwatchTile({ swatch }: { swatch: Swatch }) {
         aria-hidden="true"
       />
       <div className="p-3">
-        <p className="text-small font-semibold text-foreground">
+        <p className="type-small font-semibold text-foreground">
           {swatch.label}
         </p>
-        <p className="font-mono text-small text-muted-foreground" data-numeric>
+        <p className="font-mono type-small text-muted-foreground" data-numeric>
           {swatch.value}
         </p>
         {swatch.note && (
-          <p className="mt-1 text-small text-muted-foreground">{swatch.note}</p>
+          <p className="mt-1 type-small text-muted-foreground">{swatch.note}</p>
         )}
       </div>
     </li>
@@ -61,7 +61,7 @@ function SwatchTile({ swatch }: { swatch: Swatch }) {
 function Ramp({ title, swatches }: { title: string; swatches: Swatch[] }) {
   return (
     <div className="mt-8">
-      <h3 className="font-serif text-h3 text-foreground">{title}</h3>
+      <h3 className="font-serif type-h3 text-foreground">{title}</h3>
       <ul className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {swatches.map((swatch) => (
           <SwatchTile key={swatch.token} swatch={swatch} />
@@ -90,7 +90,7 @@ export default function DesignSystemPage() {
         actions={
           <Link
             href="/"
-            className="inline-flex items-center rounded-md border border-border px-4 text-small font-semibold transition-colors touch-target hover:bg-surface-muted"
+            className="inline-flex items-center rounded-md border border-border px-4 type-small font-semibold transition-colors touch-target hover:bg-surface-muted"
           >
             Retour à l&apos;accueil
           </Link>
@@ -104,7 +104,7 @@ export default function DesignSystemPage() {
               <li key={entry.href}>
                 <a
                   href={entry.href}
-                  className="inline-flex items-center rounded-md border border-border px-3 text-small transition-colors touch-target hover:bg-surface-muted"
+                  className="inline-flex items-center rounded-md border border-border px-3 type-small transition-colors touch-target hover:bg-surface-muted"
                 >
                   {entry.label}
                 </a>
@@ -138,7 +138,7 @@ export default function DesignSystemPage() {
 
         <div className="mt-8 grid gap-4 lg:grid-cols-2">
           <div>
-            <h3 className="font-serif text-h3 text-foreground">
+            <h3 className="font-serif type-h3 text-foreground">
               Couleurs fonctionnelles — thème clair
             </h3>
             <ul className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -148,7 +148,7 @@ export default function DesignSystemPage() {
             </ul>
           </div>
           <div>
-            <h3 className="font-serif text-h3 text-foreground">
+            <h3 className="font-serif type-h3 text-foreground">
               Couleurs fonctionnelles — thème sombre
             </h3>
             <ul className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -160,10 +160,10 @@ export default function DesignSystemPage() {
         </div>
 
         <div className="mt-8">
-          <h3 className="font-serif text-h3 text-foreground">
+          <h3 className="font-serif type-h3 text-foreground">
             Jetons sémantiques, les deux thèmes côte à côte
           </h3>
-          <p className="mt-1 max-w-reading text-small text-muted-foreground">
+          <p className="mt-1 max-w-reading type-small text-muted-foreground">
             La colonne de droite est rendue en thème sombre quel que soit le
             thème actif de la page : les deux versions se comparent sans
             basculer.
@@ -177,23 +177,23 @@ export default function DesignSystemPage() {
                 <tr className="border-b border-border">
                   <th
                     scope="col"
-                    className="py-2 pr-4 text-small font-semibold"
+                    className="py-2 pr-4 type-small font-semibold"
                   >
                     Jeton
                   </th>
                   <th
                     scope="col"
-                    className="py-2 pr-4 text-small font-semibold"
+                    className="py-2 pr-4 type-small font-semibold"
                   >
                     Rôle
                   </th>
                   <th
                     scope="col"
-                    className="py-2 pr-4 text-small font-semibold"
+                    className="py-2 pr-4 type-small font-semibold"
                   >
                     Clair
                   </th>
-                  <th scope="col" className="py-2 text-small font-semibold">
+                  <th scope="col" className="py-2 type-small font-semibold">
                     Sombre
                   </th>
                 </tr>
@@ -201,10 +201,10 @@ export default function DesignSystemPage() {
               <tbody>
                 {SEMANTIC_TOKENS.map((entry) => (
                   <tr key={entry.token} className="border-b border-border">
-                    <td className="py-2 pr-4 font-mono text-small">
+                    <td className="py-2 pr-4 font-mono type-small">
                       --{entry.token}
                     </td>
-                    <td className="py-2 pr-4 text-small text-muted-foreground">
+                    <td className="py-2 pr-4 type-small text-muted-foreground">
                       {entry.label}
                     </td>
                     <td className="py-2 pr-4">
@@ -214,7 +214,7 @@ export default function DesignSystemPage() {
                           className="inline-block size-6 shrink-0 rounded-xs border border-border"
                           style={{ backgroundColor: entry.light }}
                         />
-                        <span className="font-mono text-small" data-numeric>
+                        <span className="font-mono type-small" data-numeric>
                           {entry.light}
                         </span>
                       </span>
@@ -226,7 +226,7 @@ export default function DesignSystemPage() {
                           className="inline-block size-6 shrink-0 rounded-xs border border-border"
                           style={{ backgroundColor: entry.dark }}
                         />
-                        <span className="font-mono text-small" data-numeric>
+                        <span className="font-mono type-small" data-numeric>
                           {entry.dark}
                         </span>
                       </span>
@@ -240,13 +240,13 @@ export default function DesignSystemPage() {
 
         <div className="mt-8 grid gap-4 lg:grid-cols-2">
           <div className="rounded-md border border-border bg-background p-4">
-            <p className="text-small font-semibold text-muted-foreground">
+            <p className="type-small font-semibold text-muted-foreground">
               Rendu en thème clair
             </p>
             <ThemeSample />
           </div>
           <DarkPreview>
-            <p className="text-small font-semibold text-muted-foreground">
+            <p className="type-small font-semibold text-muted-foreground">
               Rendu en thème sombre
             </p>
             <ThemeSample />
@@ -262,19 +262,19 @@ export default function DesignSystemPage() {
       >
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="rounded-md border border-border bg-card p-4">
-            <p className="text-small text-muted-foreground">Titres et chapôs</p>
-            <p className="mt-1 font-serif text-h2">Source Serif 4</p>
-            <p className="mt-2 text-small text-muted-foreground">
+            <p className="type-small text-muted-foreground">Titres et chapôs</p>
+            <p className="mt-1 font-serif type-h2">Source Serif 4</p>
+            <p className="mt-2 type-small text-muted-foreground">
               L&apos;autorité éditoriale qui manquait au Poppins de
               l&apos;ancien site.
             </p>
           </div>
           <div className="rounded-md border border-border bg-card p-4">
-            <p className="text-small text-muted-foreground">
+            <p className="type-small text-muted-foreground">
               Corps, interface, données
             </p>
-            <p className="mt-1 font-sans text-h2">Inter</p>
-            <p className="mt-2 text-small text-muted-foreground" data-numeric>
+            <p className="mt-1 font-sans type-h2">Inter</p>
+            <p className="mt-2 type-small text-muted-foreground" data-numeric>
               Chiffres tabulaires : 1 234 567 890 · 0,00 % · 1 108 Mds FCFA
             </p>
           </div>
@@ -285,16 +285,16 @@ export default function DesignSystemPage() {
             <caption className="sr-only">Échelle typographique</caption>
             <thead>
               <tr className="border-b border-border">
-                <th scope="col" className="py-2 pr-4 text-small font-semibold">
+                <th scope="col" className="py-2 pr-4 type-small font-semibold">
                   Jeton
                 </th>
-                <th scope="col" className="py-2 pr-4 text-small font-semibold">
+                <th scope="col" className="py-2 pr-4 type-small font-semibold">
                   Mobile
                 </th>
-                <th scope="col" className="py-2 pr-4 text-small font-semibold">
+                <th scope="col" className="py-2 pr-4 type-small font-semibold">
                   Desktop
                 </th>
-                <th scope="col" className="py-2 text-small font-semibold">
+                <th scope="col" className="py-2 type-small font-semibold">
                   Usage
                 </th>
               </tr>
@@ -302,16 +302,16 @@ export default function DesignSystemPage() {
             <tbody>
               {TYPE_SCALE.map((entry) => (
                 <tr key={entry.token} className="border-b border-border">
-                  <td className="py-3 pr-4 font-mono text-small">
+                  <td className="py-3 pr-4 font-mono type-small">
                     {entry.token}
                   </td>
-                  <td className="py-3 pr-4 text-small" data-numeric>
+                  <td className="py-3 pr-4 type-small" data-numeric>
                     {entry.mobile}
                   </td>
-                  <td className="py-3 pr-4 text-small" data-numeric>
+                  <td className="py-3 pr-4 type-small" data-numeric>
                     {entry.desktop}
                   </td>
-                  <td className="py-3 text-small text-muted-foreground">
+                  <td className="py-3 type-small text-muted-foreground">
                     {entry.usage}
                   </td>
                 </tr>
@@ -326,7 +326,7 @@ export default function DesignSystemPage() {
               key={entry.token}
               className="rounded-md border border-border bg-card p-4"
             >
-              <p className="font-mono text-small text-muted-foreground">
+              <p className="font-mono type-small text-muted-foreground">
                 {entry.token} · {entry.mobile} → {entry.desktop}
               </p>
               <p className={`${entry.className} mt-2`}>{entry.sample}</p>
@@ -340,36 +340,38 @@ export default function DesignSystemPage() {
         id="lecture"
         tone="muted"
         title="Colonne de lecture"
-        description="Mesure limitée à 68ch, soit 65 à 75 caractères. Interligne 1,7, alignement à gauche — jamais de texte justifié, dont les fentes sont illisibles sur mobile."
+        description="Mesure bornée à min(68ch, 39rem) : relevé entre 65 et 70 caractères par ligne selon la largeur d'écran, dans la fourchette de 65 à 75 du cahier des charges. Interligne 1,7, alignement à gauche : jamais de texte justifié, dont les fentes sont illisibles sur mobile."
       >
         <article className="rounded-md border border-border bg-card p-6 reading-column">
-          <p className="text-small font-semibold tracking-wide text-accent uppercase">
+          <p className="type-small font-semibold tracking-wide text-accent uppercase">
             Intelligence économique
           </p>
-          <h3 className="mt-2 font-serif text-h2">
+          <h3 className="mt-2 font-serif type-h2">
             Ce que la mesure impose à la mise en page
           </h3>
-          <p className="mt-2 text-small text-muted-foreground" data-numeric>
+          <p className="mt-2 type-small text-muted-foreground" data-numeric>
             Libreville · 12 septembre 2026 · 4 min de lecture
           </p>
-          <p className="mt-6 text-body">
+          <p className="mt-6 type-body">
             Une colonne trop large fatigue : l&apos;œil perd la ligne suivante
             au retour à la marge. Une colonne trop étroite hache la phrase. La
             fourchette de soixante-cinq à soixante-quinze caractères est le
             compromis que la presse imprimée a mis un siècle à établir, et que
             l&apos;écran n&apos;a aucune raison d&apos;abandonner.
           </p>
-          <p className="mt-4 text-body">
+          <p className="mt-4 type-body">
             Le corps du texte reste à dix-sept pixels sur téléphone, dix-neuf
             sur ordinateur. L&apos;interligne de 1,7 laisse respirer les accents
             et les jambages ; celui des titres descend à 1,15 pour qu&apos;un
             titre sur trois lignes reste un bloc et non un empilement.
           </p>
-          <blockquote className="mt-6 border-l-2 border-brand-magenta pl-4 font-serif text-body italic">
+          <blockquote className="mt-6 border-l-2 border-brand-magenta pl-4 font-serif type-body italic">
             « Chaque kilo-octet est un arbitrage éditorial. »
           </blockquote>
-          <p className="mt-6 text-small text-muted-foreground">
-            Largeur mesurée de ce bloc : 68ch.
+          <p className="mt-6 type-small text-muted-foreground">
+            Mesure de ce bloc : min(68ch, 39rem), soit 624 px. Relevé à 65–66
+            caractères par ligne entre 1024 et 1440 px ; 70 caractères pour un
+            bloc de texte sans marge intérieure.
           </p>
         </article>
       </Section>
@@ -382,12 +384,12 @@ export default function DesignSystemPage() {
       >
         <div className="grid gap-8 lg:grid-cols-2">
           <div>
-            <h3 className="font-serif text-h3">Échelle d&apos;espacement</h3>
+            <h3 className="font-serif type-h3">Échelle d&apos;espacement</h3>
             <ul className="mt-3 flex flex-col gap-2">
               {SPACING_SCALE.map((step) => (
                 <li key={step.token} className="flex items-center gap-3">
                   <span
-                    className="w-16 shrink-0 font-mono text-small text-muted-foreground"
+                    className="w-16 shrink-0 font-mono type-small text-muted-foreground"
                     data-numeric
                   >
                     {step.px} px
@@ -397,7 +399,7 @@ export default function DesignSystemPage() {
                     className="block h-3 rounded-xs bg-brand-magenta"
                     style={{ width: `${step.px}px` }}
                   />
-                  <span className="font-mono text-small text-muted-foreground">
+                  <span className="font-mono type-small text-muted-foreground">
                     p-{step.token}
                   </span>
                 </li>
@@ -406,7 +408,7 @@ export default function DesignSystemPage() {
           </div>
 
           <div>
-            <h3 className="font-serif text-h3">Rayons</h3>
+            <h3 className="font-serif type-h3">Rayons</h3>
             <ul className="mt-3 grid gap-3 sm:grid-cols-3">
               {RADII.map((radius) => (
                 <li
@@ -414,25 +416,25 @@ export default function DesignSystemPage() {
                   className="border border-border bg-card p-3"
                   style={{ borderRadius: `${radius.px}px` }}
                 >
-                  <p className="text-small font-semibold" data-numeric>
+                  <p className="type-small font-semibold" data-numeric>
                     {radius.px} px
                   </p>
-                  <p className="text-small text-muted-foreground">
+                  <p className="type-small text-muted-foreground">
                     {radius.usage}
                   </p>
-                  <p className="mt-1 font-mono text-small text-muted-foreground">
+                  <p className="mt-1 font-mono type-small text-muted-foreground">
                     {radius.token}
                   </p>
                 </li>
               ))}
             </ul>
 
-            <h3 className="mt-8 font-serif text-h3">Points de rupture</h3>
+            <h3 className="mt-8 font-serif type-h3">Points de rupture</h3>
             <ul className="mt-3 flex flex-wrap gap-2">
               {BREAKPOINTS.map((breakpoint) => (
                 <li
                   key={breakpoint.token}
-                  className="rounded-md border border-border bg-card px-3 py-2 font-mono text-small"
+                  className="rounded-md border border-border bg-card px-3 py-2 font-mono type-small"
                   data-numeric
                 >
                   {breakpoint.token} · {breakpoint.px} px
@@ -440,15 +442,15 @@ export default function DesignSystemPage() {
               ))}
             </ul>
 
-            <h3 className="mt-8 font-serif text-h3">Séparation</h3>
+            <h3 className="mt-8 font-serif type-h3">Séparation</h3>
             <div className="mt-3 rounded-md border border-border bg-card">
-              <p className="p-3 text-small hairline">
+              <p className="p-3 type-small hairline">
                 Filet d&apos;un pixel en navy-100
               </p>
-              <p className="bg-surface-muted p-3 text-small">
+              <p className="bg-surface-muted p-3 type-small">
                 Aplat de surface douce
               </p>
-              <p className="rounded-b-md bg-card p-3 text-small shadow-floating">
+              <p className="rounded-b-md bg-card p-3 type-small shadow-floating">
                 Ombre portée, réservée aux éléments flottants (menu, modale)
               </p>
             </div>
@@ -465,34 +467,34 @@ export default function DesignSystemPage() {
       >
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-md border border-border bg-card p-4">
-            <h3 className="font-serif text-h3">Focus visible</h3>
-            <p className="mt-1 text-small text-muted-foreground">
+            <h3 className="font-serif type-h3">Focus visible</h3>
+            <p className="mt-1 type-small text-muted-foreground">
               Contour de 2 px, décalé de 2 px, dans la couleur d&apos;anneau du
               thème. Parcourez cette page avec Tab pour le vérifier.
             </p>
             <button
               type="button"
-              className="mt-3 inline-flex items-center rounded-md border border-border px-4 text-small touch-target"
+              className="mt-3 inline-flex items-center rounded-md border border-border px-4 type-small touch-target"
             >
               Cible d&apos;essai
             </button>
           </div>
 
           <div className="rounded-md border border-border bg-card p-4">
-            <h3 className="font-serif text-h3">Cibles tactiles</h3>
-            <p className="mt-1 text-small text-muted-foreground">
+            <h3 className="font-serif type-h3">Cibles tactiles</h3>
+            <p className="mt-1 type-small text-muted-foreground">
               44 × 44 px au minimum, y compris pour les boutons à icône.
             </p>
             <div className="mt-3 inline-flex size-11 items-center justify-center rounded-md border border-dashed border-brand-magenta bg-brand-magenta/15">
-              <span className="font-mono text-small" data-numeric>
+              <span className="font-mono type-small" data-numeric>
                 44
               </span>
             </div>
           </div>
 
           <div className="rounded-md border border-border bg-card p-4">
-            <h3 className="font-serif text-h3">Lien d&apos;évitement</h3>
-            <p className="mt-1 text-small text-muted-foreground">
+            <h3 className="font-serif type-h3">Lien d&apos;évitement</h3>
+            <p className="mt-1 type-small text-muted-foreground">
               Premier arrêt de tabulation de chaque page. Appuyez sur Tab depuis
               le haut du document : « Aller au contenu principal » apparaît en
               haut à gauche.
@@ -500,8 +502,8 @@ export default function DesignSystemPage() {
           </div>
 
           <div className="rounded-md border border-border bg-card p-4">
-            <h3 className="font-serif text-h3">Mouvement réduit</h3>
-            <p className="mt-1 text-small text-muted-foreground">
+            <h3 className="font-serif type-h3">Mouvement réduit</h3>
+            <p className="mt-1 type-small text-muted-foreground">
               Aucune librairie d&apos;animation. Les transitions d&apos;état
               durent 150 ms et sont annulées sous{" "}
               <code className="font-mono">prefers-reduced-motion</code>.
@@ -528,22 +530,22 @@ export default function DesignSystemPage() {
       >
         <dl className="grid gap-4 lg:grid-cols-3">
           <div className="rounded-md border border-border bg-card p-4">
-            <dt className="font-serif text-h3">Container</dt>
-            <dd className="mt-1 text-small text-muted-foreground">
-              Largeur maximale 1280 px (ou 68ch en mode lecture), gouttières 16
+            <dt className="font-serif type-h3">Container</dt>
+            <dd className="mt-1 type-small text-muted-foreground">
+              Largeur maximale 1280 px (ou la colonne de lecture), gouttières 16
               → 24 → 32 px. Rien ne touche jamais le bord de l&apos;écran.
             </dd>
           </div>
           <div className="rounded-md border border-border bg-card p-4">
-            <dt className="font-serif text-h3">Section</dt>
-            <dd className="mt-1 text-small text-muted-foreground">
+            <dt className="font-serif type-h3">Section</dt>
+            <dd className="mt-1 type-small text-muted-foreground">
               Unité de rythme vertical, titre en h2, bande alternée optionnelle
               sur la surface douce. Chaque bloc de cette page en est une.
             </dd>
           </div>
           <div className="rounded-md border border-border bg-card p-4">
-            <dt className="font-serif text-h3">PageHeader</dt>
-            <dd className="mt-1 text-small text-muted-foreground">
+            <dt className="font-serif type-h3">PageHeader</dt>
+            <dd className="mt-1 type-small text-muted-foreground">
               Émet l&apos;unique h1 de la page, son surtitre et son filet
               d&apos;accent. Le bloc en tête de cette page en est un.
             </dd>
@@ -551,7 +553,7 @@ export default function DesignSystemPage() {
         </dl>
 
         <Container className="mt-6 rounded-md border border-border bg-card py-6">
-          <p className="text-small text-muted-foreground">
+          <p className="type-small text-muted-foreground">
             Ce bloc est un Container imbriqué : il conserve les gouttières et la
             largeur maximale.
           </p>
@@ -565,23 +567,23 @@ export default function DesignSystemPage() {
 function ThemeSample() {
   return (
     <div className="mt-3 grid gap-3">
-      <p className="font-serif text-h3">Titre en Source Serif 4</p>
-      <p className="text-body">
+      <p className="font-serif type-h3">Titre en Source Serif 4</p>
+      <p className="type-body">
         Corps de texte en Inter, sur le fond de lecture du thème.
       </p>
-      <p className="text-small text-muted-foreground">
+      <p className="type-small text-muted-foreground">
         Texte atténué : dates, signatures, légendes.
       </p>
       <div className="flex flex-wrap gap-2">
-        <span className="inline-flex items-center rounded-md bg-primary px-4 text-small font-semibold text-primary-foreground touch-target">
+        <span className="inline-flex items-center rounded-md bg-primary px-4 type-small font-semibold text-primary-foreground touch-target">
           Action primaire
         </span>
-        <span className="inline-flex items-center text-small font-semibold text-accent underline underline-offset-4 touch-target">
+        <span className="inline-flex items-center type-small font-semibold text-accent underline underline-offset-4 touch-target">
           Lien d&apos;accent
         </span>
       </div>
       <div className="rounded-md border border-border bg-surface-muted p-3">
-        <p className="text-small">Carte posée sur la surface douce.</p>
+        <p className="type-small">Carte posée sur la surface douce.</p>
       </div>
     </div>
   );

@@ -48,7 +48,7 @@ export function SearchDialog({ className }: { className?: string }) {
         )}
       >
         <Search aria-hidden="true" className="size-4 shrink-0" />
-        <span className="hidden text-small lg:inline">Rechercher</span>
+        <span className="hidden type-small lg:inline">Rechercher</span>
         <kbd className="ml-1 hidden rounded-xs border border-border px-1.5 py-0.5 text-[0.75rem] text-muted-foreground lg:inline">
           ⌘K
         </kbd>
@@ -61,8 +61,8 @@ export function SearchDialog({ className }: { className?: string }) {
           className="max-w-[calc(100%-2rem)] rounded-xl bg-popover sm:max-w-lg"
         >
           <DialogHeader className="pr-12">
-            <DialogTitle className="font-serif text-h3">Rechercher</DialogTitle>
-            <DialogDescription className="text-small text-muted-foreground">
+            <DialogTitle className="font-serif type-h3">Rechercher</DialogTitle>
+            <DialogDescription className="type-small text-muted-foreground">
               La recherche plein texte sera activée avec la mise en ligne du
               journal. Le champ ci-dessous est encore inerte.
             </DialogDescription>
@@ -75,7 +75,7 @@ export function SearchDialog({ className }: { className?: string }) {
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="recherche-globale" className="text-small">
+            <Label htmlFor="recherche-globale" className="type-small">
               Mots-clés
             </Label>
             <Input
@@ -87,7 +87,7 @@ export function SearchDialog({ className }: { className?: string }) {
               placeholder="Ex. : marché pétrolier, CEMAC, startup"
               className="h-11 text-[1.0625rem]"
             />
-            <p className="text-small text-muted-foreground" role="status">
+            <p className="type-small text-muted-foreground" role="status">
               {term.trim().length === 0
                 ? "Saisissez un mot-clé pour préparer votre recherche."
                 : `Aucun résultat : l'index de recherche n'est pas encore en service.`}

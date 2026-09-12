@@ -56,8 +56,8 @@ export function MobileNav() {
       >
         <SheetHeader className="flex-row items-center justify-between border-b border-border p-4">
           <div>
-            <SheetTitle className="font-serif text-h3">Navigation</SheetTitle>
-            <SheetDescription className="text-small text-muted-foreground">
+            <SheetTitle className="font-serif type-h3">Navigation</SheetTitle>
+            <SheetDescription className="type-small text-muted-foreground">
               Les huit rubriques du magazine.
             </SheetDescription>
           </div>
@@ -75,7 +75,7 @@ export function MobileNav() {
                   value={section.slug}
                   className="border-b border-border"
                 >
-                  <AccordionTrigger className="min-h-[44px] px-2 text-left font-serif text-body font-semibold">
+                  <AccordionTrigger className="min-h-[44px] px-2 text-left font-serif type-body font-semibold">
                     {section.label}
                   </AccordionTrigger>
                   <AccordionContent className="pb-2">
@@ -84,7 +84,7 @@ export function MobileNav() {
                         <SheetClose asChild>
                           <Link
                             href={sectionHref(section.slug)}
-                            className="flex min-h-[44px] items-center rounded-xs px-4 text-small font-semibold text-accent hover:bg-surface-muted"
+                            className="flex min-h-[44px] items-center rounded-xs px-4 type-small font-semibold text-accent hover:bg-surface-muted"
                           >
                             Toute la rubrique
                           </Link>
@@ -95,7 +95,7 @@ export function MobileNav() {
                           <SheetClose asChild>
                             <Link
                               href={subSectionHref(section.slug, child.slug)}
-                              className="flex min-h-[44px] items-center rounded-xs px-4 text-small text-muted-foreground hover:bg-surface-muted hover:text-foreground"
+                              className="flex min-h-[44px] items-center rounded-xs px-4 type-small text-muted-foreground hover:bg-surface-muted hover:text-foreground"
                             >
                               {child.label}
                             </Link>
@@ -110,7 +110,7 @@ export function MobileNav() {
                   <SheetClose asChild>
                     <Link
                       href={sectionHref(section.slug)}
-                      className="flex min-h-[44px] items-center px-2 py-2 font-serif text-body font-semibold hover:bg-surface-muted"
+                      className="flex min-h-[44px] items-center px-2 py-2 font-serif type-body font-semibold hover:bg-surface-muted"
                     >
                       {section.label}
                     </Link>
@@ -126,7 +126,7 @@ export function MobileNav() {
                 <SheetClose asChild>
                   <Link
                     href={page.href}
-                    className="flex min-h-[44px] items-center rounded-xs px-2 text-small text-muted-foreground hover:bg-surface-muted hover:text-foreground"
+                    className="flex min-h-[44px] items-center rounded-xs px-2 type-small text-muted-foreground hover:bg-surface-muted hover:text-foreground"
                   >
                     {page.label}
                   </Link>
@@ -137,7 +137,7 @@ export function MobileNav() {
               <SheetClose asChild>
                 <Link
                   href="/design-system"
-                  className="flex min-h-[44px] items-center rounded-xs px-2 text-small text-muted-foreground hover:bg-surface-muted hover:text-foreground"
+                  className="flex min-h-[44px] items-center rounded-xs px-2 type-small text-muted-foreground hover:bg-surface-muted hover:text-foreground"
                 >
                   Design system
                 </Link>
@@ -150,7 +150,7 @@ export function MobileNav() {
 
         <div className="flex flex-col gap-4 p-4">
           <div className="flex flex-col gap-2">
-            <span className="text-small font-medium text-muted-foreground">
+            <span className="type-small font-medium text-muted-foreground">
               Thème
             </span>
             <ThemeToggle labelled className="self-start" />

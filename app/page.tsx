@@ -22,7 +22,7 @@ export default function HomePage() {
         actions={
           <Link
             href="/design-system"
-            className="inline-flex items-center gap-2 rounded-md bg-primary px-4 text-small font-semibold text-primary-foreground transition-colors touch-target hover:bg-primary/90"
+            className="inline-flex items-center gap-2 rounded-md bg-primary px-4 type-small font-semibold text-primary-foreground transition-colors touch-target hover:bg-primary/90"
           >
             Ouvrir le design system
             <ArrowRight aria-hidden="true" className="size-4" />
@@ -65,8 +65,8 @@ export default function HomePage() {
               key={card.title}
               className="rounded-md border border-border bg-card p-5"
             >
-              <h3 className="font-serif text-h3">{card.title}</h3>
-              <p className="mt-2 text-small text-muted-foreground">
+              <h3 className="font-serif type-h3">{card.title}</h3>
+              <p className="mt-2 type-small text-muted-foreground">
                 {card.body}
               </p>
             </li>
@@ -89,8 +89,8 @@ export default function HomePage() {
                   accentBorderClass[section.accent]
                 )}
               >
-                <span className="font-serif text-h3">{section.label}</span>
-                <span className="mt-2 text-small text-muted-foreground">
+                <span className="font-serif type-h3">{section.label}</span>
+                <span className="mt-2 type-small text-muted-foreground">
                   {section.children.length > 0
                     ? section.children.map((child) => child.label).join(" · ")
                     : "Pas de sous-rubrique"}

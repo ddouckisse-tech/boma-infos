@@ -53,7 +53,7 @@ function StatusLine({
   return (
     <p
       className={cn(
-        "inline-flex items-center gap-2 text-small",
+        "inline-flex items-center gap-2 type-small",
         tone === "ok" ? "text-[var(--success)]" : "text-muted-foreground",
         className
       )}

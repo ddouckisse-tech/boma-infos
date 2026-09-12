@@ -5,7 +5,7 @@ import { PREFERENCES_SCRIPT } from "@/lib/preferences";
  *
  * It runs before the first paint, so the stored theme (and the data saver
  * flag) are already on <html> when the browser paints: no flash.
- * Authorised in the CSP by its SHA-256 hash, see `middleware.ts`.
+ * It is the only inline script the project owns (see `lib/security-headers.ts`).
  */
 export function PreferencesScript() {
   return (

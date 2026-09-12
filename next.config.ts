@@ -1,5 +1,5 @@
 import type { NextConfig } from "next";
-import { STATIC_SECURITY_HEADERS } from "./lib/security-headers";
+import { securityHeaders } from "./lib/security-headers";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -12,8 +12,9 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        // Toutes les réponses, y compris les pages prérendues statiquement.
         source: "/:path*",
-        headers: [...STATIC_SECURITY_HEADERS],
+        headers: securityHeaders(),
       },
     ];
   },

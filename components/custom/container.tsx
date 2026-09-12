@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 type ContainerProps = React.ComponentProps<"div"> & {
-  /** `page` = 1280 px (CDC §3.3), `reading` = 68ch reading column (CDC §3.2). */
+  /** `page` = 1280 px (CDC §3.3), `reading` = the 65–75 character column (§3.2). */
   width?: "page" | "reading" | "wide";
   as?: "div" | "section" | "header" | "footer" | "nav" | "main" | "article";
 };

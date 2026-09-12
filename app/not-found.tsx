@@ -18,7 +18,7 @@ export default function NotFound() {
         actions={
           <Link
             href="/"
-            className="inline-flex items-center rounded-md bg-primary px-4 text-small font-semibold text-primary-foreground transition-colors touch-target hover:bg-primary/90"
+            className="inline-flex items-center rounded-md bg-primary px-4 type-small font-semibold text-primary-foreground transition-colors touch-target hover:bg-primary/90"
           >
             Retour à l&apos;accueil
           </Link>
@@ -29,7 +29,7 @@ export default function NotFound() {
           <li>
             <Link
               href="/design-system"
-              className="inline-flex items-center rounded-md border border-border px-4 text-small transition-colors touch-target hover:bg-surface-muted"
+              className="inline-flex items-center rounded-md border border-border px-4 type-small transition-colors touch-target hover:bg-surface-muted"
             >
               Design system
             </Link>
@@ -38,7 +38,7 @@ export default function NotFound() {
             <li key={section.slug}>
               <Link
                 href={sectionHref(section.slug)}
-                className="inline-flex items-center rounded-md border border-border px-4 text-small transition-colors touch-target hover:bg-surface-muted"
+                className="inline-flex items-center rounded-md border border-border px-4 type-small transition-colors touch-target hover:bg-surface-muted"
               >
                 {section.label}
               </Link>

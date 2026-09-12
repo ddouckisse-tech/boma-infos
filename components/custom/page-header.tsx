@@ -30,21 +30,21 @@ export function PageHeader({
   return (
     <header className={cn("border-b border-border py-8 md:py-10", className)}>
       <Container width={width}>
-        {breadcrumb && <div className="mb-4 text-small">{breadcrumb}</div>}
+        {breadcrumb && <div className="mb-4 type-small">{breadcrumb}</div>}
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div className="min-w-0">
             {eyebrow && (
-              <p className="mb-2 text-small font-semibold tracking-wide text-accent uppercase">
+              <p className="mb-2 type-small font-semibold tracking-wide text-accent uppercase">
                 {eyebrow}
               </p>
             )}
-            <h1 className="font-serif text-h1 text-foreground">{title}</h1>
+            <h1 className="font-serif type-h1 text-foreground">{title}</h1>
             <span
               aria-hidden="true"
               className="mt-4 block h-[3px] w-16 rounded-xs bg-brand-magenta"
             />
             {description && (
-              <p className="mt-4 max-w-reading text-body text-muted-foreground">
+              <p className="mt-4 max-w-reading type-body text-muted-foreground">
                 {description}
               </p>
             )}

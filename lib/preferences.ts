@@ -34,9 +34,9 @@ export const isThemeChoice = (value: unknown): value is ThemeChoice =>
 /**
  * Source of the blocking inline script.
  *
- * Kept as a single exported constant so that `middleware.ts` can hash exactly
- * the bytes that are served and authorise them in the Content-Security-Policy
- * without resorting to 'unsafe-inline'.
+ * Kept as a single exported constant: it is the only inline script this
+ * project owns, which keeps the Content-Security-Policy surface auditable
+ * (see `lib/security-headers.ts`).
  */
 export const PREFERENCES_SCRIPT = `(function(){try{
 var d=document.documentElement;

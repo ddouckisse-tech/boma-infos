@@ -170,7 +170,7 @@ export const SEMANTIC_TOKENS = [
 export const TYPE_SCALE = [
   {
     token: "display",
-    className: "text-display",
+    className: "type-display",
     mobile: "32 px",
     desktop: "56 px",
     usage: "Titre de la une",
@@ -178,7 +178,7 @@ export const TYPE_SCALE = [
   },
   {
     token: "h1",
-    className: "text-h1",
+    className: "type-h1",
     mobile: "28 px",
     desktop: "40 px",
     usage: "Titre d'article",
@@ -186,7 +186,7 @@ export const TYPE_SCALE = [
   },
   {
     token: "h2",
-    className: "text-h2",
+    className: "type-h2",
     mobile: "22 px",
     desktop: "28 px",
     usage: "Intertitres",
@@ -194,7 +194,7 @@ export const TYPE_SCALE = [
   },
   {
     token: "h3",
-    className: "text-h3",
+    className: "type-h3",
     mobile: "19 px",
     desktop: "22 px",
     usage: "Sous-sections",
@@ -202,7 +202,7 @@ export const TYPE_SCALE = [
   },
   {
     token: "body",
-    className: "text-body font-sans",
+    className: "type-body font-sans",
     mobile: "17 px",
     desktop: "19 px",
     usage: "Corps d'article",
@@ -211,7 +211,7 @@ export const TYPE_SCALE = [
   },
   {
     token: "small",
-    className: "text-small font-sans",
+    className: "type-small font-sans",
     mobile: "14 px",
     desktop: "15 px",
     usage: "Légendes, signatures, dates",
