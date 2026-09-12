@@ -1,104 +1,254 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { PageHeader } from "@/components/custom/page-header";
+import { ArticleCard } from "@/components/custom/article-card";
+import { Container } from "@/components/custom/container";
+import { EmptyState } from "@/components/custom/empty-state";
+import { FeaturedHero } from "@/components/custom/featured-hero";
+import { NewsletterForm } from "@/components/custom/newsletter-form";
 import { Section } from "@/components/custom/section";
-import { SECTIONS, accentBorderClass, sectionHref } from "@/lib/navigation";
+import { SiteStructuredData } from "@/components/custom/structured-data";
+import { getHomepage } from "@/lib/content/server";
+import { formatDate } from "@/lib/format";
+import { accentTextClass, sectionHref, toAccent } from "@/lib/navigation";
+import { SITE } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
+// Littéral et non `REVALIDATE_SECONDS` : Next analyse statiquement les
+// exports de configuration de segment et n'en résout pas les identifiants
+// importés. La valeur de référence est dans `lib/content/server.ts`.
+export const revalidate = 300;
+
 /**
- * Landing page of the foundations milestone.
+ * Home page (CDC §4.2).
  *
- * The real home page — lead story, "À la une", latest per section — is built
- * in milestone 2 (CAHIER-DES-CHARGES.md §4.2). Until then this page states
- * plainly where the project stands and opens the design system gallery.
+ * The order answers one question — what matters today: the lead story, then
+ * "À la une", then the standing dossier, then the latest, then one rail per
+ * section, then "Espace pro". Nine `<h1>` on the legacy home page become
+ * exactly one here, carried by the positioning line under the masthead
+ * (CDC §3.5).
+ *
+ * Fully static, revalidated every five minutes: a reader in Libreville gets a
+ * cached document, not a database round trip.
  */
-export default function HomePage() {
+export default async function HomePage() {
+  const { lead, top, dossier, latest, bySection, espacePro } =
+    await getHomepage();
+
+  if (!lead && latest.length === 0) {
+    return (
+      <Section>
+        <EmptyState
+          title="Aucun article publié"
+          description="Le journal est en place mais le fonds éditorial n'a pas encore été chargé. Exécutez « bunx convex run seeding:run » pour installer le jeu de démonstration."
+        />
+      </Section>
+    );
+  }
+
+  const today = Date.now();
+
   return (
     <>
-      <PageHeader
-        eyebrow="Refonte applicative · lot 1"
-        title="Le Corporate — socle applicatif et design system"
-        description="Le langage visuel du magazine est posé : deux couleurs de marque, deux familles typographiques, une échelle de lecture et des composants accessibles. Le journal public arrive au lot 2."
-        actions={
-          <Link
-            href="/design-system"
-            className="inline-flex items-center gap-2 rounded-md bg-primary px-4 type-small font-semibold text-primary-foreground transition-colors touch-target hover:bg-primary/90"
-          >
-            Ouvrir le design system
-            <ArrowRight aria-hidden="true" className="size-4" />
-          </Link>
-        }
-      />
+      <SiteStructuredData />
 
-      <Section
-        title="Ce que ce socle contient"
-        description="Rien de plus que les fondations : ni modèle de contenu, ni page d'article, ni authentification fonctionnelle."
-      >
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {[
-            {
-              title: "Jetons de design",
-              body: "Échelles navy et magenta dérivées des couleurs relevées en production, couleurs fonctionnelles, thème clair et thème sombre.",
-            },
-            {
-              title: "Typographie",
-              body: "Source Serif 4 et Inter, auto-hébergées. Six familles de polices supprimées, aucune requête vers Google Fonts.",
-            },
-            {
-              title: "Composants de base",
-              body: "En-tête, méga-menu, tiroir mobile, pied de page, bascules de thème et d'économie de données, mise en page.",
-            },
-            {
-              title: "Sécurité",
-              body: "HSTS, politique de sécurité du contenu stricte, nosniff, Referrer-Policy, X-Frame-Options, Permissions-Policy.",
-            },
-            {
-              title: "Accessibilité",
-              body: "lang=fr-FR, lien d'évitement, focus visible de 2 px, cibles tactiles de 44 px, respect du mouvement réduit.",
-            },
-            {
-              title: "Convex et better-auth",
-              body: "Déploiement de développement branché, schéma vide, authentification câblée sans écran de connexion.",
-            },
-          ].map((card) => (
-            <li
-              key={card.title}
-              className="rounded-md border border-border bg-card p-5"
+      {/* Bandeau de une : porte l'unique <h1> de la page. */}
+      <div className="border-b border-border bg-surface-subtle py-4">
+        <Container className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+          <h1 className="font-serif type-h3 text-foreground">
+            {SITE.tagline}
+          </h1>
+          <p className="type-small text-muted-foreground">
+            Édition du {formatDate(today)}
+          </p>
+        </Container>
+      </div>
+
+      {lead && (
+        <Section spacing="loose" aria-label="Article à la une">
+          <FeaturedHero article={lead} />
+        </Section>
+      )}
+
+      {top.length > 0 && (
+        <Section
+          tone="muted"
+          title="À la une"
+          description="La sélection de la rédaction."
+          action={
+            <Link
+              href="/rubrique/business-lifestyle"
+              className="inline-flex items-center gap-1 type-small font-semibold text-accent underline-offset-4 hover:underline"
             >
-              <h3 className="font-serif type-h3">{card.title}</h3>
-              <p className="mt-2 type-small text-muted-foreground">
-                {card.body}
-              </p>
-            </li>
-          ))}
-        </ul>
-      </Section>
+              Toute l&apos;actualité
+              <ArrowRight aria-hidden="true" className="size-4" />
+            </Link>
+          }
+        >
+          <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {top.map((article) => (
+              <li key={article.slug} className="min-w-0">
+                <ArticleCard article={article} />
+              </li>
+            ))}
+          </ul>
+        </Section>
+      )}
 
-      <Section
-        tone="muted"
-        title="Les huit rubriques"
-        description="L'arborescence éditoriale relevée en production est conservée ; l'orthographe de « Réglementations » est corrigée."
-      >
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {SECTIONS.map((section) => (
-            <li key={section.slug}>
+      {dossier && (
+        <Section spacing="loose">
+          <div className="grid gap-6 rounded-md border border-border border-l-2 border-l-brand-magenta bg-card p-6 lg:grid-cols-[2fr_1fr] lg:items-center lg:gap-10 lg:p-8">
+            <div className="min-w-0">
+              <p className="type-small font-semibold tracking-wide text-accent uppercase">
+                Dossier spécial
+              </p>
+              <h2 className="mt-3 font-serif type-h1 text-balance">
+                <Link
+                  href={`/article/${dossier.slug}`}
+                  className="underline-offset-4 hover:underline"
+                >
+                  {dossier.title}
+                </Link>
+              </h2>
+              <p className="mt-3 max-w-reading type-body text-muted-foreground">
+                {dossier.dek}
+              </p>
               <Link
-                href={sectionHref(section.slug)}
-                className={cn(
-                  "flex h-full flex-col rounded-md border-t-2 bg-card p-4 transition-colors hover:bg-surface-muted",
-                  accentBorderClass[section.accent]
-                )}
+                href={`/article/${dossier.slug}`}
+                className="mt-5 inline-flex items-center gap-2 rounded-md border border-border px-4 type-small font-semibold transition-colors touch-target hover:bg-surface-muted"
               >
-                <span className="font-serif type-h3">{section.label}</span>
-                <span className="mt-2 type-small text-muted-foreground">
-                  {section.children.length > 0
-                    ? section.children.map((child) => child.label).join(" · ")
-                    : "Pas de sous-rubrique"}
-                </span>
+                Ouvrir le dossier
+                <ArrowRight aria-hidden="true" className="size-4" />
               </Link>
-            </li>
-          ))}
-        </ul>
+            </div>
+            <dl className="grid grid-cols-2 gap-4 lg:grid-cols-1">
+              <div className="rounded-md bg-surface-muted p-4">
+                <dt className="type-small text-muted-foreground">Signature</dt>
+                <dd className="mt-1 type-body font-semibold">
+                  {dossier.authorName}
+                </dd>
+              </div>
+              <div className="rounded-md bg-surface-muted p-4">
+                <dt className="type-small text-muted-foreground">Lecture</dt>
+                <dd data-numeric className="mt-1 type-body font-semibold">
+                  {dossier.readingMinutes} minutes
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </Section>
+      )}
+
+      {latest.length > 0 && (
+        <Section
+          title="Derniers articles"
+          description="Ce qui vient d'être publié, toutes rubriques confondues."
+        >
+          <ul className="divide-y divide-border border-y border-border">
+            {latest.map((article) => (
+              <li key={article.slug}>
+                <ArticleCard article={article} variant="list" />
+              </li>
+            ))}
+          </ul>
+        </Section>
+      )}
+
+      {bySection.map((section, index) => (
+        <Section
+          key={section.slug}
+          tone={index % 2 === 0 ? "muted" : "default"}
+          title={
+            <span className={cn(accentTextClass[toAccent(section.accent)])}>
+              {section.name}
+            </span>
+          }
+          description={section.description}
+          action={
+            <Link
+              href={sectionHref(section.slug)}
+              className="inline-flex items-center gap-1 type-small font-semibold text-accent underline-offset-4 hover:underline"
+            >
+              Voir la rubrique
+              <ArrowRight aria-hidden="true" className="size-4" />
+            </Link>
+          }
+        >
+          {/* Un article illustré par rubrique, les suivants en titres seuls.
+              Vingt-et-une vignettes sur une page d'accueil, c'est un mur de
+              photos et trois cents kilo-octets — le §5.4 en plafonne six
+              cents pour toute la page. La hiérarchie y gagne aussi : chaque
+              rubrique met en avant un sujet, pas trois. */}
+          <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr] lg:gap-10">
+            <ArticleCard
+              article={section.articles[0]}
+              showCategory={false}
+              className="min-w-0"
+            />
+            {section.articles.length > 1 && (
+              <ul className="divide-y divide-border self-start">
+                {section.articles.slice(1).map((article) => (
+                  <li key={article.slug} className="min-w-0">
+                    <ArticleCard article={article} variant="compact" />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </Section>
+      ))}
+
+      {espacePro.length > 0 && (
+        <Section
+          title="Espace pro"
+          description="Réglementation, appels d'offres, formation et documentation — l'information directement utilisable."
+          action={
+            <Link
+              href="/rubrique/espace-pro"
+              className="inline-flex items-center gap-1 type-small font-semibold text-accent underline-offset-4 hover:underline"
+            >
+              Tout l&apos;espace pro
+              <ArrowRight aria-hidden="true" className="size-4" />
+            </Link>
+          }
+        >
+          <div className="grid gap-8 lg:grid-cols-[1.4fr_1fr]">
+            <ul className="divide-y divide-border rounded-md border border-border px-4">
+              {espacePro.map((article) => (
+                <li key={article.slug}>
+                  <ArticleCard article={article} variant="compact" />
+                </li>
+              ))}
+            </ul>
+            <div className="rounded-md border border-border bg-surface-muted p-6">
+              <h3 className="font-serif type-h3">Docuthèque</h3>
+              <p className="mt-2 type-small text-muted-foreground">
+                Rapports, textes réglementaires et études, téléchargeables —
+                le poids du fichier est annoncé avant le clic.
+              </p>
+              <Link
+                href="/docutheque"
+                className="mt-4 inline-flex items-center gap-2 rounded-md bg-primary px-4 type-small font-semibold text-primary-foreground transition-colors touch-target hover:bg-primary/90"
+              >
+                Ouvrir la docuthèque
+                <ArrowRight aria-hidden="true" className="size-4" />
+              </Link>
+            </div>
+          </div>
+        </Section>
+      )}
+
+      <Section tone="muted" spacing="loose">
+        <div className="grid gap-6 lg:grid-cols-[1fr_1fr] lg:items-center lg:gap-12">
+          <div className="min-w-0">
+            <h2 className="font-serif type-h2">La lettre hebdomadaire</h2>
+            <p className="mt-2 max-w-reading type-body text-muted-foreground">
+              Un courriel par semaine : les articles à retenir, les échéances
+              réglementaires, les appels d&apos;offres ouverts. Inscription
+              confirmée par courriel, désinscription en un clic.
+            </p>
+          </div>
+          <NewsletterForm source="accueil" variant="block" />
+        </div>
       </Section>
     </>
   );

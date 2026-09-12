@@ -1,95 +1,139 @@
 "use client";
 
-import { useId } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Send } from "lucide-react";
-import { toast } from "sonner";
+import { useActionState, useId, useMemo } from "react";
+import Link from "next/link";
+import { CheckCircle2, Send } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ActionButton } from "@/components/custom/action-button";
+import {
+  subscribeToNewsletter,
+  type NewsletterState,
+} from "@/lib/actions";
+import { antiRobot } from "@/lib/anti-robot";
 import { cn } from "@/lib/utils";
 
 /**
- * Newsletter opt-in schema. Zod is the single source of truth, shared between
- * client and server once the mutation exists (CAHIER-DES-CHARGES.md §5.1).
- */
-export const newsletterSchema = z.object({
-  email: z
-    .string()
-    .trim()
-    .min(1, "Indiquez votre adresse électronique.")
-    .refine(
-      (value) => z.email().safeParse(value).success,
-      "Cette adresse électronique n'est pas valide."
-    ),
-});
-
-export type NewsletterInput = z.infer<typeof newsletterSchema>;
-
-/**
- * Newsletter sign-up.
+ * Newsletter sign-up, with double opt-in (CDC §4.2).
  *
- * Validation is real; submission is deliberately inert in milestone 1 — the
- * double opt-in flow belongs to milestone 2 (CAHIER-DES-CHARGES.md §4.2).
+ * The form posts to a server action, so it works with JavaScript disabled and
+ * ships no validation library to the browser. No mail provider exists in
+ * milestone 2: rather than claim an email was sent, the confirmation link is
+ * shown plainly and labelled as standing in for it.
  */
-export function NewsletterForm({ className }: { className?: string }) {
+export function NewsletterForm({
+  className,
+  source = "pied-de-page",
+  variant = "inline",
+}: {
+  className?: string;
+  source?: string;
+  variant?: "inline" | "block";
+}) {
   const id = useId();
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors, isSubmitting },
-  } = useForm<NewsletterInput>({
-    resolver: zodResolver(newsletterSchema),
-    defaultValues: { email: "" },
-    mode: "onSubmit",
-  });
+  const [state, action, pending] = useActionState<NewsletterState, FormData>(
+    subscribeToNewsletter,
+    { status: "idle" }
+  );
 
-  const onSubmit = handleSubmit(async () => {
-    toast.info("Inscription enregistrée localement", {
-      description:
-        "Le double opt-in sera branché avec la mise en ligne du journal.",
-    });
-    reset();
-  });
+  // Figé au premier rendu : l'horodatage sert à repérer une soumission
+  // instantanée, donc robotique.
+  const openedAt = useMemo(() => String(Date.now()), []);
+
+  if (state.status === "pending" || state.status === "already") {
+    return (
+      <div
+        className={cn(
+          "rounded-md border border-border bg-background p-4",
+          className
+        )}
+        role="status"
+      >
+        <p className="flex items-start gap-2 type-small font-semibold text-foreground">
+          <CheckCircle2
+            aria-hidden="true"
+            className="mt-0.5 size-4 shrink-0 text-success-token"
+          />
+          {state.status === "already"
+            ? "Cette adresse est déjà inscrite."
+            : "Demande enregistrée."}
+        </p>
+        {state.status === "pending" && (
+          <p className="mt-2 type-small text-muted-foreground">
+            Il reste une étape : confirmer l&apos;inscription. Le service
+            d&apos;envoi de courriels n&apos;étant pas encore branché, le lien
+            de confirmation est affiché ici.
+          </p>
+        )}
+        {state.status === "pending" && state.confirmPath && (
+          <Link
+            href={state.confirmPath}
+            className="mt-3 inline-flex items-center rounded-md bg-primary px-4 type-small font-semibold text-primary-foreground transition-colors touch-target hover:bg-primary/90"
+          >
+            Confirmer mon inscription
+          </Link>
+        )}
+      </div>
+    );
+  }
 
   const errorId = `${id}-erreur`;
+  const hasError = state.status === "error";
 
   return (
-    <form
-      onSubmit={onSubmit}
-      noValidate
-      className={cn("grid gap-2", className)}
-    >
+    <form action={action} className={cn("grid gap-2", className)}>
       <Label htmlFor={id} className="type-small font-medium">
         Recevoir la lettre hebdomadaire
       </Label>
-      <div className="flex flex-wrap gap-2">
+
+      <input type="hidden" name="source" value={source} />
+      <input type="hidden" name={antiRobot.timestampField} value={openedAt} />
+      {/* Piège à robots : hors écran, hors ordre de tabulation, hors arbre
+          d'accessibilité. Un lecteur d'écran ne le rencontre jamais. */}
+      <div aria-hidden="true" className="sr-only">
+        <label htmlFor={`${id}-hp`}>Ne pas remplir</label>
+        <input
+          id={`${id}-hp`}
+          type="text"
+          name={antiRobot.honeypotField}
+          tabIndex={-1}
+          autoComplete="off"
+        />
+      </div>
+
+      <div
+        className={cn(
+          "flex gap-2",
+          variant === "inline" ? "flex-wrap" : "flex-col sm:flex-row"
+        )}
+      >
         <Input
           id={id}
           type="email"
+          name="email"
           inputMode="email"
           autoComplete="email"
+          required
           placeholder="vous@exemple.ga"
-          aria-invalid={errors.email ? true : undefined}
-          aria-describedby={errors.email ? errorId : undefined}
+          aria-invalid={hasError || undefined}
+          aria-describedby={hasError ? errorId : `${id}-aide`}
           className="h-11 min-w-0 flex-1 type-body"
-          {...register("email")}
         />
-        <ActionButton type="submit" disabled={isSubmitting}>
+        <ActionButton type="submit" disabled={pending}>
           <Send aria-hidden="true" className="size-4" />
-          S&apos;inscrire
+          {pending ? "Envoi…" : "S'inscrire"}
         </ActionButton>
       </div>
-      {errors.email && (
+
+      {hasError && (
         <p id={errorId} role="alert" className="type-small text-destructive">
-          {errors.email.message}
+          {state.message}
         </p>
       )}
-      <p className="type-small text-muted-foreground">
-        Un courriel par semaine. Désinscription en un clic.
+
+      <p id={`${id}-aide`} className="type-small text-muted-foreground">
+        Un courriel par semaine. Confirmation demandée, désinscription en un
+        clic.
       </p>
     </form>
   );

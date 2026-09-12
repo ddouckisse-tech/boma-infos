@@ -2,16 +2,22 @@
 
 import { useId } from "react";
 import { Gauge } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
 import { usePreferences } from "@/components/providers/preferences-provider";
 import { cn } from "@/lib/utils";
 
 /**
  * Data saver switch (CDC §2.2).
  *
- * Milestone 1 establishes the state, the storage key and the `data-data-saver`
- * attribute on <html>; milestone 2 reads it to serve low-definition images and
- * stop preloading video. The reader's choice is remembered across visits.
+ * Reads the `data-data-saver` attribute the blocking script of milestone 1
+ * put on `<html>`, and writes it back. Milestone 2 consumes it: every lazy
+ * picture drops to its 320 px rendition and no video is ever preloaded.
+ *
+ * Built on a **native checkbox** rather than `components/ui/switch.tsx`: the
+ * Radix primitive would pull its own runtime into every page of the site for
+ * one control in the footer, and the budget of §5.4 pays for articles, not
+ * for a styled checkbox. `role="switch"` is implicit on a checkbox with
+ * `switch` semantics, so it is declared explicitly; the label, the focus
+ * ring and the keyboard behaviour come free with the native element.
  */
 export function DataSaverToggle({
   className,
@@ -35,20 +41,30 @@ export function DataSaverToggle({
     >
       <Gauge
         aria-hidden="true"
-        className="mt-1 size-4 shrink-0 text-muted-foreground"
+        className="mt-3.5 size-4 shrink-0 text-muted-foreground"
       />
       <div className="min-w-0 flex-1">
         <label
           htmlFor={id}
-          className="flex min-h-[44px] cursor-pointer items-center gap-3 type-small font-medium text-foreground"
+          className="flex min-h-11 cursor-pointer items-center gap-3 type-small font-medium text-foreground"
         >
-          <Switch
-            id={id}
-            checked={dataSaver}
-            disabled={!ready}
-            onCheckedChange={setDataSaver}
-            aria-describedby={variant === "block" ? `${id}-help` : undefined}
-          />
+          <span className="relative inline-flex shrink-0">
+            <input
+              id={id}
+              type="checkbox"
+              role="switch"
+              checked={dataSaver}
+              disabled={!ready}
+              onChange={(event) => setDataSaver(event.target.checked)}
+              aria-describedby={variant === "block" ? `${id}-help` : undefined}
+              className="peer size-[1.15rem] w-9 cursor-pointer appearance-none rounded-full border border-border-strong bg-input/20 transition-colors checked:border-primary checked:bg-primary disabled:cursor-not-allowed disabled:opacity-50"
+            />
+            {/* Le curseur : purement décoratif, piloté par l'état de la case. */}
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute top-1/2 left-0.5 size-3.5 -translate-y-1/2 rounded-full bg-foreground transition-transform peer-checked:translate-x-[1.1rem] peer-checked:bg-primary-foreground"
+            />
+          </span>
           <span>Économie de données</span>
         </label>
         {variant === "block" && (

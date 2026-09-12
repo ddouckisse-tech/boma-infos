@@ -9,6 +9,7 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import { toast } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
 import {
   Accordion,
   AccordionContent,
@@ -63,6 +64,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Tooltip,
   TooltipContent,
+  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { ActionButton } from "@/components/custom/action-button";
@@ -132,7 +134,14 @@ export function ComponentStates() {
   const [switched, setSwitched] = useState(true);
 
   return (
-    <div>
+    // La galerie monte ses propres fournisseurs : la mise en page publique
+    // ne charge plus ni `sonner` ni le survol Radix (budget §5.4).
+    <TooltipProvider delayDuration={200}>
+      <Toaster
+        position="bottom-right"
+        closeButton
+        toastOptions={{ className: "font-sans" }}
+      />
       <Block
         title="Boutons"
         description="ActionButton compose le bouton shadcn en imposant une cible de 44 px et un libellé de 15 px. Six variantes, cinq états."
@@ -527,6 +536,6 @@ export function ComponentStates() {
           </StateCell>
         </StateGrid>
       </Block>
-    </div>
+    </TooltipProvider>
   );
 }

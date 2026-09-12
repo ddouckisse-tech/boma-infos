@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && bun run budget",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
@@ -12,7 +12,13 @@
     "format:check": "prettier --check .",
     "convex:dev": "convex dev --tail-logs disable",
     "verify": "bun run typecheck && bun run lint && bun run build",
-    "dev:full": "convex dev --tail-logs disable --start 'next dev'"
+    "dev:full": "convex dev --tail-logs disable --start 'next dev'",
+    "budget": "bun run scripts/check-budget.ts",
+    "build:only": "next build",
+    "media": "bun run scripts/fetch-media.ts",
+    "documents": "bun run scripts/make-documents.ts",
+    "icons": "bun run scripts/make-icons.ts",
+    "seed": "convex run seeding:run '{\"reset\": true}'"
   },
   "dependencies": {
     "@convex-dev/better-auth": "^0.12.5",

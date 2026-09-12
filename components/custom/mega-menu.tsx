@@ -4,10 +4,10 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 import {
-  SECTIONS,
   accentBorderClass,
   sectionHref,
   subSectionHref,
+  type Section,
 } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 
@@ -30,7 +30,13 @@ import { cn } from "@/lib/utils";
 const OPEN_DELAY_MS = 100;
 const CLOSE_DELAY_MS = 150;
 
-export function MegaMenu({ className }: { className?: string }) {
+export function MegaMenu({
+  sections,
+  className,
+}: {
+  sections: readonly Section[];
+  className?: string;
+}) {
   const baseId = useId();
   const [openSlug, setOpenSlug] = useState<string | null>(null);
   const navRef = useRef<HTMLElement | null>(null);
@@ -84,7 +90,7 @@ export function MegaMenu({ className }: { className?: string }) {
       }}
     >
       <ul className="flex flex-wrap items-center gap-x-1">
-        {SECTIONS.map((section) => {
+        {sections.map((section) => {
           const hasChildren = section.children.length > 0;
           const isOpen = openSlug === section.slug;
           const panelId = `${baseId}-${section.slug}`;

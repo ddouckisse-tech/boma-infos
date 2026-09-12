@@ -543,6 +543,191 @@
 }
 
 /* --------------------------------------------------------------------------
+   7 bis. Images et économie de données (§2.2, §5.4)
+
+   Une image différée (`loading="lazy"`) placée dans un élément
+   `display: none` n'entre jamais en intersection avec la fenêtre : le
+   navigateur ne la télécharge pas. C'est ce qui permet de rendre les deux
+   variantes — pleine définition et 320 px — et de n'en payer qu'une seule.
+   La seule exception est l'image prioritaire de la une, chargée en `eager`
+   pour tenir le LCP : elle n'est donc pas dédoublée (voir le commentaire de
+   `components/custom/responsive-image.tsx`).
+   -------------------------------------------------------------------------- */
+.lc-media {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  /* La couleur dominante de la photo est posée en attribut `style` : la boîte
+     est déjà occupée avant le premier octet, donc aucun décalage. */
+  background-color: var(--surface-muted);
+}
+
+.lc-media picture,
+.lc-media img {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.lc-media-lite {
+  display: none;
+}
+
+[data-data-saver="on"] .lc-media-full {
+  display: none;
+}
+
+[data-data-saver="on"] .lc-media-lite {
+  display: block;
+}
+
+/* Média lourd (vidéo, galerie) : remplacé par un espace réservé cliquable. */
+[data-data-saver="on"] [data-heavy-media="hide"] {
+  display: none;
+}
+
+[data-heavy-media="notice"] {
+  display: none;
+}
+
+[data-data-saver="on"] [data-heavy-media="notice"] {
+  display: flex;
+}
+
+/* --------------------------------------------------------------------------
+   7 quater. Boîtes de dialogue natives
+
+   L'élément `<dialog>` gère lui-même la modalité, le piège de focus, la
+   touche Échap et l'inertie de l'arrière-plan. Les primitives Radix qui
+   faisaient le même travail coûtaient une vingtaine de kilo-octets de
+   JavaScript sur chaque page du site (§5.4), pour un tiroir de navigation
+   et un champ de recherche.
+
+   Sur Safari iOS 15.0–15.3, `showModal()` n'existe pas : le composant
+   retombe sur l'attribut `open`, qui affiche la boîte sans voile. Les règles
+   ci-dessous la positionnent correctement dans les deux cas.
+   -------------------------------------------------------------------------- */
+dialog.lc-dialog {
+  margin: 0;
+  max-inline-size: none;
+  max-block-size: none;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  overflow: visible;
+}
+
+dialog.lc-dialog::backdrop {
+  background-color: color-mix(in oklab, var(--color-navy-950) 55%, transparent);
+}
+
+/* Tiroir latéral : plein écran en hauteur, contre le bord de départ. */
+dialog.lc-drawer {
+  position: fixed;
+  inset-block: 0;
+  inset-inline-start: 0;
+  inline-size: min(22rem, 88vw);
+  block-size: 100%;
+  background-color: var(--popover);
+  border-inline-end: 1px solid var(--border);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* Panneau centré : recherche. */
+dialog.lc-panel {
+  position: fixed;
+  inset-block-start: max(3rem, env(safe-area-inset-top));
+  inset-inline: 0;
+  margin-inline: auto;
+  inline-size: min(32rem, calc(100vw - 2rem));
+  max-block-size: min(80vh, 40rem);
+  background-color: var(--popover);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* Repli sans `showModal()` : la boîte reste au-dessus du contenu. */
+dialog.lc-dialog[open] {
+  z-index: 60;
+}
+
+/* --------------------------------------------------------------------------
+   7 ter. Corps d'article — styles de contenu riche (§3.2)
+   La mesure, l'interligne et les tailles viennent des jetons ; ce bloc ne
+   règle que le rythme vertical, que l'on ne veut pas répéter sur chaque
+   élément du rendu.
+   -------------------------------------------------------------------------- */
+.article-body > * + * {
+  margin-block-start: 1.5rem;
+}
+
+.article-body > h2 {
+  margin-block-start: 2.5rem;
+}
+
+.article-body > h3 {
+  margin-block-start: 2rem;
+}
+
+.article-body a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+.article-body a:hover {
+  text-decoration-thickness: 2px;
+}
+
+/* Progression de lecture : un filet de 3 px, sans ombre ni animation. */
+.reading-progress {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline: 0;
+  z-index: 50;
+  block-size: 3px;
+  background-color: var(--brand-magenta);
+  transform-origin: 0 50%;
+  /* La mise à l'échelle est pilotée par `scroll-timeline` quand le navigateur
+     la gère : aucun JavaScript, aucune écoute d'événement de défilement. */
+}
+
+@supports (animation-timeline: scroll()) {
+  .reading-progress {
+    animation: reading-progress-grow linear;
+    animation-timeline: scroll(root block);
+  }
+
+  @keyframes reading-progress-grow {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+}
+
+@supports not (animation-timeline: scroll()) {
+  /* Sans `scroll-timeline`, le filet reste caché plutôt que figé à zéro :
+     un indicateur qui ne bouge pas est pire que pas d'indicateur. */
+  .reading-progress {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reading-progress {
+    display: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
    8. Focus clavier — hors couche (§3.5)
    Volontairement NON encapsulé dans `@layer base` : plusieurs primitives
    shadcn portent `outline-none` dans la couche `utilities`, qui l'emporterait

@@ -8,11 +8,16 @@ import { authClient } from "@/lib/auth-client";
 const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
 
 /**
- * Convex client wired to Better Auth.
+ * Convex client wired to Better Auth — **not mounted by the public journal**.
  *
- * When `NEXT_PUBLIC_CONVEX_URL` is missing the app still renders: the design
- * system must remain reviewable without a backend. Components that read Convex
- * data guard on `useConvexAvailable()`.
+ * Milestone 2 reads Convex from the server only (`lib/content/server.ts`):
+ * the pages are prerendered, so a reactive browser client would ship tens of
+ * kilobytes of JavaScript and open a WebSocket on every page for data that
+ * never changes between two revalidations. On a budget of 180 Ko of
+ * JavaScript for the whole site (CDC §5.4), that is not affordable.
+ *
+ * Milestone 3 mounts this provider around the private areas, which are
+ * reactive by nature and rendered per request anyway.
  */
 export function ConvexClientProvider({
   children,
@@ -20,8 +25,6 @@ export function ConvexClientProvider({
   children: React.ReactNode;
 }) {
   const client = useMemo(
-    // Public queries must run without a session: the journal is readable by
-    // anyone, so `expectAuth` stays off.
     () => (convexUrl ? new ConvexReactClient(convexUrl) : undefined),
     []
   );

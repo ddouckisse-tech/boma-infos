@@ -1,40 +1,46 @@
 import Link from "next/link";
 import { PageHeader } from "@/components/custom/page-header";
 import { Section } from "@/components/custom/section";
-import { SECTIONS, sectionHref } from "@/lib/navigation";
+import { SearchForm } from "@/components/custom/search-form";
+import { getNavigation } from "@/lib/content/server";
+import { buildSections, sectionHref } from "@/lib/navigation";
 
 /**
- * 404. A soigné page rather than a server error: several pages announced by
- * the footer (À propos, Contacts, mentions légales) are built in later
- * milestones and land here in the meantime.
+ * 404.
+ *
+ * Offers a way forward — search and the section list — rather than a dead
+ * end. The section list is read from the database like everywhere else, so a
+ * renamed section cannot leave a stale link here.
  */
-export default function NotFound() {
+export default async function NotFound() {
+  const sections = buildSections(await getNavigation()).filter(
+    (section) => section.slug !== "espace-pro"
+  );
+
   return (
     <>
       <PageHeader
         eyebrow="Erreur 404"
-        title="Cette page n'existe pas encore"
-        description="Le lot 1 de la refonte ne livre que le socle applicatif et le design system. Les pages éditoriales, la recherche et les espaces privés arrivent aux lots suivants."
-        actions={
-          <Link
-            href="/"
-            className="inline-flex items-center rounded-md bg-primary px-4 type-small font-semibold text-primary-foreground transition-colors touch-target hover:bg-primary/90"
-          >
-            Retour à l&apos;accueil
-          </Link>
-        }
+        title="Cette page n'existe pas"
+        description="L'adresse demandée ne correspond à aucun article ni à aucune rubrique. Elle a peut-être changé, ou le contenu a été retiré."
+        width="reading"
       />
-      <Section title="Aller ailleurs">
+
+      <Section width="reading" spacing="compact">
+        <SearchForm />
+      </Section>
+
+      <Section title="Parcourir les rubriques">
         <ul className="flex flex-wrap gap-2">
           <li>
             <Link
-              href="/design-system"
-              className="inline-flex items-center rounded-md border border-border px-4 type-small transition-colors touch-target hover:bg-surface-muted"
+              href="/"
+              className="inline-flex items-center rounded-md bg-primary px-4 type-small font-semibold text-primary-foreground transition-colors touch-target hover:bg-primary/90"
             >
-              Design system
+              Accueil
             </Link>
           </li>
-          {SECTIONS.map((section) => (
+          {sections.map((section) => (
             <li key={section.slug}>
               <Link
                 href={sectionHref(section.slug)}
@@ -44,6 +50,14 @@ export default function NotFound() {
               </Link>
             </li>
           ))}
+          <li>
+            <Link
+              href="/docutheque"
+              className="inline-flex items-center rounded-md border border-border px-4 type-small transition-colors touch-target hover:bg-surface-muted"
+            >
+              Docuthèque
+            </Link>
+          </li>
         </ul>
       </Section>
     </>
