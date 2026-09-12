@@ -1,3 +1,4 @@
+import { AccessMenu } from "@/components/custom/access-menu";
 import { BrandWordmark } from "@/components/custom/brand-wordmark";
 import { Container } from "@/components/custom/container";
 import { MegaMenu } from "@/components/custom/mega-menu";
@@ -31,6 +32,8 @@ export function Header({ sections }: { sections: readonly Section[] }) {
         <div className="flex shrink-0 items-center gap-2">
           <SearchDialog />
           <ThemeToggle className="hidden sm:inline-flex" />
+          <span aria-hidden="true" className="hidden h-5 w-px bg-border md:block" />
+          <AccessMenu />
         </div>
       </Container>
 

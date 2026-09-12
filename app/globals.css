@@ -636,6 +636,28 @@ dialog.lc-panel {
   overscroll-behavior: contain;
 }
 
+/* Carte d'accès : connexion et ouverture d'espace entreprise (§4.3, §4.4).
+   Plus large que le panneau de recherche — le formulaire d'inscription porte
+   onze champs — et centrée verticalement plutôt que collée en haut, parce
+   qu'on la lit au lieu de la survoler. La hauteur reste bornée : sur un
+   téléphone, la carte défile dans elle-même et jamais la page derrière. */
+dialog.lc-auth {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  inline-size: min(36rem, calc(100vw - 2rem));
+  block-size: fit-content;
+  max-block-size: min(
+    calc(100dvh - 2rem - env(safe-area-inset-top) - env(safe-area-inset-bottom)),
+    46rem
+  );
+  background-color: var(--popover);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
 /* Repli sans `showModal()` : la boîte reste au-dessus du contenu. */
 dialog.lc-dialog[open] {
   z-index: 60;
