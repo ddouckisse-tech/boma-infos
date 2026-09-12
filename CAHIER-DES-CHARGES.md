@@ -1,7 +1,8 @@
 # Cahier des charges — Le Corporate (refonte applicative)
 
 > Magazine économique gabonais · édité par Up Concept
-> Document de référence pour la refonte. Version 1.0 — 11/09/2026
+> Document de référence pour la refonte. Version 1.1 — 12/09/2026
+> (v1.1 : fonds neutralisés en noirs/gris, contrastes recalculés — §3.1 et §3.5)
 > Remplace le WordPress actuel (WP 6.3.10 / Elementor / thème Newzin).
 
 ---
@@ -85,32 +86,43 @@ Ces contraintes **priment sur les préférences esthétiques** en cas de conflit
 
 ## 3. Identité visuelle et design system
 
-### 3.1 Couleurs — reprises à l'identique du site actuel
+### 3.1 Couleurs — marque conservée, fonds neutralisés
 
-Valeurs relevées dans les variables du thème en production (`--color-primary`,
-`--color-secondary`) : **elles ne changent pas**.
+Les deux couleurs de marque sont relevées dans les variables du thème en
+production (`--color-primary`, `--color-secondary`) : **elles ne changent pas**.
+Les **fonds**, eux, abandonnent la dominante bleutée au profit de **neutres
+purs** — arbitrage du 12/09/2026, pris pour le confort de lecture.
 
 | Rôle | Jeton | Valeur | Usage |
 |---|---|---|---|
-| Primaire | `--brand-navy` | **`#002060`** | Titres, barre de navigation, texte fort |
-| Secondaire | `--brand-magenta` | **`#C74794`** | Accents, rubriques, liens actifs, CTA |
-| Fond doux | `--surface-muted` | **`#E6E7F3`** | Sections alternées, cartes |
-| Blanc | `--surface` | `#FFFFFF` | Fond de lecture |
-| Encre | `--ink` | `#0D1B3E` | Corps de texte (dérivé du navy, contraste AAA) |
+| Primaire | `--brand-navy` | **`#002060`** | Titres, navigation, texte fort — **thème clair uniquement** |
+| Secondaire | `--brand-magenta` | **`#C74794`** | Accents, rubriques, éléments graphiques — **pas de texte courant** |
+| Secondaire texte | `--brand-magenta-600` | **`#B83D85`** | Le magenta dès qu'il porte du texte (voir §3.5) |
+| Fond de lecture | `--surface` | `#FFFFFF` | Fond principal |
+| Fond doux | `--surface-muted` | **`#F5F5F5`** | Sections alternées, cartes |
+| Fond très doux | `--surface-subtle` | **`#FAFAFA`** | Séparations discrètes |
+| Encre | `--ink` | **`#1A1A1A`** | Corps de texte — 17,4:1 sur blanc, 16,0:1 sur fond doux |
 
-**Échelles dérivées** (à générer, ton continu, du plus clair au plus foncé) :
-`navy-50 → navy-950` et `magenta-50 → magenta-950`. Le `#002060` correspond à
-`navy-900`, le `#C74794` à `magenta-500`.
+**Échelles dérivées** : `navy-50 → navy-950` (`#002060` = `navy-900`),
+`magenta-50 → magenta-950` (`#C74794` = `magenta-500`, `#B83D85` = `magenta-600`),
+et une **échelle de neutres** qui porte tous les fonds :
+`50 #FAFAFA · 100 #F5F5F5 · 200 #E5E5E5 · 300 #D4D4D4 · 400 #A3A3A3 · 500 #737373
+· 600 #525252 · 700 #404040 · 800 #262626 · 900 #171717 · 950 #0A0A0A`.
 
 **Couleurs à supprimer** — hétérogènes, héritées des greffons, sans rôle défini :
 `#148DFE` (bleu vif Elementor), `#066AAB` (boutons WPForms), `#461CFB`, `#DD8502`.
+S'y ajoutent les anciens fonds bleutés `#E6E7F3` et `#F1F6FE`, et l'encre `#0D1B3E`.
 
 **Couleurs fonctionnelles** (à ajouter, absentes aujourd'hui) :
 succès `#0F7B4F` · alerte `#B45309` · erreur `#B42318` · information `#00509D`.
 
-**Mode sombre** — le site actuel propose déjà une bascule : elle est conservée.
-Le fond sombre est un bleu encre (`#0A1430`), **jamais un noir pur** ; le magenta
-est remonté en luminosité (`#E06BAD`) pour tenir le contraste sur fond sombre.
+**Mode sombre** — la bascule du site actuel est conservée. Le fond est un **noir
+neutre `#121212`**, jamais un noir pur : au-delà de la fatigue visuelle, le noir
+absolu fait haloter le texte en lecture longue. Surfaces `#171717` et `#1F1F1F`,
+texte `#EDEDED` (jamais blanc pur) — soit 16,0:1, du confort AAA.
+Le navy `#002060` tombe à **1,23:1 sur ce fond** : il est donc **proscrit en
+thème sombre**, où les titres passent à `#EDEDED`. Le magenta est remonté à
+`#E06BAD` (6,1:1), conforme pour le texte.
 
 ### 3.2 Typographie — de 6 familles à 2
 
@@ -178,9 +190,15 @@ toute personnalisation passe par composition dans `components/custom/`.
 ### 3.5 Accessibilité — RGAA / WCAG 2.2 niveau AA
 
 - Contraste : **4,5:1** minimum pour le texte, 3:1 pour les éléments graphiques.
-  Le couple `#C74794` sur blanc atteint 4,6:1 — conforme pour le texte, mais
-  **interdit en dessous de 17 px** ; sur fond `#E6E7F3` il tombe à 4,1:1 et
-  n'est donc admis que pour des éléments non textuels.
+  **Point de vigilance mesuré** : le magenta de marque `#C74794` n'atteint que
+  **4,41:1 sur blanc** et **4,05:1 sur `#F5F5F5`** — il échoue donc au seuil AA
+  pour le texte courant. Il reste réservé aux **éléments graphiques, badges et
+  titres larges** (≥ 24 px, ou ≥ 18,7 px en gras, où le seuil est 3:1). Dès
+  qu'il porte du texte courant, c'est `--brand-magenta-600` **`#B83D85`** qui
+  s'applique : 5,19:1 sur blanc, 4,76:1 sur fond doux.
+  Contrastes du corps de texte, vérifiés : `#1A1A1A` sur blanc **17,4:1**,
+  sur `#F5F5F5` **16,0:1** ; `#EDEDED` sur `#121212` **16,0:1**, sur `#1F1F1F`
+  **14,1:1**. Tous en AAA — c'est l'objectif pour de la lecture longue.
 - Navigation clavier complète, `:focus-visible` de 2 px toujours visible.
 - Cibles tactiles **≥ 44 × 44 px**.
 - Toute image porte un `alt` pertinent (l'agent Média le propose, §4.6).

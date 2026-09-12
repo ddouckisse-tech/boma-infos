@@ -75,7 +75,7 @@ export function NewsletterForm({ className }: { className?: string }) {
           placeholder="vous@exemple.ga"
           aria-invalid={errors.email ? true : undefined}
           aria-describedby={errors.email ? errorId : undefined}
-          className="h-11 min-w-0 flex-1 text-[1.0625rem]"
+          className="h-11 min-w-0 flex-1 type-body"
           {...register("email")}
         />
         <ActionButton type="submit" disabled={isSubmitting}>

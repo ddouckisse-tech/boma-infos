@@ -52,7 +52,7 @@ export function MobileNav() {
       <SheetContent
         side="left"
         showCloseButton={false}
-        className="w-[min(22rem,88vw)] overflow-y-auto bg-popover p-0 sm:max-w-sm"
+        className="w-[min(22rem,88vw)] overflow-y-auto overscroll-contain bg-popover p-0 pb-[env(safe-area-inset-bottom)] sm:max-w-sm"
       >
         <SheetHeader className="flex-row items-center justify-between border-b border-border p-4">
           <div>

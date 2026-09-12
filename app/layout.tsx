@@ -49,7 +49,7 @@ export const viewport: Viewport = {
   viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0a1430" },
+    { media: "(prefers-color-scheme: dark)", color: "#121212" },
   ],
 };
 
@@ -69,7 +69,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <TooltipProvider delayDuration={200}>
               <SkipLink />
               <Header />
-              <main id="contenu" className="flex-1 focus-visible:outline-none">
+              {/* tabIndex={-1} : cible du lien d'évitement, focalisable par
+                  programme mais hors de l'ordre de tabulation. */}
+              <main
+                id="contenu"
+                tabIndex={-1}
+                className="flex-1 focus-visible:outline-none"
+              >
                 {children}
               </main>
               <Footer />

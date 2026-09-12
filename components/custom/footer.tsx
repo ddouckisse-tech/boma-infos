@@ -27,7 +27,7 @@ const LEGAL_LINKS = [
 export function Footer() {
   return (
     <footer className="mt-16 border-t border-border bg-surface-muted">
-      <Container className="py-12">
+      <Container className="pt-12 pb-[max(3rem,env(safe-area-inset-bottom))]">
         <div className="grid gap-10 lg:grid-cols-[1.2fr_1fr_1fr]">
           <div className="min-w-0">
             <p className="font-serif type-h3 font-semibold text-foreground">

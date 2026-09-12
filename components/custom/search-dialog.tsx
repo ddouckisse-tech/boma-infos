@@ -50,7 +50,7 @@ export function SearchDialog({ className }: { className?: string }) {
         <Search aria-hidden="true" className="size-4 shrink-0" />
         <span className="hidden type-small lg:inline">Rechercher</span>
         <kbd className="ml-1 hidden rounded-xs border border-border px-1.5 py-0.5 text-[0.75rem] text-muted-foreground lg:inline">
-          ⌘K
+          ⌘ K
         </kbd>
         <span className="sr-only lg:hidden">Rechercher sur le site</span>
       </button>
@@ -58,7 +58,7 @@ export function SearchDialog({ className }: { className?: string }) {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent
           showCloseButton={false}
-          className="max-w-[calc(100%-2rem)] rounded-xl bg-popover sm:max-w-lg"
+          className="max-w-[calc(100%-2rem)] overscroll-contain rounded-xl bg-popover sm:max-w-lg"
         >
           <DialogHeader className="pr-12">
             <DialogTitle className="font-serif type-h3">Rechercher</DialogTitle>
@@ -84,8 +84,8 @@ export function SearchDialog({ className }: { className?: string }) {
               autoComplete="off"
               value={term}
               onChange={(event) => setTerm(event.target.value)}
-              placeholder="Ex. : marché pétrolier, CEMAC, startup"
-              className="h-11 text-[1.0625rem]"
+              placeholder="Ex. : marché pétrolier, CEMAC, startup…"
+              className="h-11 type-body"
             />
             <p className="type-small text-muted-foreground" role="status">
               {term.trim().length === 0
