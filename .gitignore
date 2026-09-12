@@ -47,3 +47,6 @@ next-env.d.ts
 # outils locaux
 .idea
 *.local
+
+# le gabarit d'environnement est versionne
+!.env.example

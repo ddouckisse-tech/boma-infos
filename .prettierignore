@@ -1,0 +1,8 @@
+.next
+node_modules
+bun.lock
+convex/_generated
+audit-le-corporate
+public
+CAHIER-DES-CHARGES.md
+prompts
