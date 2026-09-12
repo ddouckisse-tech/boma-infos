@@ -8,3 +8,10 @@
   font-size: 0.75rem;
   line-height: 1.5;
 }
+
+@media (min-width: 1024px) and (min-height: 800px) {
+  .lc-reading-rail {
+    position: sticky;
+    top: 8.5rem;
+  }
+}

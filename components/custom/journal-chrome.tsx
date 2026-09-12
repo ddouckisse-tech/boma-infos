@@ -5,7 +5,6 @@ import { getNavigation } from "@/lib/content/server";
 import { buildSections } from "@/lib/navigation";
 import { headers } from "next/headers";
 import { AdsConsent } from "@/components/custom/adsense-slot";
-import { AdNavigationTracker } from "@/components/custom/ad-navigation-tracker";
 import { getAdSenseCmpConfig } from "@/lib/ads/adsense-config";
 
 /**
@@ -32,7 +31,6 @@ export async function JournalChrome({
 
   return (
     <>
-      <AdNavigationTracker />
       {cmp && <AdsConsent config={cmp} nonce={nonce} />}
       <SkipLink />
       <Header sections={sections} />

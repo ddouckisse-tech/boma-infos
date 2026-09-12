@@ -32,6 +32,8 @@ type ArticleCardProps = {
   className?: string;
   /** Raises the headline to <h2>; default is <h3>. */
   headingLevel?: 2 | 3;
+  /** Keeps deep home-page sections textual to stay within the mobile budget. */
+  showImage?: boolean;
 };
 
 /**
@@ -58,6 +60,7 @@ export function ArticleCard({
   showCategory = true,
   className,
   headingLevel = 3,
+  showImage = true,
 }: ArticleCardProps) {
   const media = getMediaAsset(article.heroMediaKey);
   const Heading = headingLevel === 2 ? "h2" : "h3";
@@ -111,23 +114,27 @@ export function ArticleCard({
       <article
         lang="fr"
         className={cn(
-          "group/card relative grid grid-cols-[96px_1fr] gap-4 py-4 sm:grid-cols-[160px_1fr] sm:gap-6",
+          "group/card relative py-4",
+          showImage &&
+            "grid grid-cols-[96px_1fr] gap-4 sm:grid-cols-[160px_1fr] sm:gap-6",
           className
         )}
       >
-        <div>
-          {media ? (
-            <ResponsiveImage
-              media={media}
-              alt=""
-              sizes={SIZES.thumb}
-              maxWidth={320}
-              wrapperClassName="aspect-[16/9] rounded-md"
-            />
-          ) : (
-            <span className="block aspect-[16/9] rounded-md bg-surface-muted" />
-          )}
-        </div>
+        {showImage && (
+          <div>
+            {media ? (
+              <ResponsiveImage
+                media={media}
+                alt=""
+                sizes={SIZES.thumb}
+                maxWidth={320}
+                wrapperClassName="aspect-[16/9] rounded-md"
+              />
+            ) : (
+              <span className="block aspect-[16/9] rounded-md bg-surface-muted" />
+            )}
+          </div>
+        )}
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             {showCategory && (
@@ -175,7 +182,7 @@ export function ArticleCard({
             media={media}
             alt=""
             sizes={SIZES.card}
-            maxWidth={768}
+            maxWidth={640}
             wrapperClassName="aspect-[16/9]"
           />
         ) : (

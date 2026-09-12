@@ -250,8 +250,8 @@ export default async function HomePage() {
             </Link>
           }
         >
-          {/* Un article illustré par rubrique — en vignette, pas en grande
-              carte — et les suivants en titres seuls. Vingt-et-une photos
+          {/* Un article illustré dans les six premières rubriques — en
+              vignette, pas en grande carte — puis des titres seuls. Vingt-et-une photos
               pleine largeur sur une page d'accueil, c'est un mur d'images et,
               sur un téléphone haute densité, un demi-mégaoctet : le §5.4 en
               plafonne 600 Ko pour la page entière. La densité d'images
@@ -260,6 +260,7 @@ export default async function HomePage() {
             <ArticleCard
               article={section.articles[0]}
               variant="list"
+              showImage={index < 6}
               showCategory={false}
               className="min-w-0 border-b border-border pb-4 lg:border-0 lg:pb-0"
             />
