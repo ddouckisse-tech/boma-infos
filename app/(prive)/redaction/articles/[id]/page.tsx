@@ -27,6 +27,7 @@ import {
   TextField,
 } from "@/components/custom/form-field";
 import { KeyPoints } from "@/components/custom/key-points";
+import { MediaPicker } from "@/components/custom/media-picker";
 import { PartnerTag } from "@/components/custom/partner-tag";
 import { StatusPill } from "@/components/custom/status-pill";
 import { formatDateTime, humanError } from "@/lib/private";
@@ -281,7 +282,9 @@ export default function ArticleEditorPage({
           " · lecture seule (rubrique hors de votre périmètre)"}
       </p>
 
-      <div className="mt-6 flex flex-wrap gap-2">
+      {/* Barre d'actions collante sous `lg` : sur un téléphone, « Enregistrer »
+          et « Publier » restent sous le pouce, au-dessus de la barre d'onglets. */}
+      <div className="sticky top-2 z-10 mt-6 flex flex-wrap gap-2 rounded-xl border border-border bg-background p-2 shadow-floating lg:static lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
         <ActionButton
           type="button"
           disabled={busy || !article.editable}
@@ -437,17 +440,12 @@ export default function ArticleEditorPage({
                   label: row.name,
                 }))}
               />
-              <SelectField
-                label="Média principal"
+              <MediaPicker
+                label="Image principale"
                 value={form.heroMediaKey}
-                onChange={(event) => update("heroMediaKey", event.target.value)}
-                options={[
-                  { value: "", label: "— aucun" },
-                  ...media.map((item) => ({
-                    value: item.key,
-                    label: `${item.key} — ${item.alt.slice(0, 40)}`,
-                  })),
-                ]}
+                onChange={(key) => update("heroMediaKey", key)}
+                media={media}
+                className="sm:col-span-2"
               />
               <SelectField
                 label="Mise en avant"

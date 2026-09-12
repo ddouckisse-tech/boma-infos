@@ -26,6 +26,10 @@ const convexOrigins = (): string[] => {
   return [...origins];
 };
 
+/** The deployment's HTTP origin(s) only — where uploaded pictures are served from. */
+const convexHttpOrigins = (): string[] =>
+  convexOrigins().filter((origin) => origin.startsWith("http"));
+
 /**
  * Content-Security-Policy.
  *
@@ -61,7 +65,9 @@ export const contentSecurityPolicy = (): string => {
     // next/font et Next.js injectent des styles en ligne ; aucun risque
     // d'exécution de script.
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob:",
+    // Les photographies ajoutées depuis la médiathèque sont servies par le
+    // stockage de fichiers du déploiement Convex (12/09/2026).
+    `img-src ${["'self'", "data:", "blob:", ...convexHttpOrigins()].join(" ")}`,
     "font-src 'self'",
     "media-src 'self'",
     "worker-src 'self' blob:",

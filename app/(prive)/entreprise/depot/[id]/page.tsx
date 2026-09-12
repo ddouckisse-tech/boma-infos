@@ -3,11 +3,12 @@
 import { use } from "react";
 import Link from "next/link";
 import { useQuery } from "convex/react";
-import { ExternalLink, MessageSquareText } from "lucide-react";
+import { ExternalLink, FileText, MessageSquareText } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { StatusPill } from "@/components/custom/status-pill";
+import { OfficeHeader, OfficeSection } from "@/components/custom/office-header";
 import { PartnerTag } from "@/components/custom/partner-tag";
+import { StatusPill } from "@/components/custom/status-pill";
 import {
   SubmissionForm,
   type SubmissionDraft,
@@ -38,12 +39,11 @@ export default function SubmissionPage({
 
   if (submission === null) {
     return (
-      <>
-        <h1 className="font-display type-h1">Dépôt introuvable</h1>
-        <p className="mt-3 type-body text-muted-foreground">
-          Ce dépôt n&apos;existe pas ou ne vous appartient pas.
-        </p>
-      </>
+      <OfficeHeader
+        icon={FileText}
+        title="Dépôt introuvable"
+        description="Ce dépôt n'existe pas ou ne vous appartient pas."
+      />
     );
   }
 
@@ -69,105 +69,111 @@ export default function SubmissionPage({
         </Link>
       </p>
 
-      <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
-        <h1 className="font-display type-h1">{submission.title}</h1>
-        <StatusPill status={submission.status} />
-      </div>
-      <p className="mt-1 type-small text-muted-foreground">
-        {submission.kindLabel} · déposé le{" "}
-        {formatDateTime(submission.createdAt)}
-        {submission.submittedAt
-          ? ` · transmis le ${formatDateTime(submission.submittedAt)}`
-          : ""}
-      </p>
+      <OfficeHeader
+        icon={FileText}
+        title={submission.title}
+        description={
+          <>
+            {submission.kindLabel} · déposé le{" "}
+            {formatDateTime(submission.createdAt)}
+            {submission.submittedAt
+              ? ` · transmis le ${formatDateTime(submission.submittedAt)}`
+              : ""}
+          </>
+        }
+        actions={<StatusPill status={submission.status} />}
+        className="mt-3"
+      />
 
-      {submission.status === "published" && submission.publishedArticleSlug && (
-        <div className="mt-6 rounded-md border border-success-token/40 bg-success-token/10 p-4">
-          <p className="flex flex-wrap items-center gap-2 type-small">
-            <PartnerTag size="small" />
-            En ligne depuis le {formatDateTime(submission.updatedAt)}.
-            <Link
-              href={`/article/${submission.publishedArticleSlug}`}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1 font-semibold text-accent underline underline-offset-2"
-            >
-              Voir l&apos;article
-              <ExternalLink aria-hidden="true" className="size-3.5" />
-            </Link>
-          </p>
-          <p className="mt-2 type-small text-muted-foreground">
-            Les vues, le temps de lecture moyen et les partages apparaissent
-            dans{" "}
-            <Link
-              href="/entreprise/statistiques"
-              className="underline underline-offset-2"
-            >
-              vos statistiques
-            </Link>
-            .
-          </p>
-        </div>
-      )}
-
-      {submission.status === "rejected" && (
-        <div className="mt-6 rounded-md border border-destructive/40 bg-destructive/10 p-4">
-          <p className="type-small font-semibold text-destructive">
-            Dépôt non retenu
-          </p>
-          <p className="mt-1 type-small text-foreground">
-            {submission.rejectionReason}
-          </p>
-        </div>
-      )}
-
-      {submission.reviewNotes.length > 0 && (
-        <section className="mt-8">
-          <h2 className="flex items-center gap-2 font-display type-h2">
-            <MessageSquareText aria-hidden="true" className="size-5" />
-            Suivi
-          </h2>
-          <ol className="mt-4 grid gap-3">
-            {[...submission.reviewNotes].reverse().map((note, index) => (
-              <li
-                key={`${note.at}-${index}`}
-                className="rounded-md border border-border bg-card p-3"
-              >
-                <p className="type-small font-semibold">
-                  {STATUS_LABEL[note.status] ?? note.status} ·{" "}
-                  {formatDateTime(note.at)}
-                </p>
-                <p className="mt-1 type-small text-muted-foreground">
-                  {note.comment}
-                </p>
-              </li>
-            ))}
-          </ol>
-        </section>
-      )}
-
-      <section className="mt-8">
-        <h2 className="font-display type-h2">
-          {submission.editable ? "Modifier le dépôt" : "Contenu déposé"}
-        </h2>
-        {submission.editable ? (
-          <div className="mt-4 rounded-lg border border-border bg-card p-6">
-            <SubmissionForm draft={draft} />
-          </div>
-        ) : (
-          <div className="mt-4 rounded-lg border border-border bg-card p-6">
-            <p className="type-small text-muted-foreground">
-              Le dépôt est entre les mains de la rédaction : il n&apos;est plus
-              modifiable. Il le redeviendra si des modifications sont demandées.
-            </p>
-            <h3 className="mt-4 font-display type-h3">{submission.title}</h3>
-            <p className="mt-2 type-body font-medium">{submission.dek}</p>
-            <div className="mt-4 max-w-reading type-body whitespace-pre-wrap">
-              {blocksToText(submission.body)}
+      <div className="grid gap-8">
+        {submission.status === "published" &&
+          submission.publishedArticleSlug && (
+            <div className="rounded-xl border border-success-token/40 bg-success-token/10 p-4">
+              <p className="flex flex-wrap items-center gap-2 type-small">
+                <PartnerTag size="small" />
+                En ligne depuis le {formatDateTime(submission.updatedAt)}.
+                <Link
+                  href={`/article/${submission.publishedArticleSlug}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 font-semibold text-accent underline underline-offset-2"
+                >
+                  Voir l&apos;article
+                  <ExternalLink aria-hidden="true" className="size-3.5" />
+                </Link>
+              </p>
+              <p className="mt-2 type-small text-muted-foreground">
+                Les vues, le temps de lecture moyen et les partages apparaissent
+                dans{" "}
+                <Link
+                  href="/entreprise/statistiques"
+                  className="underline underline-offset-2"
+                >
+                  vos statistiques
+                </Link>
+                .
+              </p>
             </div>
+          )}
+
+        {submission.status === "rejected" && (
+          <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-4">
+            <p className="type-small font-semibold text-destructive">
+              Dépôt non retenu
+            </p>
+            <p className="mt-1 type-small text-foreground">
+              {submission.rejectionReason}
+            </p>
           </div>
         )}
-      </section>
+
+        {submission.reviewNotes.length > 0 && (
+          <section>
+            <h2 className="flex items-center gap-2 font-display type-h2">
+              <MessageSquareText aria-hidden="true" className="size-5" />
+              Suivi
+            </h2>
+            <ol className="mt-4 grid gap-3">
+              {[...submission.reviewNotes].reverse().map((note, index) => (
+                <li
+                  key={`${note.at}-${index}`}
+                  className="rounded-xl border border-border bg-card p-3"
+                >
+                  <p className="type-small font-semibold">
+                    {STATUS_LABEL[note.status] ?? note.status} ·{" "}
+                    {formatDateTime(note.at)}
+                  </p>
+                  <p className="mt-1 type-small text-muted-foreground">
+                    {note.comment}
+                  </p>
+                </li>
+              ))}
+            </ol>
+          </section>
+        )}
+
+        <OfficeSection
+          icon={FileText}
+          title={submission.editable ? "Modifier le dépôt" : "Contenu déposé"}
+          description={
+            submission.editable
+              ? undefined
+              : "Le dépôt est entre les mains de la rédaction : il n'est plus modifiable. Il le redeviendra si des modifications sont demandées."
+          }
+        >
+          {submission.editable ? (
+            <SubmissionForm draft={draft} />
+          ) : (
+            <>
+              <h3 className="font-display type-h3">{submission.title}</h3>
+              <p className="mt-2 type-body font-medium">{submission.dek}</p>
+              <div className="mt-4 max-w-reading type-body whitespace-pre-wrap">
+                {blocksToText(submission.body)}
+              </div>
+            </>
+          )}
+        </OfficeSection>
+      </div>
     </>
   );
 }

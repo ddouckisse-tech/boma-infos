@@ -181,7 +181,7 @@ export function ArticleBody({ blocks }: { blocks: readonly Block[] }) {
               <div key={key} className="my-8">
                 <HeavyMedia
                   title={block.title}
-                  posterMediaKey={block.posterMediaKey}
+                  poster={getMediaAsset(block.posterMediaKey)}
                   src={block.src}
                   durationLabel={block.durationLabel}
                 />

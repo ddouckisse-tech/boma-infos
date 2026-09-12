@@ -11,6 +11,7 @@ import { Container } from "@/components/custom/container";
 import { DataSaverToggle } from "@/components/custom/data-saver-toggle";
 import { NewsletterForm } from "@/components/custom/newsletter-form";
 import { ThemeToggle } from "@/components/custom/theme-toggle";
+import { cn } from "@/lib/utils";
 import {
   DEMO_CONTENT_NOTICE,
   NAV_LEGAL_PAGES,
@@ -36,8 +37,18 @@ const SOCIAL_LINKS = [
  * The masthead is sticky: the sections travel with the reader, so listing
  * them again here would be the second copy of the same menu on every page.
  * What remains is what a masthead does not carry: who publishes, how to
- * reach the newsroom, the legal pages, the newsletter, the two reading
+ * reach the newsroom, the site's own pages, the newsletter, the two reading
  * preferences — and, discreetly, the administrator's key.
+ *
+ * Four blocks on a two-column grid. Top row: the publication (wordmark and
+ * tagline) beside the newsletter. Second row: the newsroom's channels beside
+ * the site's pages, laid out as two horizontal lines — the three editorial
+ * pages, then the four legal and service pages. The rows are shared across
+ * the columns, so the contact line sits level with the first line of pages
+ * and the social pills with the second. Between `lg` and `xl` the columns
+ * are too narrow for a line of four pages or four pills, so those two blocks
+ * take the full width, each on a single line, instead of wrapping onto a
+ * third; below `lg` everything stacks in reading order.
  *
  * Every link resolves. The audit counted nine links on the legacy footer, of
  * which one worked; the social URLs are still generic because the real
@@ -48,18 +59,34 @@ export function Footer() {
     "inline-flex min-h-11 items-center gap-2 type-small text-muted-foreground underline-offset-4 hover:text-foreground hover:underline";
   const pill =
     "inline-flex items-center gap-2 rounded-md border border-border bg-background px-3 text-foreground transition-colors touch-target hover:border-border-strong";
+  const pageLink =
+    "inline-flex min-h-11 items-center type-small underline-offset-4 hover:underline";
+  // Two lists: two lines in a column (`xl`), side by side on one line when
+  // the block spans the full width (`lg`), stacked below.
+  const twoLines =
+    "flex min-w-0 flex-col gap-2 lg:col-span-2 lg:flex-row lg:flex-wrap lg:gap-x-5 xl:col-span-1 xl:flex-col";
 
   return (
     <footer className="mt-16 border-t border-border bg-surface-muted">
-      <Container className="pt-10 pb-[max(2rem,env(safe-area-inset-bottom))]">
-        <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between lg:gap-12">
-          <div className="max-w-[46ch] min-w-0">
+      <Container className="pt-8 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+        <div className="grid gap-x-12 gap-y-6 lg:grid-cols-2 lg:gap-y-4">
+          <div className="min-w-0">
             <BrandWordmark />
-            <p className="mt-1 type-small text-muted-foreground">
+            <p className="mt-1 max-w-[60ch] type-small text-muted-foreground">
               Magazine économique gabonais, édité par {SITE.publisher}.{" "}
               {SITE.tagline}.
             </p>
-            <ul className="mt-2 flex flex-wrap gap-x-5">
+          </div>
+
+          {/* The wordmark is centred in its 44 px touch target; the label of
+              the form is not. The top padding brings both first lines to the
+              same height once the two blocks sit side by side. */}
+          <div className="min-w-0 lg:pt-3">
+            <NewsletterForm />
+          </div>
+
+          <div className={twoLines}>
+            <ul className="flex flex-wrap gap-x-5">
               <li>
                 <a href={`mailto:${SITE.email}`} className={link}>
                   <Mail aria-hidden="true" className="size-4 shrink-0" />
@@ -73,7 +100,7 @@ export function Footer() {
                 </a>
               </li>
             </ul>
-            <ul className="mt-2 flex flex-wrap gap-2">
+            <ul className="flex flex-wrap gap-2">
               {SOCIAL_LINKS.map(({ key, label, href }) => {
                 const Icon = SOCIAL_ICONS[key];
                 return (
@@ -100,14 +127,30 @@ export function Footer() {
             </ul>
           </div>
 
-          <nav aria-label="Le journal" className="min-w-0">
-            <ul className="grid grid-cols-2 gap-x-8 sm:grid-cols-1">
-              {[...NAV_STATIC_PAGES, ...NAV_LEGAL_PAGES].map((page) => (
+          <nav aria-label="Le journal" className={twoLines}>
+            <ul className="flex flex-wrap gap-x-5">
+              {NAV_STATIC_PAGES.map((page) => (
                 <li key={page.href}>
                   <Link
                     href={page.href}
                     prefetch={false}
-                    className="flex min-h-11 items-center type-small text-muted-foreground hover:text-foreground"
+                    className={cn(pageLink, "text-foreground")}
+                  >
+                    {page.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <ul className="flex flex-wrap gap-x-5">
+              {NAV_LEGAL_PAGES.map((page) => (
+                <li key={page.href}>
+                  <Link
+                    href={page.href}
+                    prefetch={false}
+                    className={cn(
+                      pageLink,
+                      "text-muted-foreground hover:text-foreground"
+                    )}
                   >
                     {page.label}
                   </Link>
@@ -115,13 +158,9 @@ export function Footer() {
               ))}
             </ul>
           </nav>
-
-          <div className="min-w-0 lg:max-w-sm">
-            <NewsletterForm />
-          </div>
         </div>
 
-        <div className="mt-8 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t border-border pt-4">
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-t border-border pt-2">
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
             <DataSaverToggle />
             <div className="flex items-center gap-3">
@@ -138,7 +177,7 @@ export function Footer() {
           </div>
         </div>
 
-        <p className="mt-3 type-small text-muted-foreground">
+        <p className="mt-1 type-small text-muted-foreground">
           {DEMO_CONTENT_NOTICE}
         </p>
       </Container>

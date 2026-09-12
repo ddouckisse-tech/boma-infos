@@ -8,8 +8,8 @@ Prompts d'implémentation par lot : [`prompts/`](./prompts).
 Audit de l'existant : [`audit-le-corporate/`](./audit-le-corporate).
 
 **État : lot 3 livré — la chaîne éditoriale complète.** Au journal public des
-lots 1 et 2 s'ajoutent l'authentification à quatre rôles avec double
-authentification obligatoire, le back-office de rédaction, le portail des
+lots 1 et 2 s'ajoutent l'authentification à quatre rôles avec vérification
+par application facultative, le back-office de rédaction, le portail des
 entreprises partenaires et son workflow de modération jusqu'à la publication,
 les sept agents éditoriaux sous garde-fous, et une mesure d'audience sans
 traqueur tiers.
@@ -36,17 +36,24 @@ bun run seed
 
 # 4. Créer le premier compte. Le dépôt n'en contient AUCUN : ni `admin`,
 #    ni mot de passe par défaut — l'audit avait relevé le contraire sur
-#    l'ancien site (CDC §5.3).
+#    l'ancien site (CDC §5.3). Le mot de passe est un code à six chiffres,
+#    ou douze caractères et plus (comptes entreprise) ; sous douze
+#    caractères, il est PROVISOIRE.
 bun run compte -- --email=vous@le-corporate.com --nom="Votre nom" \
-  --motdepasse='un-mot-de-passe-long' --role=administrateur
+  --motdepasse=123456 --role=administrateur
 
 # 5. Serveur de développement Next.js
 bun run dev            # http://localhost:3000
 ```
 
-> Un compte Administrateur ou Éditeur **ne peut rien faire** tant qu'il n'a
-> pas activé la double authentification depuis `/compte` : le refus vient des
-> fonctions Convex, pas d'une mise en page.
+> Un code remis par un administrateur ou par `bun run compte` est
+> **provisoire** dès qu'il fait moins de douze caractères, donc pour un code
+> à six chiffres : une carte flottante le rappelle, fermable une semaine (le
+> choix est mémorisé sur le profil), et rien n'est bloqué entre-temps. Le
+> changement se fait depuis « Réglages » (administrateur) ou « Mon compte »
+> (tout rôle de rédaction, `/redaction/compte`). La vérification par
+> application reste facultative pour tous les rôles : le serveur Convex ne
+> refuse jamais un appel pour ce motif.
 
 > Les fichiers dérivés (`public/medias/`, `public/documents/`, `public/icons/`,
 > `convex/media-manifest.ts`) sont **versionnés** : ni la compilation ni
@@ -140,12 +147,15 @@ app/
     design-system/             galerie /design-system (référence de l'équipe)
   (prive)/                     LES ESPACES PRIVÉS — ConvexClientProvider ici
     connexion/ connexion/verification/   mot de passe, puis second facteur
+                                         si activé
     mot-de-passe-oublie/ reinitialisation/
     inscription-entreprise/    demande d'ouverture, validée à la main
-    compte/                    profil, 2FA, sessions révocables
+    compte/                    profil, vérification par application,
+                               sessions révocables
     redaction/                 back-office : tableau de bord, articles,
                                dépôts, médias, agents, statistiques,
-                               rubriques, comptes, réglages, journal d'audit
+                               rubriques, compte, comptes, réglages,
+                               journal d'audit
     entreprise/                portail : dépôts, suivi, statistiques
   api/auth/[...all]/           proxy Better Auth ; `sign-up` fermé
   api/recherche/route.ts       point d'entrée du dialogue Cmd+K
@@ -221,11 +231,11 @@ plafond dépassé :
 
 | Indicateur       | Plafond §5.4 | Constaté                            |
 | ---------------- | ------------ | ----------------------------------- |
-| Poids accueil    | 600 Ko       | 488 Ko                              |
-| Poids article    | 400 Ko       | 388 Ko                              |
-| Requêtes accueil | 50           | 30                                  |
-| Requêtes article | 50           | 22                                  |
-| JavaScript       | 180 Ko       | 161 Ko (accueil) · 171 Ko (article) |
+| Poids accueil    | 600 Ko       | 491 Ko                              |
+| Poids article    | 400 Ko       | 385 Ko                              |
+| Requêtes accueil | 50           | 33                                  |
+| Requêtes article | 50           | 25                                  |
+| JavaScript       | 180 Ko       | 169 Ko (accueil) · 174 Ko (article) |
 
 > Chiffres **re-mesurés à la fin du lot 3**. L'accueil a maigri (489 → 478 Ko,
 > 31 → 28 requêtes) : la mise en page racine ne contient plus l'en-tête ni le
@@ -237,6 +247,15 @@ plafond dépassé :
 > et en-tête d'article, `.lc-hero`) ajoute ensuite 10 Ko à l'accueil — la
 > variante 1280 px de la photo de une — et 4 Ko à l'article, dont la photo
 > reste plafonnée à 960 px pour tenir sous les 400 Ko.
+>
+> Chiffres **re-mesurés le 12/09/2026 après la recomposition du back-office**.
+> Le découpage des lots JavaScript de Turbopack est désormais réglé dans
+> `next.config.ts` (`experimental.turbopackChunking`) : avec les seuils par
+> défaut, le socle partagé (tailwind-merge, noyau lucide, `next/link`) était
+> chargé deux fois par les pages du journal et l'article dépassait le plafond
+> de JavaScript (187 Ko). Trois requêtes de plus par page, mais plus aucune
+> duplication ; l'envoi d'images depuis la médiathèque n'ajoute rien au
+> journal, dont la vignette vidéo n'embarque plus le manifeste des photos.
 
 Deux partis pris de mesure, tous deux du côté sévère :
 
@@ -337,12 +356,12 @@ mention et le jeu de données à la mise en ligne.
 
 Quatre rôles, déclarés une seule fois dans `convex/model/access.ts` :
 
-| Rôle                      | Périmètre                                                                               | Second facteur  |
-| ------------------------- | --------------------------------------------------------------------------------------- | --------------- |
-| **Administrateur**        | Tout : publication, rubriques, comptes, réglages, agents, statistiques, journal d'audit | **obligatoire** |
-| **Éditeur / Journaliste** | Rédige, publie dans ses rubriques autorisées, revoit les dépôts. Ni comptes ni réglages | **obligatoire** |
-| **Client / Entreprise**   | Son espace seul : dépôts, statuts, statistiques de ses publications                     | facultatif      |
-| **Lecteur**               | Son compte                                                                              | facultatif      |
+| Rôle                      | Périmètre                                                                               | Vérification par application |
+| ------------------------- | --------------------------------------------------------------------------------------- | ---------------------------- |
+| **Administrateur**        | Tout : publication, rubriques, comptes, réglages, agents, statistiques, journal d'audit | facultative                  |
+| **Éditeur / Journaliste** | Rédige, publie dans ses rubriques autorisées, revoit les dépôts. Ni comptes ni réglages | facultative                  |
+| **Client / Entreprise**   | Son espace seul : dépôts, statuts, statistiques de ses publications                     | facultative                  |
+| **Lecteur**               | Son compte                                                                              | facultative                  |
 
 **Le contrôle est dans Convex, pas dans l'interface.** Chaque fonction commence
 par `requireViewer`, `requirePermission` ou `requireOrganizationScope` ; la
@@ -366,9 +385,14 @@ Trois points tiennent aux défauts que l'audit avait relevés :
   vérifications de second facteur, trois demandes de réinitialisation par
   cinq minutes.
 
-La double authentification est du TOTP : `/compte` affiche un code QR, l'adresse
-`otpauth://` en clair et dix codes de secours à usage unique. Le compte n'est
-marqué comme protégé qu'après avoir saisi un code produit par l'application.
+La vérification par application est du TOTP, **facultative pour les quatre
+rôles** (décision du client du 12/09/2026) : « Mon compte » (`/compte`, ou
+`/redaction/compte` sans quitter le back-office) et « Réglages »
+(administrateur) affichent un code QR, l'adresse `otpauth://` en clair et dix
+codes de secours à usage unique. Le compte n'est marqué comme protégé qu'après
+avoir saisi un code produit par l'application ; ne pas l'activer ne retire
+aucune permission — `convex/model/access.ts` ne refuse plus rien pour ce
+motif.
 
 > **`better-auth` est épinglé à 1.6.21.** À partir de 1.6.22 le greffon
 > `twoFactor` écrit deux colonnes de verrouillage de compte que le schéma du
@@ -399,6 +423,15 @@ numéro est renseigné. Aucun prestataire n'est branché sur ce déploiement : l
 messages sont conservés dans une corbeille de sortie visible sous
 `/redaction/depots`, plutôt que d'afficher « un courriel vous a été envoyé » et
 n'envoyer rien.
+
+### Médiathèque — envoi d'images
+
+Les images s'ajoutent depuis l'écran (`/redaction/medias`, `convex/library.ts`),
+sans script à lancer. Chaque photo est décodée et encodée en **WebP à 320,
+640, 960 et 1280 px** par le navigateur lui-même — aucun traitement serveur —
+puis chaque taille est envoyée au stockage de fichiers Convex. Le texte
+alternatif reste **obligatoire avant de placer l'image** dans un article : le
+champ est requis à l'écran, et le validateur Convex ne l'accepte pas vide.
 
 ### Les agents
 
@@ -576,7 +609,8 @@ servie nulle part.
 
 S'y ajoutent, côté application :
 
-- mots de passe de **douze caractères** minimum, jamais huit ;
+- mot de passe **six chiffres exactement, ou douze caractères et plus** —
+  jamais huit (`convex/model/password.ts`) ;
 - **limitation de débit en base** sur la connexion, le second facteur et la
   réinitialisation — l'audit relevait l'absence totale de limitation ;
 - **anti-robot** sur l'inscription d'entreprise : champ piège et temps minimum

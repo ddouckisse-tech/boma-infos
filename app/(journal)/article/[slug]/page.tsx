@@ -26,7 +26,7 @@ import {
   getRelated,
 } from "@/lib/content/server";
 import { formatViews } from "@/lib/format";
-import { getMediaAsset, mediaUrl, SIZES } from "@/lib/media";
+import { fallbackVariant, getMediaAsset, SIZES, variantUrl } from "@/lib/media";
 import { sectionHref, subSectionHref } from "@/lib/navigation";
 import { absoluteUrl, SITE } from "@/lib/site";
 
@@ -105,6 +105,15 @@ export default async function ArticlePage({
   const related = await getRelated(slug, 3);
   const hero = getMediaAsset(article.heroMediaKey);
   const url = absoluteUrl(`/article/${article.slug}`);
+  // Image des données structurées : la plus large rendition disponible. Une
+  // image envoyée depuis la médiathèque a déjà une adresse absolue (stockage
+  // Convex) ; celle de la bibliothèque est un chemin du site.
+  const heroImageUrl = hero
+    ? (() => {
+        const address = variantUrl(hero, fallbackVariant(hero, 1280).w, "webp");
+        return address.startsWith("http") ? address : absoluteUrl(address);
+      })()
+    : undefined;
 
   const trail = [
     { name: "Accueil", href: "/" },
@@ -145,9 +154,9 @@ export default async function ArticlePage({
         description={article.seo.description}
         slug={article.slug}
         imageUrls={
-          hero
+          heroImageUrl
             ? [
-                absoluteUrl(mediaUrl(hero.id, 1280, "webp")),
+                heroImageUrl,
                 absoluteUrl(`/article/${article.slug}/opengraph-image`),
               ]
             : [absoluteUrl(`/article/${article.slug}/opengraph-image`)]

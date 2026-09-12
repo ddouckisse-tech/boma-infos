@@ -34,8 +34,8 @@ export type ViewerSummary = {
 };
 
 /**
- * Returns the caller when they hold `permission` **and** satisfy the
- * two-factor requirement of their role, `null` otherwise. Never says why.
+ * Returns the caller when they hold `permission`, `null` otherwise. Never
+ * says why. The second factor is no longer a condition (12/09/2026).
  */
 export const check = internalQuery({
   args: { permission: v.string() },
@@ -46,7 +46,6 @@ export const check = internalQuery({
     if (!viewer.profile.active) return null;
 
     const role = roleOf(viewer.profile.roleSlug);
-    if (role.requiresTwoFactor && !viewer.twoFactorEnabled) return null;
     if (!role.permissions.includes(permission as Permission)) return null;
 
     return {

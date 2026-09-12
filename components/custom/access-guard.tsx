@@ -94,28 +94,9 @@ function PermissionGate({
     );
   }
 
-  if (viewer.passwordChangeRequired) {
-    return (
-      <Refusal
-        title="Mot de passe provisoire"
-        message={ACCESS_MESSAGE.PASSWORD_CHANGE_REQUIRED}
-        href="/compte#mot-de-passe"
-        cta="Choisir un mot de passe définitif"
-      />
-    );
-  }
-
-  if (viewer.twoFactorRequired && !viewer.twoFactorEnabled) {
-    return (
-      <Refusal
-        title="Double authentification requise"
-        message={ACCESS_MESSAGE.TWO_FACTOR_REQUIRED}
-        href="/compte"
-        cta="Activer la double authentification"
-      />
-    );
-  }
-
+  // Ni le code provisoire ni l'absence de second facteur ne ferment plus la
+  // porte (12/09/2026) : la carte flottante de l'espace s'en charge, sans
+  // bloquer — et le serveur ne refuse plus non plus.
   if (!(viewer.permissions as readonly string[]).includes(permission)) {
     return (
       <Refusal

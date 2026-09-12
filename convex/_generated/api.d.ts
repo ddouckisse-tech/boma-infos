@@ -26,6 +26,8 @@ import type * as model_agentEngine from "../model/agentEngine.js";
 import type * as model_agents from "../model/agents.js";
 import type * as model_audit from "../model/audit.js";
 import type * as model_content from "../model/content.js";
+import type * as model_media from "../model/media.js";
+import type * as model_password from "../model/password.js";
 import type * as model_text from "../model/text.js";
 import type * as newsletter from "../newsletter.js";
 import type * as newsletterDraft from "../newsletterDraft.js";
@@ -70,6 +72,8 @@ declare const fullApi: ApiFromModules<{
   "model/agents": typeof model_agents;
   "model/audit": typeof model_audit;
   "model/content": typeof model_content;
+  "model/media": typeof model_media;
+  "model/password": typeof model_password;
   "model/text": typeof model_text;
   newsletter: typeof newsletter;
   newsletterDraft: typeof newsletterDraft;

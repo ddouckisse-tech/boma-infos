@@ -12,6 +12,7 @@ import {
   requirePermission,
   type Viewer,
 } from "./model/access";
+import { thumbUrlOf } from "./model/media";
 import { recordAudit } from "./model/audit";
 import {
   articleFeature,
@@ -132,6 +133,13 @@ export const dashboard = query({
     }),
     submissionsWaiting: v.number(),
     organizationsWaiting: v.number(),
+    /** What the newsroom should look at next (task-first dashboard, 12/09/2026). */
+    tasks: v.object({
+      pendingSuggestions: v.number(),
+      mediaMissingAlt: v.number(),
+      hasLead: v.boolean(),
+      awaitingReview: v.array(rowShape),
+    }),
     recent: v.array(rowShape),
     audience: v.object({
       views7d: v.number(),
@@ -170,30 +178,36 @@ export const dashboard = query({
       published: articles.filter((a) => a.status === "published").length,
     };
 
-    const recent = [...articles]
-      .sort((a, b) => b.updatedAt - a.updatedAt)
-      .slice(0, 8)
-      .map((row) => ({
-        _id: row._id,
-        title: row.title,
-        slug: row.slug,
-        dek: row.dek,
-        status: row.status,
-        categorySlug: row.categorySlug,
-        categoryName:
-          lookup.categories.get(row.categorySlug)?.name ?? row.categorySlug,
-        subCategorySlug: row.subCategorySlug,
-        authorSlug: row.authorSlug,
-        authorName: lookup.authors.get(row.authorSlug)?.name ?? row.authorSlug,
-        origin: row.origin,
-        feature: row.feature,
-        heroMediaKey: row.heroMediaKey,
-        publishedAt: row.publishedAt,
-        updatedAt: row.updatedAt,
-        readingMinutes: row.readingMinutes,
-        views: row.views,
-        pendingSuggestions: pending.get(row._id) ?? 0,
-      }));
+    const toRow = (row: Doc<"articles">) => ({
+      _id: row._id,
+      title: row.title,
+      slug: row.slug,
+      dek: row.dek,
+      status: row.status,
+      categorySlug: row.categorySlug,
+      categoryName:
+        lookup.categories.get(row.categorySlug)?.name ?? row.categorySlug,
+      subCategorySlug: row.subCategorySlug,
+      authorSlug: row.authorSlug,
+      authorName: lookup.authors.get(row.authorSlug)?.name ?? row.authorSlug,
+      origin: row.origin,
+      feature: row.feature,
+      heroMediaKey: row.heroMediaKey,
+      publishedAt: row.publishedAt,
+      updatedAt: row.updatedAt,
+      readingMinutes: row.readingMinutes,
+      views: row.views,
+      pendingSuggestions: pending.get(row._id) ?? 0,
+    });
+    const byRecency = [...articles].sort((a, b) => b.updatedAt - a.updatedAt);
+    const recent = byRecency.slice(0, 8).map(toRow);
+    const awaitingReview = byRecency
+      .filter((a) => a.status === "in_review" || a.status === "submitted")
+      .slice(0, 5)
+      .map(toRow);
+    const media = await ctx.db.query("media").collect();
+    let pendingSuggestions = 0;
+    for (const count of pending.values()) pendingSuggestions += count;
 
     const stats = await ctx.db.query("articleStats").collect();
     const days = await ctx.db.query("articleStatDays").collect();
@@ -210,6 +224,14 @@ export const dashboard = query({
         (s) => s.status === "submitted" || s.status === "in_review"
       ).length,
       organizationsWaiting: organizations.filter((o) => !o.approved).length,
+      tasks: {
+        pendingSuggestions,
+        mediaMissingAlt: media.filter((m) => m.alt.trim() === "").length,
+        hasLead: articles.some(
+          (a) => a.status === "published" && a.feature === "lead"
+        ),
+        awaitingReview,
+      },
       recent,
       audience: {
         views7d: days
@@ -707,6 +729,8 @@ export const editorOptions = query({
         alt: v.string(),
         caption: v.string(),
         credit: v.string(),
+        /** Small rendition of an uploaded picture; the demo library has none. */
+        thumbUrl: v.optional(v.string()),
       })
     ),
   }),
@@ -734,12 +758,56 @@ export const editorOptions = query({
           allowed: unrestricted || allowed.includes(row.slug),
         })),
       authors: authors.map((row) => ({ slug: row.slug, name: row.name })),
-      media: media.map((row) => ({
-        key: row.key,
-        alt: row.alt,
-        caption: row.caption,
-        credit: row.credit,
-      })),
+      media: await Promise.all(
+        [...media]
+          .sort(
+            (a, b) =>
+              (b.uploadedAt ?? 0) - (a.uploadedAt ?? 0) ||
+              a.key.localeCompare(b.key, "fr")
+          )
+          .map(async (row) => ({
+            key: row.key,
+            alt: row.alt,
+            caption: row.caption,
+            credit: row.credit,
+            thumbUrl: await thumbUrlOf(ctx, row),
+          }))
+      ),
+    };
+  },
+});
+
+/**
+ * The little numbers on the navigation — what is waiting, where. Cheap on
+ * purpose: the shell asks for them on every screen of the back office.
+ */
+export const navCounts = query({
+  args: {},
+  returns: v.object({
+    inReview: v.number(),
+    submissionsWaiting: v.number(),
+    pendingSuggestions: v.number(),
+    organizationsWaiting: v.number(),
+  }),
+  handler: async (ctx) => {
+    await requirePermission(ctx, PERMISSIONS.newsroom);
+    const [articles, submissions, organizations, suggestions] =
+      await Promise.all([
+        ctx.db.query("articles").collect(),
+        ctx.db.query("submissions").collect(),
+        ctx.db.query("organizations").collect(),
+        ctx.db.query("agentSuggestions").collect(),
+      ]);
+    return {
+      inReview: articles.filter(
+        (a) => a.status === "in_review" || a.status === "submitted"
+      ).length,
+      submissionsWaiting: submissions.filter(
+        (s) => s.status === "submitted" || s.status === "in_review"
+      ).length,
+      pendingSuggestions: suggestions.filter((s) => s.status === "pending")
+        .length,
+      organizationsWaiting: organizations.filter((o) => !o.approved).length,
     };
   },
 });

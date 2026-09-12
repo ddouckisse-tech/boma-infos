@@ -8,6 +8,7 @@ import {
   blockValidator,
   linkValidator,
   mediaVariantValidator,
+  storedRenditionValidator,
   seoValidator,
 } from "./model/content";
 
@@ -72,6 +73,13 @@ export default defineSchema({
     /** Dominant colour, painted while the picture loads (no layout shift). */
     color: v.string(),
     variants: v.array(mediaVariantValidator),
+    /**
+     * Renditions uploaded from the back office, held in Convex file storage
+     * (WebP, up to four widths). Absent for the pre-encoded demo library,
+     * whose files live under `public/medias/`.
+     */
+    storage: v.optional(v.array(storedRenditionValidator)),
+    uploadedAt: v.optional(v.number()),
   }).index("by_key", ["key"]),
 
   articles: defineTable({
@@ -267,12 +275,14 @@ export default defineSchema({
     sectionSlugs: v.optional(v.array(v.string())),
     lastSeenAt: v.optional(v.number()),
     /**
-     * Provisional password, set by the command line. Until the account holder
-     * replaces it with a definitive one (twelve characters, §4.3), every
-     * privileged function refuses with `PASSWORD_CHANGE_REQUIRED` — the same
-     * mechanism as the mandatory second factor.
+     * Provisional access code, handed over by an administrator or the command
+     * line. Since 12/09/2026 it no longer locks anything: the interface
+     * reminds the holder to choose their own code, and the flag falls when
+     * Better Auth reports the change (`convex/auth.ts`, hooks.after).
      */
     mustChangePassword: v.optional(v.boolean()),
+    /** Last time the floating security reminder was closed. */
+    reminderDismissedAt: v.optional(v.number()),
   })
     .index("by_subject", ["authSubject"])
     .index("by_email", ["email"])

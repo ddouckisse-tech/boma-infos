@@ -1,8 +1,10 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { Clock, Eye, Megaphone, Share2 } from "lucide-react";
+import { ChartNoAxesColumn, Clock, Eye, Megaphone, Share2 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
+import { DataTable, type DataColumn } from "@/components/custom/data-table";
+import { OfficeHeader, OfficeSection } from "@/components/custom/office-header";
 import { StatsTile } from "@/components/custom/stats-tile";
 import { formatDateTime, formatDuration, formatNumber } from "@/lib/private";
 
@@ -35,163 +37,159 @@ function PartnerBadge() {
   );
 }
 
+type ArticleRow = {
+  slug: string;
+  title: string;
+  categoryName: string;
+  publishedAt: number;
+  views: number;
+  averageReadingSeconds: number;
+  shares: number;
+  sharesByChannel: { channel: string; count: number }[];
+};
+
 export default function OrganizationStatisticsPage() {
   const data = useQuery(api.stats.forOrganization, {});
 
   return (
-    <>
-      <h1 className="font-display type-h1">Statistiques de diffusion</h1>
-      <p className="mt-4 max-w-reading type-body text-muted-foreground">
-        Ces chiffres ne concernent que les publications de votre entreprise. Le
-        périmètre est calculé côté serveur à partir de votre session&nbsp;:
-        aucune donnée d&apos;une autre entreprise n&apos;est lue, même en
-        appelant l&apos;API directement. Mesure sans traqueur tiers ni cookie.
-      </p>
+    <div className="flex flex-col gap-8">
+      <OfficeHeader
+        icon={ChartNoAxesColumn}
+        title="Statistiques de diffusion"
+        description={
+          <>
+            Ces chiffres ne concernent que les publications de votre entreprise.
+            Le périmètre est calculé côté serveur à partir de votre
+            session&nbsp;: aucune donnée d&apos;une autre entreprise n&apos;est
+            lue, même en appelant l&apos;API directement. Mesure sans traqueur
+            tiers ni cookie.
+          </>
+        }
+      />
 
       {data === undefined ? (
-        <p className="mt-6 type-body text-muted-foreground">
+        <p className="type-body text-muted-foreground">
           Chargement des statistiques…
         </p>
       ) : (
         <>
-          <div className="mt-6 grid gap-4 sm:grid-cols-3">
-            <div className="relative">
-              <Eye
-                aria-hidden="true"
-                className="absolute top-4 right-4 size-4 text-muted-foreground"
-              />
-              <StatsTile label="Vues" value={formatNumber(data.totalViews)} />
-            </div>
-            <div className="relative">
-              <Share2
-                aria-hidden="true"
-                className="absolute top-4 right-4 size-4 text-muted-foreground"
-              />
-              <StatsTile
-                label="Partages"
-                value={formatNumber(data.totalShares)}
-              />
-            </div>
-            <div className="relative">
-              <Clock
-                aria-hidden="true"
-                className="absolute top-4 right-4 size-4 text-muted-foreground"
-              />
-              <StatsTile
-                label="Temps de lecture moyen"
-                value={formatDuration(data.averageReadingSeconds)}
-              />
-            </div>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <StatsTile label="Vues" value={formatNumber(data.totalViews)} />
+            <StatsTile
+              label="Partages"
+              value={formatNumber(data.totalShares)}
+            />
+            <StatsTile
+              label="Temps de lecture moyen"
+              value={formatDuration(data.averageReadingSeconds)}
+            />
           </div>
 
-          <h2 className="mt-8 font-display type-h2">Publications</h2>
-          {data.articles.length === 0 ? (
-            <p className="mt-4 rounded-md border border-border bg-card p-6 type-body text-muted-foreground">
-              Aucune publication pour l&apos;instant. Les statistiques
-              apparaissent dès qu&apos;un de vos dépôts est publié.
-            </p>
-          ) : (
-            <div className="mt-4 overflow-x-auto">
-              <table className="w-full min-w-[56rem] border-collapse text-left">
-                <caption className="sr-only">
-                  Statistiques de diffusion de vos publications
-                </caption>
-                <thead>
-                  <tr className="border-b border-border">
-                    <th
-                      scope="col"
-                      className="py-2 pr-4 type-small font-semibold"
-                    >
-                      Titre
-                    </th>
-                    <th
-                      scope="col"
-                      className="py-2 pr-4 type-small font-semibold"
-                    >
-                      Rubrique
-                    </th>
-                    <th
-                      scope="col"
-                      className="py-2 pr-4 type-small font-semibold"
-                    >
-                      Publié le
-                    </th>
-                    <th
-                      scope="col"
-                      className="py-2 pr-4 type-small font-semibold"
-                    >
-                      Vues
-                    </th>
-                    <th
-                      scope="col"
-                      className="py-2 pr-4 type-small font-semibold"
-                    >
-                      Lecture moyenne
-                    </th>
-                    <th
-                      scope="col"
-                      className="py-2 pr-4 type-small font-semibold"
-                    >
-                      Partages
-                    </th>
-                    <th scope="col" className="py-2 type-small font-semibold">
-                      Détail par canal
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.articles.map((article) => (
-                    <tr key={article.slug} className="border-b border-border">
-                      <td className="py-3 pr-4 align-top">
-                        <a
-                          href={`/article/${article.slug}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="type-small font-semibold text-accent underline-offset-2 hover:underline"
-                        >
-                          {article.title}
-                        </a>
-                        <div className="mt-1.5">
-                          <PartnerBadge />
-                        </div>
-                      </td>
-                      <td className="py-3 pr-4 align-top type-small text-muted-foreground">
-                        {article.categoryName}
-                      </td>
-                      <td className="py-3 pr-4 align-top type-small whitespace-nowrap">
-                        {formatDateTime(article.publishedAt)}
-                      </td>
-                      <td className="py-3 pr-4 align-top type-small tabular-nums">
-                        {formatNumber(article.views)}
-                      </td>
-                      <td className="py-3 pr-4 align-top type-small whitespace-nowrap tabular-nums">
-                        {formatDuration(article.averageReadingSeconds)}
-                      </td>
-                      <td className="py-3 pr-4 align-top type-small tabular-nums">
-                        {formatNumber(article.shares)}
-                      </td>
-                      <td className="py-3 align-top type-small text-muted-foreground">
-                        {article.sharesByChannel.length === 0 ? (
-                          "—"
-                        ) : (
-                          <ul className="grid gap-0.5">
-                            {article.sharesByChannel.map((entry) => (
-                              <li key={entry.channel} className="tabular-nums">
-                                {CHANNEL_LABEL[entry.channel] ?? entry.channel}
-                                &nbsp;: {formatNumber(entry.count)}
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+          <OfficeSection title="Publications">
+            <ArticleTable articles={data.articles} />
+          </OfficeSection>
         </>
       )}
-    </>
+    </div>
+  );
+}
+
+function ArticleTable({ articles }: { articles: ArticleRow[] }) {
+  const columns: DataColumn<ArticleRow>[] = [
+    {
+      key: "title",
+      header: "Titre",
+      primary: true,
+      cell: (article) => (
+        <>
+          <a
+            href={`/article/${article.slug}`}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center type-small font-semibold text-accent underline-offset-2 touch-target hover:underline"
+          >
+            {article.title}
+          </a>
+          <div className="mt-1.5">
+            <PartnerBadge />
+          </div>
+        </>
+      ),
+    },
+    {
+      key: "category",
+      header: "Rubrique",
+      cell: (article) => article.categoryName,
+    },
+    {
+      key: "publishedAt",
+      header: "Publié le",
+      className: "whitespace-nowrap tabular-nums",
+      cell: (article) => formatDateTime(article.publishedAt),
+    },
+    {
+      key: "views",
+      header: (
+        <span className="inline-flex items-center justify-end gap-1">
+          <Eye aria-hidden="true" className="size-4" />
+          Vues
+        </span>
+      ),
+      align: "end",
+      className: "tabular-nums",
+      cell: (article) => formatNumber(article.views),
+    },
+    {
+      key: "reading",
+      header: (
+        <span className="inline-flex items-center justify-end gap-1">
+          <Clock aria-hidden="true" className="size-4" />
+          Lecture moy.
+        </span>
+      ),
+      align: "end",
+      className: "whitespace-nowrap tabular-nums",
+      cell: (article) => formatDuration(article.averageReadingSeconds),
+    },
+    {
+      key: "shares",
+      header: (
+        <span className="inline-flex items-center justify-end gap-1">
+          <Share2 aria-hidden="true" className="size-4" />
+          Partages
+        </span>
+      ),
+      align: "end",
+      className: "tabular-nums",
+      cell: (article) => formatNumber(article.shares),
+    },
+    {
+      key: "channels",
+      header: "Détail par canal",
+      cell: (article) =>
+        article.sharesByChannel.length === 0 ? (
+          "—"
+        ) : (
+          <ul className="grid gap-0.5">
+            {article.sharesByChannel.map((entry) => (
+              <li key={entry.channel} className="tabular-nums">
+                {CHANNEL_LABEL[entry.channel] ?? entry.channel}
+                &nbsp;: {formatNumber(entry.count)}
+              </li>
+            ))}
+          </ul>
+        ),
+    },
+  ];
+
+  return (
+    <DataTable
+      columns={columns}
+      rows={articles}
+      rowKey={(article) => article.slug}
+      caption="Statistiques de diffusion de vos publications"
+      empty="Aucune publication pour l'instant. Les statistiques apparaissent dès qu'un de vos dépôts est publié."
+      minWidth="54rem"
+    />
   );
 }

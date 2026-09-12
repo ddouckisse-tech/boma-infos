@@ -2,13 +2,30 @@
 
 import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
-import { Plus, Power, Save, Settings, Sparkles, Trash2 } from "lucide-react";
+import {
+  ArrowRightLeft,
+  ChevronDown,
+  KeyRound,
+  Mail,
+  Newspaper,
+  Plus,
+  Save,
+  Settings,
+  Share2,
+  ShieldCheck,
+  Sparkles,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { ActionButton } from "@/components/custom/action-button";
+import { DataTable, type DataColumn } from "@/components/custom/data-table";
 import { SelectField, TextField } from "@/components/custom/form-field";
+import { OfficeHeader, OfficeSection } from "@/components/custom/office-header";
+import { PasswordChangeForm } from "@/components/custom/password-change-form";
 import { StatsTile } from "@/components/custom/stats-tile";
+import { TwoFactorPanel } from "@/components/custom/two-factor-panel";
 import {
   formatCost,
   formatDateTime,
@@ -50,6 +67,14 @@ const NEWSLETTER_DAYS = [
   { value: "6", label: "Samedi" },
 ] as const;
 
+type AgentRow = NonNullable<
+  ReturnType<typeof useQuery<typeof api.settings.agents>>
+>["agents"][number];
+
+type RedirectRow = NonNullable<
+  ReturnType<typeof useQuery<typeof api.settings.redirects>>
+>[number];
+
 /**
  * Réglages — CDC §4.4.
  *
@@ -65,6 +90,7 @@ export default function ReglagesPage() {
   const settings = useQuery(api.settings.read, {});
   const agentsData = useQuery(api.settings.agents, {});
   const redirects = useQuery(api.settings.redirects, {});
+  const viewer = useQuery(api.accounts.me, {});
 
   const saveSettings = useMutation(api.settings.save);
   const toggleAgent = useMutation(api.settings.setAgentEnabled);
@@ -216,16 +242,134 @@ export default function ReglagesPage() {
         : ("default" as const)
     : ("default" as const);
 
+  const agentColumns: DataColumn<AgentRow>[] = [
+    {
+      key: "number",
+      header: "Nº",
+      className: "tabular-nums",
+      cell: (row) => (
+        <span className="text-muted-foreground">{row.number}</span>
+      ),
+    },
+    {
+      key: "agent",
+      header: "Agent",
+      primary: true,
+      className: "max-w-xs",
+      cell: (row) => (
+        <>
+          <p className="type-small font-semibold">{row.name}</p>
+          <p className="mt-0.5 type-small text-muted-foreground">{row.what}</p>
+          {!row.enabled && (
+            <p className="mt-1 type-small text-muted-foreground">
+              Repli manuel : {row.fallback}
+            </p>
+          )}
+        </>
+      ),
+    },
+    {
+      key: "trigger",
+      header: "Déclencheur",
+      cell: (row) => (
+        <span className="text-muted-foreground">{row.trigger}</span>
+      ),
+    },
+    { key: "model", header: "Modèle", cell: (row) => row.model },
+    {
+      key: "runs",
+      header: "Exécutions",
+      className: "tabular-nums",
+      cell: (row) => formatNumber(row.runs),
+    },
+    {
+      key: "cost",
+      header: "Coût",
+      className: "tabular-nums",
+      cell: (row) => formatCost(row.costMicros),
+    },
+  ];
+
+  const redirectColumns: DataColumn<RedirectRow>[] = [
+    {
+      key: "from",
+      header: "Depuis",
+      primary: true,
+      cell: (row) => <span className="font-mono">{row.from}</span>,
+    },
+    {
+      key: "to",
+      header: "Vers",
+      cell: (row) => <span className="font-mono">{row.to}</span>,
+    },
+    {
+      key: "type",
+      header: "Type",
+      cell: (row) => (row.permanent ? "301" : "302"),
+    },
+    {
+      key: "createdAt",
+      header: "Créée le",
+      className: "whitespace-nowrap",
+      cell: (row) => (
+        <span className="text-muted-foreground">
+          {formatDateTime(row.createdAt)}
+        </span>
+      ),
+    },
+  ];
+
   return (
     <>
-      <h1 className="flex items-center gap-2 font-display type-h1">
-        <Settings aria-hidden="true" className="size-6" />
-        Réglages
-      </h1>
-      <p className="mt-2 max-w-reading type-body text-muted-foreground">
-        Identité du site, réseaux sociaux, newsletter, agents éditoriaux et
-        redirections héritées de l&apos;ancien site.
-      </p>
+      <OfficeHeader
+        icon={Settings}
+        title="Réglages"
+        description="Votre code d'accès, puis l'identité du site, les réseaux, la newsletter, les agents éditoriaux et les redirections héritées de l'ancien site."
+      />
+
+      {/* La sécurité de l'accès d'abord — c'est ici que le client attend le
+          « changement du mot de passe » (12/09/2026) : trois rangées de six
+          cases, et la vérification par application repliée dessous. */}
+      <OfficeSection
+        id="mot-de-passe"
+        icon={KeyRound}
+        tone={viewer?.passwordChangeRequired ? "warning" : "default"}
+        title="Changement du code d'accès"
+        description={
+          viewer?.passwordChangeRequired
+            ? "Le code qui vous a été remis est provisoire : choisissez le vôtre. Trois fois six chiffres."
+            : "Six chiffres, connus de vous seul. Le changement déconnecte vos autres appareils."
+        }
+        className="mb-8"
+      >
+        <div className="max-w-md">
+          <PasswordChangeForm mode="pin" />
+        </div>
+        <details className="group mt-5 rounded-lg border border-border">
+          <summary className="flex min-h-12 cursor-pointer list-none items-center gap-2 px-4 type-small font-semibold [&::-webkit-details-marker]:hidden">
+            <ShieldCheck
+              aria-hidden="true"
+              className={
+                "size-4 " +
+                (viewer?.twoFactorEnabled
+                  ? "text-success-token"
+                  : "text-muted-foreground")
+              }
+            />
+            Vérification par application
+            <span className="font-normal text-muted-foreground">
+              {viewer?.twoFactorEnabled ? "· active" : "· facultatif"}
+            </span>
+            <ChevronDown
+              aria-hidden="true"
+              className="ms-auto size-4 shrink-0 transition-transform group-open:rotate-180"
+            />
+          </summary>
+          <div className="border-t border-border p-4">
+            <TwoFactorPanel enabled={viewer?.twoFactorEnabled ?? false} />
+          </div>
+        </details>
+      </OfficeSection>
 
       {settings === undefined || form === null ? (
         <p className="mt-6 type-body text-muted-foreground">
@@ -233,9 +377,8 @@ export default function ReglagesPage() {
         </p>
       ) : (
         <div className="mt-6 grid gap-8">
-          <section className="rounded-lg border border-border bg-card p-6">
-            <h2 className="font-display type-h2">Identité du site</h2>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <OfficeSection icon={Newspaper} title="Identité du site">
+            <div className="grid gap-4 sm:grid-cols-2">
               <TextField
                 label="Nom du site"
                 value={form.siteName}
@@ -269,16 +412,15 @@ export default function ReglagesPage() {
                 required
               />
             </div>
-          </section>
+          </OfficeSection>
 
-          <section className="rounded-lg border border-border bg-card p-6">
-            <h2 className="font-display type-h2">Réseaux</h2>
+          <OfficeSection icon={Share2} title="Réseaux">
             {form.social.length === 0 ? (
-              <p className="mt-4 type-small text-muted-foreground">
+              <p className="type-small text-muted-foreground">
                 Aucun réseau enregistré.
               </p>
             ) : (
-              <div className="mt-4 grid gap-4">
+              <div className="grid gap-4">
                 {form.social.map((item, index) => (
                   <div
                     key={index}
@@ -324,11 +466,10 @@ export default function ReglagesPage() {
               <Plus aria-hidden="true" className="size-4" />
               Ajouter un réseau
             </ActionButton>
-          </section>
+          </OfficeSection>
 
-          <section className="rounded-lg border border-border bg-card p-6">
-            <h2 className="font-display type-h2">Newsletter</h2>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <OfficeSection icon={Mail} title="Newsletter">
+            <div className="grid gap-4 sm:grid-cols-2">
               <TextField
                 label="Nom de l'expéditeur"
                 value={form.newsletterSenderName}
@@ -346,20 +487,15 @@ export default function ReglagesPage() {
                 options={NEWSLETTER_DAYS}
               />
             </div>
-          </section>
+          </OfficeSection>
 
-          <section className="rounded-lg border border-border bg-card p-6">
-            <h2 className="flex items-center gap-2 font-display type-h2">
-              <Sparkles aria-hidden="true" className="size-5" />
-              Agents
-            </h2>
-
+          <OfficeSection icon={Sparkles} title="Agents">
             {agentsData === undefined ? (
-              <p className="mt-4 type-body text-muted-foreground">
+              <p className="type-body text-muted-foreground">
                 Chargement des agents…
               </p>
             ) : (
-              <div className="mt-4 grid gap-5">
+              <div className="grid gap-5">
                 {!agentsData.keyConfigured && (
                   <div className="rounded-md border border-warning-token/40 bg-warning-token/10 p-4">
                     <p className="type-small text-foreground">
@@ -412,131 +548,45 @@ export default function ReglagesPage() {
                   </div>
                 ) : null}
 
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[54rem] border-collapse text-left">
-                    <caption className="sr-only">
-                      Liste des sept agents éditoriaux et leur état
-                    </caption>
-                    <thead>
-                      <tr className="border-b border-border">
-                        <th
-                          scope="col"
-                          className="py-2 pr-4 type-small font-semibold"
-                        >
-                          Nº
-                        </th>
-                        <th
-                          scope="col"
-                          className="py-2 pr-4 type-small font-semibold"
-                        >
-                          Agent
-                        </th>
-                        <th
-                          scope="col"
-                          className="py-2 pr-4 type-small font-semibold"
-                        >
-                          Déclencheur
-                        </th>
-                        <th
-                          scope="col"
-                          className="py-2 pr-4 type-small font-semibold"
-                        >
-                          Modèle
-                        </th>
-                        <th
-                          scope="col"
-                          className="py-2 pr-4 type-small font-semibold"
-                        >
-                          Exécutions
-                        </th>
-                        <th
-                          scope="col"
-                          className="py-2 pr-4 type-small font-semibold"
-                        >
-                          Coût
-                        </th>
-                        <th
-                          scope="col"
-                          className="py-2 type-small font-semibold"
-                        >
-                          <span className="inline-flex items-center gap-1">
-                            <Power aria-hidden="true" className="size-4" />
-                            Actif
-                          </span>
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {agentsData.agents.map((agent) => (
-                        <tr
-                          key={agent.key}
-                          className="border-b border-border align-top"
-                        >
-                          <td className="py-3 pr-4 type-small text-muted-foreground tabular-nums">
-                            {agent.number}
-                          </td>
-                          <td className="max-w-xs py-3 pr-4">
-                            <p className="type-small font-semibold">
-                              {agent.name}
-                            </p>
-                            <p className="mt-0.5 type-small text-muted-foreground">
-                              {agent.what}
-                            </p>
-                            {!agent.enabled && (
-                              <p className="mt-1 type-small text-muted-foreground">
-                                Repli manuel : {agent.fallback}
-                              </p>
-                            )}
-                          </td>
-                          <td className="py-3 pr-4 type-small text-muted-foreground">
-                            {agent.trigger}
-                          </td>
-                          <td className="py-3 pr-4 type-small">
-                            {agent.model}
-                          </td>
-                          <td className="py-3 pr-4 type-small tabular-nums">
-                            {formatNumber(agent.runs)}
-                          </td>
-                          <td className="py-3 pr-4 type-small tabular-nums">
-                            {formatCost(agent.costMicros)}
-                          </td>
-                          <td className="py-3">
-                            <button
-                              type="button"
-                              role="switch"
-                              aria-checked={agent.enabled}
-                              aria-label={`Agent ${agent.name}`}
-                              disabled={togglingKey === agent.key}
-                              onClick={() =>
-                                void handleToggleAgent(
-                                  agent.key as AgentKey,
-                                  agent.name,
-                                  !agent.enabled
-                                )
-                              }
-                              className={cn(
-                                "relative inline-flex h-11 w-20 shrink-0 items-center rounded-full border p-1 transition-colors touch-target disabled:cursor-not-allowed disabled:opacity-60",
-                                agent.enabled
-                                  ? "justify-end border-primary bg-primary"
-                                  : "justify-start border-border bg-surface-muted"
-                              )}
-                            >
-                              <span
-                                aria-hidden="true"
-                                className={cn(
-                                  "block size-8 rounded-full transition-colors",
-                                  agent.enabled
-                                    ? "bg-primary-foreground"
-                                    : "bg-foreground"
-                                )}
-                              />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <DataTable
+                  columns={agentColumns}
+                  rows={agentsData.agents}
+                  rowKey={(row) => row.key}
+                  caption="Liste des sept agents éditoriaux et leur état"
+                  minWidth="54rem"
+                  actions={(row) => (
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={row.enabled}
+                      aria-label={`Agent ${row.name}`}
+                      disabled={togglingKey === row.key}
+                      onClick={() =>
+                        void handleToggleAgent(
+                          row.key as AgentKey,
+                          row.name,
+                          !row.enabled
+                        )
+                      }
+                      className={cn(
+                        "relative inline-flex h-11 w-20 shrink-0 items-center rounded-full border p-1 transition-colors touch-target disabled:cursor-not-allowed disabled:opacity-60",
+                        row.enabled
+                          ? "justify-end border-primary bg-primary"
+                          : "justify-start border-border bg-surface-muted"
+                      )}
+                    >
+                      <span
+                        aria-hidden="true"
+                        className={cn(
+                          "block size-8 rounded-full transition-colors",
+                          row.enabled
+                            ? "bg-primary-foreground"
+                            : "bg-foreground"
+                        )}
+                      />
+                    </button>
+                  )}
+                />
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <TextField
@@ -565,107 +615,46 @@ export default function ReglagesPage() {
                 </div>
               </div>
             )}
-          </section>
+          </OfficeSection>
 
-          <section className="rounded-lg border border-border bg-card p-6">
-            <h2 className="font-display type-h2">Redirections</h2>
-            <p className="mt-2 type-small text-muted-foreground">
-              Ces redirections complètent le plan statique de{" "}
-              <code className="font-mono">lib/legacy-redirects.ts</code>, mais
-              ne sont pas encore appliquées par{" "}
-              <code className="font-mono">next.config.ts</code> : elles sont
-              enregistrées ici en vue de la reprise du fonds WordPress.
-            </p>
-
+          <OfficeSection
+            icon={ArrowRightLeft}
+            title="Redirections"
+            description={
+              <>
+                Ces redirections complètent le plan statique de{" "}
+                <code className="font-mono">lib/legacy-redirects.ts</code>, mais
+                ne sont pas encore appliquées par{" "}
+                <code className="font-mono">next.config.ts</code> : elles sont
+                enregistrées ici en vue de la reprise du fonds WordPress.
+              </>
+            }
+          >
             {redirects === undefined ? (
-              <p className="mt-4 type-body text-muted-foreground">
+              <p className="type-body text-muted-foreground">
                 Chargement des redirections…
               </p>
             ) : (
-              <div className="mt-4 overflow-x-auto">
-                <table className="w-full min-w-[38rem] border-collapse text-left">
-                  <caption className="sr-only">
-                    Redirections enregistrées
-                  </caption>
-                  <thead>
-                    <tr className="border-b border-border">
-                      <th
-                        scope="col"
-                        className="py-2 pr-4 type-small font-semibold"
-                      >
-                        Depuis
-                      </th>
-                      <th
-                        scope="col"
-                        className="py-2 pr-4 type-small font-semibold"
-                      >
-                        Vers
-                      </th>
-                      <th
-                        scope="col"
-                        className="py-2 pr-4 type-small font-semibold"
-                      >
-                        Type
-                      </th>
-                      <th
-                        scope="col"
-                        className="py-2 pr-4 type-small font-semibold"
-                      >
-                        Créée le
-                      </th>
-                      <th scope="col" className="py-2 type-small font-semibold">
-                        <span className="sr-only">Actions</span>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {redirects.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan={5}
-                          className="py-3 type-small text-muted-foreground"
-                        >
-                          Aucune redirection enregistrée.
-                        </td>
-                      </tr>
-                    ) : (
-                      redirects.map((redirect) => (
-                        <tr
-                          key={redirect._id}
-                          className="border-b border-border"
-                        >
-                          <td className="py-3 pr-4 font-mono type-small">
-                            {redirect.from}
-                          </td>
-                          <td className="py-3 pr-4 font-mono type-small">
-                            {redirect.to}
-                          </td>
-                          <td className="py-3 pr-4 type-small">
-                            {redirect.permanent ? "301" : "302"}
-                          </td>
-                          <td className="py-3 pr-4 type-small text-muted-foreground">
-                            {formatDateTime(redirect.createdAt)}
-                          </td>
-                          <td className="py-3">
-                            <ActionButton
-                              type="button"
-                              variant="destructive"
-                              disabled={removingRedirectId === redirect._id}
-                              onClick={() =>
-                                void handleRemoveRedirect(redirect._id)
-                              }
-                              aria-label={`Supprimer la redirection ${redirect.from}`}
-                            >
-                              <Trash2 aria-hidden="true" className="size-4" />
-                              Supprimer
-                            </ActionButton>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
+              <DataTable
+                columns={redirectColumns}
+                rows={redirects}
+                rowKey={(row) => row._id}
+                caption="Redirections enregistrées"
+                empty="Aucune redirection enregistrée."
+                minWidth="38rem"
+                actions={(row) => (
+                  <ActionButton
+                    type="button"
+                    variant="destructive"
+                    disabled={removingRedirectId === row._id}
+                    onClick={() => void handleRemoveRedirect(row._id)}
+                    aria-label={`Supprimer la redirection ${row.from}`}
+                  >
+                    <Trash2 aria-hidden="true" className="size-4" />
+                    Supprimer
+                  </ActionButton>
+                )}
+              />
             )}
 
             <form
@@ -706,11 +695,13 @@ export default function ReglagesPage() {
                 Ajouter la redirection
               </ActionButton>
             </form>
-          </section>
+          </OfficeSection>
         </div>
       )}
 
-      <div className="sticky bottom-0 z-10 mt-6 flex flex-col gap-3 border-t border-border bg-background px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+      {/* Barre d'enregistrement collante, au-dessus de la barre d'onglets du
+          téléphone (3,5 rem) et au ras du bas dès `lg`. */}
+      <div className="sticky bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-10 mt-6 flex flex-col gap-3 rounded-t-xl border border-border bg-background px-4 py-4 sm:flex-row sm:items-center sm:justify-between lg:bottom-0">
         <p className="type-small text-muted-foreground">
           {settings && settings.updatedAt > 0
             ? `Dernière modification par ${

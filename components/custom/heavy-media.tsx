@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Play, WifiOff } from "lucide-react";
 import { ResponsiveImage } from "@/components/custom/responsive-image";
 import { usePreferences } from "@/components/providers/preferences-provider";
-import { getMediaAsset, SIZES } from "@/lib/media";
+import { SIZES, type MediaAsset } from "@/lib/media-core";
 
 /**
  * Video, and anything else expensive enough to be worth an explicit consent.
@@ -20,18 +20,25 @@ import { getMediaAsset, SIZES } from "@/lib/media";
  */
 export function HeavyMedia({
   title,
-  posterMediaKey,
+  poster: posterAsset,
   src,
   durationLabel,
 }: {
   title: string;
-  posterMediaKey: string;
+  /**
+   * The poster, resolved by the server parent (`ArticleBody`). Resolving it
+   * here would drag the whole manifest into the article's JavaScript, and
+   * an uploaded picture is only known to the server-side registry anyway
+   * (`lib/media.ts`); the prop keeps the client render identical to the
+   * server one.
+   */
+  poster?: MediaAsset;
   src: string;
   durationLabel?: string;
 }) {
   const { dataSaver } = usePreferences();
   const [playing, setPlaying] = useState(false);
-  const poster = getMediaAsset(posterMediaKey);
+  const poster = posterAsset;
 
   if (playing) {
     return (

@@ -47,7 +47,12 @@ export function SearchDialog({ className }: { className?: string }) {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key.toLowerCase() === "k" && (event.metaKey || event.ctrlKey)) {
+      // `key` peut manquer sur un événement synthétique (gestionnaire de mots
+      // de passe, automatisation) : on ne plante pas le journal pour autant.
+      if (
+        event.key?.toLowerCase() === "k" &&
+        (event.metaKey || event.ctrlKey)
+      ) {
         event.preventDefault();
         setOpen((previous) => !previous);
       }

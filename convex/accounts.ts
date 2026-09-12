@@ -27,6 +27,7 @@ import {
   recordAudit,
   queueNotification,
 } from "./model/audit";
+import { isAcceptablePassword, PASSWORD_RULE_MESSAGE } from "./model/password";
 
 /**
  * Accounts, roles and company registration — CDC §4.3 and §4.4.
@@ -55,6 +56,8 @@ const viewerShape = v.object({
   twoFactorEnabled: v.boolean(),
   twoFactorRequired: v.boolean(),
   passwordChangeRequired: v.boolean(),
+  /** Last time the floating security reminder was closed, if ever. */
+  reminderDismissedAt: v.optional(v.number()),
   active: v.boolean(),
   home: v.string(),
   authorSlug: v.optional(v.string()),
@@ -128,6 +131,7 @@ export const me = query({
       twoFactorEnabled: viewer.twoFactorEnabled,
       twoFactorRequired: viewer.role.requiresTwoFactor,
       passwordChangeRequired: viewer.profile.mustChangePassword === true,
+      reminderDismissedAt: viewer.profile.reminderDismissedAt,
       active: viewer.profile.active,
       home: viewer.role.home,
       authorSlug: viewer.profile.authorSlug,
@@ -418,6 +422,8 @@ export const attachProfile = internalMutation({
     organizationId: v.optional(v.id("organizations")),
     authorSlug: v.optional(v.string()),
     sectionSlugs: v.optional(v.array(v.string())),
+    /** The code was chosen by someone else: remind the holder to replace it. */
+    mustChangePassword: v.optional(v.boolean()),
   },
   returns: v.id("users"),
   handler: async (ctx, args) => {
@@ -432,6 +438,7 @@ export const attachProfile = internalMutation({
         organizationId: args.organizationId,
         authorSlug: args.authorSlug,
         sectionSlugs: args.sectionSlugs ?? [],
+        mustChangePassword: args.mustChangePassword === true,
       });
       return existing._id;
     }
@@ -445,6 +452,7 @@ export const attachProfile = internalMutation({
       sectionSlugs: args.sectionSlugs ?? [],
       active: true,
       createdAt: Date.now(),
+      mustChangePassword: args.mustChangePassword === true,
     });
   },
 });
@@ -599,9 +607,10 @@ export const registerCompany = action({
 
 /**
  * Nominative staff account, created by an administrator (§4.3: "aucun
- * identifiant par défaut"). The password is chosen at creation and handed
- * over out of band; the holder changes it and enrols a second factor before
- * the account can do anything at all.
+ * identifiant par défaut"). The access code is chosen at creation — six
+ * digits, typically — and handed over out of band; the profile is flagged
+ * so the interface reminds the holder to pick their own. Nothing is locked
+ * meanwhile (12/09/2026).
  */
 export const createStaff = action({
   args: {
@@ -634,6 +643,9 @@ export const createStaff = action({
     );
     if (!viewer) throw accessError("FORBIDDEN");
     if (!isRoleSlug(args.roleSlug)) throw accessError("FORBIDDEN");
+    if (!isAcceptablePassword(args.password)) {
+      return { status: "refused", message: PASSWORD_RULE_MESSAGE };
+    }
 
     const email = args.email.trim().toLowerCase();
     const already: Id<"users"> | null = await ctx.runQuery(
@@ -663,6 +675,7 @@ export const createStaff = action({
         roleSlug: args.roleSlug,
         authorSlug: args.authorSlug,
         sectionSlugs: args.sectionSlugs,
+        mustChangePassword: true,
       });
       await ctx.runMutation(internal.accounts.logStaffCreation, {
         actorSubject: viewer.subject,
@@ -672,16 +685,14 @@ export const createStaff = action({
       });
       return {
         status: "created",
-        message: ROLES[args.roleSlug].requiresTwoFactor
-          ? "Compte créé. Il restera inutilisable tant que son titulaire n'aura pas activé la double authentification."
-          : "Compte créé.",
+        message: `Compte « ${ROLES[args.roleSlug].name} » créé. Remettez le code à la personne : elle pourra le remplacer depuis « Mon compte ».`,
       };
     } catch (error) {
       return {
         status: "refused",
         message:
           error instanceof Error && /password/i.test(error.message)
-            ? "Le mot de passe ne respecte pas la politique (douze caractères au minimum)."
+            ? PASSWORD_RULE_MESSAGE
             : "Le compte n'a pas pu être créé.",
       };
     }
@@ -891,6 +902,23 @@ export const clearPasswordChange = internalMutation({
 });
 
 /** Touches `lastSeenAt`, used by the account list to show who is active. */
+/**
+ * The floating security reminder was closed. Stored on the profile so the
+ * choice follows the person from phone to desktop; the card comes back a
+ * week later if the access code is still the provisional one.
+ */
+export const dismissReminder = mutation({
+  args: {},
+  returns: v.null(),
+  handler: async (ctx) => {
+    const viewer = await requireViewer(ctx);
+    await ctx.db.patch(viewer.profile._id, {
+      reminderDismissedAt: Date.now(),
+    });
+    return null;
+  },
+});
+
 export const touch = mutation({
   args: {},
   returns: v.null(),

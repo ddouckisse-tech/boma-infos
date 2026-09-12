@@ -6,6 +6,7 @@ import { convex } from "@convex-dev/better-auth/plugins";
 import { components, internal } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
 import authConfig from "./auth.config";
+import { isAcceptablePassword, PASSWORD_RULE_MESSAGE } from "./model/password";
 
 /**
  * Public site URL, used by Better Auth to build absolute callback URLs.
@@ -47,10 +48,11 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
     secret: process.env.BETTER_AUTH_SECRET,
     emailAndPassword: {
       enabled: true,
-      // Plancher des mots de passe PROVISOIRES, que seule la ligne de
-      // commande pose (`scripts/create-account.ts`). La règle des douze
-      // caractères du §4.3 vaut pour tout mot de passe définitif : elle est
-      // tenue dans `hooks.before` ci-dessous et dans `registerCompany`.
+      // Six : la longueur du code d'accès de la rédaction (arbitrage du
+      // 12/09/2026). La forme exacte — six chiffres, ou douze caractères et
+      // plus pour une entreprise — est tenue dans `hooks.before` ci-dessous,
+      // dans `registerCompany` et dans `createStaff`
+      // (`convex/model/password.ts`).
       minPasswordLength: 6,
       maxPasswordLength: 128,
       // Aucun courriel n'est encore expédié (aucun prestataire n'est câblé) :
@@ -99,6 +101,14 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
         // quota trop serré enfermerait dehors les collègues d'une personne
         // qui se trompe de mot de passe.
         "/sign-in/email": { window: 60, max: 10 },
+        // Lecture de session et jeton Convex : appelés à chaque chargement
+        // de page et à chaque reconnexion, par chaque poste de la rédaction
+        // derrière la même IP. Sous le plafond global de trente par minute,
+        // une rafale (plusieurs collègues, ou les rechargements à chaud en
+        // développement) rendait des 429 et la session paraissait perdue.
+        // Ces deux routes ne révèlent ni ne forcent rien : on les desserre.
+        "/get-session": { window: 60, max: 120 },
+        "/convex/token": { window: 60, max: 120 },
         "/two-factor/verify-totp": { window: 60, max: 5 },
         "/two-factor/verify-backup-code": { window: 60, max: 5 },
         "/forget-password": { window: 300, max: 3 },
@@ -107,9 +117,10 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
     },
     hooks: {
       /**
-       * CDC §4.3, côté serveur : douze caractères sur les deux chemins où
-       * un titulaire choisit lui-même son mot de passe. Le formulaire le dit
-       * aussi, mais le formulaire n'est pas une garantie.
+       * Politique du mot de passe, côté serveur, sur les deux chemins où un
+       * titulaire choisit lui-même le sien : un code à six chiffres, ou
+       * douze caractères et plus (`convex/model/password.ts`). Le formulaire
+       * le dit aussi, mais le formulaire n'est pas une garantie.
        */
       before: createAuthMiddleware(async (hook) => {
         if (
@@ -120,10 +131,8 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
         }
         const next = (hook.body as { newPassword?: unknown } | undefined)
           ?.newPassword;
-        if (typeof next !== "string" || next.length < 12) {
-          throw new APIError("BAD_REQUEST", {
-            message: "Le mot de passe doit compter au moins douze caractères.",
-          });
+        if (typeof next !== "string" || !isAcceptablePassword(next)) {
+          throw new APIError("BAD_REQUEST", { message: PASSWORD_RULE_MESSAGE });
         }
       }),
       /**

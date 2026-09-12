@@ -37,6 +37,8 @@ export type AuditAction =
   | "agent.suggestion_accepted"
   | "agent.suggestion_rejected"
   | "media.update"
+  | "media.upload"
+  | "media.delete"
   | "newsletter.approve";
 
 export async function recordAudit(

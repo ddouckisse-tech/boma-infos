@@ -135,6 +135,19 @@ export const mediaVariantValidator = v.object({
   bytes: v.number(),
 });
 
+/**
+ * A rendition uploaded from the back office and held in Convex file storage.
+ * WebP only: the browser encodes it before sending, and browsers do not
+ * write AVIF.
+ */
+export const storedRenditionValidator = v.object({
+  format: v.literal("webp"),
+  w: v.number(),
+  h: v.number(),
+  bytes: v.number(),
+  storageId: v.id("_storage"),
+});
+
 /* -------------------------------------------------------------------------
    Public read shapes
    ------------------------------------------------------------------------- */

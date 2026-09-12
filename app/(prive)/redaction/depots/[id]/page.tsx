@@ -3,10 +3,11 @@
 import { use } from "react";
 import Link from "next/link";
 import { useQuery } from "convex/react";
-import { Building2, FlaskConical, Sparkles } from "lucide-react";
+import { Building2, FileText, FlaskConical, Sparkles } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { AgentSuggestionCard } from "@/components/custom/agent-suggestion-card";
+import { OfficeHeader, OfficeSection } from "@/components/custom/office-header";
 import { ReviewPanel } from "@/components/custom/review-panel";
 import { StatusPill } from "@/components/custom/status-pill";
 import { STATUS_LABEL, blocksToText, formatDateTime } from "@/lib/private";
@@ -39,7 +40,7 @@ export default function SubmissionReviewPage({
   if (submission === null) {
     return (
       <>
-        <h1 className="font-display type-h1">Dépôt introuvable</h1>
+        <OfficeHeader title="Dépôt introuvable" />
       </>
     );
   }
@@ -74,16 +75,19 @@ export default function SubmissionReviewPage({
         </Link>
       </p>
 
-      <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
-        <h1 className="font-display type-h1">{submission.title}</h1>
-        <StatusPill status={submission.status} />
-      </div>
-      <p className="mt-1 flex flex-wrap items-center gap-2 type-small text-muted-foreground">
-        <Building2 aria-hidden="true" className="size-4" />
-        {submission.organizationName} · {submission.organizationSector} ·{" "}
-        {submission.organizationContact}
-      </p>
-      <p className="mt-1 type-small text-muted-foreground">
+      <OfficeHeader
+        className="mt-3"
+        icon={Building2}
+        title={submission.title}
+        description={
+          <>
+            {submission.organizationName} · {submission.organizationSector} ·{" "}
+            {submission.organizationContact}
+          </>
+        }
+        actions={<StatusPill status={submission.status} />}
+      />
+      <p className="type-small text-muted-foreground">
         Type déclaré&nbsp;: {submission.kindLabel} · rubrique souhaitée&nbsp;:{" "}
         {submission.requestedCategorySlug}
         {submission.requestedPublishAt
@@ -93,13 +97,12 @@ export default function SubmissionReviewPage({
 
       <div className="mt-8 grid gap-8 xl:grid-cols-[minmax(0,1fr)_26rem]">
         <div className="min-w-0">
-          <section className="rounded-lg border border-border bg-card p-6">
-            <h2 className="font-display type-h2">Texte déposé</h2>
-            <p className="mt-3 type-body font-medium">{submission.dek}</p>
+          <OfficeSection icon={FileText} title="Texte déposé">
+            <p className="type-body font-medium">{submission.dek}</p>
             <div className="mt-4 max-w-reading type-body whitespace-pre-wrap">
               {blocksToText(submission.body)}
             </div>
-          </section>
+          </OfficeSection>
 
           {submission.reviewNotes.length > 0 && (
             <section className="mt-6">
@@ -108,7 +111,7 @@ export default function SubmissionReviewPage({
                 {[...submission.reviewNotes].reverse().map((note, index) => (
                   <li
                     key={`${note.at}-${index}`}
-                    className="rounded-md border border-border bg-card p-3"
+                    className="rounded-xl border border-border bg-card p-3"
                   >
                     <p className="type-small font-semibold">
                       {STATUS_LABEL[note.status] ?? note.status} ·{" "}
@@ -125,29 +128,35 @@ export default function SubmissionReviewPage({
         </div>
 
         <div className="min-w-0">
-          <section className="rounded-lg border border-border bg-card p-4">
-            <h2 className="flex flex-wrap items-center gap-2 font-display type-h2">
-              <Sparkles
-                aria-hidden="true"
-                className="size-5 text-brand-magenta"
-              />
-              Fiche de pré-qualification
-              {moderationRun?.mode === "simulated" && (
+          <OfficeSection
+            title={
+              <>
+                <Sparkles
+                  aria-hidden="true"
+                  className="size-5 shrink-0 text-brand-magenta"
+                />
+                Fiche de pré-qualification
+              </>
+            }
+            description={
+              <>
+                Produite par l&apos;agent de modération (agent 5). Elle
+                conseille, elle ne décide pas&nbsp;: aucune de ces lignes ne
+                change le statut du dépôt.
+              </>
+            }
+            actions={
+              moderationRun?.mode === "simulated" && (
                 <span className="inline-flex items-center gap-1 rounded-xs border border-warning-token/40 bg-warning-token/10 px-1.5 py-0.5 type-small font-semibold text-warning-token">
                   <FlaskConical aria-hidden="true" className="size-3" />
                   Simulation
                 </span>
-              )}
-            </h2>
-            <p className="mt-2 type-small text-muted-foreground">
-              Produite par l&apos;agent de modération (agent 5). Elle conseille,
-              elle ne décide pas&nbsp;: aucune de ces lignes ne change le statut
-              du dépôt.
-            </p>
-
+              )
+            }
+          >
             {moderationRun ? (
               <>
-                <p className="mt-3 rounded-xs border border-border bg-surface-muted px-2 py-1.5 type-small">
+                <p className="rounded-xs border border-border bg-surface-muted px-2 py-1.5 type-small">
                   {moderationRun.summary}
                 </p>
                 {moderationRun.error && (
@@ -157,7 +166,7 @@ export default function SubmissionReviewPage({
                 )}
               </>
             ) : (
-              <p className="mt-3 type-small text-muted-foreground">
+              <p className="type-small text-muted-foreground">
                 Aucune fiche pour ce dépôt — l&apos;agent est peut-être
                 désactivé, ou le plafond mensuel atteint. La revue se fait sans,
                 comme avant.
@@ -169,7 +178,7 @@ export default function SubmissionReviewPage({
                 <AgentSuggestionCard key={item._id} suggestion={item} />
               ))}
             </div>
-          </section>
+          </OfficeSection>
 
           <div className="mt-6">
             <h2 className="font-display type-h2">Décision</h2>

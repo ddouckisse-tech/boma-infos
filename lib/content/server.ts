@@ -7,6 +7,7 @@ import type {
   FunctionReference,
   FunctionReturnType,
 } from "convex/server";
+import { registerMedia, type MediaAsset } from "@/lib/media";
 
 /**
  * Server-side access to the journal.
@@ -62,6 +63,55 @@ async function run<Query extends FunctionReference<"query", "public">>(
   }
 }
 
+/* ------------------------------------------------------------------ médias */
+
+/**
+ * Pictures uploaded from the back office (12/09/2026) are not in the static
+ * manifest: their renditions live in Convex file storage. Before a page that
+ * shows pictures renders, the ones published articles display are fetched
+ * and registered with `lib/media.ts`, so `getMediaAsset` resolves them like
+ * the demo library. Deduplicated per render pass by `cache()`; a failure
+ * only costs those pictures, never the page.
+ */
+export const hydrateUploadedMedia = cache(async (): Promise<void> => {
+  try {
+    const assets = await run(
+      api.library.publicAssets,
+      {},
+      "library.publicAssets"
+    );
+    registerMedia(
+      assets.map((asset): MediaAsset => ({
+        id: asset.key,
+        alt: asset.alt,
+        caption: asset.caption,
+        credit: asset.credit,
+        license: asset.license,
+        source: asset.source,
+        color: asset.color,
+        width: asset.width,
+        height: asset.height,
+        avif: [],
+        webp: asset.renditions.map(({ w, h, bytes }) => ({ w, h, bytes })),
+        urls: Object.fromEntries(
+          asset.renditions.map((r) => [`webp-${r.w}`, r.url])
+        ),
+      }))
+    );
+  } catch (error) {
+    console.warn(
+      "Médias envoyés non chargés :",
+      error instanceof Error ? error.message : error
+    );
+  }
+});
+
+/** Runs a read and the media hydration side by side; returns the read. */
+async function withMedia<T>(read: Promise<T>): Promise<T> {
+  const [, result] = await Promise.all([hydrateUploadedMedia(), read]);
+  return result;
+}
+
 /* ------------------------------------------------------------------ lecture */
 
 export const getNavigation = cache(() =>
@@ -69,7 +119,7 @@ export const getNavigation = cache(() =>
 );
 
 export const getHomepage = cache(() =>
-  run(api.journal.homepage, {}, "journal.homepage")
+  withMedia(run(api.journal.homepage, {}, "journal.homepage"))
 );
 
 export const getPublishedSlugs = cache(() =>
@@ -77,7 +127,7 @@ export const getPublishedSlugs = cache(() =>
 );
 
 export const getLatest = cache((limit: number) =>
-  run(api.journal.latest, { limit }, "journal.latest")
+  withMedia(run(api.journal.latest, { limit }, "journal.latest"))
 );
 
 export const getSectionPage = cache(
@@ -88,10 +138,12 @@ export const getSectionPage = cache(
     perPage: number,
     order: "recent" | "ancien"
   ) =>
-    run(
-      api.journal.bySection,
-      { categorySlug, subCategorySlug, page, perPage, order },
-      "journal.bySection"
+    withMedia(
+      run(
+        api.journal.bySection,
+        { categorySlug, subCategorySlug, page, perPage, order },
+        "journal.bySection"
+      )
     )
 );
 
@@ -100,15 +152,15 @@ export const getSectionCounts = cache(() =>
 );
 
 export const getArticle = cache((slug: string) =>
-  run(api.journal.article, { slug }, "journal.article")
+  withMedia(run(api.journal.article, { slug }, "journal.article"))
 );
 
 export const getRelated = cache((slug: string, limit: number) =>
-  run(api.journal.related, { slug, limit }, "journal.related")
+  withMedia(run(api.journal.related, { slug, limit }, "journal.related"))
 );
 
 export const getAuthor = cache((slug: string) =>
-  run(api.journal.authorBySlug, { slug }, "journal.authorBySlug")
+  withMedia(run(api.journal.authorBySlug, { slug }, "journal.authorBySlug"))
 );
 
 export const getAuthors = cache(() =>
@@ -123,7 +175,10 @@ export const searchArticles = (
   term: string,
   categorySlug: string | undefined,
   limit: number
-) => run(api.journal.search, { term, categorySlug, limit }, "journal.search");
+) =>
+  withMedia(
+    run(api.journal.search, { term, categorySlug, limit }, "journal.search")
+  );
 
 /* ------------------------------------------------------------------ écriture */
 

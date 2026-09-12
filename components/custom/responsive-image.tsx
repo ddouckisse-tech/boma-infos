@@ -1,11 +1,11 @@
 import ReactDOM from "react-dom";
 import {
   fallbackVariant,
-  mediaUrl,
   srcSet,
   srcSetCapped,
+  variantUrl,
   type MediaAsset,
-} from "@/lib/media";
+} from "@/lib/media-core";
 import { cn } from "@/lib/utils";
 
 type ResponsiveImageProps = {
@@ -65,13 +65,15 @@ export function ResponsiveImage({
   if (priority) {
     // Hisse un <link rel="preload"> dans le <head>. Sans lui, l'analyseur de
     // préchargement ne découvre l'image de une qu'après la feuille de style :
-    // 593 ms de retard au démarrage, mesurés par Lighthouse.
-    ReactDOM.preload(mediaUrl(media.id, fallback.w, "avif"), {
+    // 593 ms de retard au démarrage, mesurés par Lighthouse. Une image
+    // envoyée depuis la médiathèque n'a pas d'AVIF : on précharge son WebP.
+    const preloadFormat = avif !== "" ? "avif" : "webp";
+    ReactDOM.preload(variantUrl(media, fallback.w, preloadFormat), {
       as: "image",
-      imageSrcSet: avif,
+      imageSrcSet: avif !== "" ? avif : webp,
       imageSizes: sizes,
       fetchPriority: "high",
-      type: "image/avif",
+      type: `image/${preloadFormat}`,
     });
   }
 
@@ -81,10 +83,12 @@ export function ResponsiveImage({
       style={{ backgroundColor: media.color }}
     >
       <picture>
-        <source type="image/avif" srcSet={avif} sizes={sizes} />
+        {avif !== "" && (
+          <source type="image/avif" srcSet={avif} sizes={sizes} />
+        )}
         <source type="image/webp" srcSet={webp} sizes={sizes} />
         <img
-          src={mediaUrl(media.id, fallback.w, "webp")}
+          src={variantUrl(media, fallback.w, "webp")}
           alt={description}
           width={fallback.w}
           height={fallback.h}

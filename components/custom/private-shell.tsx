@@ -1,11 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useConvexAuth, useQuery } from "convex/react";
 import type { LucideIcon } from "lucide-react";
 import {
-  AlertTriangle,
   Building2,
   ChartNoAxesColumn,
   FileText,
@@ -13,6 +13,8 @@ import {
   Inbox,
   LayoutDashboard,
   LogOut,
+  Menu,
+  Plus,
   ScrollText,
   Settings,
   Sparkles,
@@ -23,112 +25,219 @@ import {
 import { api } from "@/convex/_generated/api";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
+import { initialsOf, type Viewer } from "@/lib/viewer";
 import { BrandWordmark } from "@/components/custom/brand-wordmark";
+import { CloseButton } from "@/components/custom/close-button";
 import { Container } from "@/components/custom/container";
+import { Modal } from "@/components/custom/modal";
+import { NewContentDialog } from "@/components/custom/new-content-dialog";
+import { SecurityReminder } from "@/components/custom/security-reminder";
 import { ThemeToggle } from "@/components/custom/theme-toggle";
+
+type Area = "newsroom" | "portal";
+
+type Counts = {
+  inReview: number;
+  submissionsWaiting: number;
+  pendingSuggestions: number;
+  organizationsWaiting: number;
+};
 
 type Entry = {
   href: string;
   label: string;
+  /** Shorter label for the phone's tab bar. */
+  short?: string;
+  /** One line under the label, in the drawer: what the section is for. */
+  hint: string;
   icon: LucideIcon;
   permission: string;
   exact?: boolean;
+  /** The number shown next to the entry — what is waiting there. */
+  badge?: (counts: Counts) => number;
 };
 
-const NEWSROOM: Entry[] = [
-  {
-    href: "/redaction",
-    label: "Tableau de bord",
-    icon: LayoutDashboard,
-    permission: "newsroom:access",
-    exact: true,
-  },
-  {
-    href: "/redaction/articles",
-    label: "Articles",
-    icon: FileText,
-    permission: "articles:read",
-  },
-  {
-    href: "/redaction/depots",
-    label: "Dépôts entreprises",
-    icon: Inbox,
-    permission: "submissions:review",
-  },
-  {
-    href: "/redaction/medias",
-    label: "Médiathèque",
-    icon: Images,
-    permission: "media:write",
-  },
-  {
-    href: "/redaction/agents",
-    label: "Agents",
-    icon: Sparkles,
-    permission: "agents:run",
-  },
-  {
-    href: "/redaction/statistiques",
-    label: "Statistiques",
-    icon: ChartNoAxesColumn,
-    permission: "stats:read:all",
-  },
-  {
-    href: "/redaction/rubriques",
-    label: "Rubriques",
-    icon: Tags,
-    permission: "categories:write",
-  },
-  {
-    href: "/redaction/comptes",
-    label: "Comptes",
-    icon: UserCog,
-    permission: "accounts:manage",
-  },
-  {
-    href: "/redaction/reglages",
-    label: "Réglages",
-    icon: Settings,
-    permission: "settings:manage",
-  },
-  {
-    href: "/redaction/journal",
-    label: "Journal d'audit",
-    icon: ScrollText,
-    permission: "audit:read",
-  },
-];
-
-const PORTAL: Entry[] = [
-  {
-    href: "/entreprise",
-    label: "Mes dépôts",
-    icon: Building2,
-    permission: "portal:access",
-    exact: true,
-  },
-  {
-    href: "/entreprise/statistiques",
-    label: "Statistiques",
-    icon: ChartNoAxesColumn,
-    permission: "stats:read:own",
-  },
-];
+type Group = { title: string; entries: Entry[] };
 
 /**
- * Chrome of the private areas — CDC §4.4.
+ * The newsroom, grouped by what a person is trying to do — publish, review,
+ * steer, administer — rather than by table. An Éditeur sees the first three
+ * groups and nothing of the fourth; that is a courtesy of the shell, the
+ * server refuses the same calls regardless (`convex/model/access.ts`).
+ */
+const NEWSROOM: Group[] = [
+  {
+    title: "Publier",
+    entries: [
+      {
+        href: "/redaction",
+        label: "Tableau de bord",
+        short: "Accueil",
+        hint: "Vos tâches du jour et l'état du journal",
+        icon: LayoutDashboard,
+        permission: "newsroom:access",
+        exact: true,
+      },
+      {
+        href: "/redaction/articles",
+        label: "Articles",
+        hint: "Écrire, relire, programmer, publier",
+        icon: FileText,
+        permission: "articles:read",
+        badge: (counts) => counts.inReview,
+      },
+      {
+        href: "/redaction/medias",
+        label: "Médiathèque",
+        short: "Images",
+        hint: "Ajouter des images, légendes et crédits",
+        icon: Images,
+        permission: "media:write",
+      },
+    ],
+  },
+  {
+    title: "Modérer",
+    entries: [
+      {
+        href: "/redaction/depots",
+        label: "Dépôts entreprises",
+        short: "Dépôts",
+        hint: "Actualités déposées par les partenaires",
+        icon: Inbox,
+        permission: "submissions:review",
+        badge: (counts) => counts.submissionsWaiting,
+      },
+    ],
+  },
+  {
+    title: "Piloter",
+    entries: [
+      {
+        href: "/redaction/agents",
+        label: "Agents",
+        hint: "Les sept assistants et leurs propositions",
+        icon: Sparkles,
+        permission: "agents:run",
+        badge: (counts) => counts.pendingSuggestions,
+      },
+      {
+        href: "/redaction/statistiques",
+        label: "Statistiques",
+        short: "Stats",
+        hint: "Audience du journal, article par article",
+        icon: ChartNoAxesColumn,
+        permission: "stats:read:all",
+      },
+    ],
+  },
+  {
+    title: "Administrer",
+    entries: [
+      {
+        href: "/redaction/rubriques",
+        label: "Rubriques",
+        hint: "Arborescence et couleurs des rubriques",
+        icon: Tags,
+        permission: "categories:write",
+      },
+      {
+        href: "/redaction/comptes",
+        label: "Comptes",
+        hint: "Rédaction et entreprises partenaires",
+        icon: UserCog,
+        permission: "accounts:manage",
+        badge: (counts) => counts.organizationsWaiting,
+      },
+      {
+        href: "/redaction/reglages",
+        label: "Réglages",
+        hint: "Identité, sécurité, newsletter, agents",
+        icon: Settings,
+        permission: "settings:manage",
+      },
+      {
+        href: "/redaction/journal",
+        label: "Journal d'audit",
+        short: "Audit",
+        hint: "Toute action sensible, horodatée",
+        icon: ScrollText,
+        permission: "audit:read",
+      },
+    ],
+  },
+];
+
+const PORTAL: Group[] = [
+  {
+    title: "Espace entreprise",
+    entries: [
+      {
+        href: "/entreprise",
+        label: "Mes dépôts",
+        short: "Dépôts",
+        hint: "Vos actualités et leur statut",
+        icon: Building2,
+        permission: "portal:access",
+        exact: true,
+      },
+      {
+        href: "/entreprise/statistiques",
+        label: "Statistiques",
+        short: "Stats",
+        hint: "Audience de vos publications",
+        icon: ChartNoAxesColumn,
+        permission: "stats:read:own",
+      },
+    ],
+  },
+];
+
+const ACCOUNT: Record<Area, Entry> = {
+  newsroom: {
+    href: "/redaction/compte",
+    label: "Mon compte",
+    short: "Compte",
+    hint: "Profil, code d'accès, appareils connectés",
+    icon: UserRound,
+    permission: "newsroom:access",
+  },
+  portal: {
+    href: "/compte",
+    label: "Mon compte",
+    short: "Compte",
+    hint: "Profil, mot de passe, appareils connectés",
+    icon: UserRound,
+    permission: "portal:access",
+  },
+};
+
+const AREA_LABEL: Record<Area, string> = {
+  newsroom: "Back-office rédaction",
+  portal: "Espace entreprise",
+};
+
+/**
+ * Chrome of the private areas — CDC §4.4, recomposed on 12/09/2026.
  *
- * The navigation is filtered by the permissions the **server** reported, so
+ * Three ways in, one navigation. On a desk the sections live in a **card
+ * detached from the page** — sticky, its own border and shadow, the
+ * "Nouveau" button at the top and the account at the bottom. On a phone or
+ * a tablet the same entries become a **tab bar** along the bottom edge (the
+ * four most used) plus a drawer for everything else; nothing is more than
+ * one tap away, and the thumb never has to reach the top of the screen.
+ *
+ * The entries are filtered by the permissions the **server** reported, so
  * an Éditeur simply has no "Comptes" or "Réglages" entry. That is a
- * courtesy, not a control: the corresponding Convex functions refuse the
- * same call anyway (`convex/model/access.ts`). Hiding a menu has never
- * stopped anybody.
+ * courtesy, not a control: the Convex functions refuse the same calls
+ * anyway. The little numbers come from `newsroom.navCounts` and say what is
+ * waiting where — the shell's only job beyond getting out of the way.
  */
 export function PrivateShell({
   area,
   children,
 }: {
-  area: "newsroom" | "portal";
+  area: Area;
   children: React.ReactNode;
 }) {
   // La requête n'est émise qu'une fois le jeton de session posé sur le
@@ -136,14 +245,32 @@ export function PrivateShell({
   // clignote à vide au premier rendu.
   const { isAuthenticated } = useConvexAuth();
   const viewer = useQuery(api.accounts.me, isAuthenticated ? {} : "skip");
+  const permissions = (viewer?.permissions ?? []) as readonly string[];
+  const counts = useQuery(
+    api.newsroom.navCounts,
+    area === "newsroom" && permissions.includes("newsroom:access") ? {} : "skip"
+  );
   const pathname = usePathname();
   const router = useRouter();
+  const [drawer, setDrawer] = useState(false);
+  const [creating, setCreating] = useState(false);
 
-  const entries = (area === "newsroom" ? NEWSROOM : PORTAL).filter((entry) =>
-    (viewer?.permissions as readonly string[] | undefined)?.includes(
-      entry.permission
-    )
-  );
+  const groups = (area === "newsroom" ? NEWSROOM : PORTAL)
+    .map((group) => ({
+      ...group,
+      entries: group.entries.filter((entry) =>
+        permissions.includes(entry.permission)
+      ),
+    }))
+    .filter((group) => group.entries.length > 0);
+  const account = ACCOUNT[area];
+  const showAccount = permissions.includes(account.permission);
+  const canCreate =
+    area === "newsroom" && permissions.includes("articles:write");
+  const tabs = groups.flatMap((group) => group.entries).slice(0, 4);
+
+  const isActive = (entry: Entry) =>
+    entry.exact ? pathname === entry.href : pathname.startsWith(entry.href);
 
   const signOut = async () => {
     await authClient.signOut();
@@ -151,113 +278,107 @@ export function PrivateShell({
     router.refresh();
   };
 
-  const twoFactorOwed = Boolean(
-    viewer && viewer.twoFactorRequired && !viewer.twoFactorEnabled
-  );
+  const closeDrawer = () => setDrawer(false);
+  const openCreate = () => {
+    setDrawer(false);
+    setCreating(true);
+  };
 
   return (
     <div className="flex min-h-dvh flex-col bg-surface-muted">
-      <header className="border-b border-border bg-background">
-        <Container
-          width="wide"
-          className="flex flex-wrap items-center gap-4 py-3"
-        >
-          <BrandWordmark />
+      <header className="z-30 border-b border-border bg-background lg:sticky lg:top-0">
+        <Container width="wide" className="flex items-center gap-3 py-2">
+          <button
+            type="button"
+            onClick={() => setDrawer(true)}
+            aria-expanded={drawer}
+            aria-haspopup="dialog"
+            className="inline-flex items-center justify-center rounded-md border border-border text-foreground transition-colors touch-target hover:bg-surface-muted lg:hidden"
+          >
+            <Menu aria-hidden="true" className="size-5" />
+            <span className="sr-only">Ouvrir le menu</span>
+          </button>
+          <BrandWordmark
+            href={area === "newsroom" ? "/redaction" : "/entreprise"}
+          />
           <span
             aria-hidden="true"
-            className="hidden h-6 w-px bg-border sm:block"
+            className="hidden h-6 w-px bg-border lg:block"
           />
-          <p className="type-small font-semibold text-muted-foreground">
-            {area === "newsroom"
-              ? "Back-office rédaction"
-              : "Espace entreprise"}
+          <p className="hidden type-small font-semibold whitespace-nowrap text-muted-foreground lg:block">
+            {AREA_LABEL[area]}
           </p>
-          <div className="ms-auto flex flex-wrap items-center justify-end gap-2">
-            <ThemeToggle />
-            <Link
-              href="/compte"
-              className="inline-flex items-center gap-2 rounded-md border border-border px-3 type-small font-semibold transition-colors touch-target hover:bg-surface-muted"
-            >
-              <UserRound aria-hidden="true" className="size-4" />
-              <span className="max-w-24 truncate sm:max-w-40">
-                {viewer?.name ?? "Mon compte"}
-              </span>
-            </Link>
+          <div className="ms-auto flex items-center gap-2">
+            <ThemeToggle className="hidden sm:inline-flex" />
+            {showAccount && (
+              <Link
+                href={account.href}
+                aria-current={isActive(account) ? "page" : undefined}
+                className={cn(
+                  "inline-flex items-center gap-2 rounded-md border px-2 type-small font-semibold transition-colors touch-target sm:px-3",
+                  isActive(account)
+                    ? "border-foreground/40 bg-surface-muted"
+                    : "border-border hover:bg-surface-muted"
+                )}
+              >
+                <Avatar name={viewer?.name} />
+                <span className="hidden max-w-40 truncate md:inline">
+                  {viewer?.name ?? "Mon compte"}
+                </span>
+              </Link>
+            )}
             <button
               type="button"
-              onClick={signOut}
-              className="inline-flex items-center gap-2 rounded-md border border-border px-3 type-small font-semibold transition-colors touch-target hover:bg-surface-muted"
+              onClick={() => void signOut()}
+              className="inline-flex items-center gap-2 rounded-md border border-border px-2 type-small font-semibold transition-colors touch-target hover:bg-surface-muted sm:px-3"
             >
               <LogOut aria-hidden="true" className="size-4" />
-              <span className="sr-only sm:not-sr-only">Déconnexion</span>
+              <span className="sr-only md:not-sr-only">Déconnexion</span>
             </button>
           </div>
         </Container>
       </header>
 
-      {twoFactorOwed && (
-        <div className="border-b border-warning-token/40 bg-warning-token/10">
-          <Container
-            width="wide"
-            className="flex flex-wrap items-center gap-3 py-3"
-          >
-            <AlertTriangle
-              aria-hidden="true"
-              className="size-5 shrink-0 text-warning-token"
-            />
-            <p className="type-small text-foreground">
-              La double authentification est obligatoire pour votre rôle. Tant
-              qu&apos;elle n&apos;est pas activée, le serveur refuse toute
-              action.
-            </p>
-            <Link
-              href="/compte"
-              className="ms-auto inline-flex items-center rounded-md bg-primary px-4 type-small font-semibold text-primary-foreground touch-target"
-            >
-              Activer maintenant
-            </Link>
-          </Container>
-        </div>
-      )}
-
+      {/* Pas d'`items-start` : la colonne du menu doit occuper toute la
+          hauteur de la rangée pour que la carte collante ait où voyager. */}
       <Container
         width="wide"
-        className="flex flex-1 flex-col gap-6 py-6 lg:flex-row"
+        className="flex flex-1 gap-6 py-5 pb-24 lg:py-8 lg:pb-8"
       >
-        <nav
-          aria-label={
-            area === "newsroom"
-              ? "Sections du back-office"
-              : "Sections de l'espace entreprise"
-          }
-          className="lg:w-60 lg:shrink-0"
-        >
-          <ul className="flex flex-wrap gap-1 lg:flex-col">
-            {entries.map((entry) => {
-              const active = entry.exact
-                ? pathname === entry.href
-                : pathname.startsWith(entry.href);
-              const Icon = entry.icon;
-              return (
-                <li key={entry.href}>
-                  <Link
-                    href={entry.href}
-                    aria-current={active ? "page" : undefined}
-                    className={cn(
-                      "inline-flex w-full items-center gap-2 rounded-md px-3 type-small font-semibold transition-colors touch-target",
-                      active
-                        ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground hover:bg-background hover:text-foreground"
-                    )}
-                  >
-                    <Icon aria-hidden="true" className="size-4 shrink-0" />
-                    {entry.label}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
+        {/* Le menu, détaché de la page : une carte collante à sa hauteur. */}
+        <aside className="hidden lg:block lg:w-64 lg:shrink-0 xl:w-72">
+          <div className="sticky top-20 flex max-h-[calc(100dvh-6rem)] flex-col overflow-y-auto rounded-xl border border-border bg-card p-3 shadow-floating">
+            {canCreate && (
+              <button
+                type="button"
+                onClick={openCreate}
+                className="mb-3 inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 type-small font-semibold text-primary-foreground transition-opacity touch-target hover:opacity-90"
+              >
+                <Plus aria-hidden="true" className="size-4" />
+                Nouveau contenu
+              </button>
+            )}
+            <NavList
+              groups={groups}
+              counts={counts}
+              isActive={isActive}
+              label={
+                area === "newsroom"
+                  ? "Sections du back-office"
+                  : "Sections de l'espace entreprise"
+              }
+            />
+            {viewer && showAccount && (
+              <div className="mt-3 border-t border-border pt-3">
+                <AccountLink
+                  viewer={viewer}
+                  entry={account}
+                  active={isActive(account)}
+                />
+              </div>
+            )}
+          </div>
+        </aside>
 
         <main
           id="contenu"
@@ -267,6 +388,284 @@ export function PrivateShell({
           {children}
         </main>
       </Container>
+
+      {/* Téléphone et tablette : les quatre entrées les plus utilisées, et le reste derrière « Menu ». */}
+      {tabs.length > 0 && (
+        <nav
+          aria-label="Navigation rapide"
+          className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background pb-[env(safe-area-inset-bottom)] lg:hidden"
+        >
+          <ul
+            className="grid"
+            style={{
+              gridTemplateColumns: `repeat(${tabs.length + 1}, minmax(0, 1fr))`,
+            }}
+          >
+            {tabs.map((entry) => {
+              const Icon = entry.icon;
+              const active = isActive(entry);
+              const badge = counts && entry.badge ? entry.badge(counts) : 0;
+              return (
+                <li key={entry.href}>
+                  <Link
+                    href={entry.href}
+                    aria-current={active ? "page" : undefined}
+                    className={cn(
+                      "relative flex min-h-14 flex-col items-center justify-center gap-0.5 px-1 text-[11px] leading-tight font-semibold transition-colors",
+                      active
+                        ? "text-accent"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <span className="relative">
+                      <Icon aria-hidden="true" className="size-5" />
+                      {badge > 0 && <Badge count={badge} floating />}
+                    </span>
+                    <span>{entry.short ?? entry.label}</span>
+                  </Link>
+                </li>
+              );
+            })}
+            <li>
+              <button
+                type="button"
+                onClick={() => setDrawer(true)}
+                aria-expanded={drawer}
+                aria-haspopup="dialog"
+                className="flex min-h-14 w-full flex-col items-center justify-center gap-0.5 px-1 text-[11px] leading-tight font-semibold text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <Menu aria-hidden="true" className="size-5" />
+                <span>Menu</span>
+              </button>
+            </li>
+          </ul>
+        </nav>
+      )}
+
+      <Modal
+        open={drawer}
+        onClose={closeDrawer}
+        label="Menu"
+        variant="drawer"
+        className="pb-[env(safe-area-inset-bottom)]"
+      >
+        <div className="flex items-center justify-between gap-4 border-b border-border p-4">
+          <div className="min-w-0">
+            <p className="font-display type-h3">Menu</p>
+            <p className="type-small text-muted-foreground">
+              {AREA_LABEL[area]}
+            </p>
+          </div>
+          <CloseButton onClick={closeDrawer} />
+        </div>
+        <div className="p-3">
+          {canCreate && (
+            <button
+              type="button"
+              onClick={openCreate}
+              className="mb-3 inline-flex w-full items-center justify-center gap-2 rounded-md bg-primary px-4 type-small font-semibold text-primary-foreground touch-target"
+            >
+              <Plus aria-hidden="true" className="size-4" />
+              Nouveau contenu
+            </button>
+          )}
+          <NavList
+            groups={groups}
+            counts={counts}
+            isActive={isActive}
+            onNavigate={closeDrawer}
+            withHints
+            label={
+              area === "newsroom"
+                ? "Sections du back-office"
+                : "Sections de l'espace entreprise"
+            }
+          />
+        </div>
+        <div className="mt-auto grid gap-3 border-t border-border p-4">
+          {viewer && showAccount && (
+            <AccountLink
+              viewer={viewer}
+              entry={account}
+              active={isActive(account)}
+              onNavigate={closeDrawer}
+            />
+          )}
+          <div className="flex items-center justify-between gap-3">
+            <ThemeToggle labelled />
+            <button
+              type="button"
+              onClick={() => void signOut()}
+              className="inline-flex items-center gap-2 rounded-md border border-border px-3 type-small font-semibold touch-target hover:bg-surface-muted"
+            >
+              <LogOut aria-hidden="true" className="size-4" />
+              Déconnexion
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {canCreate && (
+        <NewContentDialog
+          open={creating}
+          onClose={() => setCreating(false)}
+          defaultAuthorSlug={viewer?.authorSlug}
+        />
+      )}
+
+      {viewer && <SecurityReminder viewer={viewer} />}
     </div>
+  );
+}
+
+function NavList({
+  groups,
+  counts,
+  isActive,
+  onNavigate,
+  withHints = false,
+  label,
+}: {
+  groups: Group[];
+  counts: Counts | undefined;
+  isActive: (entry: Entry) => boolean;
+  onNavigate?: () => void;
+  withHints?: boolean;
+  label: string;
+}) {
+  return (
+    <nav aria-label={label} className="grid gap-3">
+      {groups.map((group) => (
+        <div key={group.title}>
+          <p className="mb-1 px-3 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+            {group.title}
+          </p>
+          <ul className="grid gap-0.5">
+            {group.entries.map((entry) => {
+              const Icon = entry.icon;
+              const active = isActive(entry);
+              const badge = counts && entry.badge ? entry.badge(counts) : 0;
+              return (
+                <li key={entry.href}>
+                  <Link
+                    href={entry.href}
+                    onClick={onNavigate}
+                    aria-current={active ? "page" : undefined}
+                    title={withHints ? undefined : entry.hint}
+                    className={cn(
+                      "flex min-h-11 items-center gap-3 rounded-md px-3 py-1.5 type-small font-semibold transition-colors",
+                      active
+                        ? "bg-primary text-primary-foreground"
+                        : "text-foreground hover:bg-surface-muted"
+                    )}
+                  >
+                    <Icon aria-hidden="true" className="size-4 shrink-0" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate">{entry.label}</span>
+                      {withHints && (
+                        <span
+                          className={cn(
+                            "block truncate font-normal",
+                            active
+                              ? "text-primary-foreground/80"
+                              : "text-muted-foreground"
+                          )}
+                        >
+                          {entry.hint}
+                        </span>
+                      )}
+                    </span>
+                    {badge > 0 && <Badge count={badge} inverted={active} />}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      ))}
+    </nav>
+  );
+}
+
+function AccountLink({
+  viewer,
+  entry,
+  active,
+  onNavigate,
+}: {
+  viewer: Viewer;
+  entry: Entry;
+  active: boolean;
+  onNavigate?: () => void;
+}) {
+  return (
+    <Link
+      href={entry.href}
+      onClick={onNavigate}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "flex items-center gap-3 rounded-md p-2 transition-colors",
+        active ? "bg-surface-muted" : "hover:bg-surface-muted"
+      )}
+    >
+      <Avatar name={viewer.name} size="large" />
+      <span className="min-w-0 flex-1">
+        <span className="block truncate type-small font-semibold">
+          {viewer.name}
+        </span>
+        <span className="block truncate type-small text-muted-foreground">
+          {viewer.roleName}
+        </span>
+      </span>
+      <UserRound
+        aria-hidden="true"
+        className="size-4 shrink-0 text-muted-foreground"
+      />
+    </Link>
+  );
+}
+
+function Avatar({
+  name,
+  size = "small",
+}: {
+  name: string | undefined;
+  size?: "small" | "large";
+}) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        "inline-flex shrink-0 items-center justify-center rounded-full bg-primary font-display font-bold text-primary-foreground",
+        size === "large" ? "size-9 type-small" : "size-7 text-[11px]"
+      )}
+    >
+      {name ? initialsOf(name) : <UserRound className="size-4" />}
+    </span>
+  );
+}
+
+function Badge({
+  count,
+  inverted = false,
+  floating = false,
+}: {
+  count: number;
+  inverted?: boolean;
+  floating?: boolean;
+}) {
+  return (
+    <span
+      aria-label={`${count} en attente`}
+      className={cn(
+        "inline-flex min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] leading-5 font-bold tabular-nums",
+        inverted
+          ? "bg-primary-foreground text-primary"
+          : "bg-accent text-accent-foreground",
+        floating && "absolute -top-1.5 -right-2.5"
+      )}
+    >
+      {count > 99 ? "99+" : count}
+    </span>
   );
 }

@@ -11,9 +11,9 @@
  * and the password is chosen here, at creation time.
  *
  * Run again on a known address, it replaces the password and revokes every
- * open session. Under twelve characters the password is PROVISIONAL: the
- * server refuses any privileged action until the holder replaces it from
- * `/compte` (§4.3).
+ * open session. Under twelve characters the code is PROVISIONAL: the
+ * interface reminds the holder to choose their own six-digit code (nothing
+ * is refused meanwhile — client decision of 12/09/2026).
  *
  * Everything goes through `accounts:ensureAccount`, a Convex action. No HTTP
  * sign-up is parsed here: Better Auth answers a sign-up for a known address
@@ -21,9 +21,7 @@
  * cannot tell the two apart — the action looks the account up itself.
  *
  * Roles: administrateur · editeur · entreprise · lecteur.
- * An Administrateur or an Éditeur can do nothing at all until they have
- * enrolled a second factor from `/compte` — that is enforced in Convex, not
- * here.
+ * The verification by authenticator app is optional for every role.
  */
 
 import { spawnSync } from "node:child_process";
@@ -68,12 +66,14 @@ if (!ROLES.includes(role)) {
   console.error(`Rôle inconnu « ${role} ». Attendu : ${ROLES.join(", ")}.`);
   process.exit(1);
 }
-if (password.length < 6) {
-  console.error("Le mot de passe doit compter au moins six caractères.");
+if (!/^\d{6}$/.test(password) && password.length < 12) {
+  console.error(
+    "Le mot de passe doit être un code à six chiffres, ou compter au moins douze caractères."
+  );
   process.exit(1);
 }
-// En dessous de douze caractères (§4.3), le mot de passe est PROVISOIRE :
-// le serveur refusera toute action du compte tant qu'il n'est pas remplacé.
+// Un code remis par un tiers est PROVISOIRE : l'interface rappelle à la
+// personne de choisir le sien. Rien n'est refusé entre-temps (12/09/2026).
 const provisional = password.length < 12;
 
 run("accounts:ensureAccount", { email, name, password });
@@ -88,13 +88,7 @@ run("accounts:bootstrapProfile", {
 console.log(`\n✓ ${name} <${email}> — rôle « ${role} ».`);
 if (provisional) {
   console.log(
-    "  Mot de passe PROVISOIRE : à remplacer à la première connexion, depuis /compte\n" +
-      "  (douze caractères au minimum). Tant qu'il ne l'est pas, le serveur refuse toute action."
-  );
-}
-if (role === "administrateur" || role === "editeur") {
-  console.log(
-    "  La double authentification est obligatoire : connectez-vous puis activez-la sur /compte.\n" +
-      "  Tant qu'elle n'est pas posée, le serveur refuse toute action de ce compte."
+    "  Code PROVISOIRE : un rappel invite la personne à choisir son propre code à six chiffres\n" +
+      "  depuis « Mon compte » ou « Réglages ». Rien n'est bloqué entre-temps."
   );
 }

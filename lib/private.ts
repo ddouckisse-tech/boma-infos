@@ -72,6 +72,8 @@ export const AUDIT_LABEL: Record<string, string> = {
   "agent.suggestion_accepted": "Suggestion d'agent acceptée",
   "agent.suggestion_rejected": "Suggestion d'agent rejetée",
   "media.update": "Média modifié",
+  "media.upload": "Média ajouté",
+  "media.delete": "Média supprimé",
   "newsletter.approve": "Newsletter validée",
 };
 
@@ -89,9 +91,9 @@ export const ACCESS_MESSAGE: Record<string, string> = {
     "Ce compte n'est rattaché à aucun profil. Contactez la rédaction.",
   SUSPENDED: "Ce compte a été révoqué.",
   TWO_FACTOR_REQUIRED:
-    "La double authentification est obligatoire pour ce rôle : activez-la depuis votre compte.",
+    "Ce compte demande une vérification par application : activez-la depuis « Mon compte ».",
   PASSWORD_CHANGE_REQUIRED:
-    "Votre mot de passe est provisoire : choisissez-en un définitif (douze caractères au minimum) depuis votre compte.",
+    "Votre code d'accès est provisoire : choisissez le vôtre depuis « Mon compte ».",
   FORBIDDEN: "Vous n'avez pas accès à cet élément.",
   ORGANIZATION_REQUIRED: "Aucune entreprise n'est rattachée à ce compte.",
   ORGANIZATION_PENDING:

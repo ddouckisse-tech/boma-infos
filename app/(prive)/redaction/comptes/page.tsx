@@ -2,18 +2,33 @@
 
 import { useState } from "react";
 import { useAction, useMutation, useQuery } from "convex/react";
-import { Ban, CheckCircle2, RotateCcw, UserPlus } from "lucide-react";
+import {
+  Ban,
+  Building2,
+  CheckCircle2,
+  Copy,
+  List,
+  RotateCcw,
+  Shuffle,
+  UserCog,
+  UserPlus,
+  Users,
+} from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { ActionButton } from "@/components/custom/action-button";
+import { DataTable, type DataColumn } from "@/components/custom/data-table";
 import {
   SelectField,
   TextAreaField,
   TextField,
 } from "@/components/custom/form-field";
 import { Modal } from "@/components/custom/modal";
+import { OfficeHeader, OfficeSection } from "@/components/custom/office-header";
+import { PinField, randomPin } from "@/components/custom/pin-field";
 import { StatsTile } from "@/components/custom/stats-tile";
+import { isPinCode } from "@/convex/model/password";
 import { formatDate, humanError } from "@/lib/private";
 import { cn } from "@/lib/utils";
 
@@ -40,23 +55,9 @@ type Role = {
   permissions: string[];
 };
 
-type Organization = {
-  _id: Id<"organizations">;
-  name: string;
-  slug: string;
-  sector: string;
-  taxId?: string;
-  registrationId?: string;
-  contactName: string;
-  contactEmail: string;
-  contactPhone?: string;
-  whatsapp?: string;
-  approved: boolean;
-  reviewState: string;
-  reviewNote?: string;
-  createdAt: number;
-  submissionCount: number;
-};
+type OrganizationRow = NonNullable<
+  ReturnType<typeof useQuery<typeof api.accounts.organizations>>
+>[number];
 
 const REVIEW_STATE_LABEL: Record<string, string> = {
   pending: "En attente",
@@ -80,6 +81,11 @@ const REVIEW_STATE_TONE: Record<string, string> = {
  * même permission (`convex/model/access.ts`) : `setRole`, `setActive`,
  * `approveOrganization` et `rejectOrganization` refusent un éditeur
  * exactement comme ils refuseraient un appel direct depuis la CLI.
+ *
+ * Un compte créé ici reçoit un code provisoire à six chiffres (décision du
+ * client du 12/09/2026), que son titulaire remplace lui-même depuis « Mon
+ * compte » — il n'existe plus de rôle à double authentification obligatoire
+ * (voir `convex/model/access.ts`).
  */
 export default function AccountsPage() {
   const accounts = useQuery(api.accounts.directory, {});
@@ -173,13 +179,63 @@ export default function AccountsPage() {
     setBusyAccountId(null);
   };
 
+  const organizationColumns: DataColumn<OrganizationRow>[] = [
+    {
+      key: "name",
+      header: "Entreprise",
+      primary: true,
+      cell: (organization) => (
+        <>
+          <p className="type-body font-medium">{organization.name}</p>
+          {organization.reviewState === "rejected" &&
+            organization.reviewNote && (
+              <p className="mt-1 type-small text-destructive">
+                Motif&nbsp;: {organization.reviewNote}
+              </p>
+            )}
+        </>
+      ),
+    },
+    {
+      key: "sector",
+      header: "Secteur",
+      cell: (organization) => organization.sector,
+    },
+    {
+      key: "state",
+      header: "État",
+      cell: (organization) => (
+        <span
+          className={cn(
+            "type-small font-semibold",
+            REVIEW_STATE_TONE[organization.reviewState] ?? "text-foreground"
+          )}
+        >
+          {REVIEW_STATE_LABEL[organization.reviewState] ??
+            organization.reviewState}
+        </span>
+      ),
+    },
+    {
+      key: "submissions",
+      header: "Dépôts",
+      cell: (organization) => organization.submissionCount,
+    },
+    {
+      key: "date",
+      header: "Date",
+      className: "whitespace-nowrap",
+      cell: (organization) => formatDate(organization.createdAt),
+    },
+  ];
+
   return (
     <>
-      <h1 className="font-display type-h1">Comptes et entreprises</h1>
-      <p className="mt-2 max-w-reading type-body text-muted-foreground">
-        Écran réservé à l&apos;administrateur&nbsp;: le serveur refuse les mêmes
-        appels à un éditeur, y compris depuis l&apos;API.
-      </p>
+      <OfficeHeader
+        icon={UserCog}
+        title="Comptes et entreprises"
+        description="Écran réservé à l'administrateur : le serveur refuse les mêmes appels à un éditeur, y compris depuis l'API."
+      />
 
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
         <StatsTile
@@ -200,18 +256,22 @@ export default function AccountsPage() {
         />
       </div>
 
-      <section className="mt-10">
-        <h2 className="font-display type-h2">Entreprises à valider</h2>
+      <OfficeSection
+        icon={Building2}
+        title="Entreprises à valider"
+        tone={pendingOrganizations.length > 0 ? "warning" : "default"}
+        className="mt-10"
+      >
         {organizations === undefined ? (
-          <p className="mt-3 type-body text-muted-foreground">
+          <p className="type-body text-muted-foreground" role="status">
             Chargement des entreprises…
           </p>
         ) : pendingOrganizations.length === 0 ? (
-          <p className="mt-3 rounded-md border border-border bg-card p-6 type-body text-muted-foreground">
+          <p className="rounded-xl border border-dashed border-border-strong p-6 text-center type-small text-muted-foreground">
             Aucune demande en attente.
           </p>
         ) : (
-          <ul className="mt-4 grid gap-4">
+          <ul className="grid gap-4">
             {pendingOrganizations.map((organization) => (
               <li key={organization._id}>
                 <PendingOrganizationCard
@@ -224,99 +284,40 @@ export default function AccountsPage() {
             ))}
           </ul>
         )}
-      </section>
+      </OfficeSection>
 
-      <section className="mt-10">
-        <h2 className="font-display type-h2">Toutes les entreprises</h2>
+      <OfficeSection
+        icon={List}
+        title="Toutes les entreprises"
+        className="mt-10"
+      >
         {organizations === undefined ? (
-          <p className="mt-3 type-body text-muted-foreground">
+          <p className="type-body text-muted-foreground" role="status">
             Chargement des entreprises…
           </p>
-        ) : organizationRows.length === 0 ? (
-          <p className="mt-3 rounded-md border border-border bg-card p-6 type-body text-muted-foreground">
-            Aucune entreprise enregistrée.
-          </p>
         ) : (
-          <div className="mt-4 overflow-x-auto rounded-md border border-border bg-card">
-            <table className="w-full min-w-[40rem] border-collapse">
-              <caption className="sr-only">
-                Entreprises enregistrées, de la plus récente à la plus ancienne
-              </caption>
-              <thead>
-                <tr className="border-b border-border text-start">
-                  <th scope="col" className="p-3 text-start type-small">
-                    Entreprise
-                  </th>
-                  <th scope="col" className="p-3 text-start type-small">
-                    Secteur
-                  </th>
-                  <th scope="col" className="p-3 text-start type-small">
-                    État
-                  </th>
-                  <th scope="col" className="p-3 text-start type-small">
-                    Dépôts
-                  </th>
-                  <th scope="col" className="p-3 text-start type-small">
-                    Date
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {organizationRows.map((organization) => (
-                  <tr
-                    key={organization._id}
-                    className="border-b border-border last:border-0"
-                  >
-                    <td className="p-3">
-                      <p className="type-body font-medium">
-                        {organization.name}
-                      </p>
-                      {organization.reviewState === "rejected" &&
-                        organization.reviewNote && (
-                          <p className="mt-1 type-small text-destructive">
-                            Motif&nbsp;: {organization.reviewNote}
-                          </p>
-                        )}
-                    </td>
-                    <td className="p-3 type-small">{organization.sector}</td>
-                    <td className="p-3">
-                      <span
-                        className={cn(
-                          "type-small font-semibold",
-                          REVIEW_STATE_TONE[organization.reviewState] ??
-                            "text-foreground"
-                        )}
-                      >
-                        {REVIEW_STATE_LABEL[organization.reviewState] ??
-                          organization.reviewState}
-                      </span>
-                    </td>
-                    <td className="p-3 type-small">
-                      {organization.submissionCount}
-                    </td>
-                    <td className="p-3 type-small whitespace-nowrap text-muted-foreground">
-                      {formatDate(organization.createdAt)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            columns={organizationColumns}
+            rows={organizationRows}
+            rowKey={(organization) => organization._id}
+            caption="Entreprises enregistrées, de la plus récente à la plus ancienne"
+            empty="Aucune entreprise enregistrée."
+            minWidth="40rem"
+          />
         )}
-      </section>
+      </OfficeSection>
 
-      <section className="mt-10">
-        <h2 className="font-display type-h2">Comptes</h2>
+      <OfficeSection icon={Users} title="Comptes" className="mt-10">
         {accounts === undefined || roles === undefined ? (
-          <p className="mt-3 type-body text-muted-foreground">
+          <p className="type-body text-muted-foreground" role="status">
             Chargement des comptes…
           </p>
         ) : accountRows.length === 0 ? (
-          <p className="mt-3 rounded-md border border-border bg-card p-6 type-body text-muted-foreground">
+          <p className="rounded-xl border border-dashed border-border-strong p-6 text-center type-small text-muted-foreground">
             Aucun compte enregistré.
           </p>
         ) : (
-          <ul className="mt-4 grid gap-3">
+          <ul className="grid gap-3">
             {accountRows.map((account) => (
               <li key={account._id}>
                 <AccountRow
@@ -336,18 +337,17 @@ export default function AccountsPage() {
             ))}
           </ul>
         )}
-      </section>
+      </OfficeSection>
 
-      <section className="mt-10 rounded-md border border-border bg-card p-4 sm:p-6">
-        <h2 className="font-display type-h2">Créer un compte</h2>
+      <OfficeSection icon={UserPlus} title="Créer un compte" className="mt-10">
         {roles === undefined ? (
-          <p className="mt-3 type-body text-muted-foreground">
+          <p className="type-body text-muted-foreground" role="status">
             Chargement des rôles…
           </p>
         ) : (
           <CreateStaffForm roles={roleRows} />
         )}
-      </section>
+      </OfficeSection>
 
       <Modal
         open={rejectingOrganization !== null}
@@ -386,13 +386,13 @@ function PendingOrganizationCard({
   onApprove,
   onReject,
 }: {
-  organization: Organization;
+  organization: OrganizationRow;
   busy: boolean;
   onApprove: () => void;
   onReject: () => void;
 }) {
   return (
-    <article className="rounded-md border border-border bg-card p-4 sm:p-5">
+    <article className="rounded-xl border border-border bg-card p-4 sm:p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="type-body font-semibold">{organization.name}</p>
@@ -459,11 +459,10 @@ function AccountRow({
   onSectionsChange: (sectionSlugs: string[]) => void;
   onToggleActive: () => void;
 }) {
-  const currentRole = roles.find((role) => role.slug === account.roleSlug);
   const scoped = account.sectionSlugs;
 
   return (
-    <div className="rounded-md border border-border bg-card p-4">
+    <div className="rounded-xl border border-border bg-card p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="flex flex-wrap items-center gap-2 type-body font-semibold">
@@ -483,25 +482,27 @@ function AccountRow({
             </p>
           )}
         </div>
-        <ActionButton
-          type="button"
-          variant="outline"
-          onClick={onToggleActive}
-          disabled={busy}
-          className={account.active ? "text-destructive" : undefined}
-        >
-          {account.active ? (
-            <>
-              <Ban aria-hidden="true" className="size-4" />
-              Révoquer
-            </>
-          ) : (
-            <>
-              <RotateCcw aria-hidden="true" className="size-4" />
-              Réactiver
-            </>
-          )}
-        </ActionButton>
+        <div className="flex flex-wrap gap-2">
+          <ActionButton
+            type="button"
+            variant="outline"
+            onClick={onToggleActive}
+            disabled={busy}
+            className={account.active ? "text-destructive" : undefined}
+          >
+            {account.active ? (
+              <>
+                <Ban aria-hidden="true" className="size-4" />
+                Révoquer
+              </>
+            ) : (
+              <>
+                <RotateCcw aria-hidden="true" className="size-4" />
+                Réactiver
+              </>
+            )}
+          </ActionButton>
+        </div>
       </div>
 
       <div className="mt-3 max-w-xs">
@@ -515,11 +516,6 @@ function AccountRow({
             label: role.name,
           }))}
         />
-        {currentRole?.requiresTwoFactor && (
-          <p className="mt-1 type-small text-muted-foreground">
-            Double authentification obligatoire
-          </p>
-        )}
       </div>
 
       {account.roleSlug === "editeur" && sections.length > 0 && (
@@ -596,8 +592,18 @@ function CreateStaffForm({ roles }: { roles: Role[] }) {
     setCreating(false);
   };
 
+  /** Recopie le code provisoire, pour le transmettre hors ligne à la personne. */
+  const handleCopyPin = async () => {
+    try {
+      await navigator.clipboard.writeText(password);
+      toast.success("Code copié.");
+    } catch {
+      toast.error("Impossible de copier le code.");
+    }
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="mt-4 grid gap-4 sm:max-w-xl">
+    <form onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-2">
       <TextField
         label="Courriel"
         type="email"
@@ -611,15 +617,37 @@ function CreateStaffForm({ roles }: { roles: Role[] }) {
         value={displayName}
         onChange={(event) => setDisplayName(event.target.value)}
       />
-      <TextField
-        label="Mot de passe"
-        type="password"
-        required
-        minLength={12}
-        hint="Douze caractères au minimum, communiqué hors ligne à la personne"
-        value={password}
-        onChange={(event) => setPassword(event.target.value)}
-      />
+      <div className="grid gap-3 sm:col-span-2">
+        <div className="flex flex-wrap items-center gap-3">
+          <PinField
+            label="Code d'accès provisoire"
+            value={password}
+            onChange={setPassword}
+            hint="Six chiffres, remis à la personne hors ligne. Elle le remplacera depuis « Mon compte »."
+          />
+          <ActionButton
+            type="button"
+            variant="outline"
+            onClick={() => setPassword(randomPin())}
+          >
+            <Shuffle aria-hidden="true" className="size-4" />
+            Générer un code
+          </ActionButton>
+        </div>
+        {password !== "" && (
+          <div className="flex flex-wrap items-center gap-3">
+            <p className="font-mono type-h3 tracking-[0.3em]">{password}</p>
+            <ActionButton
+              type="button"
+              variant="outline"
+              onClick={() => handleCopyPin()}
+            >
+              <Copy aria-hidden="true" className="size-4" />
+              Copier
+            </ActionButton>
+          </div>
+        )}
+      </div>
       <SelectField
         label="Rôle"
         value={roleSlug}
@@ -641,10 +669,10 @@ function CreateStaffForm({ roles }: { roles: Role[] }) {
           creating ||
           email.trim() === "" ||
           displayName.trim() === "" ||
-          password.length < 12 ||
+          !isPinCode(password) ||
           roleSlug === ""
         }
-        className="justify-self-start"
+        className="justify-self-start sm:col-span-2"
       >
         <UserPlus aria-hidden="true" className="size-4" />
         Créer le compte
@@ -657,7 +685,7 @@ function RejectOrganizationForm({
   organization,
   onClose,
 }: {
-  organization: Organization;
+  organization: OrganizationRow;
   onClose: () => void;
 }) {
   const rejectOrganization = useMutation(api.accounts.rejectOrganization);

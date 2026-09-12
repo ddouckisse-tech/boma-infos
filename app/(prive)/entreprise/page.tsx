@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useQuery } from "convex/react";
-import { FilePlus2, Hourglass, Info } from "lucide-react";
+import { Building2, FilePlus2, Hourglass, Info } from "lucide-react";
 import { api } from "@/convex/_generated/api";
+import { OfficeHeader, OfficeSection } from "@/components/custom/office-header";
+import { PartnerTag } from "@/components/custom/partner-tag";
 import { StatsTile } from "@/components/custom/stats-tile";
 import { StatusPill } from "@/components/custom/status-pill";
-import { PartnerTag } from "@/components/custom/partner-tag";
 import { formatDateTime } from "@/lib/private";
 
 /**
@@ -26,46 +27,39 @@ export default function PortalHome() {
 
   if (!organization) {
     return (
-      <>
-        <h1 className="font-display type-h1">Espace entreprise</h1>
-        <p className="mt-4 type-body text-muted-foreground">
-          Aucune entreprise n&apos;est rattachée à ce compte. Contactez la
-          rédaction.
-        </p>
-      </>
+      <OfficeHeader
+        icon={Building2}
+        title="Espace entreprise"
+        description="Aucune entreprise n'est rattachée à ce compte. Contactez la rédaction."
+      />
     );
   }
 
   if (!organization.approved) {
     return (
       <>
-        <h1 className="font-display type-h1">{organization.name}</h1>
-        <div className="mt-6 rounded-lg border border-l-2 border-border border-l-warning-token bg-card p-6">
-          <h2 className="flex items-center gap-2 font-display type-h3">
-            <Hourglass
-              aria-hidden="true"
-              className="size-5 text-warning-token"
-            />
-            {organization.reviewState === "rejected"
+        <OfficeHeader icon={Building2} title={organization.name} />
+        <OfficeSection
+          icon={Hourglass}
+          tone="warning"
+          title={
+            organization.reviewState === "rejected"
               ? "Demande non retenue"
-              : "Compte en attente de validation"}
-          </h2>
-          {organization.reviewState === "rejected" ? (
-            <p className="mt-3 type-body text-muted-foreground">
-              La rédaction n&apos;a pas donné suite à votre demande.
-              {organization.reviewNote
-                ? ` Motif : ${organization.reviewNote}`
-                : ""}
-            </p>
-          ) : (
-            <p className="mt-3 type-body text-muted-foreground">
-              Un administrateur valide chaque compte à la main — c&apos;est une
-              exigence du cahier des charges, pas un délai technique. Vous
-              recevrez un message dès l&apos;ouverture ; le dépôt
-              d&apos;actualité sera alors possible.
-            </p>
-          )}
-        </div>
+              : "Compte en attente de validation"
+          }
+          description={
+            organization.reviewState === "rejected" ? (
+              <>
+                La rédaction n&apos;a pas donné suite à votre demande.
+                {organization.reviewNote
+                  ? ` Motif : ${organization.reviewNote}`
+                  : ""}
+              </>
+            ) : (
+              "Un administrateur valide chaque compte à la main — c'est une exigence du cahier des charges, pas un délai technique. Vous recevrez un message dès l'ouverture ; le dépôt d'actualité sera alors possible."
+            )
+          }
+        />
       </>
     );
   }
@@ -81,23 +75,22 @@ export default function PortalHome() {
 
   return (
     <>
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="font-display type-h1">{organization.name}</h1>
-          <p className="mt-1 type-small text-muted-foreground">
-            {organization.sector}
-          </p>
-        </div>
-        <Link
-          href="/entreprise/depot/nouveau"
-          className="inline-flex items-center gap-2 rounded-md bg-primary px-4 type-small font-semibold text-primary-foreground touch-target"
-        >
-          <FilePlus2 aria-hidden="true" className="size-4" />
-          Déposer une actualité
-        </Link>
-      </div>
+      <OfficeHeader
+        icon={Building2}
+        title={organization.name}
+        description={organization.sector}
+        actions={
+          <Link
+            href="/entreprise/depot/nouveau"
+            className="inline-flex items-center gap-2 rounded-md bg-primary px-4 type-small font-semibold text-primary-foreground touch-target"
+          >
+            <FilePlus2 aria-hidden="true" className="size-4" />
+            Déposer une actualité
+          </Link>
+        }
+      />
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-3">
         <StatsTile label="En cours d'examen" value={waiting} />
         <StatsTile
           label="À retravailler"
@@ -111,7 +104,7 @@ export default function PortalHome() {
         />
       </div>
 
-      <div className="mt-6 flex flex-wrap items-center gap-2 rounded-md border border-border bg-card p-4 type-small text-muted-foreground">
+      <div className="mt-6 flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card p-4 type-small text-muted-foreground">
         <Info aria-hidden="true" className="size-4 shrink-0" />
         Tout contenu publié depuis cet espace porte la mention{" "}
         <PartnerTag size="small" />, visible sur l&apos;article et dans les
@@ -123,7 +116,7 @@ export default function PortalHome() {
       {submissions === undefined ? (
         <p className="mt-4 type-body text-muted-foreground">Chargement…</p>
       ) : rows.length === 0 ? (
-        <p className="mt-4 rounded-md border border-border bg-card p-6 type-body text-muted-foreground">
+        <p className="mt-4 rounded-xl border border-border bg-card p-6 type-body text-muted-foreground">
           Aucun dépôt pour l&apos;instant. Le premier se crée avec « Déposer une
           actualité ».
         </p>
@@ -133,7 +126,7 @@ export default function PortalHome() {
             <li key={row._id}>
               <Link
                 href={`/entreprise/depot/${row._id}`}
-                className="block rounded-md border border-border bg-card p-4 transition-colors hover:border-foreground/30"
+                className="block rounded-xl border border-border bg-card p-4 transition-colors touch-target hover:border-foreground/30"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">

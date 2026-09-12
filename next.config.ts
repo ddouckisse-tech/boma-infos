@@ -6,6 +6,29 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   // Nothing gained by advertising the framework version.
   poweredByHeader: false,
+  experimental: {
+    /**
+     * Découpage des lots JavaScript de production (Turbopack).
+     *
+     * Le lot partagé « socle » — tailwind-merge, noyau lucide, `next/link`,
+     * ≈ 14 Ko compressés — est chargé par toutes les pages. Avec les seuils
+     * par défaut (`minChunkSize` 50 000 octets non minifiés), le découpeur
+     * fondait le petit lot « boutons et champs shadcn » dans le socle pour
+     * les écrans du back-office, produisant un second lot « socle + boutons »
+     * sans retirer le premier de la liste des pages du journal : celles-ci
+     * chargeaient le socle DEUX fois, et l'article dépassait le plafond de
+     * JavaScript du §5.4 (187 Ko pour 180, relevé le 12/09/2026, budget
+     * 162/172 Ko avant le back-office). Un `minChunkSize` plus bas laisse le
+     * petit lot vivre seul (trois requêtes de plus par page, sous le plafond
+     * de cinquante) ; `maxMergeChunkSize` interdit de surcroît toute fusion
+     * d'un lot de la taille du socle. Relevé après réglage : accueil 169 Ko
+     * et 33 requêtes, article 174 Ko et 25 requêtes.
+     */
+    turbopackChunking: {
+      minChunkSize: 30_000,
+      maxMergeChunkSize: 60_000,
+    },
+  },
   images: {
     // AVIF first, WebP as fallback (CAHIER-DES-CHARGES.md §5.4).
     //
@@ -49,14 +72,15 @@ const nextConfig: NextConfig = {
       {
         source: "/icons/:path*",
         headers: [
-          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
         ],
       },
       {
         source: "/documents/:path*",
-        headers: [
-          { key: "Cache-Control", value: "public, max-age=86400" },
-        ],
+        headers: [{ key: "Cache-Control", value: "public, max-age=86400" }],
       },
       {
         // Le service worker ne doit jamais être servi depuis le cache HTTP,

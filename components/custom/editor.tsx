@@ -11,6 +11,10 @@ import {
   Trash2,
 } from "lucide-react";
 import type { Block } from "@/convex/model/content";
+import {
+  MediaPicker,
+  type PickableMedia,
+} from "@/components/custom/media-picker";
 import { cn } from "@/lib/utils";
 
 /**
@@ -59,7 +63,7 @@ export function Editor({
 }: {
   blocks: readonly Block[];
   onChange: (blocks: Block[]) => void;
-  media: readonly { key: string; alt: string }[];
+  media: readonly PickableMedia[];
 }) {
   const refs = useRef(new Map<number, HTMLTextAreaElement | null>());
 
@@ -264,21 +268,15 @@ export function Editor({
 
             {block.type === "image" && (
               <>
-                <select
-                  aria-label="Photographie"
+                <MediaPicker
+                  label="Photographie"
                   value={block.mediaKey}
-                  onChange={(event) =>
-                    replace(index, { ...block, mediaKey: event.target.value })
+                  onChange={(key) =>
+                    replace(index, { ...block, mediaKey: key })
                   }
-                  className="h-11 w-full rounded-lg border border-input bg-background px-2.5 type-small text-foreground"
-                >
-                  <option value="">— choisir une photographie</option>
-                  {media.map((item) => (
-                    <option key={item.key} value={item.key}>
-                      {item.key} — {item.alt.slice(0, 60)}
-                    </option>
-                  ))}
-                </select>
+                  media={media}
+                  allowNone={false}
+                />
                 <input
                   aria-label="Légende de l'image"
                   placeholder="Légende"
@@ -349,24 +347,14 @@ export function Editor({
                   }
                   className="h-11 rounded-lg border border-input bg-background px-2.5 type-small text-foreground"
                 />
-                <select
-                  aria-label="Vignette de la vidéo"
+                <MediaPicker
+                  label="Vignette de la vidéo"
                   value={block.posterMediaKey}
-                  onChange={(event) =>
-                    replace(index, {
-                      ...block,
-                      posterMediaKey: event.target.value,
-                    })
+                  onChange={(key) =>
+                    replace(index, { ...block, posterMediaKey: key })
                   }
-                  className="h-11 rounded-lg border border-input bg-background px-2.5 type-small text-foreground"
-                >
-                  <option value="">— vignette</option>
-                  {media.map((item) => (
-                    <option key={item.key} value={item.key}>
-                      {item.key}
-                    </option>
-                  ))}
-                </select>
+                  media={media}
+                />
               </div>
             )}
           </div>

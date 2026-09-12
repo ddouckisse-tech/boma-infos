@@ -215,10 +215,20 @@ export const overview = query({
       totalViews: rows.reduce((sum, row) => sum + row.views, 0),
       totalShares: rows.reduce((sum, row) => sum + row.shares, 0),
       averageReadingSeconds: samples > 0 ? Math.round(seconds / samples) : 0,
-      byDay: [...days]
+      // Une ligne par jour : `articleStatDays` en porte une par article ET par
+      // jour, ce qui doublait les points de la courbe et les clés de la liste.
+      byDay: [
+        ...days
+          .reduce(
+            (totals, row) =>
+              totals.set(row.day, (totals.get(row.day) ?? 0) + row.views),
+            new Map<string, number>()
+          )
+          .entries(),
+      ]
+        .map(([day, views]) => ({ day, views }))
         .sort((a, b) => a.day.localeCompare(b.day))
-        .slice(-30)
-        .map((row) => ({ day: row.day, views: row.views })),
+        .slice(-30),
       bySection: [...sectionTotals.entries()]
         .map(([name, views]) => ({ name, views }))
         .sort((a, b) => b.views - a.views),

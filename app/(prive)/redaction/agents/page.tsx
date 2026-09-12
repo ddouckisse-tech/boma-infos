@@ -10,14 +10,17 @@ import {
   FlaskConical,
   Mail,
   Play,
+  Sparkles,
 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { toast } from "sonner";
 import { ActionButton } from "@/components/custom/action-button";
-import { SelectField } from "@/components/custom/form-field";
-import { StatsTile } from "@/components/custom/stats-tile";
 import { AgentSuggestionCard } from "@/components/custom/agent-suggestion-card";
+import { DataTable, type DataColumn } from "@/components/custom/data-table";
+import { SelectField } from "@/components/custom/form-field";
+import { OfficeHeader } from "@/components/custom/office-header";
+import { StatsTile } from "@/components/custom/stats-tile";
 import {
   formatCost,
   formatDateTime,
@@ -44,6 +47,10 @@ type AgentKey =
   | "moderation"
   | "diffusion"
   | "transcription";
+
+type Run = NonNullable<
+  ReturnType<typeof useQuery<typeof api.agents.journal>>
+>[number];
 
 const RUN_STATUS_LABEL: Record<string, string> = {
   queued: "En attente",
@@ -160,17 +167,101 @@ export default function AgentsPage() {
         ? "warning"
         : "default";
 
+  const columns: DataColumn<Run>[] = [
+    {
+      key: "date",
+      header: "Date",
+      className: "whitespace-nowrap tabular-nums",
+      cell: (run) => formatDateTime(run.createdAt),
+    },
+    {
+      key: "agent",
+      header: "Agent",
+      cell: (run) => run.agentName,
+    },
+    {
+      key: "target",
+      header: "Cible",
+      primary: true,
+      cell: (run) => (
+        <>
+          <button
+            type="button"
+            onClick={() => setSelectedRunId(run._id)}
+            className="text-left type-small font-semibold text-accent hover:underline"
+          >
+            {run.targetLabel}
+          </button>
+          <p className="type-small text-muted-foreground">{run.targetType}</p>
+          {run.summary && (
+            <p className="mt-1 type-small text-muted-foreground">
+              {run.summary}
+            </p>
+          )}
+          {run.error && (
+            <p className="mt-1 type-small text-destructive">{run.error}</p>
+          )}
+        </>
+      ),
+    },
+    {
+      key: "status",
+      header: "État",
+      cell: (run) => (
+        <Badge tone={RUN_STATUS_TONE[run.status] ?? RUN_STATUS_TONE.queued}>
+          {RUN_STATUS_LABEL[run.status] ?? run.status}
+        </Badge>
+      ),
+    },
+    {
+      key: "mode",
+      header: "Mode",
+      cell: (run) =>
+        run.mode === "simulated" ? (
+          <Badge tone="border-warning-token/40 bg-warning-token/10 text-warning-token">
+            <FlaskConical aria-hidden="true" className="size-4" />
+            Simulation
+          </Badge>
+        ) : (
+          <span className="type-small">API Claude</span>
+        ),
+    },
+    {
+      key: "trigger",
+      header: "Déclencheur",
+      cell: (run) => run.triggeredBy,
+    },
+    {
+      key: "tokens",
+      header: "Jetons",
+      className: "whitespace-nowrap tabular-nums",
+      cell: (run) =>
+        `${formatNumber(run.inputTokens)} / ${formatNumber(run.outputTokens)}`,
+    },
+    {
+      key: "cost",
+      header: "Coût",
+      className: "whitespace-nowrap tabular-nums",
+      cell: (run) => formatCost(run.costMicros),
+    },
+  ];
+
   return (
     <>
-      <h1 className="font-display type-h1">Agents éditoriaux</h1>
-      <p className="mt-4 max-w-reading type-body">
-        <strong className="font-semibold">
-          « Un agent propose, un humain dispose. »
-        </strong>{" "}
-        Aucun agent ne publie, ne refuse ni ne modifie un contenu&nbsp;: chaque
-        proposition est acceptée ou rejetée à la main, et une proposition
-        rejetée n&apos;est jamais re-proposée.
-      </p>
+      <OfficeHeader
+        icon={Sparkles}
+        title="Agents éditoriaux"
+        description={
+          <>
+            <strong className="font-semibold">
+              « Un agent propose, un humain dispose. »
+            </strong>{" "}
+            Aucun agent ne publie, ne refuse ni ne modifie un contenu&nbsp;:
+            chaque proposition est acceptée ou rejetée à la main, et une
+            proposition rejetée n&apos;est jamais re-proposée.
+          </>
+        }
+      />
 
       {overview === undefined ? (
         <p className="mt-6 type-body text-muted-foreground">
@@ -400,114 +491,19 @@ export default function AgentsPage() {
         <p className="mt-4 type-body text-muted-foreground">
           Chargement du journal…
         </p>
-      ) : runs.length === 0 ? (
-        <p className="mt-4 rounded-md border border-border bg-card p-4 type-body text-muted-foreground">
-          Aucune exécution pour l&apos;instant.
-        </p>
       ) : (
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full min-w-[68rem] border-collapse text-left">
-            <caption className="sr-only">
-              Journal des exécutions des agents éditoriaux
-            </caption>
-            <thead>
-              <tr className="border-b border-border">
-                <th scope="col" className="py-2 pr-4 type-small font-semibold">
-                  Date
-                </th>
-                <th scope="col" className="py-2 pr-4 type-small font-semibold">
-                  Agent
-                </th>
-                <th scope="col" className="py-2 pr-4 type-small font-semibold">
-                  Cible
-                </th>
-                <th scope="col" className="py-2 pr-4 type-small font-semibold">
-                  État
-                </th>
-                <th scope="col" className="py-2 pr-4 type-small font-semibold">
-                  Mode
-                </th>
-                <th scope="col" className="py-2 pr-4 type-small font-semibold">
-                  Déclencheur
-                </th>
-                <th scope="col" className="py-2 pr-4 type-small font-semibold">
-                  Jetons
-                </th>
-                <th scope="col" className="py-2 type-small font-semibold">
-                  Coût
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {runs.map((run) => (
-                <tr
-                  key={run._id}
-                  className={cn(
-                    "border-b border-border",
-                    selectedRunId === run._id && "bg-surface-muted"
-                  )}
-                >
-                  <td className="py-2 pr-4 align-top type-small whitespace-nowrap tabular-nums">
-                    {formatDateTime(run.createdAt)}
-                  </td>
-                  <td className="py-2 pr-4 align-top type-small">
-                    {run.agentName}
-                  </td>
-                  <td className="py-2 pr-4 align-top">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedRunId(run._id)}
-                      className="text-left type-small font-semibold text-accent hover:underline"
-                    >
-                      {run.targetLabel}
-                    </button>
-                    <p className="type-small text-muted-foreground">
-                      {run.targetType}
-                    </p>
-                    {run.summary && (
-                      <p className="mt-1 type-small text-muted-foreground">
-                        {run.summary}
-                      </p>
-                    )}
-                    {run.error && (
-                      <p className="mt-1 type-small text-destructive">
-                        {run.error}
-                      </p>
-                    )}
-                  </td>
-                  <td className="py-2 pr-4 align-top">
-                    <Badge
-                      tone={
-                        RUN_STATUS_TONE[run.status] ?? RUN_STATUS_TONE.queued
-                      }
-                    >
-                      {RUN_STATUS_LABEL[run.status] ?? run.status}
-                    </Badge>
-                  </td>
-                  <td className="py-2 pr-4 align-top">
-                    {run.mode === "simulated" ? (
-                      <Badge tone="border-warning-token/40 bg-warning-token/10 text-warning-token">
-                        <FlaskConical aria-hidden="true" className="size-4" />
-                        Simulation
-                      </Badge>
-                    ) : (
-                      <span className="type-small">API Claude</span>
-                    )}
-                  </td>
-                  <td className="py-2 pr-4 align-top type-small">
-                    {run.triggeredBy}
-                  </td>
-                  <td className="py-2 pr-4 align-top type-small whitespace-nowrap tabular-nums">
-                    {formatNumber(run.inputTokens)} /{" "}
-                    {formatNumber(run.outputTokens)}
-                  </td>
-                  <td className="py-2 align-top type-small whitespace-nowrap tabular-nums">
-                    {formatCost(run.costMicros)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="mt-4">
+          <DataTable
+            columns={columns}
+            rows={runs}
+            rowKey={(run) => run._id}
+            caption="Journal des exécutions des agents éditoriaux"
+            empty="Aucune exécution pour l'instant."
+            minWidth="68rem"
+            rowClassName={(run) =>
+              run._id === selectedRunId ? "bg-surface-muted" : undefined
+            }
+          />
         </div>
       )}
 

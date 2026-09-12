@@ -3,6 +3,8 @@
 import { useQuery } from "convex/react";
 import { ChartNoAxesColumn, Clock, Eye, Share2 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
+import { DataTable, type DataColumn } from "@/components/custom/data-table";
+import { OfficeHeader, OfficeSection } from "@/components/custom/office-header";
 import { StatsTile } from "@/components/custom/stats-tile";
 import { formatDate, formatDuration, formatNumber } from "@/lib/private";
 
@@ -34,24 +36,21 @@ export default function AudienceStatsPage() {
 
   return (
     <div className="flex flex-col gap-8 pb-12">
-      <div>
-        <h1 className="flex items-center gap-2 font-display type-h1">
-          <ChartNoAxesColumn
-            aria-hidden="true"
-            className="size-4 text-accent"
-          />
-          Statistiques d&apos;audience
-        </h1>
-        <p className="mt-3 max-w-3xl type-body text-muted-foreground">
-          La mesure est faite sur nos propres serveurs, sans traqueur tiers,
-          sans cookie et sans identifiant&nbsp;: le comptage a lieu au passage
-          de la requête, et la durée de lecture provient d&apos;une balise de
-          quelques centaines d&apos;octets posée sur la page d&apos;article.
-          Aucune ligne enregistrée ne décrit un lecteur. L&apos;ancien site
-          chargeait MonsterInsights et Google Analytics&nbsp;; celui-ci ne
-          charge aucun script tiers de mesure.
-        </p>
-      </div>
+      <OfficeHeader
+        icon={ChartNoAxesColumn}
+        title="Statistiques"
+        description={
+          <>
+            La mesure est faite sur nos propres serveurs, sans traqueur tiers,
+            sans cookie et sans identifiant&nbsp;: le comptage a lieu au passage
+            de la requête, et la durée de lecture provient d&apos;une balise de
+            quelques centaines d&apos;octets posée sur la page d&apos;article.
+            Aucune ligne enregistrée ne décrit un lecteur. L&apos;ancien site
+            chargeait MonsterInsights et Google Analytics&nbsp;; celui-ci ne
+            charge aucun script tiers de mesure.
+          </>
+        }
+      />
 
       {overview === undefined ? (
         <p className="type-body text-muted-foreground" role="status">
@@ -64,7 +63,7 @@ export default function AudienceStatsPage() {
         </p>
       ) : (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
             <StatsTile
               label="Vues totales"
               value={formatNumber(overview.totalViews)}
@@ -83,41 +82,27 @@ export default function AudienceStatsPage() {
             />
           </div>
 
-          <section aria-labelledby="courbe-vues">
-            <h2
-              id="courbe-vues"
-              className="flex items-center gap-2 font-display type-h3"
-            >
-              <Eye
-                aria-hidden="true"
-                className="size-4 text-muted-foreground"
-              />
-              Vues des trente derniers jours
-            </h2>
+          <OfficeSection
+            id="courbe-vues"
+            icon={Eye}
+            title="Vues des trente derniers jours"
+          >
             {overview.byDay.length === 0 ? (
-              <p className="mt-2 type-body text-muted-foreground">
+              <p className="type-body text-muted-foreground">
                 Aucune vue enregistrée pour l&apos;instant.
               </p>
             ) : (
               <DailyViewsChart byDay={overview.byDay} />
             )}
-          </section>
+          </OfficeSection>
 
-          <section aria-labelledby="par-rubrique">
-            <h2 id="par-rubrique" className="font-display type-h3">
-              Par rubrique
-            </h2>
+          <OfficeSection id="par-rubrique" title="Par rubrique">
             <SectionBreakdown bySection={overview.bySection} />
-          </section>
+          </OfficeSection>
 
-          <section aria-labelledby="par-article">
-            <h2 id="par-article" className="font-display type-h3">
-              Par article
-            </h2>
-            <div className="mt-3 overflow-x-auto">
-              <ArticleTable articles={overview.articles} />
-            </div>
-          </section>
+          <OfficeSection id="par-article" title="Par article">
+            <ArticleTable articles={overview.articles} />
+          </OfficeSection>
         </>
       )}
     </div>
@@ -138,9 +123,24 @@ function DailyViewsChart({ byDay }: { byDay: DayPoint[] }) {
       return `${x},${y}`;
     })
     .join(" ");
+  const dayColumns: DataColumn<DayPoint>[] = [
+    {
+      key: "day",
+      header: "Jour",
+      primary: true,
+      cell: (point) => formatDate(new Date(point.day).getTime()),
+    },
+    {
+      key: "views",
+      header: "Vues",
+      align: "end",
+      className: "tabular-nums",
+      cell: (point) => formatNumber(point.views),
+    },
+  ];
 
   return (
-    <div className="mt-3">
+    <>
       <svg
         viewBox="0 0 600 160"
         role="img"
@@ -172,54 +172,30 @@ function DailyViewsChart({ byDay }: { byDay: DayPoint[] }) {
         <summary className="inline-flex items-center type-small font-semibold text-accent underline underline-offset-2 touch-target">
           Voir les données du graphique
         </summary>
-        <div className="mt-2 overflow-x-auto">
-          <table className="w-full border-collapse type-small">
-            <thead>
-              <tr>
-                <th
-                  scope="col"
-                  className="border-b border-border py-1 text-left"
-                >
-                  Jour
-                </th>
-                <th
-                  scope="col"
-                  className="border-b border-border py-1 text-right"
-                >
-                  Vues
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {byDay.map((point) => (
-                <tr key={point.day}>
-                  <td className="border-b border-border py-1">
-                    {formatDate(new Date(point.day).getTime())}
-                  </td>
-                  <td className="border-b border-border py-1 text-right tabular-nums">
-                    {formatNumber(point.views)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="mt-2">
+          <DataTable
+            columns={dayColumns}
+            rows={byDay}
+            rowKey={(point) => point.day}
+            caption="Vues par jour sur les trente derniers jours"
+          />
         </div>
       </details>
-    </div>
+    </>
   );
 }
 
 function SectionBreakdown({ bySection }: { bySection: SectionRow[] }) {
   if (bySection.length === 0) {
     return (
-      <p className="mt-2 type-body text-muted-foreground">
+      <p className="type-body text-muted-foreground">
         Aucune vue par rubrique pour l&apos;instant.
       </p>
     );
   }
   const max = Math.max(1, ...bySection.map((section) => section.views));
   return (
-    <ul className="mt-3 flex flex-col gap-3">
+    <ul className="flex flex-col gap-3">
       {bySection.map((section) => (
         <li key={section.name}>
           <div className="flex items-center justify-between type-small">
@@ -241,97 +217,94 @@ function SectionBreakdown({ bySection }: { bySection: SectionRow[] }) {
 }
 
 function ArticleTable({ articles }: { articles: ArticleRow[] }) {
+  const columns: DataColumn<ArticleRow>[] = [
+    {
+      key: "title",
+      header: "Article",
+      primary: true,
+      cell: (article) => (
+        <a
+          href={`/article/${article.slug}`}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center font-semibold text-accent underline underline-offset-2 touch-target"
+        >
+          {article.title}
+        </a>
+      ),
+    },
+    {
+      key: "category",
+      header: "Rubrique",
+      cell: (article) => article.categoryName,
+    },
+    {
+      key: "origin",
+      header: "Origine",
+      cell: (article) =>
+        article.origin === "partenaire" ? "Contenu partenaire" : "Rédaction",
+    },
+    {
+      key: "publishedAt",
+      header: "Publié le",
+      className: "tabular-nums",
+      cell: (article) => formatDate(article.publishedAt),
+    },
+    {
+      key: "views",
+      header: (
+        <span className="inline-flex items-center justify-end gap-1">
+          <Eye aria-hidden="true" className="size-4" />
+          Vues
+        </span>
+      ),
+      align: "end",
+      className: "tabular-nums",
+      cell: (article) => formatNumber(article.views),
+    },
+    {
+      key: "reading",
+      header: (
+        <span className="inline-flex items-center justify-end gap-1">
+          <Clock aria-hidden="true" className="size-4" />
+          Lecture moy.
+        </span>
+      ),
+      align: "end",
+      className: "tabular-nums",
+      cell: (article) => formatDuration(article.averageReadingSeconds),
+    },
+    {
+      key: "shares",
+      header: (
+        <span className="inline-flex items-center justify-end gap-1">
+          <Share2 aria-hidden="true" className="size-4" />
+          Partages
+        </span>
+      ),
+      align: "end",
+      className: "tabular-nums",
+      cell: (article) => formatNumber(article.shares),
+    },
+    {
+      key: "channels",
+      header: "Par canal",
+      cell: (article) =>
+        article.sharesByChannel.length > 0
+          ? article.sharesByChannel
+              .map((entry) => `${entry.channel} ${entry.count}`)
+              .join(" · ")
+          : "—",
+    },
+  ];
+
   return (
-    <table className="w-full min-w-[860px] border-collapse type-small">
-      <thead>
-        <tr className="text-left text-muted-foreground">
-          <th scope="col" className="border-b border-border py-2 pr-3">
-            Article
-          </th>
-          <th scope="col" className="border-b border-border py-2 pr-3">
-            Rubrique
-          </th>
-          <th scope="col" className="border-b border-border py-2 pr-3">
-            Origine
-          </th>
-          <th scope="col" className="border-b border-border py-2 pr-3">
-            Publié le
-          </th>
-          <th
-            scope="col"
-            className="border-b border-border py-2 pr-3 text-right"
-          >
-            <span className="inline-flex items-center justify-end gap-1">
-              <Eye aria-hidden="true" className="size-4" />
-              Vues
-            </span>
-          </th>
-          <th
-            scope="col"
-            className="border-b border-border py-2 pr-3 text-right"
-          >
-            <span className="inline-flex items-center justify-end gap-1">
-              <Clock aria-hidden="true" className="size-4" />
-              Lecture moy.
-            </span>
-          </th>
-          <th
-            scope="col"
-            className="border-b border-border py-2 pr-3 text-right"
-          >
-            <span className="inline-flex items-center justify-end gap-1">
-              <Share2 aria-hidden="true" className="size-4" />
-              Partages
-            </span>
-          </th>
-          <th scope="col" className="border-b border-border py-2">
-            Par canal
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        {articles.map((article) => (
-          <tr key={article.slug}>
-            <td className="border-b border-border py-2 pr-3">
-              <a
-                href={`/article/${article.slug}`}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center font-semibold text-accent underline underline-offset-2 touch-target"
-              >
-                {article.title}
-              </a>
-            </td>
-            <td className="border-b border-border py-2 pr-3">
-              {article.categoryName}
-            </td>
-            <td className="border-b border-border py-2 pr-3">
-              {article.origin === "partenaire"
-                ? "Contenu partenaire"
-                : "Rédaction"}
-            </td>
-            <td className="border-b border-border py-2 pr-3 tabular-nums">
-              {formatDate(article.publishedAt)}
-            </td>
-            <td className="border-b border-border py-2 pr-3 text-right tabular-nums">
-              {formatNumber(article.views)}
-            </td>
-            <td className="border-b border-border py-2 pr-3 text-right tabular-nums">
-              {formatDuration(article.averageReadingSeconds)}
-            </td>
-            <td className="border-b border-border py-2 pr-3 text-right tabular-nums">
-              {formatNumber(article.shares)}
-            </td>
-            <td className="border-b border-border py-2">
-              {article.sharesByChannel.length > 0
-                ? article.sharesByChannel
-                    .map((entry) => `${entry.channel} ${entry.count}`)
-                    .join(" · ")
-                : "—"}
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <DataTable
+      columns={columns}
+      rows={articles}
+      rowKey={(article) => article.slug}
+      caption="Articles mesurés, du plus consulté au moins consulté"
+      minWidth="54rem"
+    />
   );
 }

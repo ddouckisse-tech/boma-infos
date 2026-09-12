@@ -10,10 +10,11 @@
  *
  * Two invariants this file is responsible for:
  *
- *  1. **Two-factor authentication is mandatory for Administrateur and
- *     Éditeur.** An account of either role that has not enrolled can reach
- *     its own profile and nothing else — not the articles, not the deposits,
- *     not the settings. Enforced here, not in a layout.
+ *  1. **Every privileged call is gated by role, here.** The second factor is
+ *     *recommended* for Administrateur and Éditeur, no longer required
+ *     (client decision, 12/09/2026): an account that has not enrolled works
+ *     normally, and the interface reminds it — it does not lock it out. The
+ *     same goes for a provisional access code.
  *  2. **A company sees its own data and no one else's.** Every read and
  *     write that touches `organizations` or `submissions` resolves the scope
  *     from the *session*, never from an argument the caller chose.
@@ -59,6 +60,10 @@ export type RoleDefinition = {
   readonly name: string;
   readonly description: string;
   readonly permissions: readonly Permission[];
+  /**
+   * Kept for the interface's wording only: since 12/09/2026 no role is
+   * refused for lack of a second factor. `true` would only change sentences.
+   */
   readonly requiresTwoFactor: boolean;
   /** Where a member of this role lands after signing in. */
   readonly home: string;
@@ -89,7 +94,7 @@ export const ROLES: Record<RoleSlug, RoleDefinition> = {
       PERMISSIONS.agentsManage,
       PERMISSIONS.auditRead,
     ],
-    requiresTwoFactor: true,
+    requiresTwoFactor: false,
     home: "/redaction",
   },
   editeur: {
@@ -98,7 +103,7 @@ export const ROLES: Record<RoleSlug, RoleDefinition> = {
     description:
       "Rédige, soumet et publie dans ses rubriques autorisées. Ne gère ni les comptes ni les réglages.",
     permissions: EDITOR_PERMISSIONS,
-    requiresTwoFactor: true,
+    requiresTwoFactor: false,
     home: "/redaction",
   },
   entreprise: {
@@ -227,40 +232,18 @@ export async function requireViewer(ctx: QueryCtx): Promise<Viewer> {
   };
 }
 
-/**
- * Permissions that stay reachable while an Administrateur or an Éditeur has
- * not enrolled a second factor — otherwise the requirement would lock the
- * very account that has to satisfy it.
- */
-const SELF_SERVICE: readonly Permission[] = [PERMISSIONS.readerAccount];
-
 export async function requirePermission(
   ctx: QueryCtx,
   permission: Permission
 ): Promise<Viewer> {
   const viewer = await requireViewer(ctx);
 
-  if (
-    viewer.profile.mustChangePassword === true &&
-    !SELF_SERVICE.includes(permission)
-  ) {
-    // Mot de passe provisoire, posé par la ligne de commande : le compte ne
-    // sert à rien tant qu'un mot de passe définitif n'a pas été choisi.
-    // Vérifié AVANT le second facteur — c'est le geste que le titulaire peut
-    // faire tout de suite, il connaît ce mot de passe-là.
-    throw accessError("PASSWORD_CHANGE_REQUIRED");
-  }
-
-  if (
-    viewer.role.requiresTwoFactor &&
-    !viewer.twoFactorEnabled &&
-    !SELF_SERVICE.includes(permission)
-  ) {
-    // CDC §4.3 : « double authentification obligatoire ». Obligatoire veut
-    // dire que le compte ne sert à rien tant qu'elle n'est pas posée.
-    throw accessError("TWO_FACTOR_REQUIRED");
-  }
-
+  // Ni le code provisoire ni le second facteur manquant ne verrouillent plus
+  // le compte (arbitrage du client, 12/09/2026) : l'un et l'autre sont
+  // rappelés par l'interface — carte flottante, réglages — et restent des
+  // gestes du titulaire, pas une condition posée par le serveur. Les codes
+  // PASSWORD_CHANGE_REQUIRED et TWO_FACTOR_REQUIRED subsistent dans le
+  // vocabulaire des erreurs pour les clients qui les traduisent encore.
   if (!viewer.role.permissions.includes(permission)) {
     throw accessError("FORBIDDEN");
   }
@@ -282,12 +265,6 @@ export async function requireOrganizationScope(
   const viewer = await requireViewer(ctx);
 
   if (viewer.role.permissions.includes(PERMISSIONS.submissionsReview)) {
-    if (viewer.profile.mustChangePassword === true) {
-      throw accessError("PASSWORD_CHANGE_REQUIRED");
-    }
-    if (viewer.role.requiresTwoFactor && !viewer.twoFactorEnabled) {
-      throw accessError("TWO_FACTOR_REQUIRED");
-    }
     if (!requested) throw accessError("ORGANIZATION_REQUIRED");
     return { viewer, organizationId: requested };
   }

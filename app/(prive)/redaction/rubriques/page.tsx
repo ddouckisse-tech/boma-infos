@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
-import { ArrowDown, ArrowUp, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Pencil, Plus, Tags, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -13,6 +13,7 @@ import {
   TextField,
 } from "@/components/custom/form-field";
 import { Modal } from "@/components/custom/modal";
+import { OfficeHeader, OfficeSection } from "@/components/custom/office-header";
 import { humanError } from "@/lib/private";
 
 type Category = {
@@ -154,24 +155,31 @@ export default function CategoriesPage() {
 
   return (
     <>
-      <h1 className="font-display type-h1">Rubriques</h1>
-      <p className="mt-2 max-w-reading type-body text-muted-foreground">
-        Le slug d&apos;une rubrique ne change jamais lors d&apos;un
-        renommage&nbsp;: il figure dans les adresses publiques et dans le plan
-        de redirections 301. Seuls le nom, l&apos;accent, la description et la
-        visibilité restent modifiables.
-      </p>
+      <OfficeHeader
+        icon={Tags}
+        title="Rubriques"
+        description="Arborescence du journal : ajout, renommage, ordre et couleur d'accent, sans intervention technique."
+        actions={
+          <a
+            href="#nouvelle-rubrique"
+            className="inline-flex items-center gap-2 rounded-md bg-primary px-4 type-small font-semibold text-primary-foreground touch-target"
+          >
+            <Plus aria-hidden="true" className="size-4" />
+            Nouvelle rubrique
+          </a>
+        }
+      />
 
       {categories === undefined ? (
-        <p className="mt-6 type-body text-muted-foreground">
+        <p className="type-body text-muted-foreground">
           Chargement des rubriques…
         </p>
       ) : topLevel.length === 0 ? (
-        <p className="mt-6 rounded-md border border-border bg-card p-6 type-body text-muted-foreground">
+        <p className="rounded-md border border-border bg-card p-6 type-body text-muted-foreground">
           Aucune rubrique n&apos;a encore été créée.
         </p>
       ) : (
-        <ul className="mt-6 grid gap-3">
+        <ul className="grid gap-3">
           {topLevel.map((parent) => {
             const children = byOrder(
               rows.filter((c) => c.parentSlug === parent.slug)
@@ -211,12 +219,17 @@ export default function CategoriesPage() {
         </ul>
       )}
 
-      <section className="mt-10 rounded-md border border-border bg-card p-4 sm:p-6">
-        <h2 className="font-display type-h2">Nouvelle rubrique</h2>
-        <form onSubmit={handleCreate} className="mt-4 grid gap-4 sm:max-w-xl">
+      <OfficeSection
+        id="nouvelle-rubrique"
+        icon={Plus}
+        title="Nouvelle rubrique"
+        className="mt-10"
+      >
+        <form onSubmit={handleCreate} className="grid gap-4 sm:grid-cols-2">
           <TextField
             label="Nom"
             required
+            className="sm:col-span-2"
             value={name}
             onChange={(event) => setName(event.target.value)}
           />
@@ -237,6 +250,7 @@ export default function CategoriesPage() {
           />
           <TextAreaField
             label="Description"
+            className="sm:col-span-2"
             value={description}
             onChange={(event) => setDescription(event.target.value)}
           />
@@ -249,7 +263,7 @@ export default function CategoriesPage() {
             Créer la rubrique
           </ActionButton>
         </form>
-      </section>
+      </OfficeSection>
 
       <Modal
         open={editingCategory !== null}
@@ -310,7 +324,7 @@ function CategoryRow({
   onDelete: () => void;
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-md border border-border bg-card p-3">
+    <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card p-4">
       <span
         aria-hidden="true"
         className="size-3 shrink-0 rounded-xs"
@@ -331,7 +345,7 @@ function CategoryRow({
           {category.articleCount > 1 ? "s" : ""}
         </p>
       </div>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <ActionButton
           type="button"
           variant="outline"
@@ -354,12 +368,7 @@ function CategoryRow({
           <Pencil aria-hidden="true" className="size-4" />
           Modifier
         </ActionButton>
-        <ActionButton
-          type="button"
-          variant="outline"
-          onClick={onDelete}
-          className="text-destructive"
-        >
+        <ActionButton type="button" variant="destructive" onClick={onDelete}>
           <Trash2 aria-hidden="true" className="size-4" />
           Supprimer
         </ActionButton>
@@ -402,8 +411,8 @@ function EditCategoryForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-4 p-5">
-      <div>
+    <form onSubmit={handleSubmit} className="grid gap-4 p-5 sm:grid-cols-2">
+      <div className="sm:col-span-2">
         <p className="font-display type-h3">Modifier la rubrique</p>
         <p className="mt-1 type-small text-muted-foreground">
           Slug&nbsp;: <span className="font-mono">{category.slug}</span> — ne
@@ -424,6 +433,7 @@ function EditCategoryForm({
       />
       <TextAreaField
         label="Description"
+        className="sm:col-span-2"
         value={description}
         onChange={(event) => setDescription(event.target.value)}
       />
@@ -433,7 +443,7 @@ function EditCategoryForm({
         onChange={(event) => setIsActive(event.target.value === "true")}
         options={VISIBILITY_OPTIONS}
       />
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-3 sm:col-span-2">
         <ActionButton type="submit" disabled={saving || name.trim().length < 2}>
           Enregistrer
         </ActionButton>
@@ -484,9 +494,9 @@ function DeleteCategoryForm({
       <div className="flex flex-wrap gap-3">
         <ActionButton
           type="button"
+          variant="destructive"
           onClick={handleDelete}
           disabled={busy}
-          className="text-destructive"
         >
           <Trash2 aria-hidden="true" className="size-4" />
           Confirmer la suppression

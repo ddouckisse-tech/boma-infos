@@ -7,7 +7,9 @@ import { Inbox, Mail, MessageCircle, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { ActionButton } from "@/components/custom/action-button";
 import { SelectField } from "@/components/custom/form-field";
+import { OfficeHeader } from "@/components/custom/office-header";
 import { StatsTile } from "@/components/custom/stats-tile";
 import { StatusPill } from "@/components/custom/status-pill";
 import { STATUS_LABEL, formatDateTime, humanError } from "@/lib/private";
@@ -43,14 +45,20 @@ export default function SubmissionsQueuePage() {
 
   return (
     <>
-      <h1 className="font-display type-h1">Dépôts entreprises</h1>
-      <p className="mt-2 max-w-reading type-body text-muted-foreground">
-        Chaque dépôt soumis déclenche l&apos;agent de modération, qui produit
-        une fiche de pré-qualification. Cette fiche conseille&nbsp;; accepter,
-        demander des modifications ou refuser reste un acte de la rédaction.
-      </p>
+      <OfficeHeader
+        icon={Inbox}
+        title="Dépôts entreprises"
+        description={
+          <>
+            Chaque dépôt soumis déclenche l&apos;agent de modération, qui
+            produit une fiche de pré-qualification. Cette fiche conseille&nbsp;;
+            accepter, demander des modifications ou refuser reste un acte de la
+            rédaction.
+          </>
+        }
+      />
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-3">
         <StatsTile
           label="À traiter"
           value={waiting}
@@ -75,7 +83,7 @@ export default function SubmissionsQueuePage() {
       {rows === undefined ? (
         <p className="mt-6 type-body text-muted-foreground">Chargement…</p>
       ) : all.length === 0 ? (
-        <p className="mt-6 rounded-md border border-border bg-card p-6 type-body text-muted-foreground">
+        <p className="mt-6 rounded-xl border border-border bg-card p-6 type-body text-muted-foreground">
           Aucun dépôt pour ce filtre.
         </p>
       ) : (
@@ -84,7 +92,7 @@ export default function SubmissionsQueuePage() {
             <li key={row._id}>
               <Link
                 href={`/redaction/depots/${row._id}`}
-                className="block rounded-md border border-border bg-card p-4 transition-colors hover:border-foreground/30"
+                className="block rounded-xl border border-border bg-card p-4 transition-colors touch-target hover:border-foreground/30"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
@@ -132,7 +140,7 @@ export default function SubmissionsQueuePage() {
           {notifications.map((item) => (
             <li
               key={item._id}
-              className="rounded-md border border-border bg-card p-4"
+              className="rounded-xl border border-border bg-card p-4"
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <p className="flex items-center gap-2 type-small font-semibold">
@@ -154,8 +162,10 @@ export default function SubmissionsQueuePage() {
                 {item.body}
               </pre>
               {item.status === "pending" ? (
-                <button
+                <ActionButton
                   type="button"
+                  variant="outline"
+                  className="mt-3"
                   onClick={async () => {
                     try {
                       await markSent({ id: item._id as Id<"notifications"> });
@@ -164,10 +174,9 @@ export default function SubmissionsQueuePage() {
                       toast.error(humanError(error));
                     }
                   }}
-                  className="mt-3 inline-flex items-center rounded-md border border-border px-3 type-small font-semibold touch-target hover:bg-surface-muted"
                 >
                   Marquer comme transmis
-                </button>
+                </ActionButton>
               ) : (
                 <p className="mt-3 type-small text-success-token">Transmis</p>
               )}
