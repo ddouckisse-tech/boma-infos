@@ -61,7 +61,7 @@ export default function LegalPage() {
           </div>
 
           <div className="article-body mt-8 type-body">
-            <h2 className="font-serif type-h2">Éditeur du site</h2>
+            <h2 className="font-display type-h2">Éditeur du site</h2>
             <p>
               {SITE.name}, magazine économique en ligne, édité par{" "}
               {SITE.publisher}, {SITE.address}.
@@ -76,7 +76,7 @@ export default function LegalPage() {
               </li>
             </ul>
 
-            <h2 className="font-serif type-h2">Éléments à compléter</h2>
+            <h2 className="font-display type-h2">Éléments à compléter</h2>
             <p>
               Un organe de presse doit pouvoir être identifié par son lecteur.
               Les mentions suivantes relèvent de l&apos;éditeur et seront
@@ -88,7 +88,7 @@ export default function LegalPage() {
               ))}
             </ul>
 
-            <h2 className="font-serif type-h2">Propriété intellectuelle</h2>
+            <h2 className="font-display type-h2">Propriété intellectuelle</h2>
             <p>
               Les textes publiés sur ce site sont la propriété de leur auteur et
               de l&apos;éditeur. Toute reproduction intégrale est soumise à
@@ -102,7 +102,7 @@ export default function LegalPage() {
               celle-ci.
             </p>
 
-            <h2 className="font-serif type-h2">Responsabilité</h2>
+            <h2 className="font-display type-h2">Responsabilité</h2>
             <p>
               Les tribunes signées n&apos;engagent que leurs auteurs. Les
               contenus d&apos;origine commerciale portent la mention
@@ -110,7 +110,7 @@ export default function LegalPage() {
               partout où ils apparaissent.
             </p>
 
-            <h2 className="font-serif type-h2">Droit de réponse</h2>
+            <h2 className="font-display type-h2">Droit de réponse</h2>
             <p>
               Toute personne nommée dans un article dispose d&apos;un droit de
               réponse. Adressez votre demande à la rédaction&nbsp;: elle sera

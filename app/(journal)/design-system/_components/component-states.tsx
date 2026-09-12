@@ -110,7 +110,7 @@ function Block({
 }) {
   return (
     <div className="mt-10">
-      <h3 className="font-serif type-h3 text-foreground">{title}</h3>
+      <h3 className="font-display type-h3 text-foreground">{title}</h3>
       {description && (
         <p className="mt-1 max-w-reading type-small text-muted-foreground">
           {description}
@@ -473,7 +473,7 @@ export function ComponentStates() {
               </DialogTrigger>
               <DialogContent showCloseButton={false}>
                 <DialogHeader className="pr-12">
-                  <DialogTitle className="font-serif type-h3">
+                  <DialogTitle className="font-display type-h3">
                     Dépublier l&apos;article ?
                   </DialogTitle>
                   <DialogDescription>
@@ -506,7 +506,7 @@ export function ComponentStates() {
               <SheetContent side="right" showCloseButton={false}>
                 <SheetHeader className="flex-row items-start justify-between">
                   <div>
-                    <SheetTitle className="font-serif type-h3">
+                    <SheetTitle className="font-display type-h3">
                       Filtres
                     </SheetTitle>
                     <SheetDescription>

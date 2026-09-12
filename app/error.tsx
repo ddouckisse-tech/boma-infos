@@ -39,7 +39,7 @@ export default function ErrorBoundary({
           className="mt-1 size-6 shrink-0 text-destructive"
         />
         <div className="min-w-0">
-          <h1 className="font-serif type-h2">
+          <h1 className="font-display type-h2">
             Le journal n&apos;a pas pu être affiché
           </h1>
           <p className="mt-3 type-body text-muted-foreground">

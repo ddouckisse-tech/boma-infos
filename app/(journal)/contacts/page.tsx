@@ -66,7 +66,7 @@ export default function ContactsPage() {
         <Container className="px-0">
           <div className="grid gap-10 lg:grid-cols-[1.3fr_1fr] lg:gap-14">
             <div className="min-w-0">
-              <h2 className="font-serif type-h2">Écrire à la rédaction</h2>
+              <h2 className="font-display type-h2">Écrire à la rédaction</h2>
               <p className="mt-2 max-w-reading type-body text-muted-foreground">
                 Les champs marqués d&apos;un astérisque sont obligatoires.
               </p>
@@ -76,7 +76,7 @@ export default function ContactsPage() {
             </div>
 
             <aside className="min-w-0">
-              <h2 className="font-serif type-h2">Coordonnées</h2>
+              <h2 className="font-display type-h2">Coordonnées</h2>
               <ul className="mt-4 grid gap-3">
                 <li className={line}>
                   <Mail
@@ -126,7 +126,7 @@ export default function ContactsPage() {
               </ul>
 
               <div className="mt-6 rounded-md border border-border bg-surface-muted p-4">
-                <h3 className="font-serif type-h3">Déposer une actualité</h3>
+                <h3 className="font-display type-h3">Déposer une actualité</h3>
                 <p className="mt-2 type-small text-muted-foreground">
                   Le portail de dépôt réservé aux entreprises partenaires
                   ouvrira avec la prochaine version du site. En attendant,

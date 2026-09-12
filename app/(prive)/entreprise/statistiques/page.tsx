@@ -40,7 +40,7 @@ export default function OrganizationStatisticsPage() {
 
   return (
     <>
-      <h1 className="font-serif type-h1">Statistiques de diffusion</h1>
+      <h1 className="font-display type-h1">Statistiques de diffusion</h1>
       <p className="mt-4 max-w-reading type-body text-muted-foreground">
         Ces chiffres ne concernent que les publications de votre entreprise. Le
         périmètre est calculé côté serveur à partir de votre session&nbsp;:
@@ -84,7 +84,7 @@ export default function OrganizationStatisticsPage() {
             </div>
           </div>
 
-          <h2 className="mt-8 font-serif type-h2">Publications</h2>
+          <h2 className="mt-8 font-display type-h2">Publications</h2>
           {data.articles.length === 0 ? (
             <p className="mt-4 rounded-md border border-border bg-card p-6 type-body text-muted-foreground">
               Aucune publication pour l&apos;instant. Les statistiques

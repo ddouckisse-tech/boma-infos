@@ -36,10 +36,7 @@ export function FeaturedHero({
   return (
     // `dark` : île sombre — les composants imbriqués prennent leurs jetons
     // sombres quel que soit le thème de la page (voir `.lc-hero`).
-    <section
-      aria-label="Article à la une"
-      className={cn("lc-hero dark", className)}
-    >
+    <section aria-label="Article à la une" className={cn("lc-hero", className)}>
       {media && (
         <ResponsiveImage
           media={media}
@@ -60,10 +57,10 @@ export function FeaturedHero({
             de 1280 — le voile est opaque là où elle s'arrête. */}
         <div className="md:max-w-[58%] xl:max-w-[54%]">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-2 type-small font-semibold tracking-wide text-magenta-300 uppercase">
+            <span className="inline-flex items-center gap-2 type-small font-semibold tracking-wide text-brand-magenta uppercase dark:text-brand-magenta-dark">
               <span
                 aria-hidden="true"
-                className="inline-block h-[3px] w-6 bg-magenta-300"
+                className="inline-block h-[3px] w-6 bg-brand-magenta dark:bg-brand-magenta-dark"
               />
               À la une
             </span>
@@ -75,7 +72,7 @@ export function FeaturedHero({
             {article.origin === "partenaire" && <PartnerTag />}
           </div>
 
-          <h2 className="mt-5 font-serif type-display text-balance text-white">
+          <h2 className="mt-5 font-display type-display text-balance text-foreground">
             <Link
               href={`/article/${article.slug}`}
               prefetch={false}
@@ -85,16 +82,16 @@ export function FeaturedHero({
             </Link>
           </h2>
 
-          <p className="mt-4 max-w-[40rem] type-body text-neutral-100">
+          <p className="mt-4 max-w-[40rem] type-body text-foreground/90">
             {article.dek}
           </p>
 
-          <p className="relative z-10 mt-4 type-small text-neutral-300">
+          <p className="relative z-10 mt-4 type-small text-muted-foreground">
             Par{" "}
             <Link
               href={`/auteur/${article.authorSlug}`}
               prefetch={false}
-              className="inline-flex min-h-11 items-center font-semibold text-white underline-offset-4 hover:underline"
+              className="inline-flex min-h-11 items-center font-semibold text-foreground underline-offset-4 hover:underline"
             >
               {article.authorName}
             </Link>

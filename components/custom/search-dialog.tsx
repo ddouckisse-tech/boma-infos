@@ -126,7 +126,7 @@ export function SearchDialog({ className }: { className?: string }) {
         <div className="p-5">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <p className="font-serif type-h3">Rechercher</p>
+              <p className="font-display type-h3">Rechercher</p>
               <p className="type-small text-muted-foreground">
                 Titres, chapôs et corps des articles publiés.
               </p>

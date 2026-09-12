@@ -80,7 +80,7 @@ export default function MediaLibraryPage() {
   return (
     <div className="flex flex-col gap-8 pb-12">
       <div>
-        <h1 className="flex items-center gap-2 font-serif type-h1">
+        <h1 className="flex items-center gap-2 font-display type-h1">
           <Images aria-hidden="true" className="size-4 text-accent" />
           Médiathèque
         </h1>
@@ -164,7 +164,7 @@ export default function MediaLibraryPage() {
       )}
 
       <div className="rounded-md border border-border bg-card p-4">
-        <h2 className="font-serif type-h3">Édition du média</h2>
+        <h2 className="font-display type-h3">Édition du média</h2>
         {!selected ? (
           <p className="mt-2 type-body text-muted-foreground">
             Sélectionnez un média dans la grille ci-dessus pour modifier son
@@ -216,7 +216,7 @@ export default function MediaLibraryPage() {
       </div>
 
       <div>
-        <h2 className="font-serif type-h3">
+        <h2 className="font-display type-h3">
           Propositions de l&apos;agent Média
         </h2>
         {!selected ? (

@@ -40,7 +40,7 @@ export default function OfflinePage() {
               className="mt-1 size-5 shrink-0 text-muted-foreground"
             />
             <div className="min-w-0">
-              <h2 className="font-serif type-h3">Ce que vous pouvez faire</h2>
+              <h2 className="font-display type-h3">Ce que vous pouvez faire</h2>
               <ul className="mt-3 space-y-3 type-body">
                 <li className="flex gap-3">
                   <RefreshCw

@@ -39,7 +39,7 @@ export default function SubmissionPage({
   if (submission === null) {
     return (
       <>
-        <h1 className="font-serif type-h1">Dépôt introuvable</h1>
+        <h1 className="font-display type-h1">Dépôt introuvable</h1>
         <p className="mt-3 type-body text-muted-foreground">
           Ce dépôt n&apos;existe pas ou ne vous appartient pas.
         </p>
@@ -70,7 +70,7 @@ export default function SubmissionPage({
       </p>
 
       <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
-        <h1 className="font-serif type-h1">{submission.title}</h1>
+        <h1 className="font-display type-h1">{submission.title}</h1>
         <StatusPill status={submission.status} />
       </div>
       <p className="mt-1 type-small text-muted-foreground">
@@ -123,7 +123,7 @@ export default function SubmissionPage({
 
       {submission.reviewNotes.length > 0 && (
         <section className="mt-8">
-          <h2 className="flex items-center gap-2 font-serif type-h2">
+          <h2 className="flex items-center gap-2 font-display type-h2">
             <MessageSquareText aria-hidden="true" className="size-5" />
             Suivi
           </h2>
@@ -147,7 +147,7 @@ export default function SubmissionPage({
       )}
 
       <section className="mt-8">
-        <h2 className="font-serif type-h2">
+        <h2 className="font-display type-h2">
           {submission.editable ? "Modifier le dépôt" : "Contenu déposé"}
         </h2>
         {submission.editable ? (
@@ -160,7 +160,7 @@ export default function SubmissionPage({
               Le dépôt est entre les mains de la rédaction : il n&apos;est plus
               modifiable. Il le redeviendra si des modifications sont demandées.
             </p>
-            <h3 className="mt-4 font-serif type-h3">{submission.title}</h3>
+            <h3 className="mt-4 font-display type-h3">{submission.title}</h3>
             <p className="mt-2 type-body font-medium">{submission.dek}</p>
             <div className="mt-4 max-w-reading type-body whitespace-pre-wrap">
               {blocksToText(submission.body)}

@@ -27,7 +27,7 @@ export default function PortalHome() {
   if (!organization) {
     return (
       <>
-        <h1 className="font-serif type-h1">Espace entreprise</h1>
+        <h1 className="font-display type-h1">Espace entreprise</h1>
         <p className="mt-4 type-body text-muted-foreground">
           Aucune entreprise n&apos;est rattachée à ce compte. Contactez la
           rédaction.
@@ -39,9 +39,9 @@ export default function PortalHome() {
   if (!organization.approved) {
     return (
       <>
-        <h1 className="font-serif type-h1">{organization.name}</h1>
+        <h1 className="font-display type-h1">{organization.name}</h1>
         <div className="mt-6 rounded-lg border border-l-2 border-border border-l-warning-token bg-card p-6">
-          <h2 className="flex items-center gap-2 font-serif type-h3">
+          <h2 className="flex items-center gap-2 font-display type-h3">
             <Hourglass
               aria-hidden="true"
               className="size-5 text-warning-token"
@@ -83,7 +83,7 @@ export default function PortalHome() {
     <>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-serif type-h1">{organization.name}</h1>
+          <h1 className="font-display type-h1">{organization.name}</h1>
           <p className="mt-1 type-small text-muted-foreground">
             {organization.sector}
           </p>
@@ -118,7 +118,7 @@ export default function PortalHome() {
         listes.
       </div>
 
-      <h2 className="mt-8 font-serif type-h2">Mes dépôts</h2>
+      <h2 className="mt-8 font-display type-h2">Mes dépôts</h2>
 
       {submissions === undefined ? (
         <p className="mt-4 type-body text-muted-foreground">Chargement…</p>
@@ -137,7 +137,7 @@ export default function PortalHome() {
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="font-serif type-h3">{row.title}</p>
+                    <p className="font-display type-h3">{row.title}</p>
                     <p className="mt-1 type-small text-muted-foreground">
                       {row.kindLabel} · modifié le{" "}
                       {formatDateTime(row.updatedAt)}

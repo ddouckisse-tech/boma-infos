@@ -44,7 +44,7 @@ export default function JournalAuditPage() {
 
   return (
     <>
-      <h1 className="flex items-center gap-2 font-serif type-h1">
+      <h1 className="flex items-center gap-2 font-display type-h1">
         <ScrollText aria-hidden="true" className="size-6" />
         Journal d&apos;audit
       </h1>

@@ -90,7 +90,7 @@ export default async function DocuthequePage() {
                       <p className="type-small font-semibold tracking-wide text-accent uppercase">
                         {document.kind}
                       </p>
-                      <h2 className="mt-1 font-serif type-h3 text-balance">
+                      <h2 className="mt-1 font-display type-h3 text-balance">
                         {document.title}
                       </h2>
                     </div>

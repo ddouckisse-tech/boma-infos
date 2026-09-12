@@ -238,7 +238,7 @@ export default function AccountPage() {
     <Shell>
       <div className="grid gap-6">
         <section className="rounded-lg border border-border bg-card p-6">
-          <h2 className="font-serif type-h3">Profil</h2>
+          <h2 className="font-display type-h3">Profil</h2>
           <dl className="mt-4 grid gap-3 sm:grid-cols-2">
             <Row label="Nom" value={viewer.name} />
             <Row label="Adresse" value={viewer.email} />
@@ -293,7 +293,7 @@ export default function AccountPage() {
               : "border-border")
           }
         >
-          <h2 className="flex items-center gap-2 font-serif type-h3">
+          <h2 className="flex items-center gap-2 font-display type-h3">
             <KeyRound
               aria-hidden="true"
               className={
@@ -344,7 +344,7 @@ export default function AccountPage() {
         </section>
 
         <section className="rounded-lg border border-border bg-card p-6">
-          <h2 className="flex items-center gap-2 font-serif type-h3">
+          <h2 className="flex items-center gap-2 font-display type-h3">
             {viewer.twoFactorEnabled ? (
               <ShieldCheck
                 aria-hidden="true"
@@ -475,7 +475,7 @@ export default function AccountPage() {
         </section>
 
         <section className="rounded-lg border border-border bg-card p-6">
-          <h2 className="flex items-center gap-2 font-serif type-h3">
+          <h2 className="flex items-center gap-2 font-display type-h3">
             <MonitorSmartphone aria-hidden="true" className="size-5" />
             Sessions
           </h2>
@@ -537,7 +537,7 @@ function Shell({ children }: { children: React.ReactNode }) {
       </div>
       <main id="contenu" tabIndex={-1} className="focus-visible:outline-none">
         <Container width="page" className="py-8">
-          <h1 className="mb-6 font-serif type-h1">Mon compte</h1>
+          <h1 className="mb-6 font-display type-h1">Mon compte</h1>
           {children}
         </Container>
       </main>

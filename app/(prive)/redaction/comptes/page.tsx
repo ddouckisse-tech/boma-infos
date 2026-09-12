@@ -175,7 +175,7 @@ export default function AccountsPage() {
 
   return (
     <>
-      <h1 className="font-serif type-h1">Comptes et entreprises</h1>
+      <h1 className="font-display type-h1">Comptes et entreprises</h1>
       <p className="mt-2 max-w-reading type-body text-muted-foreground">
         Écran réservé à l&apos;administrateur&nbsp;: le serveur refuse les mêmes
         appels à un éditeur, y compris depuis l&apos;API.
@@ -201,7 +201,7 @@ export default function AccountsPage() {
       </div>
 
       <section className="mt-10">
-        <h2 className="font-serif type-h2">Entreprises à valider</h2>
+        <h2 className="font-display type-h2">Entreprises à valider</h2>
         {organizations === undefined ? (
           <p className="mt-3 type-body text-muted-foreground">
             Chargement des entreprises…
@@ -227,7 +227,7 @@ export default function AccountsPage() {
       </section>
 
       <section className="mt-10">
-        <h2 className="font-serif type-h2">Toutes les entreprises</h2>
+        <h2 className="font-display type-h2">Toutes les entreprises</h2>
         {organizations === undefined ? (
           <p className="mt-3 type-body text-muted-foreground">
             Chargement des entreprises…
@@ -306,7 +306,7 @@ export default function AccountsPage() {
       </section>
 
       <section className="mt-10">
-        <h2 className="font-serif type-h2">Comptes</h2>
+        <h2 className="font-display type-h2">Comptes</h2>
         {accounts === undefined || roles === undefined ? (
           <p className="mt-3 type-body text-muted-foreground">
             Chargement des comptes…
@@ -339,7 +339,7 @@ export default function AccountsPage() {
       </section>
 
       <section className="mt-10 rounded-md border border-border bg-card p-4 sm:p-6">
-        <h2 className="font-serif type-h2">Créer un compte</h2>
+        <h2 className="font-display type-h2">Créer un compte</h2>
         {roles === undefined ? (
           <p className="mt-3 type-body text-muted-foreground">
             Chargement des rôles…
@@ -683,7 +683,7 @@ function RejectOrganizationForm({
   return (
     <form onSubmit={handleSubmit} className="grid gap-4 p-5">
       <div>
-        <p className="font-serif type-h3">Refuser la demande</p>
+        <p className="font-display type-h3">Refuser la demande</p>
         <p className="mt-1 type-small text-muted-foreground">
           {organization.name}
         </p>

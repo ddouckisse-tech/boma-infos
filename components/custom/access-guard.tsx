@@ -146,7 +146,7 @@ function Refusal({
       role="status"
       className="rounded-lg border border-l-2 border-border border-l-warning-token bg-card p-6"
     >
-      <h2 className="flex items-center gap-2 font-serif type-h3">
+      <h2 className="flex items-center gap-2 font-display type-h3">
         <Lock aria-hidden="true" className="size-5 text-warning-token" />
         {title}
       </h2>

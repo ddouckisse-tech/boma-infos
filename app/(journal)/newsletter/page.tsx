@@ -56,7 +56,7 @@ export default function NewsletterPage() {
           </div>
 
           <div className="article-body mt-10 type-body">
-            <h2 className="font-serif type-h2">
+            <h2 className="font-display type-h2">
               Comment fonctionne l&apos;inscription
             </h2>
             <ol className="list-decimal space-y-2 ps-6">

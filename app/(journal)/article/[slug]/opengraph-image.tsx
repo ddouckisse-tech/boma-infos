@@ -53,6 +53,10 @@ export default async function OpengraphImage({
     }
   }
 
+  // L'image de partage garde Source Serif 4 : ses fichiers .ttf sont dans
+  // `assets/fonts/` et aucun .ttf d'Inter Tight (la face des titres du site
+  // depuis le 12/09/2026) n'y a encore été déposé. À aligner en ajoutant
+  // `InterTight-800.ttf` et en changeant les deux noms ci-dessous.
   // Source Serif 4 est chargée depuis `assets/` — hors de `public/`, donc
   // jamais servie au navigateur : ces deux fichiers ne coûtent rien au
   // budget du §5.4, ils ne servent qu'au rendu de la carte à la compilation.

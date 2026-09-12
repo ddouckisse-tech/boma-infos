@@ -27,7 +27,7 @@ export function KeyPoints({
     >
       <h2
         id="essentiel"
-        className="font-serif type-small font-semibold tracking-wide text-foreground uppercase"
+        className="font-display type-small font-semibold tracking-wide text-foreground uppercase"
       >
         L&apos;essentiel en {points.length} points
       </h2>

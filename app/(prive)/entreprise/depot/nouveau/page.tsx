@@ -15,7 +15,7 @@ export default function NewSubmissionPage() {
           ← Mes dépôts
         </Link>
       </p>
-      <h1 className="mt-3 font-serif type-h1">Déposer une actualité</h1>
+      <h1 className="mt-3 font-display type-h1">Déposer une actualité</h1>
       <p className="mt-2 max-w-reading type-body text-muted-foreground">
         Le dépôt part en revue dès que vous le transmettez. Vous pouvez
         l&apos;enregistrer en brouillon autant de fois que nécessaire avant.

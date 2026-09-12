@@ -57,7 +57,7 @@ export default async function HomePage() {
       {/* Bandeau de une : porte l'unique <h1> de la page. */}
       <div className="border-b border-border bg-surface-subtle py-4">
         <Container className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-          <h1 className="font-serif type-h3 text-foreground">{SITE.tagline}</h1>
+          <h1 className="font-display type-h3 text-foreground">{SITE.tagline}</h1>
           {editionDate !== undefined && (
             <p className="type-small text-muted-foreground">
               Édition du {formatDate(editionDate)}
@@ -103,7 +103,7 @@ export default async function HomePage() {
               <p className="type-small font-semibold tracking-wide text-accent uppercase">
                 Dossier spécial
               </p>
-              <h2 className="mt-3 font-serif type-h1 text-balance">
+              <h2 className="mt-3 font-display type-h1 text-balance">
                 <Link
                   href={`/article/${dossier.slug}`}
                   prefetch={false}
@@ -228,7 +228,7 @@ export default async function HomePage() {
               ))}
             </ul>
             <div className="rounded-md border border-border bg-surface-muted p-6">
-              <h3 className="font-serif type-h3">Docuthèque</h3>
+              <h3 className="font-display type-h3">Docuthèque</h3>
               <p className="mt-2 type-small text-muted-foreground">
                 Rapports, textes réglementaires et études, téléchargeables — le
                 poids du fichier est annoncé avant le clic.
@@ -249,7 +249,7 @@ export default async function HomePage() {
       <Section tone="muted" spacing="loose">
         <div className="grid gap-6 lg:grid-cols-[1fr_1fr] lg:items-center lg:gap-12">
           <div className="min-w-0">
-            <h2 className="font-serif type-h2">La lettre hebdomadaire</h2>
+            <h2 className="font-display type-h2">La lettre hebdomadaire</h2>
             <p className="mt-2 max-w-reading type-body text-muted-foreground">
               Un courriel par semaine : les articles à retenir, les échéances
               réglementaires, les appels d&apos;offres ouverts. Inscription

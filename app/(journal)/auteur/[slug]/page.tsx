@@ -113,7 +113,7 @@ export default async function AuthorPage({
               <p className="type-small font-semibold tracking-wide text-accent uppercase">
                 {author.role}
               </p>
-              <h1 className="mt-1 font-serif type-h1">{author.name}</h1>
+              <h1 className="mt-1 font-display type-h1">{author.name}</h1>
               <span
                 aria-hidden="true"
                 className="mt-4 block h-[3px] w-16 rounded-xs bg-brand-magenta"

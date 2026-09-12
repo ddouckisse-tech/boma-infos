@@ -31,7 +31,7 @@ export function TableOfContents({
     >
       <h2
         id="sommaire"
-        className="font-serif type-small font-semibold tracking-wide text-foreground uppercase"
+        className="font-display type-small font-semibold tracking-wide text-foreground uppercase"
       >
         Sommaire
       </h2>

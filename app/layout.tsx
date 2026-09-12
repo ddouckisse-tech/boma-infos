@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Source_Serif_4 } from "next/font/google";
+import { Inter, Inter_Tight } from "next/font/google";
 import { PreferencesScript } from "@/components/custom/preferences-script";
 import { ServiceWorker } from "@/components/custom/service-worker";
 import { PreferencesProvider } from "@/components/providers/preferences-provider";
@@ -18,15 +18,15 @@ import "./globals.css";
  * euro sign all live in `latin`. Both families are loaded as variable fonts,
  * so one file covers every weight the design uses.
  *
- * No italic face either. A second Source Serif file costs 47 Ko on *every*
+ * No italic face either. A second display-face file costs 47 Ko on *every*
  * page — eight per cent of the whole 600 Ko budget of §5.4 — for pull quotes
  * and the occasional emphasis. The pull quote is set upright instead (its
  * rule, its quote mark and its size already set it apart), and the rare
  * `<em>` falls back to a synthesised oblique. Two font requests for the
  * whole site, against the six families the legacy site loaded.
  */
-const sourceSerif = Source_Serif_4({
-  variable: "--font-source-serif",
+const interTight = Inter_Tight({
+  variable: "--font-inter-tight",
   subsets: ["latin"],
   display: "swap",
 });
@@ -104,7 +104,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="fr-FR"
       suppressHydrationWarning
-      className={`${sourceSerif.variable} ${inter.variable} h-full`}
+      className={`${interTight.variable} ${inter.variable} h-full`}
     >
       <head>
         <PreferencesScript />

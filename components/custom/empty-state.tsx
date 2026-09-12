@@ -32,7 +32,7 @@ export function EmptyState({
         aria-hidden="true"
         className="size-8 text-muted-foreground"
       />
-      <p className="mt-4 font-serif type-h3 text-foreground">{title}</p>
+      <p className="mt-4 font-display type-h3 text-foreground">{title}</p>
       {description && (
         <div className="mt-2 max-w-reading type-small text-muted-foreground">
           {description}

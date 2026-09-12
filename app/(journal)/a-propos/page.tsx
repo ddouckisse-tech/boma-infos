@@ -49,7 +49,7 @@ export default async function AboutPage() {
 
       <Section width="reading">
         <div className="article-body type-body">
-          <h2 className="font-serif type-h2">Ce que nous publions</h2>
+          <h2 className="font-display type-h2">Ce que nous publions</h2>
           <p>
             Le Corporate couvre l&apos;économie réelle : opérations
             d&apos;entreprise, filières extractives, logistique et
@@ -65,7 +65,7 @@ export default async function AboutPage() {
             contenu absent par un flux générique.
           </p>
 
-          <h2 className="font-serif type-h2">Notre méthode</h2>
+          <h2 className="font-display type-h2">Notre méthode</h2>
           <ul className="list-disc space-y-2 ps-6">
             <li>
               Chaque article est signé par une personne nommée, jointe à une
@@ -87,7 +87,7 @@ export default async function AboutPage() {
             </li>
           </ul>
 
-          <h2 className="font-serif type-h2">Contenus partenaires</h2>
+          <h2 className="font-display type-h2">Contenus partenaires</h2>
           <p>
             Les entreprises peuvent déposer leur actualité. Tout contenu
             d&apos;origine commerciale porte une mention{" "}
@@ -97,7 +97,7 @@ export default async function AboutPage() {
             décision de publier, la date et le titre.
           </p>
 
-          <h2 className="font-serif type-h2">Le poids d&apos;une page</h2>
+          <h2 className="font-display type-h2">Le poids d&apos;une page</h2>
           <p>
             Au Gabon, le mégaoctet se décompte. Nous nous imposons un plafond de
             600&nbsp;kilo-octets sur la page d&apos;accueil et de
@@ -118,7 +118,7 @@ export default async function AboutPage() {
                 <div className="flex items-center gap-3">
                   <AuthorMonogram name={author.name} className="size-11" />
                   <div className="min-w-0">
-                    <h3 className="font-serif type-h3">
+                    <h3 className="font-display type-h3">
                       <Link
                         href={`/auteur/${author.slug}`}
                         prefetch={false}
@@ -148,7 +148,7 @@ export default async function AboutPage() {
       <Section>
         <Container width="reading" className="px-0">
           <div className="rounded-md border border-border bg-card p-6">
-            <h2 className="font-serif type-h2">Nous joindre</h2>
+            <h2 className="font-display type-h2">Nous joindre</h2>
             <p className="mt-2 type-body text-muted-foreground">
               Une information, un communiqué, un droit de réponse, une
               proposition de tribune&nbsp;: écrivez à la rédaction.

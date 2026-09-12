@@ -39,7 +39,7 @@ export default function SubmissionReviewPage({
   if (submission === null) {
     return (
       <>
-        <h1 className="font-serif type-h1">Dépôt introuvable</h1>
+        <h1 className="font-display type-h1">Dépôt introuvable</h1>
       </>
     );
   }
@@ -75,7 +75,7 @@ export default function SubmissionReviewPage({
       </p>
 
       <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
-        <h1 className="font-serif type-h1">{submission.title}</h1>
+        <h1 className="font-display type-h1">{submission.title}</h1>
         <StatusPill status={submission.status} />
       </div>
       <p className="mt-1 flex flex-wrap items-center gap-2 type-small text-muted-foreground">
@@ -94,7 +94,7 @@ export default function SubmissionReviewPage({
       <div className="mt-8 grid gap-8 xl:grid-cols-[minmax(0,1fr)_26rem]">
         <div className="min-w-0">
           <section className="rounded-lg border border-border bg-card p-6">
-            <h2 className="font-serif type-h2">Texte déposé</h2>
+            <h2 className="font-display type-h2">Texte déposé</h2>
             <p className="mt-3 type-body font-medium">{submission.dek}</p>
             <div className="mt-4 max-w-reading type-body whitespace-pre-wrap">
               {blocksToText(submission.body)}
@@ -103,7 +103,7 @@ export default function SubmissionReviewPage({
 
           {submission.reviewNotes.length > 0 && (
             <section className="mt-6">
-              <h2 className="font-serif type-h2">Historique de revue</h2>
+              <h2 className="font-display type-h2">Historique de revue</h2>
               <ol className="mt-4 grid gap-3">
                 {[...submission.reviewNotes].reverse().map((note, index) => (
                   <li
@@ -126,7 +126,7 @@ export default function SubmissionReviewPage({
 
         <div className="min-w-0">
           <section className="rounded-lg border border-border bg-card p-4">
-            <h2 className="flex flex-wrap items-center gap-2 font-serif type-h2">
+            <h2 className="flex flex-wrap items-center gap-2 font-display type-h2">
               <Sparkles
                 aria-hidden="true"
                 className="size-5 text-brand-magenta"
@@ -172,7 +172,7 @@ export default function SubmissionReviewPage({
           </section>
 
           <div className="mt-6">
-            <h2 className="font-serif type-h2">Décision</h2>
+            <h2 className="font-display type-h2">Décision</h2>
             <div className="mt-4">
               <ReviewPanel
                 submissionId={submissionId}

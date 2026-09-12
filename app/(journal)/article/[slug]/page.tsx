@@ -164,9 +164,9 @@ export default async function ArticlePage({
 
       <article>
         {/* En-tête fondu dans la photo (`.lc-hero`) : fil d'Ariane en haut,
-            titre, chapeau et signature en bas, sur le voile sombre. `dark` en
-            fait une île sombre quel que soit le thème de la page. */}
-        <header className="lc-hero dark">
+            titre, chapeau et signature en bas, sur un voile aux couleurs du
+            thème — blanc en clair, nuit en sombre. */}
+        <header className="lc-hero">
           {hero && (
             <ResponsiveImage
               media={hero}
@@ -188,16 +188,19 @@ export default async function ArticlePage({
                       <Link
                         href={item.href}
                         prefetch={false}
-                        className="inline-flex min-h-11 items-center text-neutral-200 underline-offset-4 hover:underline"
+                        className="inline-flex min-h-11 items-center text-foreground/80 underline-offset-4 hover:underline"
                       >
                         {item.name}
                       </Link>
-                      <span aria-hidden="true" className="text-neutral-400">
+                      <span
+                        aria-hidden="true"
+                        className="text-muted-foreground"
+                      >
                         ›
                       </span>
                     </li>
                   ))}
-                  <li className="min-w-0 truncate text-neutral-300">
+                  <li className="min-w-0 truncate text-muted-foreground">
                     {article.title}
                   </li>
                 </ol>
@@ -223,11 +226,11 @@ export default async function ArticlePage({
                   {article.origin === "partenaire" && <PartnerTag />}
                 </div>
 
-                <h1 className="mt-4 font-serif type-display text-balance text-white">
+                <h1 className="mt-4 font-display type-display text-balance text-foreground">
                   {article.title}
                 </h1>
 
-                <p className="mt-4 max-w-[40rem] type-body font-medium text-neutral-100">
+                <p className="mt-4 max-w-[40rem] type-body font-medium text-foreground/90">
                   {article.dek}
                 </p>
 
@@ -240,7 +243,7 @@ export default async function ArticlePage({
                     updatedAt={article.updatedAt}
                     readingMinutes={article.readingMinutes}
                   />
-                  <p className="type-small text-neutral-300" data-numeric>
+                  <p className="type-small text-muted-foreground" data-numeric>
                     {formatViews(article.views)}
                   </p>
                 </div>
@@ -314,7 +317,7 @@ export default async function ArticlePage({
                   className="size-12 shrink-0"
                 />
                 <div className="min-w-0">
-                  <h2 className="font-serif type-h3">
+                  <h2 className="font-display type-h3">
                     <Link
                       href={`/auteur/${article.authorSlug}`}
                       prefetch={false}

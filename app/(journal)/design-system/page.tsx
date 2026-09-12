@@ -159,7 +159,7 @@ function SwatchTile({ swatch }: { swatch: Swatch }) {
 function Ramp({ title, swatches }: { title: string; swatches: Swatch[] }) {
   return (
     <div className="mt-8">
-      <h3 className="font-serif type-h3 text-foreground">{title}</h3>
+      <h3 className="font-display type-h3 text-foreground">{title}</h3>
       <ul className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {swatches.map((swatch) => (
           <SwatchTile key={swatch.token} swatch={swatch} />
@@ -240,7 +240,7 @@ export default function DesignSystemPage() {
 
         <div className="mt-8 grid gap-4 lg:grid-cols-2">
           <div>
-            <h3 className="font-serif type-h3 text-foreground">
+            <h3 className="font-display type-h3 text-foreground">
               Couleurs fonctionnelles — thème clair
             </h3>
             <ul className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -250,7 +250,7 @@ export default function DesignSystemPage() {
             </ul>
           </div>
           <div>
-            <h3 className="font-serif type-h3 text-foreground">
+            <h3 className="font-display type-h3 text-foreground">
               Couleurs fonctionnelles — thème sombre
             </h3>
             <ul className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -262,7 +262,7 @@ export default function DesignSystemPage() {
         </div>
 
         <div className="mt-8">
-          <h3 className="font-serif type-h3 text-foreground">
+          <h3 className="font-display type-h3 text-foreground">
             Jetons sémantiques, les deux thèmes côte à côte
           </h3>
           <p className="mt-1 max-w-reading type-small text-muted-foreground">
@@ -360,12 +360,12 @@ export default function DesignSystemPage() {
       <Section
         id="typographie"
         title="Typographie"
-        description="Deux familles au lieu de six : Source Serif 4 pour les titres et les chapôs, Inter pour le corps, l'interface et les données. Les deux sont auto-hébergées, sous-ensemble latin étendu, font-display: swap."
+        description="Deux familles au lieu de six : Inter Tight pour les titres et les chapôs, Inter pour le corps, l'interface et les données. Les deux sont auto-hébergées, sous-ensemble latin étendu, font-display: swap."
       >
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="rounded-md border border-border bg-card p-4">
             <p className="type-small text-muted-foreground">Titres et chapôs</p>
-            <p className="mt-1 font-serif type-h2">Source Serif 4</p>
+            <p className="mt-1 font-display type-h2">Inter Tight</p>
             <p className="mt-2 type-small text-muted-foreground">
               L&apos;autorité éditoriale qui manquait au Poppins de
               l&apos;ancien site.
@@ -448,7 +448,7 @@ export default function DesignSystemPage() {
           <p className="type-small font-semibold tracking-wide text-accent uppercase">
             Intelligence économique
           </p>
-          <h3 className="mt-2 font-serif type-h2">
+          <h3 className="mt-2 font-display type-h2">
             Ce que la mesure impose à la mise en page
           </h3>
           <p className="mt-2 type-small text-muted-foreground" data-numeric>
@@ -467,7 +467,7 @@ export default function DesignSystemPage() {
             et les jambages ; celui des titres descend à 1,15 pour qu&apos;un
             titre sur trois lignes reste un bloc et non un empilement.
           </p>
-          <blockquote className="mt-6 border-l-2 border-brand-magenta pl-4 font-serif type-body italic">
+          <blockquote className="mt-6 border-l-2 border-brand-magenta pl-4 font-display type-body italic">
             « Chaque kilo-octet est un arbitrage éditorial. »
           </blockquote>
           <p className="mt-6 type-small text-muted-foreground">
@@ -486,7 +486,7 @@ export default function DesignSystemPage() {
       >
         <div className="grid gap-8 lg:grid-cols-2">
           <div>
-            <h3 className="font-serif type-h3">Échelle d&apos;espacement</h3>
+            <h3 className="font-display type-h3">Échelle d&apos;espacement</h3>
             <ul className="mt-3 flex flex-col gap-2">
               {SPACING_SCALE.map((step) => (
                 <li key={step.token} className="flex items-center gap-3">
@@ -510,7 +510,7 @@ export default function DesignSystemPage() {
           </div>
 
           <div>
-            <h3 className="font-serif type-h3">Rayons</h3>
+            <h3 className="font-display type-h3">Rayons</h3>
             <ul className="mt-3 grid gap-3 sm:grid-cols-3">
               {RADII.map((radius) => (
                 <li
@@ -531,7 +531,7 @@ export default function DesignSystemPage() {
               ))}
             </ul>
 
-            <h3 className="mt-8 font-serif type-h3">Points de rupture</h3>
+            <h3 className="mt-8 font-display type-h3">Points de rupture</h3>
             <ul className="mt-3 flex flex-wrap gap-2">
               {BREAKPOINTS.map((breakpoint) => (
                 <li
@@ -544,7 +544,7 @@ export default function DesignSystemPage() {
               ))}
             </ul>
 
-            <h3 className="mt-8 font-serif type-h3">Séparation</h3>
+            <h3 className="mt-8 font-display type-h3">Séparation</h3>
             <div className="mt-3 rounded-md border border-border bg-card">
               <p className="p-3 type-small hairline">
                 Filet d&apos;un pixel en navy-100
@@ -568,7 +568,7 @@ export default function DesignSystemPage() {
         description="RGAA / WCAG 2.2 niveau AA. Un seul h1 par page, hiérarchie continue, points de repère ARIA, lien d'évitement."
       >
         <div className="mb-8">
-          <h3 className="font-serif type-h3 text-foreground">
+          <h3 className="font-display type-h3 text-foreground">
             Contrastes mesurés
           </h3>
           <p className="mt-1 max-w-reading type-small text-muted-foreground">
@@ -639,7 +639,7 @@ export default function DesignSystemPage() {
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-md border border-border bg-card p-4">
-            <h3 className="font-serif type-h3">Focus visible</h3>
+            <h3 className="font-display type-h3">Focus visible</h3>
             <p className="mt-1 type-small text-muted-foreground">
               Contour de 2 px, décalé de 2 px, dans la couleur d&apos;anneau du
               thème. Parcourez cette page avec Tab pour le vérifier.
@@ -653,7 +653,7 @@ export default function DesignSystemPage() {
           </div>
 
           <div className="rounded-md border border-border bg-card p-4">
-            <h3 className="font-serif type-h3">Cibles tactiles</h3>
+            <h3 className="font-display type-h3">Cibles tactiles</h3>
             <p className="mt-1 type-small text-muted-foreground">
               44 × 44 px au minimum, y compris pour les boutons à icône.
             </p>
@@ -665,7 +665,7 @@ export default function DesignSystemPage() {
           </div>
 
           <div className="rounded-md border border-border bg-card p-4">
-            <h3 className="font-serif type-h3">Lien d&apos;évitement</h3>
+            <h3 className="font-display type-h3">Lien d&apos;évitement</h3>
             <p className="mt-1 type-small text-muted-foreground">
               Premier arrêt de tabulation de chaque page. Appuyez sur Tab depuis
               le haut du document : « Aller au contenu principal » apparaît en
@@ -674,7 +674,7 @@ export default function DesignSystemPage() {
           </div>
 
           <div className="rounded-md border border-border bg-card p-4">
-            <h3 className="font-serif type-h3">Mouvement réduit</h3>
+            <h3 className="font-display type-h3">Mouvement réduit</h3>
             <p className="mt-1 type-small text-muted-foreground">
               Aucune librairie d&apos;animation. Les transitions d&apos;état
               durent 150 ms et sont annulées sous{" "}
@@ -702,21 +702,21 @@ export default function DesignSystemPage() {
       >
         <dl className="grid gap-4 lg:grid-cols-3">
           <div className="rounded-md border border-border bg-card p-4">
-            <dt className="font-serif type-h3">Container</dt>
+            <dt className="font-display type-h3">Container</dt>
             <dd className="mt-1 type-small text-muted-foreground">
               Largeur maximale 1280 px (ou la colonne de lecture), gouttières 16
               → 24 → 32 px. Rien ne touche jamais le bord de l&apos;écran.
             </dd>
           </div>
           <div className="rounded-md border border-border bg-card p-4">
-            <dt className="font-serif type-h3">Section</dt>
+            <dt className="font-display type-h3">Section</dt>
             <dd className="mt-1 type-small text-muted-foreground">
               Unité de rythme vertical, titre en h2, bande alternée optionnelle
               sur la surface douce. Chaque bloc de cette page en est une.
             </dd>
           </div>
           <div className="rounded-md border border-border bg-card p-4">
-            <dt className="font-serif type-h3">PageHeader</dt>
+            <dt className="font-display type-h3">PageHeader</dt>
             <dd className="mt-1 type-small text-muted-foreground">
               Émet l&apos;unique h1 de la page, son surtitre et son filet
               d&apos;accent. Le bloc en tête de cette page en est un.
@@ -739,7 +739,7 @@ export default function DesignSystemPage() {
 function ThemeSample() {
   return (
     <div className="mt-3 grid gap-3">
-      <p className="font-serif type-h3">Titre en Source Serif 4</p>
+      <p className="font-display type-h3">Titre en Inter Tight</p>
       <p className="type-body">
         Corps de texte en Inter, sur le fond de lecture du thème.
       </p>

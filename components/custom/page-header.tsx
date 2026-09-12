@@ -38,7 +38,7 @@ export function PageHeader({
                 {eyebrow}
               </p>
             )}
-            <h1 className="font-serif type-h1 text-foreground">{title}</h1>
+            <h1 className="font-display type-h1 text-foreground">{title}</h1>
             <span
               aria-hidden="true"
               className="mt-4 block h-[3px] w-16 rounded-xs bg-brand-magenta"

@@ -69,7 +69,7 @@ export function ArticleCard({
             className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-magenta"
           />
           <div className="min-w-0">
-            <Heading className="font-serif type-body font-semibold text-balance">
+            <Heading className="font-display type-body font-semibold text-balance">
               <Link
                 href={`/article/${article.slug}`}
                 prefetch={false}
@@ -124,7 +124,7 @@ export function ArticleCard({
             )}
             {article.origin === "partenaire" && <PartnerTag size="small" />}
           </div>
-          <Heading className="mt-1 font-serif type-h3 text-balance">
+          <Heading className="mt-1 font-display type-h3 text-balance">
             <Link
               href={`/article/${article.slug}`}
               prefetch={false}
@@ -176,7 +176,7 @@ export function ArticleCard({
           )}
           {article.origin === "partenaire" && <PartnerTag size="small" />}
         </div>
-        <Heading className="mt-3 font-serif type-h3 text-balance">
+        <Heading className="mt-3 font-display type-h3 text-balance">
           <Link
             href={`/article/${article.slug}`}
             prefetch={false}

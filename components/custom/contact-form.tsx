@@ -54,7 +54,7 @@ export function ContactForm() {
         role="status"
         className="rounded-md border border-l-2 border-border border-l-success-token bg-card p-6"
       >
-        <p className="flex items-start gap-2 font-serif type-h3 text-foreground">
+        <p className="flex items-start gap-2 font-display type-h3 text-foreground">
           <CheckCircle2
             aria-hidden="true"
             className="mt-1 size-5 shrink-0 text-success-token"

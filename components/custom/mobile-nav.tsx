@@ -55,7 +55,7 @@ export function MobileNav({
       >
         <div className="flex items-center justify-between gap-4 border-b border-border p-4">
           <div className="min-w-0">
-            <p className="font-serif type-h3">Navigation</p>
+            <p className="font-display type-h3">Navigation</p>
             <p className="type-small text-muted-foreground">
               Les {sections.length} rubriques du magazine.
             </p>
@@ -69,7 +69,7 @@ export function MobileNav({
               section.children.length > 0 ? (
                 <li key={section.slug} className="border-b border-border">
                   <details className="group/section">
-                    <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 px-2 font-serif type-body font-semibold [&::-webkit-details-marker]:hidden">
+                    <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 px-2 font-display type-body font-semibold [&::-webkit-details-marker]:hidden">
                       {section.label}
                       <ChevronDown
                         aria-hidden="true"
@@ -105,7 +105,7 @@ export function MobileNav({
                   <Link
                     href={sectionHref(section.slug)}
                     onClick={close}
-                    className="flex min-h-11 items-center px-2 font-serif type-body font-semibold hover:bg-surface-muted"
+                    className="flex min-h-11 items-center px-2 font-display type-body font-semibold hover:bg-surface-muted"
                   >
                     {section.label}
                   </Link>

@@ -154,7 +154,7 @@ export default function CategoriesPage() {
 
   return (
     <>
-      <h1 className="font-serif type-h1">Rubriques</h1>
+      <h1 className="font-display type-h1">Rubriques</h1>
       <p className="mt-2 max-w-reading type-body text-muted-foreground">
         Le slug d&apos;une rubrique ne change jamais lors d&apos;un
         renommage&nbsp;: il figure dans les adresses publiques et dans le plan
@@ -212,7 +212,7 @@ export default function CategoriesPage() {
       )}
 
       <section className="mt-10 rounded-md border border-border bg-card p-4 sm:p-6">
-        <h2 className="font-serif type-h2">Nouvelle rubrique</h2>
+        <h2 className="font-display type-h2">Nouvelle rubrique</h2>
         <form onSubmit={handleCreate} className="mt-4 grid gap-4 sm:max-w-xl">
           <TextField
             label="Nom"
@@ -404,7 +404,7 @@ function EditCategoryForm({
   return (
     <form onSubmit={handleSubmit} className="grid gap-4 p-5">
       <div>
-        <p className="font-serif type-h3">Modifier la rubrique</p>
+        <p className="font-display type-h3">Modifier la rubrique</p>
         <p className="mt-1 type-small text-muted-foreground">
           Slug&nbsp;: <span className="font-mono">{category.slug}</span> — ne
           change pas.
@@ -475,7 +475,7 @@ function DeleteCategoryForm({
   return (
     <div className="grid gap-4 p-5">
       <div>
-        <p className="font-serif type-h3">Supprimer la rubrique</p>
+        <p className="font-display type-h3">Supprimer la rubrique</p>
         <p className="mt-2 type-body">
           Confirmez la suppression de «&nbsp;{category.name}&nbsp;». Cette
           action est irréversible.

@@ -43,7 +43,7 @@ export default function SubmissionsQueuePage() {
 
   return (
     <>
-      <h1 className="font-serif type-h1">Dépôts entreprises</h1>
+      <h1 className="font-display type-h1">Dépôts entreprises</h1>
       <p className="mt-2 max-w-reading type-body text-muted-foreground">
         Chaque dépôt soumis déclenche l&apos;agent de modération, qui produit
         une fiche de pré-qualification. Cette fiche conseille&nbsp;; accepter,
@@ -88,7 +88,7 @@ export default function SubmissionsQueuePage() {
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="font-serif type-h3">{row.title}</p>
+                    <p className="font-display type-h3">{row.title}</p>
                     <p className="mt-1 type-small text-muted-foreground">
                       {row.organizationName} · {row.kindLabel} · modifié le{" "}
                       {formatDateTime(row.updatedAt)}
@@ -110,7 +110,7 @@ export default function SubmissionsQueuePage() {
         </ul>
       )}
 
-      <h2 className="mt-10 flex items-center gap-2 font-serif type-h2">
+      <h2 className="mt-10 flex items-center gap-2 font-display type-h2">
         <Inbox aria-hidden="true" className="size-5" />
         Corbeille de sortie
       </h2>

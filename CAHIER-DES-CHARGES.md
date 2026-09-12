@@ -1,8 +1,9 @@
 # Cahier des charges — Le Corporate (refonte applicative)
 
 > Magazine économique gabonais · édité par Up Concept
-> Document de référence pour la refonte. Version 1.1 — 12/09/2026
-> (v1.1 : fonds neutralisés en noirs/gris, contrastes recalculés — §3.1 et §3.5)
+> Document de référence pour la refonte. Version 1.2 — 12/09/2026
+> (v1.1 : fonds neutralisés en noirs/gris, contrastes recalculés — §3.1 et §3.5 ;
+> v1.2 : Inter Tight pour les titres et la marque, à la place de Source Serif 4 — §3.2)
 > Remplace le WordPress actuel (WP 6.3.10 / Elementor / thème Newzin).
 
 ---
@@ -132,7 +133,7 @@ Slab et Source Sans Pro. On retient **deux familles**, auto-hébergées en
 
 | Rôle | Police | Justification |
 |---|---|---|
-| **Titres et chapôs** | **Source Serif 4** | La serif est le marqueur des grands titres de presse ; elle donne l'autorité éditoriale qui manque au Poppins actuel, et distingue le titre du corps au premier coup d'œil. |
+| **Titres et marque** | **Inter Tight** | Grotesque géométrique lourde et resserrée, retenue par le client (12/09/2026) sur échantillon, à la place de la serif initialement proposée. Graisses 800 (une, h1) et 700 (h2, h3), interlettrage négatif. Même dessin de base qu'Inter : un seul système, deux coupes. |
 | **Corps, interface, données** | **Inter** | Dessinée pour l'écran, excellente lisibilité aux petites tailles, chiffres tabulaires pour les chiffres économiques. |
 
 Poppins peut être conservé **uniquement** dans le lock-up du logo existant.

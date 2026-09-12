@@ -35,7 +35,7 @@ export default function AudienceStatsPage() {
   return (
     <div className="flex flex-col gap-8 pb-12">
       <div>
-        <h1 className="flex items-center gap-2 font-serif type-h1">
+        <h1 className="flex items-center gap-2 font-display type-h1">
           <ChartNoAxesColumn
             aria-hidden="true"
             className="size-4 text-accent"
@@ -86,7 +86,7 @@ export default function AudienceStatsPage() {
           <section aria-labelledby="courbe-vues">
             <h2
               id="courbe-vues"
-              className="flex items-center gap-2 font-serif type-h3"
+              className="flex items-center gap-2 font-display type-h3"
             >
               <Eye
                 aria-hidden="true"
@@ -104,14 +104,14 @@ export default function AudienceStatsPage() {
           </section>
 
           <section aria-labelledby="par-rubrique">
-            <h2 id="par-rubrique" className="font-serif type-h3">
+            <h2 id="par-rubrique" className="font-display type-h3">
               Par rubrique
             </h2>
             <SectionBreakdown bySection={overview.bySection} />
           </section>
 
           <section aria-labelledby="par-article">
-            <h2 id="par-article" className="font-serif type-h3">
+            <h2 id="par-article" className="font-display type-h3">
               Par article
             </h2>
             <div className="mt-3 overflow-x-auto">

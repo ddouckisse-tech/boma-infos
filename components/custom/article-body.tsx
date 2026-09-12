@@ -32,7 +32,7 @@ function PullQuote({
       {/* Droit, pas italique : la fonte italique de Source Serif pèse 47 Ko
           sur chaque page du site. Le filet, le guillemet et le corps
           suffisent à détacher la citation (CDC §5.4). */}
-      <blockquote className="font-serif type-h3 leading-snug text-foreground">
+      <blockquote className="font-display type-h3 leading-snug text-foreground">
         {text}
       </blockquote>
       {attribution && (
@@ -57,7 +57,7 @@ function StatBlock({
     <div className="my-8 rounded-md border border-border bg-surface-muted p-5">
       <p
         data-numeric
-        className="font-serif type-display leading-none text-foreground"
+        className="font-display type-display leading-none text-foreground"
       >
         {value}
       </p>
@@ -119,11 +119,11 @@ export function ArticleBody({ blocks }: { blocks: readonly Block[] }) {
           case "heading": {
             const id = slugifyHeading(block.text);
             return block.level === 2 ? (
-              <h2 key={key} id={id} className="font-serif type-h2">
+              <h2 key={key} id={id} className="font-display type-h2">
                 {block.text}
               </h2>
             ) : (
-              <h3 key={key} id={id} className="font-serif type-h3">
+              <h3 key={key} id={id} className="font-display type-h3">
                 {block.text}
               </h3>
             );

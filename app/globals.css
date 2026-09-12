@@ -296,9 +296,12 @@
   --font-sans:
     var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
     sans-serif;
-  --font-serif:
-    var(--font-source-serif), ui-serif, Georgia, "Times New Roman", serif;
-  --font-heading: var(--font-serif);
+  /* Titres et marque : Inter Tight, grotesque géométrique lourde et
+     resserrée — arbitrage du client (12/09/2026), à la place de la serif. */
+  --font-display:
+    var(--font-inter-tight), var(--font-inter), ui-sans-serif, system-ui,
+    sans-serif;
+  --font-heading: var(--font-display);
   --font-mono:
     ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 
@@ -379,7 +382,7 @@
   h4,
   h5,
   h6 {
-    font-family: var(--font-serif);
+    font-family: var(--font-display);
     line-height: var(--leading-title);
     text-wrap: balance;
   }
@@ -442,28 +445,28 @@
 @utility type-display {
   font-size: var(--text-display);
   line-height: var(--leading-title);
-  letter-spacing: -0.02em;
-  font-weight: 600;
+  letter-spacing: -0.035em;
+  font-weight: 800;
 }
 
 @utility type-h1 {
   font-size: var(--text-h1);
   line-height: var(--leading-title);
-  letter-spacing: -0.015em;
-  font-weight: 600;
+  letter-spacing: -0.03em;
+  font-weight: 800;
 }
 
 @utility type-h2 {
   font-size: var(--text-h2);
   line-height: var(--leading-title);
-  letter-spacing: -0.01em;
-  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-weight: 700;
 }
 
 @utility type-h3 {
   font-size: var(--text-h3);
   line-height: 1.2;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 @utility type-body {
@@ -517,7 +520,8 @@
 @utility shadow-floating {
   box-shadow:
     0 1px 0 0 var(--border),
-    0 8px 16px -8px color-mix(in oklab, var(--color-neutral-950) 30%, transparent);
+    0 8px 16px -8px
+      color-mix(in oklab, var(--color-neutral-950) 30%, transparent);
 }
 
 /* Lien d'évitement : hors écran jusqu'au focus clavier. */
@@ -587,16 +591,19 @@
    Neutre et non navy : la v1.1 du cahier des charges a chassé le bleuté des
    fonds, et le voile des dialogues a été neutralisé pour la même raison.
 
-   Le bandeau porte aussi la classe `dark` : c'est une île sombre quel que
-   soit le thème, et les composants qu'il contient (pastille de rubrique,
-   mention partenaire, signature, bouton) y prennent leurs jetons sombres.
+   Le bandeau suit le thème de la page : voile blanc et texte encre en
+   clair, voile nuit et texte clair en sombre. Les composants qu'il contient
+   (pastille de rubrique, mention partenaire, signature) suivent de même.
    -------------------------------------------------------------------------- */
 .lc-hero {
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  background-color: var(--color-neutral-950);
-  color: #ffffff;
+  /* Aux couleurs du thème, plus une île sombre : en clair le voile est
+     blanc et le texte encre, en sombre l'inverse (arbitrage du 12/09/2026).
+     Le dégradé ci-dessous est tiré de `--background` pour la même raison. */
+  background-color: var(--background);
+  color: var(--foreground);
 }
 
 /* Un écran, pas plus : la bande tient sous l'en-tête (deux rangées et le
@@ -631,16 +638,16 @@
   background-image:
     linear-gradient(
       to top,
-      rgb(10 10 10 / 0.96) 0%,
-      rgb(10 10 10 / 0.9) 35%,
-      rgb(10 10 10 / 0.55) 65%,
-      rgb(10 10 10 / 0.3) 100%
+      color-mix(in oklab, var(--background) 96%, transparent) 0%,
+      color-mix(in oklab, var(--background) 90%, transparent) 35%,
+      color-mix(in oklab, var(--background) 55%, transparent) 65%,
+      color-mix(in oklab, var(--background) 30%, transparent) 100%
     ),
     linear-gradient(
       to bottom,
-      rgb(10 10 10 / 0.75) 0%,
-      rgb(10 10 10 / 0.5) 8%,
-      rgb(10 10 10 / 0) 30%
+      color-mix(in oklab, var(--background) 75%, transparent) 0%,
+      color-mix(in oklab, var(--background) 50%, transparent) 8%,
+      color-mix(in oklab, var(--background) 0%, transparent) 30%
     );
 }
 
@@ -658,15 +665,19 @@
     background-image:
       linear-gradient(
         to right,
-        rgb(10 10 10 / 1) 0%,
-        rgb(10 10 10 / 1) 30%,
-        rgb(10 10 10 / 0.94) 42%,
-        rgb(10 10 10 / 0.72) 56%,
-        rgb(10 10 10 / 0.4) 70%,
-        rgb(10 10 10 / 0.22) 85%,
-        rgb(10 10 10 / 0.22) 100%
+        color-mix(in oklab, var(--background) 100%, transparent) 0%,
+        color-mix(in oklab, var(--background) 100%, transparent) 30%,
+        color-mix(in oklab, var(--background) 94%, transparent) 42%,
+        color-mix(in oklab, var(--background) 72%, transparent) 56%,
+        color-mix(in oklab, var(--background) 40%, transparent) 70%,
+        color-mix(in oklab, var(--background) 22%, transparent) 85%,
+        color-mix(in oklab, var(--background) 22%, transparent) 100%
       ),
-      linear-gradient(to top, rgb(10 10 10 / 0.6) 0%, rgb(10 10 10 / 0) 28%);
+      linear-gradient(
+        to top,
+        color-mix(in oklab, var(--background) 60%, transparent) 0%,
+        color-mix(in oklab, var(--background) 0%, transparent) 28%
+      );
   }
 }
 
@@ -674,8 +685,8 @@
 @media (prefers-contrast: more) {
   .lc-hero::before {
     background-image: linear-gradient(
-      rgb(10 10 10 / 0.92),
-      rgb(10 10 10 / 0.92)
+      color-mix(in oklab, var(--background) 92%, transparent),
+      color-mix(in oklab, var(--background) 92%, transparent)
     );
   }
 }
@@ -722,7 +733,11 @@ dialog.lc-dialog::backdrop {
      toute la surface, c'est toute la page qui virait au bleu nuit dès qu'une
      boîte s'ouvrait — la dominante bleutée que la v1.1 du cahier des charges
      avait justement chassée des fonds. */
-  background-color: color-mix(in oklab, var(--color-neutral-950) 72%, transparent);
+  background-color: color-mix(
+    in oklab,
+    var(--color-neutral-950) 72%,
+    transparent
+  );
 }
 
 /* Tiroir latéral : plein écran en hauteur, contre le bord de départ. */

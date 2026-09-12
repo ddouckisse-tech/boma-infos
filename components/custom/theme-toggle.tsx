@@ -1,69 +1,61 @@
 "use client";
 
-import { Monitor, Moon, Sun } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 import { usePreferences } from "@/components/providers/preferences-provider";
-import { THEME_LABELS, type ThemeChoice } from "@/lib/preferences";
 import { cn } from "@/lib/utils";
 
-const OPTIONS: { value: ThemeChoice; Icon: typeof Sun }[] = [
-  { value: "light", Icon: Sun },
-  { value: "dark", Icon: Moon },
-  { value: "system", Icon: Monitor },
-];
-
 /**
- * Three-state theme control: explicit light, explicit dark, follow the system.
+ * Light / dark switch.
  *
- * No flash on load: the theme is applied by a blocking inline script before
- * the first paint (`components/custom/preferences-script.tsx`). This control
- * only mirrors and changes what that script already set, so it stays inert
- * until the DOM has been read (`ready`).
+ * One control, two positions — the reader asked for a switch, not a
+ * three-way group. "Follow the system" remains the default for a reader who
+ * has never touched it (the boot script resolves it before first paint); the
+ * first flick makes the choice explicit and persists it.
+ *
+ * The knob's position and icon are driven by the `.dark` class on <html>,
+ * not by React state: the boot script sets that class before the first
+ * paint, so the switch is right from the very first frame and never jumps
+ * after hydration. Only `aria-checked` waits for the store to be read.
  */
 export function ThemeToggle({
   className,
   labelled = false,
 }: {
   className?: string;
-  /** Show the French label next to each icon (used in the settings panel). */
+  /** Show the current state as text next to the switch (settings panel). */
   labelled?: boolean;
 }) {
-  const { theme, setTheme, ready } = usePreferences();
+  const { resolvedTheme, setTheme, ready } = usePreferences();
+  const dark = ready && resolvedTheme === "dark";
 
   return (
-    <div
-      role="group"
-      aria-label="Thème de l'interface"
+    <button
+      type="button"
+      role="switch"
+      aria-checked={dark}
+      aria-label="Thème sombre"
+      title={dark ? "Passer en thème clair" : "Passer en thème sombre"}
+      onClick={() => setTheme(dark ? "light" : "dark")}
       className={cn(
-        "inline-flex items-center gap-0.5 rounded-md border border-border bg-background p-0.5",
+        "group inline-flex min-h-11 items-center gap-2 rounded-full",
         className
       )}
     >
-      {OPTIONS.map(({ value, Icon }) => {
-        const active = ready && theme === value;
-        return (
-          <button
-            key={value}
-            type="button"
-            onClick={() => setTheme(value)}
-            aria-pressed={active}
-            title={THEME_LABELS[value]}
-            className={cn(
-              "inline-flex items-center justify-center gap-2 rounded-xs px-2 type-small font-medium transition-colors touch-target",
-              "hover:bg-surface-muted hover:text-foreground",
-              active
-                ? "bg-primary text-primary-foreground hover:bg-primary"
-                : "text-muted-foreground"
-            )}
-          >
-            <Icon aria-hidden="true" className="size-4 shrink-0" />
-            {labelled ? (
-              <span>{THEME_LABELS[value]}</span>
-            ) : (
-              <span className="sr-only">{THEME_LABELS[value]}</span>
-            )}
-          </button>
-        );
-      })}
-    </div>
+      {labelled && (
+        <span className="type-small text-muted-foreground">
+          <span className="dark:hidden">Clair</span>
+          <span className="hidden dark:inline">Sombre</span>
+        </span>
+      )}
+      <span
+        aria-hidden="true"
+        className="relative inline-flex h-7 w-12 shrink-0 items-center rounded-full border border-border-strong bg-surface-muted transition-colors group-hover:border-foreground/40 dark:bg-primary/30"
+      >
+        <span className="absolute top-0.5 left-0.5 inline-flex size-6 items-center justify-center rounded-full bg-background text-foreground shadow-xs transition-transform dark:translate-x-5 dark:bg-primary dark:text-primary-foreground">
+          <Sun className="size-3.5 dark:hidden" />
+          <Moon className="hidden size-3.5 dark:block" />
+        </span>
+      </span>
+    </button>
   );
 }

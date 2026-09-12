@@ -100,10 +100,10 @@ export default function ArticlesPage() {
 
   return (
     <>
-      <h1 className="font-serif type-h1">Articles</h1>
+      <h1 className="font-display type-h1">Articles</h1>
 
       <section className="mt-6 rounded-md border border-border bg-card p-4">
-        <h2 className="font-serif type-h3">Nouvel article</h2>
+        <h2 className="font-display type-h3">Nouvel article</h2>
         <div className="mt-3 flex flex-wrap items-end gap-3">
           <TextField
             label="Titre de travail"

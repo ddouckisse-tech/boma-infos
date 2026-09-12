@@ -22,7 +22,7 @@ import type { Section } from "@/lib/navigation";
  */
 export function Header({ sections }: { sections: readonly Section[] }) {
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background">
+    <header className="sticky top-0 z-40 border-b border-border/70 bg-background/85 backdrop-blur-md supports-[backdrop-filter]:bg-background/75">
       <Container className="flex min-h-[64px] items-center justify-between gap-4 py-2">
         <div className="flex min-w-0 items-center gap-2">
           <MobileNav sections={sections} pages={NAV_STATIC_PAGES} />
@@ -32,7 +32,10 @@ export function Header({ sections }: { sections: readonly Section[] }) {
         <div className="flex shrink-0 items-center gap-2">
           <SearchDialog />
           <ThemeToggle className="hidden sm:inline-flex" />
-          <span aria-hidden="true" className="hidden h-5 w-px bg-border md:block" />
+          <span
+            aria-hidden="true"
+            className="hidden h-5 w-px bg-border md:block"
+          />
           <AccessMenu />
         </div>
       </Container>

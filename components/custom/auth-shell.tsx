@@ -39,7 +39,7 @@ export function AuthShell({
       >
         <div className="w-full max-w-[34rem]">
           <div className="rounded-lg border border-border bg-card p-6 md:p-8">
-            <h1 className="font-serif type-h2 text-foreground">{title}</h1>
+            <h1 className="font-display type-h2 text-foreground">{title}</h1>
             <span
               aria-hidden="true"
               className="mt-3 block h-[3px] w-12 rounded-xs bg-brand-magenta"

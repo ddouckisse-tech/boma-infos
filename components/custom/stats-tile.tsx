@@ -37,7 +37,7 @@ export function StatsTile({
       <p className="type-small text-muted-foreground">{label}</p>
       <p
         className={cn(
-          "mt-1 font-serif type-h2 tabular-nums",
+          "mt-1 font-display type-h2 tabular-nums",
           tone === "warning"
             ? "text-warning-token"
             : tone === "danger"

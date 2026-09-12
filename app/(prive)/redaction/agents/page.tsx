@@ -162,7 +162,7 @@ export default function AgentsPage() {
 
   return (
     <>
-      <h1 className="font-serif type-h1">Agents éditoriaux</h1>
+      <h1 className="font-display type-h1">Agents éditoriaux</h1>
       <p className="mt-4 max-w-reading type-body">
         <strong className="font-semibold">
           « Un agent propose, un humain dispose. »
@@ -227,7 +227,7 @@ export default function AgentsPage() {
             </div>
           )}
 
-          <h2 className="mt-8 font-serif type-h2">Les sept agents</h2>
+          <h2 className="mt-8 font-display type-h2">Les sept agents</h2>
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             {overview.agents.map((agent) => (
               <article
@@ -235,7 +235,7 @@ export default function AgentsPage() {
                 className="rounded-md border border-border bg-card p-4"
               >
                 <header className="flex flex-wrap items-start justify-between gap-2">
-                  <h3 className="font-serif type-h3">
+                  <h3 className="font-display type-h3">
                     Agent {agent.number} — {agent.name}
                   </h3>
                   <Badge
@@ -300,7 +300,7 @@ export default function AgentsPage() {
         </>
       )}
 
-      <h2 className="mt-8 flex items-center gap-2 font-serif type-h2">
+      <h2 className="mt-8 flex items-center gap-2 font-display type-h2">
         <Mail aria-hidden="true" className="size-4" />
         Newsletter hebdomadaire
       </h2>
@@ -339,7 +339,7 @@ export default function AgentsPage() {
                   <p className="type-small text-muted-foreground">
                     Semaine {edition.week}
                   </p>
-                  <h3 className="font-serif type-h3">{edition.subject}</h3>
+                  <h3 className="font-display type-h3">{edition.subject}</h3>
                 </div>
                 <Badge
                   tone={
@@ -387,7 +387,7 @@ export default function AgentsPage() {
         )}
       </div>
 
-      <h2 className="mt-8 font-serif type-h2">Journal des exécutions</h2>
+      <h2 className="mt-8 font-display type-h2">Journal des exécutions</h2>
       <SelectField
         label="Filtrer par agent"
         value={filter}
@@ -513,7 +513,7 @@ export default function AgentsPage() {
 
       {selectedRunId && (
         <>
-          <h2 className="mt-8 font-serif type-h2">
+          <h2 className="mt-8 font-display type-h2">
             Propositions de cette exécution
           </h2>
           {detail === undefined ? (

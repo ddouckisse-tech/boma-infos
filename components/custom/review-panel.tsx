@@ -81,7 +81,7 @@ export function ReviewPanel({
     <div className="grid gap-6">
       {status === "submitted" && (
         <section className="rounded-md border border-border bg-card p-4">
-          <h3 className="font-serif type-h3">Prendre en charge</h3>
+          <h3 className="font-display type-h3">Prendre en charge</h3>
           <p className="mt-1 type-small text-muted-foreground">
             Passe le dépôt en revue et prévient l&apos;entreprise que
             quelqu&apos;un s&apos;en occupe.
@@ -104,7 +104,7 @@ export function ReviewPanel({
 
       {status === "rejected" ? (
         <section className="rounded-md border border-border bg-card p-4">
-          <h3 className="font-serif type-h3">Rouvrir</h3>
+          <h3 className="font-display type-h3">Rouvrir</h3>
           <p className="mt-1 type-small text-muted-foreground">
             Remet le dépôt entre les mains de l&apos;entreprise pour retravail.
           </p>
@@ -125,7 +125,7 @@ export function ReviewPanel({
       ) : (
         <>
           <section className="rounded-md border border-border bg-card p-4">
-            <h3 className="flex items-center gap-2 font-serif type-h3">
+            <h3 className="flex items-center gap-2 font-display type-h3">
               <CheckCircle2
                 aria-hidden="true"
                 className="size-5 text-success-token"
@@ -205,7 +205,7 @@ export function ReviewPanel({
           </section>
 
           <section className="rounded-md border border-warning-token/40 bg-card p-4">
-            <h3 className="font-serif type-h3">Demander des modifications</h3>
+            <h3 className="font-display type-h3">Demander des modifications</h3>
             <TextAreaField
               label="Commentaire à l'entreprise"
               className="mt-3"
@@ -231,7 +231,7 @@ export function ReviewPanel({
           </section>
 
           <section className="rounded-md border border-destructive/40 bg-card p-4">
-            <h3 className="flex items-center gap-2 font-serif type-h3">
+            <h3 className="flex items-center gap-2 font-display type-h3">
               <XCircle aria-hidden="true" className="size-5 text-destructive" />
               Refuser
             </h3>

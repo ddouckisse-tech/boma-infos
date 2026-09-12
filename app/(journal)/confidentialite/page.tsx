@@ -34,7 +34,7 @@ export default function PrivacyPage() {
       <Section width="reading">
         <Container width="reading" className="px-0">
           <div className="article-body type-body">
-            <h2 className="font-serif type-h2">Aucun traçage par défaut</h2>
+            <h2 className="font-display type-h2">Aucun traçage par défaut</h2>
             <p>
               La lecture du journal ne dépose <strong>aucun cookie</strong> et
               ne déclenche <strong>aucune requête vers un tiers</strong>. Pas de
@@ -49,7 +49,7 @@ export default function PrivacyPage() {
               ne vous est présentée&nbsp;: il n&apos;y a rien à consentir.
             </p>
 
-            <h2 className="font-serif type-h2">
+            <h2 className="font-display type-h2">
               Ce qui est conservé dans votre navigateur
             </h2>
             <p>
@@ -77,10 +77,10 @@ export default function PrivacyPage() {
               n&apos;est accessible qu&apos;à vous.
             </p>
 
-            <h2 className="font-serif type-h2">
+            <h2 className="font-display type-h2">
               Les données que vous nous confiez
             </h2>
-            <h3 className="font-serif type-h3">Formulaire de contact</h3>
+            <h3 className="font-display type-h3">Formulaire de contact</h3>
             <ul className="list-disc space-y-2 ps-6">
               <li>
                 Données&nbsp;: nom, adresse électronique, organisation
@@ -97,7 +97,7 @@ export default function PrivacyPage() {
               </li>
             </ul>
 
-            <h3 className="font-serif type-h3">Lettre hebdomadaire</h3>
+            <h3 className="font-display type-h3">Lettre hebdomadaire</h3>
             <ul className="list-disc space-y-2 ps-6">
               <li>Donnée&nbsp;: votre adresse électronique.</li>
               <li>
@@ -115,7 +115,7 @@ export default function PrivacyPage() {
               </li>
             </ul>
 
-            <h2 className="font-serif type-h2">Hébergement des données</h2>
+            <h2 className="font-display type-h2">Hébergement des données</h2>
             <p>
               Les articles, les messages de contact et les inscriptions à la
               lettre sont stockés chez notre prestataire de base de données. Le
@@ -127,7 +127,7 @@ export default function PrivacyPage() {
               avant la mise en ligne publique.
             </p>
 
-            <h2 className="font-serif type-h2">Vos droits</h2>
+            <h2 className="font-display type-h2">Vos droits</h2>
             <p>
               Vous disposez d&apos;un droit d&apos;accès, de rectification,
               d&apos;effacement et d&apos;opposition sur les données vous

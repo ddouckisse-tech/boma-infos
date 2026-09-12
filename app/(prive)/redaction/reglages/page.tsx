@@ -218,7 +218,7 @@ export default function ReglagesPage() {
 
   return (
     <>
-      <h1 className="flex items-center gap-2 font-serif type-h1">
+      <h1 className="flex items-center gap-2 font-display type-h1">
         <Settings aria-hidden="true" className="size-6" />
         Réglages
       </h1>
@@ -234,7 +234,7 @@ export default function ReglagesPage() {
       ) : (
         <div className="mt-6 grid gap-8">
           <section className="rounded-lg border border-border bg-card p-6">
-            <h2 className="font-serif type-h2">Identité du site</h2>
+            <h2 className="font-display type-h2">Identité du site</h2>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <TextField
                 label="Nom du site"
@@ -272,7 +272,7 @@ export default function ReglagesPage() {
           </section>
 
           <section className="rounded-lg border border-border bg-card p-6">
-            <h2 className="font-serif type-h2">Réseaux</h2>
+            <h2 className="font-display type-h2">Réseaux</h2>
             {form.social.length === 0 ? (
               <p className="mt-4 type-small text-muted-foreground">
                 Aucun réseau enregistré.
@@ -327,7 +327,7 @@ export default function ReglagesPage() {
           </section>
 
           <section className="rounded-lg border border-border bg-card p-6">
-            <h2 className="font-serif type-h2">Newsletter</h2>
+            <h2 className="font-display type-h2">Newsletter</h2>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <TextField
                 label="Nom de l'expéditeur"
@@ -349,7 +349,7 @@ export default function ReglagesPage() {
           </section>
 
           <section className="rounded-lg border border-border bg-card p-6">
-            <h2 className="flex items-center gap-2 font-serif type-h2">
+            <h2 className="flex items-center gap-2 font-display type-h2">
               <Sparkles aria-hidden="true" className="size-5" />
               Agents
             </h2>
@@ -568,7 +568,7 @@ export default function ReglagesPage() {
           </section>
 
           <section className="rounded-lg border border-border bg-card p-6">
-            <h2 className="font-serif type-h2">Redirections</h2>
+            <h2 className="font-display type-h2">Redirections</h2>
             <p className="mt-2 type-small text-muted-foreground">
               Ces redirections complètent le plan statique de{" "}
               <code className="font-mono">lib/legacy-redirects.ts</code>, mais

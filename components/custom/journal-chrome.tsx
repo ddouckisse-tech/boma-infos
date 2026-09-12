@@ -33,7 +33,7 @@ export async function JournalChrome({
       >
         {children}
       </main>
-      <Footer sections={sections} />
+      <Footer />
     </>
   );
 }

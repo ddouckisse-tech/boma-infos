@@ -225,7 +225,7 @@ export default function ArticleEditorPage({
     return <p className="type-body text-muted-foreground">Chargement…</p>;
   }
   if (article === null) {
-    return <h1 className="font-serif type-h1">Article introuvable</h1>;
+    return <h1 className="font-display type-h1">Article introuvable</h1>;
   }
 
   const categories = options?.categories ?? [];
@@ -265,7 +265,7 @@ export default function ArticleEditorPage({
       </p>
 
       <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
-        <h1 className="min-w-0 font-serif type-h1">
+        <h1 className="min-w-0 font-display type-h1">
           {form.title || "Sans titre"}
         </h1>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
@@ -346,7 +346,7 @@ export default function ArticleEditorPage({
       <div className="mt-8 grid gap-8 xl:grid-cols-[minmax(0,1fr)_24rem]">
         <div className="grid min-w-0 gap-6">
           <section className="rounded-lg border border-border bg-card p-6">
-            <h2 className="font-serif type-h2">Contenu</h2>
+            <h2 className="font-display type-h2">Contenu</h2>
             <div className="mt-4 grid gap-5">
               <TextField
                 label="Titre"
@@ -377,9 +377,9 @@ export default function ArticleEditorPage({
 
           {preview && (
             <section className="rounded-lg border border-border bg-card p-6">
-              <h2 className="font-serif type-h2">Aperçu</h2>
+              <h2 className="font-display type-h2">Aperçu</h2>
               <div className="mt-4 max-w-reading">
-                <p className="font-serif type-h1">{form.title}</p>
+                <p className="font-display type-h1">{form.title}</p>
                 <p className="mt-3 type-body font-medium text-muted-foreground">
                   {form.dek}
                 </p>
@@ -397,7 +397,7 @@ export default function ArticleEditorPage({
           )}
 
           <section className="rounded-lg border border-border bg-card p-6">
-            <h2 className="font-serif type-h2">Publication</h2>
+            <h2 className="font-display type-h2">Publication</h2>
             <div className="mt-4 grid gap-5 sm:grid-cols-2">
               <SelectField
                 label="Rubrique"
@@ -475,7 +475,7 @@ export default function ArticleEditorPage({
           </section>
 
           <section className="rounded-lg border border-border bg-card p-6">
-            <h2 className="font-serif type-h2">Référencement</h2>
+            <h2 className="font-display type-h2">Référencement</h2>
             <div className="mt-4 grid gap-5">
               <TextField
                 label="Slug"
@@ -510,7 +510,7 @@ export default function ArticleEditorPage({
 
         <aside className="grid min-w-0 gap-6">
           <section className="rounded-lg border border-border bg-card p-4">
-            <h2 className="flex items-center gap-2 font-serif type-h3">
+            <h2 className="flex items-center gap-2 font-display type-h3">
               <Sparkles
                 aria-hidden="true"
                 className="size-5 text-brand-magenta"
@@ -565,7 +565,7 @@ export default function ArticleEditorPage({
           </section>
 
           <section>
-            <h2 className="font-serif type-h3">
+            <h2 className="font-display type-h3">
               Propositions ({pending.length})
             </h2>
             <div className="mt-3 grid gap-3">
@@ -593,7 +593,7 @@ export default function ArticleEditorPage({
           </section>
 
           <section className="rounded-lg border border-border bg-card p-4">
-            <h2 className="flex items-center gap-2 font-serif type-h3">
+            <h2 className="flex items-center gap-2 font-display type-h3">
               <History aria-hidden="true" className="size-5" />
               Versions
             </h2>

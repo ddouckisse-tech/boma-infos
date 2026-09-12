@@ -18,7 +18,7 @@ export default function NewsroomDashboard() {
   if (data === undefined) {
     return (
       <>
-        <h1 className="font-serif type-h1">Tableau de bord</h1>
+        <h1 className="font-display type-h1">Tableau de bord</h1>
         <p className="mt-4 type-body text-muted-foreground">Chargement…</p>
       </>
     );
@@ -27,7 +27,7 @@ export default function NewsroomDashboard() {
   return (
     <>
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <h1 className="font-serif type-h1">Tableau de bord</h1>
+        <h1 className="font-display type-h1">Tableau de bord</h1>
         <Link
           href="/redaction/articles"
           className="inline-flex items-center gap-2 rounded-md bg-primary px-4 type-small font-semibold text-primary-foreground touch-target"
@@ -61,7 +61,7 @@ export default function NewsroomDashboard() {
             <Inbox aria-hidden="true" className="size-4" />
             Dépôts entreprises à traiter
           </p>
-          <p className="mt-1 font-serif type-h2 tabular-nums">
+          <p className="mt-1 font-display type-h2 tabular-nums">
             {data.submissionsWaiting}
           </p>
         </Link>
@@ -73,7 +73,7 @@ export default function NewsroomDashboard() {
             <Building2 aria-hidden="true" className="size-4" />
             Entreprises en attente de validation
           </p>
-          <p className="mt-1 font-serif type-h2 tabular-nums">
+          <p className="mt-1 font-display type-h2 tabular-nums">
             {data.organizationsWaiting}
           </p>
         </Link>
@@ -81,7 +81,7 @@ export default function NewsroomDashboard() {
 
       <div className="mt-8 grid gap-8 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <section className="min-w-0">
-          <h2 className="font-serif type-h2">Articles récents</h2>
+          <h2 className="font-display type-h2">Articles récents</h2>
           {data.recent.length === 0 ? (
             <p className="mt-4 type-body text-muted-foreground">
               Aucun article pour l&apos;instant.
@@ -120,7 +120,7 @@ export default function NewsroomDashboard() {
         </section>
 
         <section className="min-w-0">
-          <h2 className="font-serif type-h2">Audience</h2>
+          <h2 className="font-display type-h2">Audience</h2>
           <div className="mt-4 grid gap-3">
             <StatsTile
               label="Vues — 7 derniers jours"
@@ -131,7 +131,7 @@ export default function NewsroomDashboard() {
               value={formatNumber(data.audience.views30d)}
             />
           </div>
-          <h3 className="mt-6 font-serif type-h3">Les plus lus</h3>
+          <h3 className="mt-6 font-display type-h3">Les plus lus</h3>
           {data.audience.topArticles.length === 0 ? (
             <p className="mt-2 type-small text-muted-foreground">
               Aucune vue enregistrée. Les compteurs se remplissent à la première
