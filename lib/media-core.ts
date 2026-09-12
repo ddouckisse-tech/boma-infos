@@ -1,7 +1,7 @@
 import type {
   MediaAsset as ManifestAsset,
   MediaVariant,
-} from "@/convex/mediaManifest";
+} from "../convex/mediaManifest";
 
 /**
  * Pure image helpers — the half of `lib/media.ts` that a **client** component

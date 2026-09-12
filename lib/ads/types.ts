@@ -1,4 +1,4 @@
-import type { MediaAsset } from "@/lib/media-core";
+import type { MediaAsset } from "../media-core";
 
 export const AD_PLACEMENTS = [
   "home-primary",
