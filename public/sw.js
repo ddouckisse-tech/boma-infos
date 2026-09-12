@@ -16,7 +16,7 @@
  *  - Le reste : réseau seul. Rien n'est mis en cache par accident.
  */
 
-const VERSION = "v1";
+const VERSION = "v2";
 const SHELL_CACHE = `lecorporate-shell-${VERSION}`;
 const PAGES_CACHE = `lecorporate-pages-${VERSION}`;
 const ASSETS_CACHE = `lecorporate-assets-${VERSION}`;
@@ -78,7 +78,18 @@ async function cacheFirst(request) {
   const cached = await caches.match(request);
   if (cached) return cached;
   const response = await fetch(request);
-  if (response.ok && response.type === "basic") {
+  // Seules les réponses que le serveur déclare IMMUABLES entrent en cache.
+  // En production, /_next/static, /medias et /icons le sont (nom porteur
+  // d'empreinte). En développement, /_next/static ne l'est pas : ses
+  // fichiers gardent le même nom et changent à chaque modification. Un
+  // worker posé lors d'un essai en production sur le même localhost servait
+  // alors des chunks périmés au serveur de dev — constaté, d'où cette règle.
+  const cacheControl = response.headers.get("cache-control") || "";
+  if (
+    response.ok &&
+    response.type === "basic" &&
+    /\bimmutable\b/.test(cacheControl)
+  ) {
     const cache = await caches.open(ASSETS_CACHE);
     cache.put(request, response.clone());
   }

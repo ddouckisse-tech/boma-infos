@@ -7,13 +7,32 @@ import { useEffect } from "react";
  * routine, an article already read must stay readable).
  *
  * Registration is deferred to the `load` event so it never competes with the
- * first paint, and it is skipped in development where the worker would cache
- * Turbopack's output and make every edit invisible.
+ * first paint. In development it is not only skipped: any worker already
+ * controlling this origin is **unregistered and its caches dropped**. A
+ * worker installed by a production run on the same `localhost:3000` would
+ * otherwise outlive it and keep serving Turbopack's chunks from cache, so
+ * that every edit shows up as "module factory is not available" — measured,
+ * not hypothetical.
  */
 export function ServiceWorker() {
   useEffect(() => {
-    if (process.env.NODE_ENV !== "production") return;
     if (!("serviceWorker" in navigator)) return;
+
+    if (process.env.NODE_ENV !== "production") {
+      navigator.serviceWorker
+        .getRegistrations()
+        .then((registrations) =>
+          Promise.all(
+            registrations.map((registration) => registration.unregister())
+          )
+        )
+        .then(() => ("caches" in window ? caches.keys() : []))
+        .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
+        .catch(() => {
+          // Sans accès au stockage (navigation privée), rien à nettoyer.
+        });
+      return;
+    }
 
     const register = () => {
       navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {
