@@ -22,6 +22,10 @@ const subscribeNothing = () => () => {};
  *
  * `navigator.share` is offered when the browser has it: on Android it opens
  * the system sheet, which is faster than any of these buttons.
+ *
+ * The `data-partage` attributes are read by the inline beacon of
+ * `components/custom/audience-beacon.tsx`, which counts shares per channel
+ * without adding a byte of JavaScript to this component (CDC §4.4, §5.4).
  */
 export function ShareBar({
   url,
@@ -80,6 +84,7 @@ export function ShareBar({
 
       <a
         href={`https://wa.me/?text=${encodedTitle}%20${encodedUrl}`}
+        data-partage="whatsapp"
         target="_blank"
         rel="noopener noreferrer"
         className="inline-flex items-center gap-2 rounded-md bg-success-token px-4 type-small font-semibold text-white transition-opacity touch-target hover:opacity-90 dark:text-neutral-950"
@@ -91,6 +96,7 @@ export function ShareBar({
 
       <a
         href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`}
+        data-partage="linkedin"
         target="_blank"
         rel="noopener noreferrer"
         className={secondary}
@@ -102,6 +108,7 @@ export function ShareBar({
 
       <a
         href={`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`}
+        data-partage="facebook"
         target="_blank"
         rel="noopener noreferrer"
         className={secondary}
@@ -111,7 +118,12 @@ export function ShareBar({
         <span className="sr-only">(nouvelle fenêtre)</span>
       </a>
 
-      <button type="button" onClick={copy} className={secondary}>
+      <button
+        type="button"
+        onClick={copy}
+        data-partage="lien"
+        className={secondary}
+      >
         {copied ? (
           <Check aria-hidden="true" className="size-4 shrink-0" />
         ) : (
