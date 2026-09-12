@@ -1,0 +1,10 @@
+/* Secondary reading links keep a quieter hierarchy than the article body. */
+.lc-reading-related h3 {
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.lc-reading-related p {
+  font-size: 0.75rem;
+  line-height: 1.5;
+}

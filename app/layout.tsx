@@ -1,9 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Inter_Tight } from "next/font/google";
+import { headers } from "next/headers";
 import { PreferencesScript } from "@/components/custom/preferences-script";
 import { ServiceWorker } from "@/components/custom/service-worker";
 import { PreferencesProvider } from "@/components/providers/preferences-provider";
 import { SITE, siteUrl } from "@/lib/site";
+import { getAdSenseRuntimeConfig } from "@/lib/ads/adsense-config";
 import "./globals.css";
 
 /**
@@ -99,7 +101,11 @@ export const viewport: Viewport = {
  * shared JavaScript chunk**, since the public journal pays for it on every
  * page (CDC §5.4).
  */
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  // A complete AdSense setup opts into per-request rendering for unique nonces.
+  const nonce = getAdSenseRuntimeConfig()
+    ? ((await headers()).get("x-nonce") ?? undefined)
+    : undefined;
   return (
     <html
       lang="fr-FR"
@@ -107,7 +113,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${interTight.variable} ${inter.variable} h-full`}
     >
       <head>
-        <PreferencesScript />
+        <PreferencesScript nonce={nonce} />
       </head>
       <body className="flex min-h-full flex-col">
         {/* Ni Toaster ni TooltipProvider ici : `sonner` et le survol Radix

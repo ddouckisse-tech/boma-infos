@@ -35,7 +35,10 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches
       .open(SHELL_CACHE)
-      .then((cache) => cache.addAll(SHELL))
+      .then((cache) => Promise.all(SHELL.map(async (url) => {
+        const response = await fetch(url);
+        if (canCacheDocument(response)) await cache.put(url, response);
+      })))
       .then(() => self.skipWaiting())
   );
 });
@@ -96,6 +99,13 @@ async function cacheFirst(request) {
   return response;
 }
 
+/** A request nonce must never be replayed by the offline document cache. */
+function canCacheDocument(response) {
+  return response.ok &&
+    !/\bno-store\b/i.test(response.headers.get("cache-control") || "") &&
+    !(response.headers.get("content-security-policy") || "").includes("'nonce-");
+}
+
 async function networkFirstDocument(request) {
   const cache = await caches.open(PAGES_CACHE);
 
@@ -105,19 +115,22 @@ async function networkFirstDocument(request) {
     const response = await fetch(request, { signal: controller.signal });
     clearTimeout(timer);
 
-    if (response.ok) {
+    if (canCacheDocument(response)) {
       // On ne conserve que le HTML : les charges utiles RSC des navigations
       // clientes changent de nom à chaque déploiement.
       cache.put(request, response.clone());
       trim(PAGES_CACHE, MAX_PAGES);
+    } else {
+      // A page which has switched to nonce rendering supersedes its old copy.
+      await cache.delete(request);
     }
     return response;
   } catch {
     const cached = await cache.match(request);
-    if (cached) return cached;
+    if (cached && canCacheDocument(cached)) return cached;
 
     const offline = await caches.match(OFFLINE_URL);
-    if (offline) return offline;
+    if (offline && canCacheDocument(offline)) return offline;
 
     return new Response(
       "<!doctype html><meta charset=utf-8><title>Hors ligne</title><p>Vous êtes hors ligne.",

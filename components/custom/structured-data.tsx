@@ -1,4 +1,6 @@
 import { absoluteUrl, SITE } from "@/lib/site";
+import { headers } from "next/headers";
+import { getAdSenseRuntimeConfig } from "@/lib/ads/adsense-config";
 
 /**
  * schema.org payloads (CDC §4.2 / audit §07).
@@ -15,10 +17,14 @@ import { absoluteUrl, SITE } from "@/lib/site";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- un graphe JSON-LD n'a pas de forme fixe ; il est sérialisé, jamais parcouru
 type JsonLd = Record<string, any>;
 
-function Script({ data }: { data: JsonLd }) {
+async function Script({ data }: { data: JsonLd }) {
+  const nonce = getAdSenseRuntimeConfig()
+    ? ((await headers()).get("x-nonce") ?? undefined)
+    : undefined;
   return (
     <script
       type="application/ld+json"
+      nonce={nonce}
       dangerouslySetInnerHTML={{
         __html: JSON.stringify(data).replace(/</g, "\\u003c"),
       }}

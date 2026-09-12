@@ -1,0 +1,47 @@
+.lc-adsense-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-block-size: 44px;
+  margin-block-end: 12px;
+  gap: 12px;
+  color: var(--muted-foreground);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.lc-adsense-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 44px;
+  block-size: 44px;
+  flex-shrink: 0;
+  border-radius: 0.25rem;
+  background: transparent;
+  cursor: pointer;
+}
+
+.lc-adsense-close:hover {
+  color: var(--foreground);
+  background: var(--surface-muted);
+}
+
+.lc-adsense-close:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+}
+
+/* Same head-time dismissal contract as internal advertising; no hydration flash. */
+html[data-ad-dismissed~="home-primary"]
+  .lc-adsense-slot[data-ad-placement="home-primary"],
+html[data-ad-dismissed~="home-secondary"]
+  .lc-adsense-slot[data-ad-placement="home-secondary"],
+html[data-ad-dismissed~="article"]
+  .lc-adsense-slot[data-ad-placement="article"],
+html[data-ad-dismissed~="listing"]
+  .lc-adsense-slot[data-ad-placement="listing"] {
+  display: none !important;
+}

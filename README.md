@@ -551,61 +551,55 @@ includeSubDomains; preload`), `X-Content-Type-Options: nosniff`,
 `Permissions-Policy` restrictive, `Cross-Origin-Opener-Policy`,
 `Cross-Origin-Resource-Policy`, `X-DNS-Prefetch-Control: off`.
 
-La `Content-Security-Policy` vit dans `lib/security-headers.ts` :
+La `Content-Security-Policy` vit dans `lib/security-headers.ts`. La politique
+suivante s'applique aux modes `campaigns`, `off` et `preview`, ainsi qu'à une
+configuration AdSense incomplète :
 
 ```
 default-src 'self'; base-uri 'none'; object-src 'none';
 frame-ancestors 'none'; frame-src 'none'; form-action 'self';
 script-src 'self' 'unsafe-inline'; script-src-attr 'none';
-style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:;
+style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: <origines HTTP Convex>;
 font-src 'self'; media-src 'self'; worker-src 'self' blob:;
 manifest-src 'self'; connect-src 'self' <URL Convex>;
 upgrade-insecure-requests
 ```
 
-`'unsafe-eval'` est ajouté **en développement seulement** (rechargement à
-chaud de Turbopack) ; `upgrade-insecure-requests` n'apparaît qu'en
+Dans ces modes, `'unsafe-eval'` est ajouté **en développement seulement**
+pour Turbopack. `'unsafe-inline'` autorise les scripts React Server Components
+produits par Next dans le HTML prérendu. Aucun script publicitaire tiers
+n'est chargé ; les images envoyées à la médiathèque utilisent les origines
+HTTP du déploiement Convex. `upgrade-insecure-requests` n'apparaît qu'en
 production.
 
-**Pourquoi `'unsafe-inline'` sur `script-src`.** Next.js sérialise la charge
-utile React Server Components dans des `<script>` en ligne dont le contenu
-change à chaque rendu. Les autoriser autrement impose un nonce par requête,
-ce qui **désactive le rendu statique de toutes les pages** — inacceptable au
-regard du budget de performance du §5.4. La variante à nonce +
-`strict-dynamic` a été implémentée puis retirée : elle bloquait
-effectivement l'hydratation sur les pages prérendues. Tout le reste reste
-verrouillé : aucune origine tierce, aucun gestionnaire d'événement en ligne
-(`script-src-attr 'none'`), pas d'`eval` en production, `base-uri` et
-`form-action` fermés.
+**Avec une configuration AdSense complète**, `proxy.ts` produit un nonce
+aléatoire par requête et remplace la CSP de la réponse. Le root layout rend
+alors le HTML dynamiquement ; Next, les préférences, JSON-LD, la CMP et
+AdSense reçoivent ce nonce. Cette politique utilise `strict-dynamic` et
+`unsafe-eval`, y compris en production, et autorise les ressources
+publicitaires HTTPS. Les origines des styles et polices de la CMP restent
+limitées à la configuration. `script-src-attr 'none'`, `base-uri 'none'`,
+`frame-ancestors 'none'` et `form-action 'self'` restent appliqués.
 
-**Revu au lot 3, et laissé en l'état — à raison.** L'idée était de donner un
-nonce aux seules routes privées, rendues dynamiquement de toute façon. Deux
-obstacles, tous deux dans la façon dont Next.js construit la politique :
-l'en-tête est posé par `next.config.ts`, qui est statique et ne voit pas la
-requête ; et un nonce par requête suppose de générer la politique dans le
-proxy, donc pour **toutes** les routes — y compris les pages prérendues, dont
-le HTML est déjà écrit et porterait un nonce périmé. Une politique par groupe
-de routes demanderait de dupliquer la logique d'en-têtes entre
-`next.config.ts` et `proxy.ts`, pour un gain réel faible : les espaces privés
-ne rendent aucun contenu tiers et `script-src-attr 'none'` ferme déjà les
-gestionnaires en ligne. Le durcissement utile ici est plutôt `require-trusted-types-for`,
-à instruire avant la mise en ligne.
+Le mode, les identifiants d'éditeur et d'unités et la configuration CMP
+doivent être présents **au build et au runtime**. Leur modification nécessite
+une reconstruction et une nouvelle livraison : changer seulement les
+variables de `next start` peut associer un nouveau nonce à un ancien HTML
+prérendu et bloquer l'hydratation. Le cache hors ligne exclut les documents
+à nonce ou `no-store`. Voir [le raccordement AdSense](docs/adsense.md).
 
-Le lot 2 n'a **rien relâché** dans la politique : aucun domaine média n'a
-été ajouté, `img-src` reste `'self' data: blob:` et `font-src 'self'` —
-les 27 photographies et les deux polices sont servies depuis ce domaine.
-S'y ajoutent des en-têtes de cache : un an d'`immutable` sur `/medias`,
+Dans ce mode dynamique, le contrôle de budget mesure le HTML local et les
+ressources propriétaires référencées, avant consentement. Il exclut les
+téléchargements Google et CMP, y compris le script CMP chargé avant le
+choix du lecteur ; leur poids doit être mesuré séparément avec la
+configuration réelle.
+
+Les en-têtes de cache restent : un an d'`immutable` sur `/medias`,
 `/icons` et les fichiers versionnés (l'audit relevait l'absence totale de
 `Cache-Control` sur les images du site actuel, soit une cinquantaine
 d'allers-retours vers l'Europe à chaque visite), `Vary: Cookie` sur
 `/medias` puisque `proxy.ts` y sert une variante selon le mode économie, et
 `must-revalidate` sur `/sw.js`.
-
-Le lot 3 n'a rien relâché non plus. Les seules origines ajoutées à
-`connect-src` sont les deux URL du déploiement Convex, déjà présentes depuis
-le lot 1 ; le code QR du second facteur est une `data:` URI, couverte par
-`img-src 'self' data: blob:`. Aucune balise `<script>` d'origine tierce n'est
-servie nulle part.
 
 S'y ajoutent, côté application :
 

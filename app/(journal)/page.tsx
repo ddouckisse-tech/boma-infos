@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { Advertising } from "@/components/custom/advertising";
 import { ArticleCard } from "@/components/custom/article-card";
 import { Container } from "@/components/custom/container";
 import { EmptyState } from "@/components/custom/empty-state";
@@ -96,6 +97,8 @@ export default async function HomePage() {
         </Section>
       )}
 
+      <Advertising placement="home-primary" pageKey="/" className="mx-auto my-10 w-[calc(100%-2rem)] max-w-[728px] md:my-14" />
+
       {dossier && (
         <Section spacing="loose">
           <div className="grid gap-6 rounded-md border border-l-2 border-border border-l-brand-magenta bg-card p-6 lg:grid-cols-[2fr_1fr] lg:items-center lg:gap-10 lg:p-8">
@@ -155,6 +158,10 @@ export default async function HomePage() {
             ))}
           </ul>
         </Section>
+      )}
+
+      {latest.length >= 4 && (
+        <Advertising placement="home-secondary" pageKey="/" className="mx-auto my-14 w-[calc(100%-2rem)] max-w-[728px]" />
       )}
 
       {bySection.map((section, index) => (

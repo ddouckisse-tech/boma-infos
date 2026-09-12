@@ -4,6 +4,7 @@ import { Container } from "@/components/custom/container";
 import { PageHeader } from "@/components/custom/page-header";
 import { Section } from "@/components/custom/section";
 import { SITE } from "@/lib/site";
+import { getAdSenseCmpConfig } from "@/lib/ads/adsense-config";
 
 export const metadata: Metadata = {
   title: "Politique de confidentialité",
@@ -17,11 +18,11 @@ export const metadata: Metadata = {
  *
  * The audit found the legacy site depositing Google Analytics and seven
  * WooCommerce advertising cookies before any consent, with no policy page at
- * all. This version has nothing to declare because the site collects nothing
- * by default: no analytics, no advertising tag, no third-party request.
- * That is the honest state of the application, and it is stated plainly.
+ * all. Display campaigns now use the site's own media and keep dismissal
+ * preferences locally, without third-party advertising scripts.
  */
 export default function PrivacyPage() {
+  const externalAdvertising = getAdSenseCmpConfig() !== null;
   return (
     <>
       <PageHeader
@@ -34,27 +35,39 @@ export default function PrivacyPage() {
       <Section width="reading">
         <Container width="reading" className="px-0">
           <div className="article-body type-body">
-            <h2 className="font-display type-h2">Aucun traçage par défaut</h2>
+            <h2 className="font-display type-h2">Publicité et choix de lecture</h2>
+            {externalAdvertising ? (
+              <p>
+                Des emplacements Google AdSense peuvent financer le journal.
+                Leur chargement attend le signal de consentement de la plateforme
+                de gestion des choix. Sans accord, aucun encart Google n&apos;est
+                demandé par le site. Vous pouvez revoir vos choix dans le panneau
+                de consentement ; un retrait masque les encarts et bloque les
+                nouvelles demandes. Les annonces Google ne sont pas soumises à la
+                rotation des campagnes internes.
+              </p>
+            ) : (
+              <>
             <p>
-              La lecture du journal ne dépose <strong>aucun cookie</strong> et
-              ne déclenche <strong>aucune requête vers un tiers</strong>. Pas de
-              mesure d&apos;audience, pas de régie publicitaire, pas de bouton
-              social qui vous suit&nbsp;: les boutons de partage sont de simples
-              liens, qui n&apos;envoient rien tant que vous ne cliquez pas. Les
-              polices et les images sont servies depuis ce domaine, jamais
-              depuis un serveur extérieur.
+              Les encarts publicitaires utilisent la médiathèque du journal,
+              sans script publicitaire tiers ni profil de ciblage. Les images
+              sont servies par le site ou son stockage Convex. Les boutons de
+              partage et les publicités sont de simples liens&nbsp;: le site
+              de destination ne s&apos;ouvre que lorsque vous cliquez.
             </p>
             <p>
-              C&apos;est aussi pour cela qu&apos;aucune bannière de consentement
-              ne vous est présentée&nbsp;: il n&apos;y a rien à consentir.
+              Aucun identifiant de suivi publicitaire n&apos;est créé. Les
+              éventuelles mesures d&apos;audience du journal restent distinctes
+              des encarts et ne servent pas à choisir leurs créations.
             </p>
+              </>
+            )}
 
             <h2 className="font-display type-h2">
               Ce qui est conservé dans votre navigateur
             </h2>
             <p>
-              Deux préférences, stockées localement sur votre appareil et jamais
-              transmises&nbsp;:
+              Le site conserve vos préférences de lecture sur cet appareil&nbsp;:
             </p>
             <ul className="list-disc space-y-2 ps-6">
               <li>
@@ -63,12 +76,19 @@ export default function PrivacyPage() {
               </li>
               <li>
                 <strong>l&apos;économie de données</strong>, qui abaisse la
-                définition des images.
+                définition des images&nbsp;;
+              </li>
+              <li>
+                <strong>la fermeture des publicités</strong>, mémorisée pendant
+                24 heures pour l&apos;emplacement et la campagne. Un encart
+                fermé ne revient pas tant que vous restez sur la même page.
               </li>
             </ul>
             <p>
-              Elles disparaissent si vous videz les données de navigation. Ce ne
-              sont pas des cookies&nbsp;: rien n&apos;est envoyé au serveur.
+              Elles disparaissent si vous videz les données de navigation.
+              La fermeture des publicités reste locale et n&apos;est jamais
+              transmise au serveur. L&apos;économie de données est aussi portée
+              par un cookie de préférence pour servir des images plus légères.
             </p>
             <p>
               Un <em>service worker</em> conserve également une copie des

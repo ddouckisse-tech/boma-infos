@@ -14,11 +14,12 @@ import { PREFERENCES_SCRIPT } from "@/lib/preferences";
  * the tag without executing it — and says so in the console. `next/script`
  * injects it into the document head once, outside the React tree.
  */
-export function PreferencesScript() {
+export function PreferencesScript({ nonce }: { nonce?: string }) {
   return (
     // eslint-disable-next-line @next/next/no-before-interactive-script-outside-document -- App Router : la doc de Next place `beforeInteractive` dans le root layout, où ce composant est monté ; vérifié dans le HTML servi (script inline dans <head>, avant <body>).
     <Script
       id="lc-preferences"
+      nonce={nonce}
       strategy="beforeInteractive"
       // Le contenu est une constante du dépôt, jamais une entrée utilisateur.
       dangerouslySetInnerHTML={{ __html: PREFERENCES_SCRIPT }}

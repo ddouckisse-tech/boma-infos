@@ -1,3 +1,5 @@
+import { AD_PREFERENCES_SCRIPT } from "@/lib/ads/browser";
+
 /**
  * Reader preferences persisted in `localStorage`.
  *
@@ -63,4 +65,4 @@ d.style.colorScheme=r;
 var s=localStorage.getItem(${JSON.stringify(DATA_SAVER_STORAGE_KEY)})==="1";
 d.dataset.dataSaver=s?"on":"off";
 document.cookie=${JSON.stringify(DATA_SAVER_COOKIE)}+"="+(s?"1":"0")+"; Path=/; Max-Age="+(s?31536000:0)+"; SameSite=Lax";
-}catch(e){}})();`;
+}catch(e){}})();` + AD_PREFERENCES_SCRIPT;

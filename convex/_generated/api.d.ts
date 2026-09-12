@@ -9,6 +9,7 @@
  */
 
 import type * as accounts from "../accounts.js";
+import type * as advertising from "../advertising.js";
 import type * as agentRuntime from "../agentRuntime.js";
 import type * as agents from "../agents.js";
 import type * as audit from "../audit.js";
@@ -22,6 +23,7 @@ import type * as journal from "../journal.js";
 import type * as library from "../library.js";
 import type * as mediaManifest from "../mediaManifest.js";
 import type * as model_access from "../model/access.js";
+import type * as model_advertising from "../model/advertising.js";
 import type * as model_agentEngine from "../model/agentEngine.js";
 import type * as model_agents from "../model/agents.js";
 import type * as model_audit from "../model/audit.js";
@@ -55,6 +57,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   accounts: typeof accounts;
+  advertising: typeof advertising;
   agentRuntime: typeof agentRuntime;
   agents: typeof agents;
   audit: typeof audit;
@@ -68,6 +71,7 @@ declare const fullApi: ApiFromModules<{
   library: typeof library;
   mediaManifest: typeof mediaManifest;
   "model/access": typeof model_access;
+  "model/advertising": typeof model_advertising;
   "model/agentEngine": typeof model_agentEngine;
   "model/agents": typeof model_agents;
   "model/audit": typeof model_audit;
