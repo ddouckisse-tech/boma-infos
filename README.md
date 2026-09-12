@@ -186,15 +186,30 @@ prérendu de l'accueil et d'un article, additionne le transfert réel
 `srcset` pour une fenêtre de 412 px) et **sort en erreur** au premier
 plafond dépassé :
 
-| Indicateur         | Plafond §5.4 |
-| ------------------ | ------------ |
-| Poids accueil      | 600 Ko       |
-| Poids article      | 400 Ko       |
-| Requêtes par page  | 50           |
-| JavaScript         | 180 Ko       |
+| Indicateur        | Plafond §5.4 | Constaté |
+| ----------------- | ------------ | -------- |
+| Poids accueil     | 600 Ko       | 489 Ko   |
+| Poids article     | 400 Ko       | 380 Ko   |
+| Requêtes accueil  | 50           | 31       |
+| Requêtes article  | 50           | 20       |
+| JavaScript        | 180 Ko       | 159 Ko   |
 
-Une ressource référencée mais introuvable sur le disque fait aussi échouer
-le contrôle : mieux vaut refuser que sous-estimer.
+Deux partis pris de mesure, tous deux du côté sévère :
+
+- **DPR 2**, pas 1. Le parc visé est en haute densité et c'est le lecteur
+  qui paie les pixels : la même page d'accueil coûte 424 Ko à DPR 1 et
+  818 Ko à DPR 2 avant correction. C'est la seconde valeur qui compte.
+- **Pire cas par image** : on compte la plus grande variante que chaque
+  `<picture>` peut réclamer, parce qu'un navigateur choisit parfois un cran
+  au-dessus de ce que `sizes × DPR` laisse prévoir. Chaque appel à
+  `ResponsiveImage` porte donc un `maxWidth` taillé pour sa mise en page.
+
+Sont exclues du total, et signalées à part, les prothèses `nomodule`
+(core-js, 39 Ko) : aucun navigateur du §5.5 ne les télécharge.
+
+Font aussi échouer le contrôle : une ressource référencée mais introuvable
+sur le disque, et un lien interne malformé (espace ou accolade dans un
+`href`). Mieux vaut refuser que servir un 404.
 
 ### Images
 
@@ -206,29 +221,47 @@ encode en **AVIF + WebP à 320, 640, 960 et 1280 px**, puis écrit
 calculable à la compilation, la boîte de l'image est réservée avant le
 premier octet (CLS nul), et le service worker peut précacher.
 
-`<ResponsiveImage>` rend **deux** `<picture>` pour toute image différée : la
-pleine définition et une variante 320 px. Le CSS n'en affiche qu'une, et une
-image `loading="lazy"` dans un élément `display: none` n'est jamais
-téléchargée — la variante cachée ne coûte donc rien. Seule l'image
-prioritaire (une par page, celle du LCP) échappe à ce doublage : elle est
-chargée en `eager`, et une image `eager` masquée serait tout de même
-téléchargée. Elle reste légère par son `sizes` : un téléphone reçoit la
-variante 640 px, environ 19 Ko.
+`<ResponsiveImage>` rend **un seul** `<picture>`, identique pour tout le
+monde. L'image de une est en outre préchargée depuis le `<head>`
+(`ReactDOM.preload`) et décodée en `async` — `decoding="sync"` imposait un
+décodage AVIF avant présentation, soit deux secondes de retard au rendu sur
+un processeur bridé.
 
 ### Économie de données
 
-L'attribut `data-data-saver` posé sur `<html>` par le script bloquant du
-lot 1 pilote, sans JavaScript supplémentaire :
+Le choix du lecteur vit dans `localStorage` **et** dans un cookie.
+`proxy.ts` lit le cookie et réécrit chaque requête d'image vers la variante
+480 px : les pages restent entièrement statiques, et l'image prioritaire est
+couverte elle aussi. Mesuré : 18 713 octets sans le cookie, 11 317 avec.
 
-- toutes les images différées passent en 320 px ;
-- les vidéos ne sont jamais préchargées et leur vignette disparaît au profit
-  d'un bouton qui annonce le téléchargement (`HeavyMedia`).
+> La version précédente rendait deux `<picture>` et en masquait un par CSS.
+> **Elle ne fonctionnait pas** : Chrome télécharge une image
+> `loading="lazy"` même dans un élément `display: none`, la page payait donc
+> les deux variantes. Constaté au relevé réseau, pas à la lecture du code.
+
+Les vidéos, elles, ne sont jamais préchargées : leur vignette disparaît au
+profit d'un bouton qui annonce le téléchargement (`HeavyMedia`).
+
+Un cache HTTP `immutable` signifie qu'une photographie déjà téléchargée
+n'est pas re-téléchargée en plus petit quand on active le mode — ce qui est
+le bon comportement : une image en cache coûte zéro octet.
 
 ### Hors-ligne
 
 `public/sw.js`, écrit à la main (pas de Workbox) : réseau d'abord avec
 garde-temps de 3,5 s pour les documents, cache d'abord pour les ressources
 versionnées, quarante pages conservées, et `/hors-ligne` en dernier recours.
+Une bascule du mode économie purge le cache des photographies, sinon le
+service worker resservirait celles de l'ancien mode.
+
+> **Non vérifié en navigateur.** L'environnement de test refuse
+> l'enregistrement des service workers — y compris pour un fichier de deux
+> lignes servi par un serveur statique nu, sans politique de sécurité : le
+> refus ne vient donc pas du projet. Ce qui a pu être vérifié : `/sw.js`
+> répond 200 avec le bon type MIME, `Service-Worker-Allowed: /` et
+> `Cache-Control: must-revalidate`, sa syntaxe passe `node --check`, et
+> `/hors-ligne` s'affiche. **La lecture hors-ligne reste à recetter sur un
+> vrai appareil.**
 
 ### Référencement
 
@@ -329,3 +362,13 @@ verrouillé : aucune origine tierce, aucun gestionnaire d'événement en ligne
 
 **À revoir au lot 3** : les espaces privés sont rendus dynamiquement par
 nature ; ces routes-là pourront passer à un nonce sans coûter le cache.
+
+Le lot 2 n'a **rien relâché** dans la politique : aucun domaine média n'a
+été ajouté, `img-src` reste `'self' data: blob:` et `font-src 'self'` —
+les 27 photographies et les deux polices sont servies depuis ce domaine.
+S'y ajoutent des en-têtes de cache : un an d'`immutable` sur `/medias`,
+`/icons` et les fichiers versionnés (l'audit relevait l'absence totale de
+`Cache-Control` sur les images du site actuel, soit une cinquantaine
+d'allers-retours vers l'Europe à chaque visite), `Vary: Cookie` sur
+`/medias` puisque `proxy.ts` y sert une variante selon le mode économie, et
+`must-revalidate` sur `/sw.js`.
