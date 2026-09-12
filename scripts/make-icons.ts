@@ -44,6 +44,18 @@ const FILES = [
 
 await mkdir(OUT_DIR, { recursive: true });
 
+// Favicon : 32 px, écrit directement dans `app/` pour que Next le serve.
+// Celui du lot 1 pesait 26,7 Ko et partait en priorité haute, dans le même
+// tuyau que l'image de une — pour seize pixels de côté dans un onglet.
+const favicon = await sharp(Buffer.from(icon(32, 1, false)))
+  .png({ compressionLevel: 9, palette: true })
+  .toBuffer();
+await writeFile(
+  path.resolve(import.meta.dirname, "..", "app", "icon.png"),
+  favicon
+);
+console.log(`✓ ${"app/icon.png".padEnd(26)} ${favicon.byteLength} octets`);
+
 for (const file of FILES) {
   const buffer = await sharp(
     Buffer.from(icon(file.size, file.safe, file.rounded))
