@@ -7,11 +7,12 @@ Document de référence : [`CAHIER-DES-CHARGES.md`](./CAHIER-DES-CHARGES.md).
 Prompts d'implémentation par lot : [`prompts/`](./prompts).
 Audit de l'existant : [`audit-le-corporate/`](./audit-le-corporate).
 
-**État : lot 2 livré — le journal public.** Modèle de contenu Convex, jeu de
-démonstration, accueil, rubriques, article, recherche, auteurs, docuthèque,
-newsletter à double consentement, PWA hors-ligne, référencement et budget de
-performance contrôlé à la compilation. L'authentification, le back-office, le
-portail entreprise et les agents relèvent du lot 3.
+**État : lot 3 livré — la chaîne éditoriale complète.** Au journal public des
+lots 1 et 2 s'ajoutent l'authentification à quatre rôles avec double
+authentification obligatoire, le back-office de rédaction, le portail des
+entreprises partenaires et son workflow de modération jusqu'à la publication,
+les sept agents éditoriaux sous garde-fous, et une mesure d'audience sans
+traqueur tiers.
 
 ---
 
@@ -33,9 +34,19 @@ bunx convex env set SITE_URL http://localhost:3000
 #    27 photographies, 6 documents). Sans lui, le site est vide.
 bun run seed
 
-# 4. Serveur de développement Next.js
+# 4. Créer le premier compte. Le dépôt n'en contient AUCUN : ni `admin`,
+#    ni mot de passe par défaut — l'audit avait relevé le contraire sur
+#    l'ancien site (CDC §5.3).
+bun run compte -- --email=vous@le-corporate.com --nom="Votre nom" \
+  --motdepasse='un-mot-de-passe-long' --role=administrateur
+
+# 5. Serveur de développement Next.js
 bun run dev            # http://localhost:3000
 ```
+
+> Un compte Administrateur ou Éditeur **ne peut rien faire** tant qu'il n'a
+> pas activé la double authentification depuis `/compte` : le refus vient des
+> fonctions Convex, pas d'une mise en page.
 
 > Les fichiers dérivés (`public/medias/`, `public/documents/`, `public/icons/`,
 > `convex/media-manifest.ts`) sont **versionnés** : ni la compilation ni
@@ -81,6 +92,8 @@ demande explicite.
 | `bun run icons`      | Régénère les icônes de la PWA                |
 | `bun run convex:dev` | Backend Convex, en veille                    |
 | `bun run dev:full`   | Convex + Next dans un seul processus         |
+| `bun run compte`     | Crée un compte nominatif (lot 3)             |
+| `bun run agents:cle` | Copie `ANTHROPIC_API_KEY` sur le déploiement |
 
 `bun run build` enchaîne `next build` **puis** `bun run budget` : une
 compilation qui dépasse un plafond du §5.4 échoue, elle n'avertit pas.
@@ -95,12 +108,14 @@ en un appel depuis l'outillage.
 `.env.local` est généré par `convex dev` et **n'est pas versionné**. Le
 gabarit versionné est [`.env.example`](./.env.example).
 
-| Variable                      | Où                            | Rôle                                           |
-| ----------------------------- | ----------------------------- | ---------------------------------------------- |
-| `CONVEX_DEPLOYMENT`           | `.env.local`                  | Déploiement visé par la CLI Convex             |
-| `NEXT_PUBLIC_CONVEX_URL`      | `.env.local`                  | URL client du déploiement (WebSocket + HTTP)   |
-| `NEXT_PUBLIC_CONVEX_SITE_URL` | `.env.local`                  | URL des actions HTTP (routes Better Auth)      |
-| `SITE_URL`                    | **sur le déploiement Convex** | URL publique du site, utilisée par Better Auth |
+| Variable                      | Où                                                                   | Rôle                                                                                                                      |
+| ----------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `CONVEX_DEPLOYMENT`           | `.env.local`                                                         | Déploiement visé par la CLI Convex                                                                                        |
+| `NEXT_PUBLIC_CONVEX_URL`      | `.env.local`                                                         | URL client du déploiement (WebSocket + HTTP)                                                                              |
+| `NEXT_PUBLIC_CONVEX_SITE_URL` | `.env.local`                                                         | URL des actions HTTP (routes Better Auth)                                                                                 |
+| `SITE_URL`                    | **sur le déploiement Convex**                                        | URL publique du site, utilisée par Better Auth                                                                            |
+| `BETTER_AUTH_SECRET`          | **sur le déploiement Convex**                                        | Chiffre les secrets TOTP. Sans lui, Better Auth en dérive un, et les seconds facteurs ne survivent pas à un redéploiement |
+| `ANTHROPIC_API_KEY`           | `.env.local` **et** sur le déploiement Convex (`bun run agents:cle`) | Clé de l'API Claude. Absente, les sept agents passent en mode simulé — voir « Les agents »                                |
 
 Les deux URL Convex sont automatiquement autorisées dans la directive
 `connect-src` de la politique de sécurité du contenu (voir
@@ -112,23 +127,30 @@ Les deux URL Convex sont automatiquement autorisées dans la directive
 
 ```
 app/
-  layout.tsx                   racine : lang="fr-FR", polices, en-tête, pied
-  page.tsx                     accueil : une, à la une, dossier, rubriques
-  [slug]/                      301 des permaliens WordPress vers /article/<slug>
-  article/[slug]/              page d'article + opengraph-image.tsx (1200×630)
-  rubrique/[...segments]/      liste paginée, filtres, tri (tout dans le chemin)
-  auteur/[slug]/               page de signature
-  recherche/                   recherche plein texte (seule page dynamique)
-  docutheque/                  documents téléchargeables
-  a-propos/ contacts/          pages éditoriales
-  newsletter/                  inscription, confirmation, désinscription
-  hors-ligne/                  page servie par le service worker sans réseau
-  mentions-legales/ confidentialite/
+  layout.tsx                   racine : document seul (langue, polices, thème)
+  error.tsx not-found.tsx      états d'erreur soignés, hors groupe de routes
+  (journal)/                   LE JOURNAL PUBLIC — en-tête, pied, budget §5.4
+    layout.tsx                 masthead + pied ; aucun client Convex monté
+    page.tsx                   accueil : une, à la une, dossier, rubriques
+    [slug]/                    301 des permaliens WordPress vers /article/<slug>
+    article/[slug]/            page d'article + opengraph-image.tsx (1200×630)
+    rubrique/[...segments]/    liste paginée, filtres, tri (tout dans le chemin)
+    auteur/[slug]/ recherche/ docutheque/ newsletter/
+    a-propos/ contacts/ hors-ligne/ mentions-legales/ confidentialite/
+    design-system/             galerie /design-system (référence de l'équipe)
+  (prive)/                     LES ESPACES PRIVÉS — ConvexClientProvider ici
+    connexion/ connexion/verification/   mot de passe, puis second facteur
+    mot-de-passe-oublie/ reinitialisation/
+    inscription-entreprise/    demande d'ouverture, validée à la main
+    compte/                    profil, 2FA, sessions révocables
+    redaction/                 back-office : tableau de bord, articles,
+                               dépôts, médias, agents, statistiques,
+                               rubriques, comptes, réglages, journal d'audit
+    entreprise/                portail : dépôts, suivi, statistiques
+  api/auth/[...all]/           proxy Better Auth ; `sign-up` fermé
   api/recherche/route.ts       point d'entrée du dialogue Cmd+K
   sitemap.ts robots.ts manifest.ts
   rss.xml/ news-sitemap.xml/   flux et plan de site « actualités »
-  error.tsx not-found.tsx      états d'erreur soignés
-  design-system/               galerie /design-system (référence de l'équipe)
   globals.css                  TOUS les jetons de design
 components/
   ui/                          primitives shadcn/ui — JAMAIS modifiées
@@ -137,12 +159,24 @@ components/
 convex/
   schema.ts                    modèle de données complet (§5.2)
   model/content.ts             validateurs et types partagés des blocs
+  model/access.ts              RÔLES ET PERMISSIONS — le seul garde-barrière
+  model/audit.ts               journal d'audit + corbeille de notifications
+  model/agents.ts              déclaration des sept agents (§4.6)
+  model/agentEngine.ts         prompts, analyse, repli hors ligne, coûts
+  model/text.ts                temps de lecture, index, slug, périodes
   journal.ts                   requêtes publiques (lecture seule)
   newsletter.ts contact.ts     mutations publiques, validées et limitées
-  seeding.ts                   internalMutation `seeding:run` (jeu de démo)
-  seed/                        le corpus de démonstration, en clair
-  media-manifest.ts            GÉNÉRÉ — dimensions et poids exacts des photos
-  auth.ts http.ts              Better Auth (câblé, inexploité avant le lot 3)
+  accounts.ts guard.ts         comptes, rôles, inscription d'entreprise
+  newsroom.ts taxonomy.ts      articles + versions, rubriques
+  library.ts settings.ts       médiathèque, réglages, agents, redirections
+  portal.ts                    dépôts entreprises et workflow de revue
+  agents.ts agentRuntime.ts    journal des agents / exécution (action Node)
+  newsletterDraft.ts           éditions hebdomadaires composées par l'agent 6
+  stats.ts audit.ts            audience, journal d'audit (lecture seule)
+  crons.ts schedule.ts         ordonnanceur : newsletter, publications datées
+  seeding.ts seed/             le corpus de démonstration, en clair
+  mediaManifest.ts             GÉNÉRÉ — dimensions et poids exacts des photos
+  auth.ts http.ts              Better Auth : mots de passe, TOTP, débit
 lib/
   content/server.ts            accès Convex côté serveur (+ ISR)
   media.ts                     srcset, sizes, variantes basse définition
@@ -160,7 +194,6 @@ scripts/
   check-budget.ts              contrôle du §5.4 — fait échouer la compilation
 next.config.ts                 en-têtes, cache des médias, redirections 301
 ```
-
 
 ### Conventions
 
@@ -186,13 +219,19 @@ prérendu de l'accueil et d'un article, additionne le transfert réel
 `srcset` pour une fenêtre de 412 px) et **sort en erreur** au premier
 plafond dépassé :
 
-| Indicateur        | Plafond §5.4 | Constaté |
-| ----------------- | ------------ | -------- |
-| Poids accueil     | 600 Ko       | 489 Ko   |
-| Poids article     | 400 Ko       | 380 Ko   |
-| Requêtes accueil  | 50           | 31       |
-| Requêtes article  | 50           | 20       |
-| JavaScript        | 180 Ko       | 159 Ko   |
+| Indicateur       | Plafond §5.4 | Constaté                            |
+| ---------------- | ------------ | ----------------------------------- |
+| Poids accueil    | 600 Ko       | 486 Ko                              |
+| Poids article    | 400 Ko       | 385 Ko                              |
+| Requêtes accueil | 50           | 29                                  |
+| Requêtes article | 50           | 20                                  |
+| JavaScript       | 180 Ko       | 159 Ko (accueil) · 169 Ko (article) |
+
+> Chiffres **re-mesurés à la fin du lot 3**. L'accueil a légèrement maigri
+> (489 → 486 Ko, 31 → 29 requêtes) parce que la mise en page racine ne
+> contient plus l'en-tête ni le pied : le découpage des lots JavaScript a
+> changé. L'article a pris 5 Ko, dont 1,2 Ko de JavaScript : c'est la balise
+> d'audience, qui remplace les deux traqueurs tiers de l'ancien site.
 
 Deux partis pris de mesure, tous deux du côté sévère :
 
@@ -287,6 +326,147 @@ mention et le jeu de données à la mise en ligne.
 
 ---
 
+## La chaîne éditoriale (lot 3)
+
+### Comptes et rôles
+
+Quatre rôles, déclarés une seule fois dans `convex/model/access.ts` :
+
+| Rôle                      | Périmètre                                                                               | Second facteur  |
+| ------------------------- | --------------------------------------------------------------------------------------- | --------------- |
+| **Administrateur**        | Tout : publication, rubriques, comptes, réglages, agents, statistiques, journal d'audit | **obligatoire** |
+| **Éditeur / Journaliste** | Rédige, publie dans ses rubriques autorisées, revoit les dépôts. Ni comptes ni réglages | **obligatoire** |
+| **Client / Entreprise**   | Son espace seul : dépôts, statuts, statistiques de ses publications                     | facultatif      |
+| **Lecteur**               | Son compte                                                                              | facultatif      |
+
+**Le contrôle est dans Convex, pas dans l'interface.** Chaque fonction commence
+par `requireViewer`, `requirePermission` ou `requireOrganizationScope` ; la
+navigation du back-office masque ce qu'un rôle ne peut pas faire, mais c'est une
+politesse. Un Éditeur qui appelle `accounts:setRole` ou `settings:save` en HTTP
+direct reçoit `FORBIDDEN`, exactement comme dans l'écran.
+
+Trois points tiennent aux défauts que l'audit avait relevés :
+
+- **Aucun identifiant par défaut.** Le dépôt ne contient aucun compte.
+  `bun run compte` en crée un, nominatif, avec un mot de passe choisi à cet
+  instant. `POST /api/auth/sign-up/*` est **fermé au navigateur** : cet appel
+  répond différemment selon que l'adresse existe déjà, c'est un oracle. Les deux
+  créations légitimes — un administrateur qui ouvre un compte, une entreprise
+  qui demande un espace — passent par des fonctions serveur.
+- **Aucune énumération.** La connexion répond `INVALID_EMAIL_OR_PASSWORD` avec
+  le même corps et le même temps qu'une adresse soit connue ou non ; le
+  formulaire d'inscription d'entreprise répond « demande enregistrée » dans tous
+  les cas ; aucune API ne liste les comptes à qui n'est pas administrateur.
+- **Limitation de débit** en base : dix connexions par minute et par IP, cinq
+  vérifications de second facteur, trois demandes de réinitialisation par
+  cinq minutes.
+
+La double authentification est du TOTP : `/compte` affiche un code QR, l'adresse
+`otpauth://` en clair et dix codes de secours à usage unique. Le compte n'est
+marqué comme protégé qu'après avoir saisi un code produit par l'application.
+
+> **`better-auth` est épinglé à 1.6.21.** À partir de 1.6.22 le greffon
+> `twoFactor` écrit deux colonnes de verrouillage de compte que le schéma du
+> composant `@convex-dev/better-auth@0.12.5` — le dernier publié — ne connaît
+> pas ; l'activation échouait sur une erreur de validation du composant. Ce qui
+> est perdu est remplacé : la force brute sur le second facteur reste couverte
+> par la limitation de débit. À lever dès que le composant rattrape l'amont.
+
+### Portail entreprise
+
+`brouillon → soumis → en revue → modifications demandées → (re-soumis) →
+programmé → publié`, ou `refusé` **avec motif obligatoire** — refusé côté
+serveur, pas seulement marqué `required` dans le HTML.
+
+Deux invariants, tous deux dans Convex :
+
+- **Cloisonnement.** `requireOrganizationScope` lit l'entreprise dans la
+  session. L'identifiant n'est jamais pris dans les arguments : une entreprise
+  qui passe celui d'une autre reçoit `FORBIDDEN`, le même code qu'un identifiant
+  inexistant, pour que l'API ne réponde pas non plus à la question « ce dépôt
+  existe-t-il ».
+- **Mention « Contenu partenaire ».** L'article créé à la publication porte
+  `origin: "partenaire"`, écrit par la mutation de la rédaction. Aucun champ du
+  formulaire de dépôt n'y touche : l'entreprise ne peut pas l'enlever.
+
+Chaque transition compose sa notification, par courriel et par WhatsApp quand le
+numéro est renseigné. Aucun prestataire n'est branché sur ce déploiement : les
+messages sont conservés dans une corbeille de sortie visible sous
+`/redaction/depots`, plutôt que d'afficher « un courriel vous a été envoyé » et
+n'envoyer rien.
+
+### Les agents
+
+Les sept agents du §4.6 tournent dans une **action Convex** — l'ordonnanceur
+porte donc réellement les traitements longs (transcription, newsletter
+hebdomadaire) et aucun formulaire n'attend un modèle.
+
+| #   | Agent                 | Déclencheur                                          | Repli manuel                                           |
+| --- | --------------------- | ---------------------------------------------------- | ------------------------------------------------------ |
+| 1   | Relecture             | à l'enregistrement / à la demande                    | la relecture reste manuelle                            |
+| 2   | Titraille             | à la demande                                         | les champs se saisissent à la main                     |
+| 3   | SEO                   | à la demande                                         | slug dérivé du titre, métadonnées à la main            |
+| 4   | Média                 | depuis la médiathèque                                | le texte alternatif reste obligatoire, saisi à la main |
+| 5   | Modération des dépôts | à la soumission (ordonnanceur)                       | la revue se fait sans fiche                            |
+| 6   | Diffusion             | à la publication, et chaque jeudi pour la newsletter | rédaction à la main                                    |
+| 7   | Transcription         | à la demande (différé)                               | transcription à la main                                |
+
+**Un agent propose, un humain dispose.** Aucune fonction n'écrit un champ d'elle-même :
+`agents:decide` est le seul chemin d'une proposition vers le contenu, et il exige
+une session. Une proposition **rejetée** laisse l'empreinte de sa valeur et n'est
+plus jamais re-proposée pour la même cible.
+
+Trois barrières avant chaque appel, dans cet ordre : l'interrupteur de l'agent,
+le plafond de dépense mensuel, la permission de l'appelant. Une exécution
+bloquée est quand même journalisée, avec son motif et le repli correspondant.
+
+#### Clé d'API : réel ou simulé, sans changement de code
+
+Une seule variable, `ANTHROPIC_API_KEY`, lue avec `process.env` :
+
+- **présente** → l'API Claude est appelée (`@anthropic-ai/sdk`), modèle
+  `claude-sonnet-5` pour le volume, `claude-opus-5` pour les deux tâches où une
+  erreur coûte quelque chose à la rédaction : la titraille et la
+  pré-qualification d'un dépôt. Le coût réel de chaque exécution est calculé
+  depuis `usage` et imputé au plafond mensuel ;
+- **absente ou vide** → un **repli hors ligne** prend la main. Ce n'est pas un
+  jeu de réponses factices : la passe typographique applique réellement les
+  règles françaises (espace fine insécable avant `; : ! ?`, guillemets « »,
+  capitales accentuées, apostrophe typographique), le maillage interne compare
+  réellement les mots-clés au fonds publié, la pré-qualification d'un dépôt
+  cherche réellement les tournures promotionnelles et les chiffres non sourcés.
+  Chaque proposition est étiquetée **« simulation »** de la ligne de journal
+  jusqu'à la carte, et la ligne dit pourquoi. Rien n'est jamais présenté comme
+  une réponse de modèle.
+
+Le passage de l'un à l'autre est la seule présence de la clé. Comme les agents
+s'exécutent dans Convex, la clé doit être posée sur le déploiement :
+
+```bash
+# renseigner ANTHROPIC_API_KEY dans .env.local, puis :
+bun run agents:cle
+```
+
+Un appel qui échoue (clé invalide, panne, quota) retombe sur le même repli : la
+chaîne éditoriale ne s'arrête pas, la ligne du journal porte l'erreur exacte, et
+la proposition affichée est étiquetée « simulation ».
+
+### Statistiques, sans traqueur tiers
+
+L'ancien site charge MonsterInsights et Google Analytics ; celui-ci ne charge
+rien. Une vue est comptée par `proxy.ts` **au passage de la requête** : côté
+serveur, sans cookie, sans identifiant, sans JavaScript, sans requête
+supplémentaire — donc sans un octet au budget du §5.4. Ce qu'un serveur ne peut
+pas savoir, la durée de lecture et le canal de partage, vient d'un composant
+client minuscule (`AudienceBeacon`) qui envoie deux nombres et rien d'autre.
+
+Aucune ligne enregistrée ne décrit un lecteur : trois compteurs par article et
+un seau par jour. La rédaction voit l'audience par article, par rubrique et par
+jour ; l'entreprise voit **ses** publications, le périmètre étant résolu dans
+Convex à partir de la session.
+
+---
+
 ## Design system
 
 La page [`/design-system`](http://localhost:3000/design-system) présente la
@@ -360,8 +540,18 @@ verrouillé : aucune origine tierce, aucun gestionnaire d'événement en ligne
 (`script-src-attr 'none'`), pas d'`eval` en production, `base-uri` et
 `form-action` fermés.
 
-**À revoir au lot 3** : les espaces privés sont rendus dynamiquement par
-nature ; ces routes-là pourront passer à un nonce sans coûter le cache.
+**Revu au lot 3, et laissé en l'état — à raison.** L'idée était de donner un
+nonce aux seules routes privées, rendues dynamiquement de toute façon. Deux
+obstacles, tous deux dans la façon dont Next.js construit la politique :
+l'en-tête est posé par `next.config.ts`, qui est statique et ne voit pas la
+requête ; et un nonce par requête suppose de générer la politique dans le
+proxy, donc pour **toutes** les routes — y compris les pages prérendues, dont
+le HTML est déjà écrit et porterait un nonce périmé. Une politique par groupe
+de routes demanderait de dupliquer la logique d'en-têtes entre
+`next.config.ts` et `proxy.ts`, pour un gain réel faible : les espaces privés
+ne rendent aucun contenu tiers et `script-src-attr 'none'` ferme déjà les
+gestionnaires en ligne. Le durcissement utile ici est plutôt `require-trusted-types-for`,
+à instruire avant la mise en ligne.
 
 Le lot 2 n'a **rien relâché** dans la politique : aucun domaine média n'a
 été ajouté, `img-src` reste `'self' data: blob:` et `font-src 'self'` —
@@ -372,3 +562,27 @@ S'y ajoutent des en-têtes de cache : un an d'`immutable` sur `/medias`,
 d'allers-retours vers l'Europe à chaque visite), `Vary: Cookie` sur
 `/medias` puisque `proxy.ts` y sert une variante selon le mode économie, et
 `must-revalidate` sur `/sw.js`.
+
+Le lot 3 n'a rien relâché non plus. Les seules origines ajoutées à
+`connect-src` sont les deux URL du déploiement Convex, déjà présentes depuis
+le lot 1 ; le code QR du second facteur est une `data:` URI, couverte par
+`img-src 'self' data: blob:`. Aucune balise `<script>` d'origine tierce n'est
+servie nulle part.
+
+S'y ajoutent, côté application :
+
+- mots de passe de **douze caractères** minimum, jamais huit ;
+- **limitation de débit en base** sur la connexion, le second facteur et la
+  réinitialisation — l'audit relevait l'absence totale de limitation ;
+- **anti-robot** sur l'inscription d'entreprise : champ piège et temps minimum
+  sur le formulaire, comme sur le contact public, plutôt qu'un CAPTCHA qui
+  taxerait chaque visiteur réel ;
+- **journal d'audit en ajout seul** : `convex/audit.ts` n'exporte aucune
+  mutation, donc aucun point d'entrée ne modifie ni ne supprime une ligne ;
+- **validation Zod ou validateur Convex sur toute entrée** : les arguments des
+  fonctions Convex sont typés et validés avant d'atteindre le gestionnaire.
+
+**Ce qui reste à durcir avant une mise en ligne réelle** : TLS 1.2 minimum (au
+niveau de l'hébergeur, pas du code), rotation des clés JWKS de Better Auth,
+sauvegardes chiffrées avec restauration testée, analyse de vulnérabilités des
+dépendances en intégration continue, et le retrait du jeu de démonstration.
