@@ -34,7 +34,7 @@ export function ContactForm() {
     return (
       <div
         role="status"
-        className="rounded-md border border-border border-l-2 border-l-success-token bg-card p-6"
+        className="rounded-md border border-l-2 border-border border-l-success-token bg-card p-6"
       >
         <p className="flex items-start gap-2 font-serif type-h3 text-foreground">
           <CheckCircle2
@@ -104,9 +104,14 @@ export function ContactForm() {
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor={`${id}-organisation`} className="type-small font-medium">
+        <Label
+          htmlFor={`${id}-organisation`}
+          className="type-small font-medium"
+        >
           Organisation{" "}
-          <span className="font-normal text-muted-foreground">(facultatif)</span>
+          <span className="font-normal text-muted-foreground">
+            (facultatif)
+          </span>
         </Label>
         <Input
           id={`${id}-organisation`}
@@ -147,7 +152,10 @@ export function ContactForm() {
           aria-describedby={`${id}-aide-message`}
           className="type-body"
         />
-        <p id={`${id}-aide-message`} className="type-small text-muted-foreground">
+        <p
+          id={`${id}-aide-message`}
+          className="type-small text-muted-foreground"
+        >
           Vingt caractères au minimum, quatre mille au maximum.
         </p>
       </div>
@@ -165,10 +173,13 @@ export function ContactForm() {
             htmlFor={`${id}-consentement`}
             className="type-small font-medium"
           >
-            J&apos;accepte que ces informations soient utilisées pour traiter
-            ma demande. <span className="text-destructive">*</span>
+            J&apos;accepte que ces informations soient utilisées pour traiter ma
+            demande. <span className="text-destructive">*</span>
           </Label>
-          <p id={`${id}-finalite`} className="mt-1 type-small text-muted-foreground">
+          <p
+            id={`${id}-finalite`}
+            className="mt-1 type-small text-muted-foreground"
+          >
             Finalité : répondre à votre message. Destinataire : la rédaction du
             Corporate, elle seule. Conservation : douze mois. Vous pouvez
             demander l&apos;accès, la rectification ou la suppression de vos
@@ -183,7 +194,11 @@ export function ContactForm() {
         </p>
       )}
 
-      <ActionButton type="submit" disabled={pending} className="justify-self-start">
+      <ActionButton
+        type="submit"
+        disabled={pending}
+        className="justify-self-start"
+      >
         <Send aria-hidden="true" className="size-4" />
         {pending ? "Envoi en cours…" : "Envoyer le message"}
       </ActionButton>

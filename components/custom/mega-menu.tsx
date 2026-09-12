@@ -100,6 +100,7 @@ export function MegaMenu({
               <li key={section.slug}>
                 <Link
                   href={sectionHref(section.slug)}
+                  prefetch={false}
                   className="flex items-center rounded-xs px-2 type-small font-medium transition-colors touch-target hover:bg-surface-muted"
                   onPointerEnter={() => {
                     clearTimer();
@@ -163,6 +164,7 @@ export function MegaMenu({
                   <li>
                     <Link
                       href={sectionHref(section.slug)}
+                      prefetch={false}
                       className="flex min-h-[44px] items-center rounded-xs px-2 type-small font-semibold text-accent hover:bg-surface-muted"
                       onClick={() => setOpenSlug(null)}
                     >
@@ -173,6 +175,7 @@ export function MegaMenu({
                     <li key={child.slug}>
                       <Link
                         href={subSectionHref(section.slug, child.slug)}
+                        prefetch={false}
                         className="flex min-h-[44px] items-center rounded-xs px-2 type-small text-foreground hover:bg-surface-muted"
                         onClick={() => setOpenSlug(null)}
                       >

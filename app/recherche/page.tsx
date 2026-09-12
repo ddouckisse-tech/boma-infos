@@ -30,10 +30,10 @@ export default async function SearchPage({
   const raw = params.q;
   const term = (Array.isArray(raw) ? raw[0] : (raw ?? "")).trim().slice(0, 120);
 
-  const results = term.length >= 2 ? await searchArticles(term, undefined, 30) : [];
-  const suggestions = term.length >= 2 && results.length === 0
-    ? await getLatest(3)
-    : [];
+  const results =
+    term.length >= 2 ? await searchArticles(term, undefined, 30) : [];
+  const suggestions =
+    term.length >= 2 && results.length === 0 ? await getLatest(3) : [];
 
   return (
     <>
@@ -59,8 +59,8 @@ export default async function SearchPage({
             description={
               <>
                 Essayez un terme plus court, ou parcourez les rubriques depuis
-                le menu. Rien d&apos;autre ne vous est présenté à la place de
-                ce que vous cherchiez.
+                le menu. Rien d&apos;autre ne vous est présenté à la place de ce
+                que vous cherchiez.
               </>
             }
             action={
@@ -76,7 +76,11 @@ export default async function SearchPage({
           <ul className="divide-y divide-border border-y border-border">
             {results.map((article) => (
               <li key={article.slug}>
-                <ArticleCard article={article} variant="list" headingLevel={2} />
+                <ArticleCard
+                  article={article}
+                  variant="list"
+                  headingLevel={2}
+                />
               </li>
             ))}
           </ul>

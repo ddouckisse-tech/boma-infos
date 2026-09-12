@@ -8,10 +8,7 @@ import { Container } from "@/components/custom/container";
 import { EmptyState } from "@/components/custom/empty-state";
 import { Section } from "@/components/custom/section";
 import { BreadcrumbStructuredData } from "@/components/custom/structured-data";
-import {
-  getAuthor,
-  getAuthors,
-} from "@/lib/content/server";
+import { getAuthor, getAuthors } from "@/lib/content/server";
 import { absoluteUrl } from "@/lib/site";
 
 // Littéral et non `REVALIDATE_SECONDS` : Next analyse statiquement les
@@ -94,7 +91,11 @@ export default async function AuthorPage({
       <header className="border-b border-border py-8 md:py-10">
         <Container>
           <nav aria-label="Fil d'Ariane" className="mb-4 type-small">
-            <Link href="/" className="text-accent underline-offset-4 hover:underline">
+            <Link
+              href="/"
+              prefetch={false}
+              className="inline-flex min-h-11 items-center text-accent underline-offset-4 hover:underline"
+            >
               Accueil
             </Link>
             <span aria-hidden="true" className="text-muted-foreground">
@@ -131,6 +132,7 @@ export default async function AuthorPage({
                     <li key={link.url}>
                       <Link
                         href={link.url}
+                        prefetch={false}
                         className="inline-flex items-center gap-2 rounded-md border border-border px-3 type-small transition-colors touch-target hover:border-border-strong"
                       >
                         <Mail aria-hidden="true" className="size-4" />

@@ -37,7 +37,8 @@ export default async function UnsubscribePage({
     : { status: "unknown" as const };
 
   const ok =
-    result.status === "unsubscribed" || result.status === "already_unsubscribed";
+    result.status === "unsubscribed" ||
+    result.status === "already_unsubscribed";
 
   return (
     <>
@@ -78,12 +79,14 @@ export default async function UnsubscribePage({
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link
                   href="/"
+                  prefetch={false}
                   className="inline-flex items-center rounded-md bg-primary px-4 type-small font-semibold text-primary-foreground transition-colors touch-target hover:bg-primary/90"
                 >
                   Retour à l&apos;accueil
                 </Link>
                 <Link
                   href="/contacts"
+                  prefetch={false}
                   className="inline-flex items-center rounded-md border border-border px-4 type-small font-semibold transition-colors touch-target hover:bg-surface-muted"
                 >
                   Écrire à la rédaction

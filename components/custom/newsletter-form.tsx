@@ -6,10 +6,7 @@ import { CheckCircle2, Send } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ActionButton } from "@/components/custom/action-button";
-import {
-  subscribeToNewsletter,
-  type NewsletterState,
-} from "@/lib/actions";
+import { subscribeToNewsletter, type NewsletterState } from "@/lib/actions";
 import { antiRobot } from "@/lib/anti-robot";
 import { cn } from "@/lib/utils";
 
@@ -101,10 +98,13 @@ export function NewsletterForm({
         />
       </div>
 
+      {/* `flex-1` sur le champ ne vaut qu'en ligne : dans un conteneur en
+          colonne, il s'applique à la hauteur et écrase les 44 px de la
+          cible tactile (§3.5). D'où la grille en dessous de `sm`. */}
       <div
         className={cn(
-          "flex gap-2",
-          variant === "inline" ? "flex-wrap" : "flex-col sm:flex-row"
+          "gap-2",
+          variant === "inline" ? "flex flex-wrap" : "grid sm:flex"
         )}
       >
         <Input
@@ -117,7 +117,7 @@ export function NewsletterForm({
           placeholder="vous@exemple.ga"
           aria-invalid={hasError || undefined}
           aria-describedby={hasError ? errorId : `${id}-aide`}
-          className="h-11 min-w-0 flex-1 type-body"
+          className="h-11 w-full min-w-0 type-body sm:flex-1"
         />
         <ActionButton type="submit" disabled={pending}>
           <Send aria-hidden="true" className="size-4" />

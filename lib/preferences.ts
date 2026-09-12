@@ -16,6 +16,19 @@ export type ResolvedTheme = "light" | "dark";
 export const THEME_STORAGE_KEY = "lecorporate.theme";
 export const DATA_SAVER_STORAGE_KEY = "lecorporate.data-saver";
 
+/**
+ * Le mode économie est aussi écrit dans un cookie : c'est `proxy.ts` qui le
+ * lit, pour réécrire les requêtes d'images vers la variante 480 px
+ * (CDC §2.2). Le script bloquant ci-dessous le remet à chaque visite, de
+ * sorte qu'un cookie expiré ou effacé se répare tout seul.
+ */
+export const DATA_SAVER_COOKIE = "lc-eco";
+
+export const dataSaverCookie = (enabled: boolean): string =>
+  `${DATA_SAVER_COOKIE}=${enabled ? "1" : "0"}; Path=/; Max-Age=${
+    enabled ? 31_536_000 : 0
+  }; SameSite=Lax`;
+
 export const THEME_CHOICES: readonly ThemeChoice[] = [
   "light",
   "dark",
@@ -49,4 +62,5 @@ d.dataset.theme=r;
 d.style.colorScheme=r;
 var s=localStorage.getItem(${JSON.stringify(DATA_SAVER_STORAGE_KEY)})==="1";
 d.dataset.dataSaver=s?"on":"off";
+document.cookie=${JSON.stringify(DATA_SAVER_COOKIE)}+"="+(s?"1":"0")+"; Path=/; Max-Age="+(s?31536000:0)+"; SameSite=Lax";
 }catch(e){}})();`;

@@ -55,17 +55,19 @@ export default function NewsletterPage() {
           </div>
 
           <div className="article-body mt-10 type-body">
-            <h2 className="font-serif type-h2">Comment fonctionne l&apos;inscription</h2>
+            <h2 className="font-serif type-h2">
+              Comment fonctionne l&apos;inscription
+            </h2>
             <ol className="list-decimal space-y-2 ps-6">
               <li>
-                Vous saisissez votre adresse. Rien n&apos;est encore
-                enregistré comme un abonnement.
+                Vous saisissez votre adresse. Rien n&apos;est encore enregistré
+                comme un abonnement.
               </li>
               <li>
                 Vous recevez un message de confirmation. Tant que vous ne
-                cliquez pas, vous ne recevez aucune lettre&nbsp;: c&apos;est
-                ce qu&apos;on appelle le double consentement, et cela protège
-                les personnes dont l&apos;adresse serait saisie par un tiers.
+                cliquez pas, vous ne recevez aucune lettre&nbsp;: c&apos;est ce
+                qu&apos;on appelle le double consentement, et cela protège les
+                personnes dont l&apos;adresse serait saisie par un tiers.
               </li>
               <li>
                 Vous cliquez, l&apos;abonnement devient actif. Chaque envoi
@@ -73,9 +75,9 @@ export default function NewsletterPage() {
               </li>
             </ol>
             <p>
-              Vos données&nbsp;: seule votre adresse électronique est
-              conservée, le temps de votre abonnement. Elle sert uniquement à
-              vous envoyer cette lettre. Voir la{" "}
+              Vos données&nbsp;: seule votre adresse électronique est conservée,
+              le temps de votre abonnement. Elle sert uniquement à vous envoyer
+              cette lettre. Voir la{" "}
               <a href="/confidentialite">politique de confidentialité</a>.
             </p>
           </div>

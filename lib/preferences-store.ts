@@ -1,6 +1,7 @@
 import {
   DATA_SAVER_STORAGE_KEY,
   THEME_STORAGE_KEY,
+  dataSaverCookie,
   isThemeChoice,
   type ResolvedTheme,
   type ThemeChoice,
@@ -109,5 +110,15 @@ export const setDataSaver = (enabled: boolean) => {
   document.documentElement.dataset.dataSaver = enabled ? "on" : "off";
   snapshot = { ...snapshot, dataSaver: enabled, ready: true };
   persist(DATA_SAVER_STORAGE_KEY, enabled ? "1" : "0");
+  // Le cookie est ce que lit `proxy.ts` pour réécrire les images : sans lui
+  // la bascule n'aurait aucun effet sur les octets réellement téléchargés.
+  document.cookie = dataSaverCookie(enabled);
+  // Et le service worker garde en cache les photographies de l'ancien mode :
+  // on lui demande de les oublier, sinon la bascule reste sans effet visible.
+  try {
+    navigator.serviceWorker?.controller?.postMessage({ type: "purge-medias" });
+  } catch {
+    // Pas de service worker (développement, navigation privée) : rien à faire.
+  }
   emit();
 };

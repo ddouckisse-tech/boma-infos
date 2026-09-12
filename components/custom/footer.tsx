@@ -113,6 +113,7 @@ export function Footer({ sections }: { sections: readonly Section[] }) {
                 <li key={section.slug}>
                   <Link
                     href={sectionHref(section.slug)}
+                    prefetch={false}
                     className="flex min-h-11 items-center type-small text-muted-foreground hover:text-foreground"
                   >
                     {section.label}
@@ -135,6 +136,7 @@ export function Footer({ sections }: { sections: readonly Section[] }) {
                   <li key={page.href}>
                     <Link
                       href={page.href}
+                      prefetch={false}
                       className="flex min-h-11 items-center type-small text-muted-foreground hover:text-foreground"
                     >
                       {page.label}

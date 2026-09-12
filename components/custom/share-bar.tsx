@@ -35,7 +35,9 @@ export function ShareBar({
   const [canShareNatively, setCanShareNatively] = useState(false);
 
   useEffect(() => {
-    setCanShareNatively(typeof navigator !== "undefined" && "share" in navigator);
+    setCanShareNatively(
+      typeof navigator !== "undefined" && "share" in navigator
+    );
   }, []);
 
   const encodedUrl = encodeURIComponent(url);

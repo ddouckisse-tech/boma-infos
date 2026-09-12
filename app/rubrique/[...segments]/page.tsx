@@ -197,7 +197,8 @@ export default async function SectionPage({
                 <li key={item.href} className="flex items-center gap-1">
                   <Link
                     href={item.href}
-                    className="text-accent underline-offset-4 hover:underline"
+                    prefetch={false}
+                    className="inline-flex min-h-11 items-center text-accent underline-offset-4 hover:underline"
                   >
                     {item.name}
                   </Link>
@@ -222,6 +223,7 @@ export default async function SectionPage({
                 <li>
                   <Link
                     href={buildHref(section.slug, undefined, order, 1)}
+                    prefetch={false}
                     aria-current={!child ? "page" : undefined}
                     className={cn(
                       filterClass,
@@ -240,7 +242,10 @@ export default async function SectionPage({
                   <li key={item.slug}>
                     <Link
                       href={buildHref(section.slug, item.slug, order, 1)}
-                      aria-current={child?.slug === item.slug ? "page" : undefined}
+                      prefetch={false}
+                      aria-current={
+                        child?.slug === item.slug ? "page" : undefined
+                      }
                       className={cn(
                         filterClass,
                         child?.slug === item.slug
@@ -263,6 +268,7 @@ export default async function SectionPage({
             <span className="type-small text-muted-foreground">Trier</span>
             <Link
               href={buildHref(section.slug, child?.slug, "recent", 1)}
+              prefetch={false}
               aria-current={order === "recent" ? "true" : undefined}
               className={cn(
                 filterClass,
@@ -276,6 +282,7 @@ export default async function SectionPage({
             </Link>
             <Link
               href={buildHref(section.slug, child?.slug, "ancien", 1)}
+              prefetch={false}
               aria-current={order === "ancien" ? "true" : undefined}
               className={cn(
                 filterClass,
@@ -305,6 +312,7 @@ export default async function SectionPage({
             action={
               <Link
                 href="/"
+                prefetch={false}
                 className="inline-flex items-center rounded-md bg-primary px-4 type-small font-semibold text-primary-foreground transition-colors touch-target hover:bg-primary/90"
               >
                 Revenir à l&apos;accueil

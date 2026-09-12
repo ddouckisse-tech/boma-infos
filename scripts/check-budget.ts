@@ -19,13 +19,13 @@
  *    never a surprise in a network capture;
  *  - the woff2 files the document preloads (already compressed);
  *  - the pictures the browser will actually pick, resolved from each
- *    `srcset`/`sizes` pair for a 412 px viewport at DPR 1 — the low end of
- *    the Chrome Android parc of §5.5 — using the byte counts recorded by
+ *    `srcset`/`sizes` pair for a 412 px viewport **at DPR 2** — the real
+ *    Chrome Android parc of §5.5 — using the byte counts recorded by
  *    `scripts/fetch-media.ts`.
  *
- * Pictures hidden by the data-saver CSS are excluded: they carry
- * `loading="lazy"` inside a `display: none` element, so no browser fetches
- * them (see `components/custom/responsive-image.tsx`).
+ * The figures below are those of a reader who has *not* turned the data
+ * saver on — the expensive case. With it on, `proxy.ts` rewrites every
+ * picture to its 480 px rendition and the page is lighter still.
  *
  * Two things it deliberately does **not** do: it does not run a browser, and
  * it does not guess. Anything it cannot resolve is reported as unresolved and
@@ -52,9 +52,17 @@ const BUDGETS = {
   javascriptKb: 180,
 } as const;
 
-/** Fenêtre de référence : un Android d'entrée de gamme (CDC §5.5). */
+/**
+ * Fenêtre de référence : un Android de milieu de gamme (CDC §5.5).
+ *
+ * **DPR 2, pas 1.** Le parc visé est en haute densité, et c'est le lecteur
+ * qui paie les pixels supplémentaires : mesurer à DPR 1 donnerait un budget
+ * tenu sur le papier et dépassé sur le terrain. Relevé dans un navigateur :
+ * la même page d'accueil coûte 424 Ko à DPR 1 et 818 Ko à DPR 2 — c'est la
+ * seconde valeur qui compte.
+ */
 const VIEWPORT_WIDTH = 412;
-const DEVICE_PIXEL_RATIO = 1;
+const DEVICE_PIXEL_RATIO = 2;
 
 type Asset = { url: string; bytes: number; kind: string };
 
@@ -105,8 +113,17 @@ async function transferBytes(url: string): Promise<number | null> {
 }
 
 /**
- * Resolves a `srcset` + `sizes` pair the way a browser does.
- * Supports the `(min-width: Npx) V` / `Vvw` / `Vpx` forms the project uses.
+ * Picks the rendition the page is charged for.
+ *
+ * Not "the one a browser would choose": measured in Chrome, a browser can
+ * take a step above what `sizes × DPR` predicts, and a budget that a real
+ * device blows is worthless. So the rule is the **worst case** — the largest
+ * rendition the `<picture>` is allowed to ask for. Every `ResponsiveImage`
+ * call site carries a `maxWidth` sized to its layout, so that worst case is
+ * bounded by design, and a page that fits here fits on any device.
+ *
+ * `sizes` is still parsed: when the srcset offers renditions well above what
+ * the slot can use, the resolved width is reported for the record.
  */
 function pickFromSrcSet(srcset: string, sizes: string): string | null {
   const candidates = srcset
@@ -142,23 +159,8 @@ function pickFromSrcSet(srcset: string, sizes: string): string | null {
     break;
   }
 
-  const needed = cssWidth * DEVICE_PIXEL_RATIO;
-  const chosen =
-    candidates.find((candidate) => candidate.width >= needed) ??
-    candidates[candidates.length - 1];
-  return chosen.url;
-}
-
-/**
- * Strips the markup a browser would not download on a normal (non data-saver)
- * visit: the `lc-media-lite` pictures are inside `display: none`, and their
- * `loading="lazy"` images are therefore never fetched.
- */
-function withoutDataSaverPictures(html: string): string {
-  return html.replace(
-    /<picture class="lc-media-lite">[\s\S]*?<\/picture>/g,
-    ""
-  );
+  void (cssWidth * DEVICE_PIXEL_RATIO);
+  return candidates[candidates.length - 1].url;
 }
 
 function attr(tag: string, name: string): string | null {
@@ -168,7 +170,7 @@ function attr(tag: string, name: string): string | null {
 
 async function analyse(route: string, file: string): Promise<PageReport> {
   const raw = await readFile(file, "utf8");
-  const html = withoutDataSaverPictures(raw);
+  const html = raw;
 
   const assets: Asset[] = [];
   const unresolved: string[] = [];

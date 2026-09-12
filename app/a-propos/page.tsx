@@ -55,9 +55,8 @@ export default async function AboutPage() {
             d&apos;entreprise, filières extractives, logistique et
             infrastructures, réglementation, financement, formation. Nous
             écrivons pour des lecteurs qui décident — dirigeants, cadres,
-            institutions, bailleurs et partenaires régionaux — et qui ont
-            besoin d&apos;une information vérifiable plutôt que d&apos;un
-            commentaire.
+            institutions, bailleurs et partenaires régionaux — et qui ont besoin
+            d&apos;une information vérifiable plutôt que d&apos;un commentaire.
           </p>
           <p>
             Huit rubriques structurent le journal. Elles sont consultables
@@ -78,9 +77,9 @@ export default async function AboutPage() {
             </li>
             <li>
               « L&apos;essentiel en trois points » ouvre chaque article&nbsp;:
-              le lecteur sait en trente secondes ce qu&apos;il va apprendre,
-              et décide en connaissance de cause s&apos;il dépense la suite de
-              sa data.
+              le lecteur sait en trente secondes ce qu&apos;il va apprendre, et
+              décide en connaissance de cause s&apos;il dépense la suite de sa
+              data.
             </li>
             <li>
               Une correction est signalée dans l&apos;article, datée, et non
@@ -100,13 +99,13 @@ export default async function AboutPage() {
 
           <h2 className="font-serif type-h2">Le poids d&apos;une page</h2>
           <p>
-            Au Gabon, le mégaoctet se décompte. Nous nous imposons un plafond
-            de 600&nbsp;kilo-octets sur la page d&apos;accueil et de
+            Au Gabon, le mégaoctet se décompte. Nous nous imposons un plafond de
+            600&nbsp;kilo-octets sur la page d&apos;accueil et de
             400&nbsp;kilo-octets sur un article&nbsp;; une version du site qui
             dépasse ces plafonds n&apos;est pas mise en ligne. Le mode
-            «&nbsp;économie de données&nbsp;», activable en bas de page,
-            abaisse encore la définition des images et ne télécharge aucune
-            vidéo sans votre accord.
+            «&nbsp;économie de données&nbsp;», activable en bas de page, abaisse
+            encore la définition des images et ne télécharge aucune vidéo sans
+            votre accord.
           </p>
         </div>
       </Section>
@@ -121,7 +120,7 @@ export default async function AboutPage() {
                   <div className="min-w-0">
                     <h3 className="font-serif type-h3">
                       <Link
-                        href={`/auteur/${author.slug}`}
+                        href={`/auteur/${author.slug} prefetch={false}`}
                         className="underline-offset-4 hover:underline"
                       >
                         {author.name}
@@ -183,6 +182,7 @@ export default async function AboutPage() {
             </dl>
             <Link
               href="/contacts"
+              prefetch={false}
               className="mt-5 inline-flex items-center gap-2 rounded-md bg-primary px-4 type-small font-semibold text-primary-foreground transition-colors touch-target hover:bg-primary/90"
             >
               Ouvrir le formulaire de contact

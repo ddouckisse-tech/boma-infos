@@ -68,6 +68,7 @@ export default function OfflinePage() {
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link
                   href="/"
+                  prefetch={false}
                   className="inline-flex items-center gap-2 rounded-md bg-primary px-4 type-small font-semibold text-primary-foreground transition-colors touch-target hover:bg-primary/90"
                 >
                   <RefreshCw aria-hidden="true" className="size-4" />

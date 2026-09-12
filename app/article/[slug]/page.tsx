@@ -3,7 +3,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArticleBody } from "@/components/custom/article-body";
 import { ArticleCard } from "@/components/custom/article-card";
-import { AuthorByline, AuthorMonogram } from "@/components/custom/author-byline";
+import {
+  AuthorByline,
+  AuthorMonogram,
+} from "@/components/custom/author-byline";
 import { CategoryBadge } from "@/components/custom/category-badge";
 import { Container } from "@/components/custom/container";
 import { KeyPoints } from "@/components/custom/key-points";
@@ -64,7 +67,9 @@ export async function generateMetadata({
     title,
     description: article.seo.description,
     keywords: [...article.seo.keywords],
-    authors: [{ name: article.authorName, url: `/auteur/${article.authorSlug}` }],
+    authors: [
+      { name: article.authorName, url: `/auteur/${article.authorSlug}` },
+    ],
     alternates: { canonical: path },
     openGraph: {
       type: "article",
@@ -165,7 +170,8 @@ export default async function ArticlePage({
                   <li key={item.href} className="flex items-center gap-1">
                     <Link
                       href={item.href}
-                      className="text-accent underline-offset-4 hover:underline"
+                      prefetch={false}
+                      className="inline-flex min-h-11 items-center text-accent underline-offset-4 hover:underline"
                     >
                       {item.name}
                     </Link>
@@ -230,6 +236,7 @@ export default async function ArticlePage({
               <ResponsiveImage
                 media={hero}
                 sizes={SIZES.articleHero}
+                maxWidth={960}
                 priority
                 wrapperClassName="aspect-[16/9] rounded-md"
               />
@@ -248,7 +255,7 @@ export default async function ArticlePage({
 
         <Container className="py-8 md:py-10">
           <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-12">
-            <div className="min-w-0 max-w-reading">
+            <div className="max-w-reading min-w-0">
               {article.keyPoints.length > 0 && (
                 <KeyPoints points={article.keyPoints} className="mb-8" />
               )}
@@ -270,7 +277,7 @@ export default async function ArticlePage({
                     {article.tags.map((tag) => (
                       <li key={tag}>
                         <Link
-                          href={`/recherche?q=${encodeURIComponent(tag)}`}
+                          href={`/recherche?q=${encodeURIComponent(tag)} prefetch={false}`}
                           className="inline-flex items-center rounded-xs border border-border px-3 type-small text-muted-foreground transition-colors touch-target hover:border-border-strong hover:text-foreground"
                         >
                           {tag}
@@ -295,7 +302,7 @@ export default async function ArticlePage({
                 <div className="min-w-0">
                   <h2 className="font-serif type-h3">
                     <Link
-                      href={`/auteur/${article.authorSlug}`}
+                      href={`/auteur/${article.authorSlug} prefetch={false}`}
                       className="underline-offset-4 hover:underline"
                     >
                       {article.authorName}
@@ -309,28 +316,10 @@ export default async function ArticlePage({
               </aside>
             </div>
 
+            {/* Sommaire seulement : les articles liés sont en fin de page,
+                les répéter ici les faisait apparaître deux fois. */}
             <aside className="min-w-0 lg:sticky lg:top-32 lg:self-start">
               <TableOfContents blocks={article.body} />
-              {related.length > 0 && (
-                <nav
-                  aria-labelledby="a-lire-aussi"
-                  className="mt-6 rounded-md border border-border p-5"
-                >
-                  <h2
-                    id="a-lire-aussi"
-                    className="font-serif type-small font-semibold tracking-wide text-foreground uppercase"
-                  >
-                    À lire aussi
-                  </h2>
-                  <ul className="mt-2 divide-y divide-border">
-                    {related.map((item) => (
-                      <li key={item.slug}>
-                        <ArticleCard article={item} variant="compact" />
-                      </li>
-                    ))}
-                  </ul>
-                </nav>
-              )}
             </aside>
           </div>
         </Container>
@@ -342,10 +331,18 @@ export default async function ArticlePage({
           title="Dans la même rubrique"
           description="Trois articles choisis pour leur proximité de sujet."
         >
-          <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {/* Variante en ligne : la vignette de 160 px coûte 6 Ko contre 25
+              pour une carte pleine largeur, et trois cartes en fin
+              d'article ne méritent pas un dixième du budget de la page. */}
+          <ul className="grid gap-x-8 sm:grid-cols-2 lg:grid-cols-3">
             {related.map((item) => (
               <li key={item.slug} className="min-w-0">
-                <ArticleCard article={item} headingLevel={3} />
+                <ArticleCard
+                  article={item}
+                  variant="list"
+                  headingLevel={3}
+                  className="h-full"
+                />
               </li>
             ))}
           </ul>

@@ -16,7 +16,13 @@ import type { Block } from "@/convex/model/content";
  * contents can link to them.
  */
 
-function PullQuote({ text, attribution }: { text: string; attribution?: string }) {
+function PullQuote({
+  text,
+  attribution,
+}: {
+  text: string;
+  attribution?: string;
+}) {
   return (
     <figure className="my-8 border-l-2 border-brand-magenta pl-5 sm:pl-6">
       <Quote
@@ -57,7 +63,9 @@ function StatBlock({
       </p>
       <p className="mt-2 type-body text-foreground">{label}</p>
       {source && (
-        <p className="mt-1 type-small text-muted-foreground">Source : {source}</p>
+        <p className="mt-1 type-small text-muted-foreground">
+          Source : {source}
+        </p>
       )}
     </div>
   );
@@ -73,7 +81,7 @@ function Figure({ mediaKey, caption }: { mediaKey: string; caption?: string }) {
       <ResponsiveImage
         media={media}
         sizes={SIZES.inline}
-        maxWidth={960}
+        maxWidth={768}
         wrapperClassName="aspect-[16/9] rounded-md"
       />
       {(legend || media.credit) && (

@@ -37,6 +37,13 @@ const nextConfig: NextConfig = {
             key: "Cache-Control",
             value: "public, max-age=31536000, immutable",
           },
+          {
+            // `proxy.ts` sert la variante 480 px quand le cookie du mode
+            // économie est posé : sans `Vary`, un cache partagé servirait
+            // une image dégradée à un lecteur qui ne l'a pas demandée.
+            key: "Vary",
+            value: "Cookie",
+          },
         ],
       },
       {

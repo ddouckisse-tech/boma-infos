@@ -61,104 +61,106 @@ export default async function OpengraphImage({
   // jamais servie au navigateur : ces deux fichiers ne coûtent rien au
   // budget du §5.4, ils ne servent qu'au rendu de la carte à la compilation.
   const [semibold, bold] = await Promise.all([
-    readFile(path.join(process.cwd(), "assets", "fonts", "SourceSerif4-600.ttf")),
-    readFile(path.join(process.cwd(), "assets", "fonts", "SourceSerif4-700.ttf")),
+    readFile(
+      path.join(process.cwd(), "assets", "fonts", "SourceSerif4-600.ttf")
+    ),
+    readFile(
+      path.join(process.cwd(), "assets", "fonts", "SourceSerif4-700.ttf")
+    ),
   ]);
 
   return new ImageResponse(
-    (
-      <div
-        style={{
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          backgroundColor: NAVY,
-          position: "relative",
-          fontFamily: "Source Serif 4",
-        }}
-      >
-        {background && (
-          // eslint-disable-next-line @next/next/no-img-element -- satori ne connaît que <img>
-          <img
-            src={background}
-            alt=""
-            width={1200}
-            height={630}
-            style={{
-              position: "absolute",
-              inset: 0,
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              opacity: 0.28,
-            }}
-          />
-        )}
-
-        <div
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        backgroundColor: NAVY,
+        position: "relative",
+        fontFamily: "Source Serif 4",
+      }}
+    >
+      {background && (
+        // eslint-disable-next-line @next/next/no-img-element -- satori ne connaît que <img>
+        <img
+          src={background}
+          alt=""
+          width={1200}
+          height={630}
           style={{
             position: "absolute",
             inset: 0,
-            background:
-              "linear-gradient(90deg, rgba(0,32,96,0.97) 0%, rgba(0,32,96,0.88) 55%, rgba(0,32,96,0.62) 100%)",
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            opacity: 0.28,
           }}
         />
+      )}
+
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background:
+            "linear-gradient(90deg, rgba(0,32,96,0.97) 0%, rgba(0,32,96,0.88) 55%, rgba(0,32,96,0.62) 100%)",
+        }}
+      />
+
+      <div
+        style={{
+          position: "relative",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+          height: "100%",
+          padding: 64,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <div style={{ width: 72, height: 6, backgroundColor: MAGENTA }} />
+          <div
+            style={{
+              color: "#FFFFFF",
+              fontSize: 28,
+              fontWeight: 700,
+              letterSpacing: -0.5,
+            }}
+          >
+            {SITE.name}
+          </div>
+          <div style={{ color: "#A2BFF1", fontSize: 24 }}>{kicker}</div>
+        </div>
 
         <div
           style={{
-            position: "relative",
             display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-            height: "100%",
-            padding: 64,
+            color: "#FFFFFF",
+            fontSize: headline.length > 90 ? 52 : 64,
+            fontWeight: 700,
+            lineHeight: 1.14,
+            letterSpacing: -1.5,
+            maxWidth: 1000,
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <div style={{ width: 72, height: 6, backgroundColor: MAGENTA }} />
-            <div
-              style={{
-                color: "#FFFFFF",
-                fontSize: 28,
-                fontWeight: 700,
-                letterSpacing: -0.5,
-              }}
-            >
-              {SITE.name}
-            </div>
-            <div style={{ color: "#A2BFF1", fontSize: 24 }}>{kicker}</div>
-          </div>
+          {headline.length > 150 ? `${headline.slice(0, 147)}…` : headline}
+        </div>
 
-          <div
-            style={{
-              display: "flex",
-              color: "#FFFFFF",
-              fontSize: headline.length > 90 ? 52 : 64,
-              fontWeight: 700,
-              lineHeight: 1.14,
-              letterSpacing: -1.5,
-              maxWidth: 1000,
-            }}
-          >
-            {headline.length > 150 ? `${headline.slice(0, 147)}…` : headline}
-          </div>
-
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              color: "#C5D8F9",
-              fontSize: 26,
-            }}
-          >
-            <div style={{ display: "flex" }}>{byline}</div>
-            <div style={{ display: "flex" }}>le-corporate.com</div>
-          </div>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            color: "#C5D8F9",
+            fontSize: 26,
+          }}
+        >
+          <div style={{ display: "flex" }}>{byline}</div>
+          <div style={{ display: "flex" }}>le-corporate.com</div>
         </div>
       </div>
-    ),
+    </div>,
     {
       ...size,
       headers: {

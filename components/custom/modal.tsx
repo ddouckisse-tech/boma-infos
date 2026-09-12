@@ -35,22 +35,31 @@ export function Modal({
   children: React.ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement | null>(null);
+  const invoker = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
 
     if (open) {
+      // Mémorise le contrôle qui a ouvert la boîte, pour y ramener le focus
+      // à la fermeture (WCAG 2.4.3). `<dialog>` le fait quand il ferme
+      // lui-même, pas quand on le ferme par programme.
+      invoker.current = document.activeElement as HTMLElement | null;
       if (typeof dialog.showModal === "function") {
         if (!dialog.open) dialog.showModal();
       } else {
         dialog.setAttribute("open", "");
       }
-    } else if (dialog.open) {
-      dialog.close();
-    } else {
-      dialog.removeAttribute("open");
+      return;
     }
+
+    if (dialog.open) dialog.close();
+    else dialog.removeAttribute("open");
+
+    const previous = invoker.current;
+    invoker.current = null;
+    if (previous && document.contains(previous)) previous.focus();
   }, [open]);
 
   // `cancel` couvre la touche Échap, `close` la fermeture par le navigateur.
@@ -65,6 +74,16 @@ export function Modal({
       onClose={handleClose}
       onCancel={(event) => {
         event.preventDefault();
+        onClose();
+      }}
+      onKeyDown={(event) => {
+        // Le `cancel` natif ne suffit pas. Un `<input type="search">`
+        // consomme Échap pour vider son contenu, et le navigateur n'émet
+        // alors jamais `cancel` — la boîte resterait ouverte, mesuré dans
+        // Chrome. Sans `showModal()` (Safari iOS 15.0–15.3) il n'y a pas de
+        // `cancel` du tout. On ferme donc explicitement.
+        if (event.key !== "Escape") return;
+        event.stopPropagation();
         onClose();
       }}
       onClick={(event) => {

@@ -33,28 +33,24 @@ export function FeaturedHero({
   return (
     <article
       className={cn(
-        "grid gap-6 lg:grid-cols-[1.15fr_1fr] lg:items-center lg:gap-10",
+        "relative grid gap-6 lg:grid-cols-[1.15fr_1fr] lg:items-center lg:gap-10",
         className
       )}
     >
-      <Link
-        href={`/article/${article.slug}`}
-        tabIndex={-1}
-        aria-hidden="true"
-        className="block"
-      >
+      <div>
         {media ? (
           <ResponsiveImage
             media={media}
             alt=""
             sizes={SIZES.hero}
+            maxWidth={960}
             priority
             wrapperClassName="aspect-[16/9] rounded-md"
           />
         ) : (
           <span className="block aspect-[16/9] rounded-md bg-surface-muted" />
         )}
-      </Link>
+      </div>
 
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
@@ -76,7 +72,8 @@ export function FeaturedHero({
         <h2 className="mt-4 font-serif type-display text-balance">
           <Link
             href={`/article/${article.slug}`}
-            className="underline-offset-[6px] hover:underline"
+            prefetch={false}
+            className="underline-offset-[6px] after:absolute after:inset-0 hover:underline"
           >
             {article.title}
           </Link>
@@ -86,11 +83,12 @@ export function FeaturedHero({
           {article.dek}
         </p>
 
-        <p className="mt-4 type-small text-muted-foreground">
+        <p className="relative z-10 mt-4 type-small text-muted-foreground">
           Par{" "}
           <Link
             href={`/auteur/${article.authorSlug}`}
-            className="font-semibold text-foreground underline-offset-4 hover:underline"
+            prefetch={false}
+            className="inline-flex min-h-11 items-center font-semibold text-foreground underline-offset-4 hover:underline"
           >
             {article.authorName}
           </Link>
@@ -104,7 +102,8 @@ export function FeaturedHero({
 
         <Link
           href={`/article/${article.slug}`}
-          className="mt-6 inline-flex items-center gap-2 rounded-md bg-primary px-4 type-small font-semibold text-primary-foreground transition-colors touch-target hover:bg-primary/90"
+          prefetch={false}
+          className="relative z-10 mt-6 inline-flex items-center gap-2 rounded-md bg-primary px-4 type-small font-semibold text-primary-foreground transition-colors touch-target hover:bg-primary/90"
         >
           Lire l&apos;article
           <ArrowRight aria-hidden="true" className="size-4" />

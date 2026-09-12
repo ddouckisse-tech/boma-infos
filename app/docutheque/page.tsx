@@ -53,7 +53,11 @@ export default async function DocuthequePage() {
         description="Rapports, textes réglementaires, guides et études, tenus à jour par la rédaction. Le poids de chaque fichier est indiqué avant le téléchargement."
         breadcrumb={
           <nav aria-label="Fil d'Ariane">
-            <Link href="/" className="text-accent underline-offset-4 hover:underline">
+            <Link
+              href="/"
+              prefetch={false}
+              className="inline-flex min-h-11 items-center text-accent underline-offset-4 hover:underline"
+            >
               Accueil
             </Link>
             <span aria-hidden="true" className="text-muted-foreground">
@@ -106,7 +110,10 @@ export default async function DocuthequePage() {
                     {document.pages && (
                       <div className="flex gap-1">
                         <dt>Pages :</dt>
-                        <dd data-numeric className="font-medium text-foreground">
+                        <dd
+                          data-numeric
+                          className="font-medium text-foreground"
+                        >
                           {document.pages}
                         </dd>
                       </div>

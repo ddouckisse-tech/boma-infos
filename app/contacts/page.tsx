@@ -47,7 +47,11 @@ export default function ContactsPage() {
         description="Une information à porter à notre connaissance, un communiqué, un droit de réponse, une proposition de tribune ou une demande commerciale."
         breadcrumb={
           <nav aria-label="Fil d'Ariane">
-            <Link href="/" className="text-accent underline-offset-4 hover:underline">
+            <Link
+              href="/"
+              prefetch={false}
+              className="inline-flex min-h-11 items-center text-accent underline-offset-4 hover:underline"
+            >
               Accueil
             </Link>
             <span aria-hidden="true" className="text-muted-foreground">
@@ -95,7 +99,9 @@ export default function ContactsPage() {
                     className="mt-0.5 size-5 shrink-0 text-muted-foreground"
                   />
                   <div className="min-w-0">
-                    <p className="type-small text-muted-foreground">Téléphone</p>
+                    <p className="type-small text-muted-foreground">
+                      Téléphone
+                    </p>
                     <a
                       href={SITE.phoneHref}
                       className="type-body text-accent underline underline-offset-4"

@@ -1,5 +1,4 @@
 import {
-  DATA_SAVER_MAX_WIDTH,
   fallbackVariant,
   mediaUrl,
   srcSet,
@@ -35,15 +34,14 @@ type ResponsiveImageProps = {
  * the box is reserved before a byte arrives, so the page never jumps
  * (CDC §5.4 — CLS ≤ 0,1).
  *
- * **Data saver (CDC §2.2).** A lazy picture is rendered twice: the full
- * rendition and a 320 px one. CSS shows exactly one of them, and a
- * `loading="lazy"` image inside a `display: none` element is never
- * intersected, therefore never downloaded — the hidden rendition costs zero
- * byte. The `priority` picture is the documented exception: it must be
- * eagerly fetched to hold the LCP, and an eager image *is* downloaded even
- * when hidden, so pairing it would waste on the very readers the mode
- * protects. It is instead kept small by its `sizes` — a phone pulls the
- * 640 px rendition, around 19 Ko.
+ * **Data saver (CDC §2.2)** is not handled here. The markup is identical for
+ * everyone, and `proxy.ts` rewrites the picture *request* to the 480 px
+ * rendition when the reader has the mode on. The obvious alternative —
+ * rendering two `<picture>` elements and hiding one with CSS — was built,
+ * measured and removed: Chrome downloads a `loading="lazy"` image inside a
+ * `display: none` element anyway, so the page paid for both. Rewriting at
+ * the edge costs nothing, keeps the DOM half the size, and also covers the
+ * eagerly loaded lead picture, which CSS never could.
  */
 export function ResponsiveImage({
   media,
@@ -57,65 +55,42 @@ export function ResponsiveImage({
   const fallback = fallbackVariant(media, maxWidth ?? media.width);
   const description = alt ?? media.alt;
 
-  const full = (
-    <picture className={priority ? undefined : "lc-media-full"}>
-      <source
-        type="image/avif"
-        srcSet={
-          maxWidth ? srcSetCapped(media, "avif", maxWidth) : srcSet(media, "avif")
-        }
-        sizes={sizes}
-      />
-      <source
-        type="image/webp"
-        srcSet={
-          maxWidth ? srcSetCapped(media, "webp", maxWidth) : srcSet(media, "webp")
-        }
-        sizes={sizes}
-      />
-      <img
-        src={mediaUrl(media.id, fallback.w, "webp")}
-        alt={description}
-        width={fallback.w}
-        height={fallback.h}
-        loading={priority ? "eager" : "lazy"}
-        // `fetchPriority` n'est honoré que sur une image non différée.
-        fetchPriority={priority ? "high" : undefined}
-        decoding={priority ? "sync" : "async"}
-        className={cn("block h-full w-full object-cover", className)}
-      />
-    </picture>
-  );
-
   return (
     <span
       className={cn("lc-media", wrapperClassName)}
       style={{ backgroundColor: media.color }}
     >
-      {full}
-      {!priority && (
-        <picture className="lc-media-lite">
-          <source
-            type="image/avif"
-            srcSet={srcSetCapped(media, "avif", DATA_SAVER_MAX_WIDTH)}
-            sizes="320px"
-          />
-          <source
-            type="image/webp"
-            srcSet={srcSetCapped(media, "webp", DATA_SAVER_MAX_WIDTH)}
-            sizes="320px"
-          />
-          <img
-            src={mediaUrl(media.id, 320, "webp")}
-            alt={description}
-            width={media.avif[0].w}
-            height={media.avif[0].h}
-            loading="lazy"
-            decoding="async"
-            className={cn("block h-full w-full object-cover", className)}
-          />
-        </picture>
-      )}
+      <picture>
+        <source
+          type="image/avif"
+          srcSet={
+            maxWidth
+              ? srcSetCapped(media, "avif", maxWidth)
+              : srcSet(media, "avif")
+          }
+          sizes={sizes}
+        />
+        <source
+          type="image/webp"
+          srcSet={
+            maxWidth
+              ? srcSetCapped(media, "webp", maxWidth)
+              : srcSet(media, "webp")
+          }
+          sizes={sizes}
+        />
+        <img
+          src={mediaUrl(media.id, fallback.w, "webp")}
+          alt={description}
+          width={fallback.w}
+          height={fallback.h}
+          loading={priority ? "eager" : "lazy"}
+          // `fetchPriority` n'est honoré que sur une image non différée.
+          fetchPriority={priority ? "high" : undefined}
+          decoding={priority ? "sync" : "async"}
+          className={cn("block h-full w-full object-cover", className)}
+        />
+      </picture>
     </span>
   );
 }

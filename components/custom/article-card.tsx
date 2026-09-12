@@ -25,11 +25,20 @@ type ArticleCardProps = {
 /**
  * The workhorse of every list on the site.
  *
- * One link wraps the whole card, so the touch target is the card itself —
- * comfortably past the 44 px of CDC §3.5 rather than a 16 px chevron. The
- * headline carries the accessible name; the picture is decorative here
- * (`alt=""`) because repeating it would make a screen reader announce the
- * same story twice.
+ * Every link carries `prefetch={false}`. Next prefetches in-viewport links
+ * by default, which on a section page means downloading nine articles the
+ * reader has not asked for — measured at 40 Ko of speculative traffic on the
+ * home page alone. On a metered Gabonese connection that is the reader's
+ * money, so navigation is prefetched on intent (hover, touch) instead.
+ *
+ * The headline link is **stretched** over the whole card (`after:absolute
+ * after:inset-0`), so the touch target is the card — far past the 44 px of
+ * CDC §3.5, instead of a 27 px line of text. There is exactly one link per
+ * card in the accessibility tree: the picture is not a second link and not
+ * described (`alt=""`), because a screen reader announcing the same story
+ * twice is worse than not announcing the picture at all. Controls that must
+ * stay separately clickable — the section badge — are lifted above the
+ * stretch with `relative z-10`.
  */
 export function ArticleCard({
   article,
@@ -53,7 +62,7 @@ export function ArticleCard({
 
   if (variant === "compact") {
     return (
-      <article className={cn("group/card py-3", className)}>
+      <article className={cn("group/card relative py-3", className)}>
         <div className="flex items-baseline gap-3">
           <span
             aria-hidden="true"
@@ -63,7 +72,8 @@ export function ArticleCard({
             <Heading className="font-serif type-body font-semibold text-balance">
               <Link
                 href={`/article/${article.slug}`}
-                className="underline-offset-4 hover:underline"
+                prefetch={false}
+                className="underline-offset-4 after:absolute after:inset-0 hover:underline"
               >
                 {article.title}
               </Link>
@@ -82,28 +92,23 @@ export function ArticleCard({
     return (
       <article
         className={cn(
-          "group/card grid grid-cols-[96px_1fr] gap-4 py-4 sm:grid-cols-[160px_1fr] sm:gap-6",
+          "group/card relative grid grid-cols-[96px_1fr] gap-4 py-4 sm:grid-cols-[160px_1fr] sm:gap-6",
           className
         )}
       >
-        <Link
-          href={`/article/${article.slug}`}
-          tabIndex={-1}
-          aria-hidden="true"
-          className="block"
-        >
+        <div>
           {media ? (
             <ResponsiveImage
               media={media}
               alt=""
               sizes={SIZES.thumb}
-              maxWidth={640}
+              maxWidth={320}
               wrapperClassName="aspect-[16/9] rounded-md"
             />
           ) : (
             <span className="block aspect-[16/9] rounded-md bg-surface-muted" />
           )}
-        </Link>
+        </div>
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             {showCategory && (
@@ -111,7 +116,9 @@ export function ArticleCard({
                 slug={article.subCategorySlug ?? article.categorySlug}
                 name={article.subCategoryName ?? article.categoryName}
                 accent={article.categoryAccent}
-                parentSlug={article.subCategorySlug ? article.categorySlug : undefined}
+                parentSlug={
+                  article.subCategorySlug ? article.categorySlug : undefined
+                }
                 variant="text"
               />
             )}
@@ -120,7 +127,8 @@ export function ArticleCard({
           <Heading className="mt-1 font-serif type-h3 text-balance">
             <Link
               href={`/article/${article.slug}`}
-              className="underline-offset-4 hover:underline"
+              prefetch={false}
+              className="underline-offset-4 after:absolute after:inset-0 hover:underline"
             >
               {article.title}
             </Link>
@@ -137,28 +145,23 @@ export function ArticleCard({
   return (
     <article
       className={cn(
-        "group/card flex h-full flex-col overflow-hidden rounded-md border border-border bg-card",
+        "group/card relative flex h-full flex-col overflow-hidden rounded-md border border-border bg-card",
         className
       )}
     >
-      <Link
-        href={`/article/${article.slug}`}
-        tabIndex={-1}
-        aria-hidden="true"
-        className="block"
-      >
+      <div>
         {media ? (
           <ResponsiveImage
             media={media}
             alt=""
             sizes={SIZES.card}
-            maxWidth={960}
+            maxWidth={768}
             wrapperClassName="aspect-[16/9]"
           />
         ) : (
           <span className="block aspect-[16/9] bg-surface-muted" />
         )}
-      </Link>
+      </div>
       <div className="flex flex-1 flex-col p-4">
         <div className="flex flex-wrap items-center gap-2">
           {showCategory && (
@@ -166,7 +169,9 @@ export function ArticleCard({
               slug={article.subCategorySlug ?? article.categorySlug}
               name={article.subCategoryName ?? article.categoryName}
               accent={article.categoryAccent}
-              parentSlug={article.subCategorySlug ? article.categorySlug : undefined}
+              parentSlug={
+                article.subCategorySlug ? article.categorySlug : undefined
+              }
             />
           )}
           {article.origin === "partenaire" && <PartnerTag size="small" />}
@@ -174,7 +179,8 @@ export function ArticleCard({
         <Heading className="mt-3 font-serif type-h3 text-balance">
           <Link
             href={`/article/${article.slug}`}
-            className="underline-offset-4 hover:underline"
+            prefetch={false}
+            className="underline-offset-4 after:absolute after:inset-0 hover:underline"
           >
             {article.title}
           </Link>

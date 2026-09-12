@@ -61,7 +61,9 @@ export function AuthorByline({
   const edited = updatedAt && updatedAt - publishedAt > 60_000;
 
   return (
-    <div className={cn("flex flex-wrap items-center gap-x-3 gap-y-1", className)}>
+    <div
+      className={cn("flex flex-wrap items-center gap-x-3 gap-y-1", className)}
+    >
       <AuthorMonogram
         name={authorName}
         className={size === "compact" ? "size-7 text-[0.7rem]" : "size-10"}
@@ -70,17 +72,14 @@ export function AuthorByline({
         <p className="type-small">
           <span className="text-muted-foreground">Par </span>
           <Link
-            href={`/auteur/${authorSlug}`}
-            className="font-semibold text-foreground underline-offset-4 hover:underline"
+            href={`/auteur/${authorSlug} prefetch={false}`}
+            className="inline-flex min-h-11 items-center font-semibold text-foreground underline-offset-4 hover:underline"
             rel="author"
           >
             {authorName}
           </Link>
           {authorRole && size === "default" && (
-            <span className="text-muted-foreground">
-              {" "}
-              — {authorRole}
-            </span>
+            <span className="text-muted-foreground"> — {authorRole}</span>
           )}
         </p>
         <p className="type-small text-muted-foreground">

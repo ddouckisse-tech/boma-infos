@@ -35,20 +35,32 @@ export function CategoryBadge({
   className,
 }: CategoryBadgeProps) {
   const token = toAccent(accent);
-  const href = parentSlug ? subSectionHref(parentSlug, slug) : sectionHref(slug);
+  const href = parentSlug
+    ? subSectionHref(parentSlug, slug)
+    : sectionHref(slug);
 
+  // La cible tactile fait 44 px de haut (CDC §3.5) sans que la pastille
+  // n'en fasse autant : le lien porte la hauteur, l'aplat vit dans le span.
+  // `relative z-10` la garde cliquable au-dessus du lien étiré de la carte.
   return (
     <Link
       href={href}
+      prefetch={false}
       className={cn(
-        "inline-flex max-w-full items-center rounded-xs type-small font-semibold",
-        variant === "fill"
-          ? cn("px-2 py-1 leading-tight", accentFillClass[token])
-          : cn("tracking-wide uppercase", accentTextClass[token]),
+        "relative z-10 inline-flex min-h-11 max-w-full items-center type-small font-semibold",
         className
       )}
     >
-      <span className="truncate">{name}</span>
+      <span
+        className={cn(
+          "truncate rounded-xs",
+          variant === "fill"
+            ? cn("px-2 py-1 leading-tight", accentFillClass[token])
+            : cn("tracking-wide uppercase", accentTextClass[token])
+        )}
+      >
+        {name}
+      </span>
     </Link>
   );
 }

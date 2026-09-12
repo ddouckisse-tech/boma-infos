@@ -26,7 +26,7 @@ export default function ErrorBoundary({
 
   return (
     <Container width="reading" className="py-16">
-      <div className="flex gap-4 rounded-md border border-border border-l-2 border-l-destructive bg-card p-6">
+      <div className="flex gap-4 rounded-md border border-l-2 border-border border-l-destructive bg-card p-6">
         <AlertTriangle
           aria-hidden="true"
           className="mt-1 size-6 shrink-0 text-destructive"
@@ -50,6 +50,7 @@ export default function ErrorBoundary({
             </button>
             <Link
               href="/"
+              prefetch={false}
               className="inline-flex items-center rounded-md border border-border px-4 type-small font-semibold transition-colors touch-target hover:bg-surface-muted"
             >
               Retour à l&apos;accueil

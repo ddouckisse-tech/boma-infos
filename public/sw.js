@@ -115,6 +115,22 @@ async function networkFirstDocument(request) {
   }
 }
 
+/*
+ * Purge des photographies, demandée par la page quand le lecteur bascule le
+ * mode économie de données.
+ *
+ * Sans cela, la bascule resterait sans effet : `proxy.ts` sert bien la
+ * variante 480 px, mais le service worker répondait d'abord depuis son cache
+ * avec la version pleine définition enregistrée avant la bascule. L'en-tête
+ * `Vary: Cookie` ne suffit pas ici — l'API Cache ne voit pas l'en-tête
+ * `Cookie`, ajouté plus tard par la couche réseau.
+ */
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "purge-medias") {
+    event.waitUntil(caches.delete(ASSETS_CACHE));
+  }
+});
+
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   if (request.method !== "GET") return;

@@ -35,6 +35,7 @@ export default async function NotFound() {
           <li>
             <Link
               href="/"
+              prefetch={false}
               className="inline-flex items-center rounded-md bg-primary px-4 type-small font-semibold text-primary-foreground transition-colors touch-target hover:bg-primary/90"
             >
               Accueil
@@ -44,6 +45,7 @@ export default async function NotFound() {
             <li key={section.slug}>
               <Link
                 href={sectionHref(section.slug)}
+                prefetch={false}
                 className="inline-flex items-center rounded-md border border-border px-4 type-small transition-colors touch-target hover:bg-surface-muted"
               >
                 {section.label}
@@ -53,6 +55,7 @@ export default async function NotFound() {
           <li>
             <Link
               href="/docutheque"
+              prefetch={false}
               className="inline-flex items-center rounded-md border border-border px-4 type-small transition-colors touch-target hover:bg-surface-muted"
             >
               Docuthèque

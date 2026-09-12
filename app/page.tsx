@@ -54,9 +54,7 @@ export default async function HomePage() {
       {/* Bandeau de une : porte l'unique <h1> de la page. */}
       <div className="border-b border-border bg-surface-subtle py-4">
         <Container className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-          <h1 className="font-serif type-h3 text-foreground">
-            {SITE.tagline}
-          </h1>
+          <h1 className="font-serif type-h3 text-foreground">{SITE.tagline}</h1>
           <p className="type-small text-muted-foreground">
             Édition du {formatDate(today)}
           </p>
@@ -77,7 +75,8 @@ export default async function HomePage() {
           action={
             <Link
               href="/rubrique/business-lifestyle"
-              className="inline-flex items-center gap-1 type-small font-semibold text-accent underline-offset-4 hover:underline"
+              prefetch={false}
+              className="inline-flex min-h-11 items-center gap-1 type-small font-semibold text-accent underline-offset-4 hover:underline"
             >
               Toute l&apos;actualité
               <ArrowRight aria-hidden="true" className="size-4" />
@@ -96,14 +95,14 @@ export default async function HomePage() {
 
       {dossier && (
         <Section spacing="loose">
-          <div className="grid gap-6 rounded-md border border-border border-l-2 border-l-brand-magenta bg-card p-6 lg:grid-cols-[2fr_1fr] lg:items-center lg:gap-10 lg:p-8">
+          <div className="grid gap-6 rounded-md border border-l-2 border-border border-l-brand-magenta bg-card p-6 lg:grid-cols-[2fr_1fr] lg:items-center lg:gap-10 lg:p-8">
             <div className="min-w-0">
               <p className="type-small font-semibold tracking-wide text-accent uppercase">
                 Dossier spécial
               </p>
               <h2 className="mt-3 font-serif type-h1 text-balance">
                 <Link
-                  href={`/article/${dossier.slug}`}
+                  href={`/article/${dossier.slug} prefetch={false}`}
                   className="underline-offset-4 hover:underline"
                 >
                   {dossier.title}
@@ -113,7 +112,7 @@ export default async function HomePage() {
                 {dossier.dek}
               </p>
               <Link
-                href={`/article/${dossier.slug}`}
+                href={`/article/${dossier.slug} prefetch={false}`}
                 className="mt-5 inline-flex items-center gap-2 rounded-md border border-border px-4 type-small font-semibold transition-colors touch-target hover:bg-surface-muted"
               >
                 Ouvrir le dossier
@@ -166,23 +165,26 @@ export default async function HomePage() {
           action={
             <Link
               href={sectionHref(section.slug)}
-              className="inline-flex items-center gap-1 type-small font-semibold text-accent underline-offset-4 hover:underline"
+              prefetch={false}
+              className="inline-flex min-h-11 items-center gap-1 type-small font-semibold text-accent underline-offset-4 hover:underline"
             >
               Voir la rubrique
               <ArrowRight aria-hidden="true" className="size-4" />
             </Link>
           }
         >
-          {/* Un article illustré par rubrique, les suivants en titres seuls.
-              Vingt-et-une vignettes sur une page d'accueil, c'est un mur de
-              photos et trois cents kilo-octets — le §5.4 en plafonne six
-              cents pour toute la page. La hiérarchie y gagne aussi : chaque
-              rubrique met en avant un sujet, pas trois. */}
-          <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr] lg:gap-10">
+          {/* Un article illustré par rubrique — en vignette, pas en grande
+              carte — et les suivants en titres seuls. Vingt-et-une photos
+              pleine largeur sur une page d'accueil, c'est un mur d'images et,
+              sur un téléphone haute densité, un demi-mégaoctet : le §5.4 en
+              plafonne 600 Ko pour la page entière. La densité d'images
+              décroît donc en descendant, comme sur une une imprimée. */}
+          <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr] lg:gap-10">
             <ArticleCard
               article={section.articles[0]}
+              variant="list"
               showCategory={false}
-              className="min-w-0"
+              className="min-w-0 border-b border-border pb-4 lg:border-0 lg:pb-0"
             />
             {section.articles.length > 1 && (
               <ul className="divide-y divide-border self-start">
@@ -204,7 +206,8 @@ export default async function HomePage() {
           action={
             <Link
               href="/rubrique/espace-pro"
-              className="inline-flex items-center gap-1 type-small font-semibold text-accent underline-offset-4 hover:underline"
+              prefetch={false}
+              className="inline-flex min-h-11 items-center gap-1 type-small font-semibold text-accent underline-offset-4 hover:underline"
             >
               Tout l&apos;espace pro
               <ArrowRight aria-hidden="true" className="size-4" />
@@ -222,11 +225,12 @@ export default async function HomePage() {
             <div className="rounded-md border border-border bg-surface-muted p-6">
               <h3 className="font-serif type-h3">Docuthèque</h3>
               <p className="mt-2 type-small text-muted-foreground">
-                Rapports, textes réglementaires et études, téléchargeables —
-                le poids du fichier est annoncé avant le clic.
+                Rapports, textes réglementaires et études, téléchargeables — le
+                poids du fichier est annoncé avant le clic.
               </p>
               <Link
                 href="/docutheque"
+                prefetch={false}
                 className="mt-4 inline-flex items-center gap-2 rounded-md bg-primary px-4 type-small font-semibold text-primary-foreground transition-colors touch-target hover:bg-primary/90"
               >
                 Ouvrir la docuthèque

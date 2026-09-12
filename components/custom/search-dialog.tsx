@@ -137,11 +137,7 @@ export function SearchDialog({ className }: { className?: string }) {
             <CloseButton onClick={() => setOpen(false)} />
           </div>
 
-          <form
-            method="get"
-            action="/recherche"
-            className="mt-4 grid gap-2"
-          >
+          <form method="get" action="/recherche" className="mt-4 grid gap-2">
             <Label htmlFor={inputId} className="type-small">
               Mots-clés
             </Label>
@@ -166,7 +162,8 @@ export function SearchDialog({ className }: { className?: string }) {
           >
             {state === "idle" && "Saisissez au moins deux caractères."}
             {state === "loading" && "Recherche en cours…"}
-            {state === "error" && "La recherche est momentanément indisponible."}
+            {state === "error" &&
+              "La recherche est momentanément indisponible."}
             {state === "done" &&
               (hits.length === 0
                 ? `Aucun article ne correspond à « ${term.trim()} ».`

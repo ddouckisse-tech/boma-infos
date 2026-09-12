@@ -33,10 +33,14 @@ export default async function ConfirmationPage({
         api.newsletter.confirm,
         { token },
         "newsletter.confirm"
-      ).catch(() => ({ status: "unknown" as const, unsubscribeToken: undefined }))
+      ).catch(() => ({
+        status: "unknown" as const,
+        unsubscribeToken: undefined,
+      }))
     : { status: "unknown" as const, unsubscribeToken: undefined };
 
-  const ok = result.status === "confirmed" || result.status === "already_confirmed";
+  const ok =
+    result.status === "confirmed" || result.status === "already_confirmed";
 
   return (
     <>
@@ -79,7 +83,7 @@ export default async function ConfirmationPage({
                 <p className="mt-4 type-small text-muted-foreground">
                   Conservez ce lien de désinscription&nbsp;:{" "}
                   <Link
-                    href={`/newsletter/desinscription?jeton=${result.unsubscribeToken}`}
+                    href={`/newsletter/desinscription?jeton=${result.unsubscribeToken} prefetch={false}`}
                     className="text-accent underline underline-offset-4"
                   >
                     se désinscrire en un clic
@@ -91,6 +95,7 @@ export default async function ConfirmationPage({
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link
                   href="/"
+                  prefetch={false}
                   className="inline-flex items-center rounded-md bg-primary px-4 type-small font-semibold text-primary-foreground transition-colors touch-target hover:bg-primary/90"
                 >
                   Retour à l&apos;accueil
@@ -98,6 +103,7 @@ export default async function ConfirmationPage({
                 {!ok && (
                   <Link
                     href="/newsletter"
+                    prefetch={false}
                     className="inline-flex items-center rounded-md border border-border px-4 type-small font-semibold transition-colors touch-target hover:bg-surface-muted"
                   >
                     Reprendre l&apos;inscription

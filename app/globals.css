@@ -545,13 +545,11 @@
 /* --------------------------------------------------------------------------
    7 bis. Images et économie de données (§2.2, §5.4)
 
-   Une image différée (`loading="lazy"`) placée dans un élément
-   `display: none` n'entre jamais en intersection avec la fenêtre : le
-   navigateur ne la télécharge pas. C'est ce qui permet de rendre les deux
-   variantes — pleine définition et 320 px — et de n'en payer qu'une seule.
-   La seule exception est l'image prioritaire de la une, chargée en `eager`
-   pour tenir le LCP : elle n'est donc pas dédoublée (voir le commentaire de
-   `components/custom/responsive-image.tsx`).
+   Une seule variante est rendue, pour tout le monde. L'économie de données
+   n'est pas traitée en CSS : `proxy.ts` réécrit la requête de l'image vers
+   la variante 480 px. La version en deux `<picture>` masqués par CSS a été
+   construite puis retirée — Chrome télécharge une image `loading="lazy"`
+   même dans un élément `display: none`, la page payait donc les deux.
    -------------------------------------------------------------------------- */
 .lc-media {
   display: block;
@@ -567,18 +565,6 @@
   display: block;
   inline-size: 100%;
   block-size: 100%;
-}
-
-.lc-media-lite {
-  display: none;
-}
-
-[data-data-saver="on"] .lc-media-full {
-  display: none;
-}
-
-[data-data-saver="on"] .lc-media-lite {
-  display: block;
 }
 
 /* Média lourd (vidéo, galerie) : remplacé par un espace réservé cliquable. */

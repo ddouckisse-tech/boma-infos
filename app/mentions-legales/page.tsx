@@ -53,10 +53,10 @@ export default function LegalPage() {
               className="mt-0.5 size-5 shrink-0 text-warning-token"
             />
             <p className="type-small">
-              Page en cours de constitution. Les mentions ci-dessous sont
-              celles dont la rédaction dispose&nbsp;; les éléments listés plus
-              bas doivent être fournis par l&apos;éditeur avant la mise en
-              ligne publique. Aucune information n&apos;est inventée ici.
+              Page en cours de constitution. Les mentions ci-dessous sont celles
+              dont la rédaction dispose&nbsp;; les éléments listés plus bas
+              doivent être fournis par l&apos;éditeur avant la mise en ligne
+              publique. Aucune information n&apos;est inventée ici.
             </p>
           </div>
 
@@ -90,8 +90,8 @@ export default function LegalPage() {
 
             <h2 className="font-serif type-h2">Propriété intellectuelle</h2>
             <p>
-              Les textes publiés sur ce site sont la propriété de leur auteur
-              et de l&apos;éditeur. Toute reproduction intégrale est soumise à
+              Les textes publiés sur ce site sont la propriété de leur auteur et
+              de l&apos;éditeur. Toute reproduction intégrale est soumise à
               autorisation&nbsp;; la citation courte avec lien vers
               l&apos;article d&apos;origine est libre.
             </p>

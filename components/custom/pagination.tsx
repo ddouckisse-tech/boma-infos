@@ -40,6 +40,7 @@ export function Pagination({
           {page > 1 ? (
             <Link
               href={hrefFor(page - 1)}
+              prefetch={false}
               rel="prev"
               className={cn(base, "hover:bg-surface-muted")}
             >
@@ -48,10 +49,7 @@ export function Pagination({
               <span className="sr-only sm:hidden">Page précédente</span>
             </Link>
           ) : (
-            <span
-              aria-hidden="true"
-              className={cn(base, "opacity-40")}
-            >
+            <span aria-hidden="true" className={cn(base, "opacity-40")}>
               <ChevronLeft className="size-4" />
               <span className="ms-1 hidden sm:inline">Précédente</span>
             </span>
@@ -61,7 +59,10 @@ export function Pagination({
         {ordered.map((number, index) => (
           <li key={number} className="flex items-center gap-2">
             {index > 0 && ordered[index - 1] !== number - 1 && (
-              <span aria-hidden="true" className="type-small text-muted-foreground">
+              <span
+                aria-hidden="true"
+                className="type-small text-muted-foreground"
+              >
                 …
               </span>
             )}
@@ -69,13 +70,17 @@ export function Pagination({
               <span
                 aria-current="page"
                 data-numeric
-                className={cn(base, "border-primary bg-primary text-primary-foreground")}
+                className={cn(
+                  base,
+                  "border-primary bg-primary text-primary-foreground"
+                )}
               >
                 {number}
               </span>
             ) : (
               <Link
                 href={hrefFor(number)}
+                prefetch={false}
                 data-numeric
                 className={cn(base, "hover:bg-surface-muted")}
               >
@@ -90,6 +95,7 @@ export function Pagination({
           {page < pageCount ? (
             <Link
               href={hrefFor(page + 1)}
+              prefetch={false}
               rel="next"
               className={cn(base, "hover:bg-surface-muted")}
             >

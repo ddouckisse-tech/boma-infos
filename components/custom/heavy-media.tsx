@@ -64,7 +64,7 @@ export function HeavyMedia({
             media={poster}
             alt=""
             sizes={SIZES.inline}
-            maxWidth={960}
+            maxWidth={768}
             wrapperClassName="aspect-[16/9]"
           />
         ) : (

@@ -48,7 +48,11 @@ export function DataSaverToggle({
           htmlFor={id}
           className="flex min-h-11 cursor-pointer items-center gap-3 type-small font-medium text-foreground"
         >
-          <span className="relative inline-flex shrink-0">
+          {/* La case elle-même occupe 44 x 44 px et reste transparente ;
+              la piste et le curseur sont dessinés par les deux spans, que la
+              case pilote via `peer-checked`. La cible tactile vaut donc bien
+              44 px, sans que la bascule n'en ait l'air (§3.5). */}
+          <span className="relative inline-flex size-11 shrink-0 items-center">
             <input
               id={id}
               type="checkbox"
@@ -57,12 +61,15 @@ export function DataSaverToggle({
               disabled={!ready}
               onChange={(event) => setDataSaver(event.target.checked)}
               aria-describedby={variant === "block" ? `${id}-help` : undefined}
-              className="peer size-[1.15rem] w-9 cursor-pointer appearance-none rounded-full border border-border-strong bg-input/20 transition-colors checked:border-primary checked:bg-primary disabled:cursor-not-allowed disabled:opacity-50"
+              className="peer absolute inset-0 size-11 cursor-pointer appearance-none rounded-md disabled:cursor-not-allowed"
             />
-            {/* Le curseur : purement décoratif, piloté par l'état de la case. */}
             <span
               aria-hidden="true"
-              className="pointer-events-none absolute top-1/2 left-0.5 size-3.5 -translate-y-1/2 rounded-full bg-foreground transition-transform peer-checked:translate-x-[1.1rem] peer-checked:bg-primary-foreground"
+              className="pointer-events-none block h-5 w-9 rounded-full border border-border-strong bg-input/20 transition-colors peer-checked:border-primary peer-checked:bg-primary peer-disabled:opacity-50"
+            />
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute top-1/2 left-0.5 size-3.5 -translate-y-1/2 rounded-full bg-foreground transition-transform peer-checked:translate-x-[1.1rem] peer-checked:bg-primary-foreground peer-disabled:opacity-50"
             />
           </span>
           <span>Économie de données</span>
