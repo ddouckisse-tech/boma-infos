@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Audit technique — le-corporate.com</title>
+<style>
+@page { size: A4; margin: 16mm 14mm 18mm 14mm; }
+@page :first { margin: 0; }
+
+:root{
+  --navy:#0b2352;
+  --navy-deep:#002060;
+  --magenta:#c74794;
+  --ink:#15181f;
+  --muted:#5b6474;
+  --line:#dfe3ea;
+  --bg-soft:#f5f7fa;
+  --crit:#c0233c;
+  --warn:#b8730d;
+  --ok:#1a7a52;
+  --info:#2563a8;
+}
+*{box-sizing:border-box}
+body{
+  font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
+  color:var(--ink); font-size:9.6pt; line-height:1.5; margin:0;
+  -webkit-print-color-adjust:exact; print-color-adjust:exact;
+}
+h1,h2,h3,h4{ line-height:1.22; margin:0; }
+
+/* ---------- COUVERTURE ---------- */
+.cover{
+  height:297mm; padding:26mm 22mm; page-break-after:always;
+  background:linear-gradient(160deg,#0b2352 0%,#002060 55%,#1a1038 100%);
+  color:#fff; position:relative; overflow:hidden;
+}
+.cover::after{
+  content:""; position:absolute; right:-90mm; bottom:-90mm;
+  width:200mm; height:200mm; border-radius:50%;
+  background:radial-gradient(circle,rgba(199,71,148,.32) 0%,rgba(199,71,148,0) 66%);
+}
+.cover-brand{ font-size:10pt; letter-spacing:.26em; text-transform:uppercase; color:#c9a7e0; }
+.cover h1{ font-size:33pt; font-weight:800; margin:14mm 0 0; letter-spacing:-.022em; max-width:150mm;}
+.cover h1 em{ font-style:normal; color:#f2a8d2; }
+.cover .sub{ font-size:12.5pt; color:#c3cde4; margin-top:7mm; max-width:125mm; line-height:1.55;}
+.cover .rule{ width:34mm; height:3px; background:var(--magenta); margin:9mm 0; border:0;}
+.cover-meta{ position:absolute; left:22mm; right:22mm; bottom:22mm; display:flex; gap:12mm; flex-wrap:wrap;}
+.cover-meta div{ font-size:8.6pt; }
+.cover-meta .k{ color:#8fa2c6; text-transform:uppercase; letter-spacing:.14em; font-size:7.2pt; display:block; margin-bottom:1.5mm;}
+.cover-verdict{
+  position:relative; z-index:2; margin-top:14mm; background:rgba(255,255,255,.09);
+  border-left:3px solid var(--magenta); padding:6mm 7mm; border-radius:0 4px 4px 0; max-width:140mm;
+}
+.cover-verdict strong{ color:#fff; font-size:11pt; display:block; margin-bottom:2mm;}
+.cover-verdict span{ color:#cdd8ec; font-size:9.4pt; line-height:1.6;}
+
+/* ---------- STRUCTURE ---------- */
+section{ page-break-inside:auto; }
+h2.sec{
+  font-size:17pt; font-weight:800; color:var(--navy); letter-spacing:-.018em;
+  margin:0 0 1mm; padding-top:3mm;
+}
+h2.sec .num{
+  display:inline-block; background:var(--navy); color:#fff; font-size:9.5pt;
+  width:8.2mm; height:8.2mm; line-height:8.2mm; text-align:center; border-radius:2px;
+  margin-right:3.5mm; vertical-align:2px; font-weight:700;
+}
+.sec-intro{ color:var(--muted); font-size:9.3pt; margin:0 0 5mm; padding-left:11.7mm; max-width:150mm;}
+h3{ font-size:11pt; color:var(--navy-deep); margin:6mm 0 2mm; font-weight:700;}
+h4{ font-size:9.7pt; margin:4mm 0 1.5mm; font-weight:700; color:var(--ink);}
+p{ margin:0 0 2.6mm; }
+.page-break{ page-break-before:always; }
+.avoid-break{ page-break-inside:avoid; }
+
+/* ---------- TABLEAUX ---------- */
+table{ width:100%; border-collapse:collapse; margin:3mm 0 5mm; font-size:8.6pt; page-break-inside:auto;}
+thead{ display:table-header-group; }
+tr{ page-break-inside:avoid; }
+th{
+  background:var(--navy); color:#fff; text-align:left; padding:2.2mm 2.6mm; font-weight:700;
+  font-size:7.9pt; letter-spacing:.045em; text-transform:uppercase;
+}
+td{ padding:2.1mm 2.6mm; border-bottom:1px solid var(--line); vertical-align:top; }
+tbody tr:nth-child(even){ background:#fafbfd; }
+td.num, th.num{ text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap;}
+code{ font-family:"SF Mono",Menlo,Consolas,monospace; font-size:8pt; background:#eef1f6; padding:.4mm 1.1mm; border-radius:2px; color:#1d3a6b;}
+
+/* ---------- BADGES ---------- */
+.b{ display:inline-block; padding:.5mm 2mm; border-radius:2.5px; font-size:7.3pt; font-weight:700;
+    letter-spacing:.045em; text-transform:uppercase; white-space:nowrap;}
+.b-crit{ background:#fdeaee; color:var(--crit); border:1px solid #f3c2cd;}
+.b-warn{ background:#fdf3e3; color:var(--warn); border:1px solid #f0d9ae;}
+.b-ok{ background:#e8f6ef; color:var(--ok); border:1px solid #b9e3cf;}
+.b-info{ background:#e9f1fa; color:var(--info); border:1px solid #bdd4ec;}
+
+/* ---------- ENCADRÉS ---------- */
+.box{ border:1px solid var(--line); border-left:3px solid var(--navy); background:var(--bg-soft);
+      padding:3.5mm 4.5mm; margin:4mm 0; border-radius:0 3px 3px 0; page-break-inside:avoid;}
+.box.crit{ border-left-color:var(--crit); background:#fdf7f8;}
+.box.warn{ border-left-color:var(--warn); background:#fdfaf3;}
+.box.ok{ border-left-color:var(--ok); background:#f4faf7;}
+.box h4{ margin:0 0 1.8mm; font-size:9.5pt;}
+.box p:last-child{ margin-bottom:0;}
+
+/* ---------- MÉTRIQUES ---------- */
+.kpis{ display:flex; gap:3mm; margin:4mm 0 6mm; flex-wrap:wrap;}
+.kpi{ flex:1 1 0; min-width:30mm; border:1px solid var(--line); border-top:2.5px solid var(--navy);
+      padding:3mm 3mm 3.5mm; border-radius:0 0 3px 3px; background:#fff;}
+.kpi .v{ font-size:16pt; font-weight:800; color:var(--navy); letter-spacing:-.03em; line-height:1.05;}
+.kpi .v.bad{ color:var(--crit);} .kpi .v.mid{ color:var(--warn);} .kpi .v.good{ color:var(--ok);}
+.kpi .l{ font-size:7.4pt; color:var(--muted); text-transform:uppercase; letter-spacing:.07em; margin-top:1.5mm; line-height:1.35;}
+.kpi.bad{ border-top-color:var(--crit);} .kpi.mid{ border-top-color:var(--warn);} .kpi.good{ border-top-color:var(--ok);}
+
+/* ---------- BARRES DE SCORE ---------- */
+.scores{ margin:4mm 0 2mm;}
+.score-row{ display:flex; align-items:center; gap:3mm; margin-bottom:2.6mm; page-break-inside:avoid;}
+.score-row .name{ width:46mm; font-size:8.8pt; font-weight:600;}
+.score-row .track{ flex:1; height:5.5mm; background:#eef1f6; border-radius:2px; overflow:hidden; position:relative;}
+.score-row .fill{ height:100%; border-radius:2px;}
+.score-row .val{ width:16mm; text-align:right; font-size:8.6pt; font-weight:700; font-variant-numeric:tabular-nums;}
+.score-row .cmt{ width:52mm; font-size:7.6pt; color:var(--muted); line-height:1.3;}
+
+/* ---------- IMAGES ---------- */
+figure{ margin:4mm 0; page-break-inside:avoid;}
+figure img{ width:100%; border:1px solid var(--line); border-radius:2px; display:block;}
+figcaption{ font-size:7.8pt; color:var(--muted); margin-top:1.8mm; line-height:1.4;}
+figcaption b{ color:var(--ink);}
+.fig-row{ display:flex; gap:4mm; align-items:flex-start; margin:4mm 0; page-break-inside:avoid;}
+.fig-row figure{ margin:0; min-width:0;}
+.fig-row figure img{ width:100% !important; max-width:100% !important; height:auto !important;}
+.fig-row > div{ min-width:0;}
+h3{ page-break-after:avoid;}
+h4{ page-break-after:avoid;}
+
+/* ---------- DÉMO CONTRASTE ---------- */
+.demo{ display:flex; gap:0; border:1px solid var(--line); border-radius:3px; overflow:hidden; margin:3mm 0;}
+.demo > div{ flex:1; padding:4mm;}
+.demo .before{ background:#fff;}
+.demo .after{ background:#0c0f16;}
+.demo .tag{ font-size:7pt; text-transform:uppercase; letter-spacing:.1em; margin-bottom:2mm; font-weight:700;}
+.demo .before .tag{ color:var(--muted);}
+.demo .after .tag{ color:#8e9bb5;}
+.demo .invisible{ color:#fff; font-size:9.5pt; font-weight:700;}
+.demo .darktext{ color:#000; font-size:9pt; line-height:1.5;}
+
+/* ---------- LISTES ---------- */
+ul,ol{ margin:0 0 3mm; padding-left:5mm;}
+li{ margin-bottom:1.4mm;}
+ul.tight li{ margin-bottom:.9mm;}
+ul.check{ list-style:none; padding-left:0;}
+ul.check li{ padding-left:5.5mm; position:relative;}
+ul.check li::before{ content:"▪"; position:absolute; left:1mm; color:var(--magenta); font-size:10pt;}
+
+/* ---------- PLAN D'ACTION ---------- */
+.action{ border:1px solid var(--line); border-radius:3px; padding:0; margin:3.5mm 0; page-break-inside:avoid; overflow:hidden;}
+.action-head{ display:flex; align-items:center; gap:3mm; padding:2.6mm 3.5mm; background:var(--bg-soft); border-bottom:1px solid var(--line);}
+.action-head .t{ font-weight:700; font-size:9.6pt; flex:1;}
+.action-body{ padding:3mm 3.5mm; font-size:8.7pt;}
+.action-body p{ margin-bottom:2mm;}
+.action-meta{ display:flex; gap:6mm; font-size:7.7pt; color:var(--muted); margin-top:2.5mm; padding-top:2.5mm; border-top:1px dashed var(--line);}
+.action-meta b{ color:var(--ink); font-weight:700;}
+
+/* ---------- FOOTER NOTE ---------- */
+.note{ font-size:7.8pt; color:var(--muted); border-top:1px solid var(--line); padding-top:2.5mm; margin-top:5mm;}
+.toc{ columns:2; column-gap:10mm; font-size:9pt;}
+.toc div{ break-inside:avoid; margin-bottom:1.8mm; padding-bottom:1.2mm; border-bottom:1px dotted var(--line);}
+.toc .n{ color:var(--magenta); font-weight:700; display:inline-block; width:7mm;}
+</style>
+</head>
+<body>
+
+<!-- ============ COUVERTURE ============ -->
+<div class="cover">
+  <div class="cover-brand">Audit numérique indépendant</div>
+  <h1>le-corporate.com<br><em>Diagnostic complet</em></h1>
+  <hr class="rule">
+  <div class="sub">
+    Architecture, sécurité, performance, affichage, accessibilité, référencement,
+    conformité légale et cohérence éditoriale d'une plateforme d'information
+    économique destinée au public gabonais.
+  </div>
+
+  <div class="cover-verdict">
+    <strong>Verdict en une phrase</strong>
+    <span>Un site de presse au contenu solide et au rythme soutenu (1&nbsp;019 articles, ~1,1&nbsp;publication/jour),
+    porté par une base WordPress correctement protégée contre les attaques automatisées — mais lourdement
+    pénalisé par un poids de page de <b>9,35&nbsp;Mo</b> qui sanctionne directement le lecteur mobile gabonais,
+    par une <b>absence totale de mentions légales et de politique de confidentialité</b>, et par des
+    défauts d'affichage qui rendent certains contenus littéralement illisibles.</span>
+  </div>
+
+  <div class="cover-meta">
+    <div><span class="k">Site audité</span>https://le-corporate.com</div>
+    <div><span class="k">Date de l'audit</span>11 septembre 2026</div>
+    <div><span class="k">Méthode</span>Boîte noire, sans accès admin</div>
+    <div><span class="k">Éditeur</span>Up Concept — Libreville</div>
+  </div>
+</div>
+
+<!-- ============ SOMMAIRE + SYNTHÈSE ============ -->
+<section>
+<h2 class="sec"><span class="num">01</span>Synthèse exécutive</h2>
+<p class="sec-intro">Ce que révèle l'audit, classé par gravité, et ce qu'il faut traiter en premier.</p>
+
+<h3>Tableau de bord</h3>
+<div class="kpis">
+  <div class="kpi bad"><div class="v bad">9,35 Mo</div><div class="l">Poids de la page d'accueil</div></div>
+  <div class="kpi bad"><div class="v bad">4,46 s</div><div class="l">Premier affichage (FCP)</div></div>
+  <div class="kpi bad"><div class="v bad">0</div><div class="l">Page légale publiée</div></div>
+  <div class="kpi good"><div class="v good">1 019</div><div class="l">Articles publiés</div></div>
+  <div class="kpi mid"><div class="v mid">88,7 %</div><div class="l">Articles dans une seule rubrique</div></div>
+</div>
+
+<h3>Notation par domaine</h3>
+<div class="scores">
+  <div class="score-row"><div class="name">Contenu &amp; rythme éditorial</div>
+    <div class="track"><div class="fill" style="width:82%;background:#1a7a52"></div></div>
+    <div class="val">8,2/10</div><div class="cmt">Production régulière et de fond, réel atout</div></div>
+
+  <div class="score-row"><div class="name">Sécurité applicative</div>
+    <div class="track"><div class="fill" style="width:55%;background:#b8730d"></div></div>
+    <div class="val">5,5/10</div><div class="cmt">Bon pare-feu, mais socle logiciel périmé</div></div>
+
+  <div class="score-row"><div class="name">Architecture technique</div>
+    <div class="track"><div class="fill" style="width:52%;background:#b8730d"></div></div>
+    <div class="val">5,2/10</div><div class="cmt">WordPress assemblé, non sur-mesure, surchargé</div></div>
+
+  <div class="score-row"><div class="name">Responsivité (mobile)</div>
+    <div class="track"><div class="fill" style="width:65%;background:#b8730d"></div></div>
+    <div class="val">6,5/10</div><div class="cmt">Mise en page correcte, poids inadapté</div></div>
+
+  <div class="score-row"><div class="name">Référencement / visibilité</div>
+    <div class="track"><div class="fill" style="width:48%;background:#b8730d"></div></div>
+    <div class="val">4,8/10</div><div class="cmt">Aucun H1 sur les articles, pas de Google News</div></div>
+
+  <div class="score-row"><div class="name">Affichage &amp; interface</div>
+    <div class="track"><div class="fill" style="width:45%;background:#c0233c"></div></div>
+    <div class="val">4,5/10</div><div class="cmt">Contenus illisibles en mode sombre</div></div>
+
+  <div class="score-row"><div class="name">Accessibilité</div>
+    <div class="track"><div class="fill" style="width:34%;background:#c0233c"></div></div>
+    <div class="val">3,4/10</div><div class="cmt">Navigation clavier et lecteurs d'écran entravés</div></div>
+
+  <div class="score-row"><div class="name">Performance</div>
+    <div class="track"><div class="fill" style="width:22%;background:#c0233c"></div></div>
+    <div class="val">2,2/10</div><div class="cmt">Le point noir absolu du site</div></div>
+
+  <div class="score-row"><div class="name">Conformité légale &amp; données</div>
+    <div class="track"><div class="fill" style="width:15%;background:#c0233c"></div></div>
+    <div class="val">1,5/10</div><div class="cmt">Aucune mention légale, traçage sans consentement</div></div>
+</div>
+
+<h3>Les cinq urgences</h3>
+<table>
+  <thead><tr><th style="width:7mm">#</th><th>Constat</th><th style="width:22mm">Gravité</th><th style="width:34mm">Conséquence directe</th></tr></thead>
+  <tbody>
+    <tr><td><b>1</b></td>
+      <td><b>Aucune mention légale, ni politique de confidentialité, ni politique cookies</b> — les quatre URL testées renvoient une erreur 404. Pourtant Google Analytics dépose des cookies de pistage dès l'arrivée du lecteur, sans lui demander son accord.</td>
+      <td><span class="b b-crit">Critique</span></td>
+      <td>Exposition juridique ; organe de presse non identifiable au sens légal</td></tr>
+
+    <tr><td><b>2</b></td>
+      <td><b>Page d'accueil de 9,35 Mo</b>, dont ~8 Mo d'images. Des photos de 2&nbsp;560&nbsp;px sont envoyées pour être affichées en 85&nbsp;px, et <b>aucune image n'utilise le redimensionnement automatique</b> (<code>srcset</code>).</td>
+      <td><span class="b b-crit">Critique</span></td>
+      <td>Coût data supporté par le lecteur ; abandon avant affichage</td></tr>
+
+    <tr><td><b>3</b></td>
+      <td><b>En mode sombre, le corps des articles est noir sur fond noir</b> (contraste mesuré 1,1:1). Le texte devient illisible pour tout lecteur ayant activé ce thème.</td>
+      <td><span class="b b-crit">Critique</span></td>
+      <td>Contenu inaccessible ; lecteur perdu immédiatement</td></tr>
+
+    <tr><td><b>4</b></td>
+      <td><b>Aucun moyen de contact du pied de page ne fonctionne.</b> Sur les 9 liens qu'il contient : <b>0 lien e-mail</b> et <b>0 lien téléphone</b> valides, <b>4 icônes sociales mortes</b>. Pire, l'adresse de la rédaction publiée — <code>redaction@lecorporate.com</code>, sans tiret — repose sur un domaine <b>qui n'est même pas enregistré</b>.</td>
+      <td><span class="b b-crit">Critique</span></td>
+      <td>Le lecteur ne peut joindre le journal ; risque d'usurpation</td></tr>
+
+    <tr><td><b>5</b></td>
+      <td><b>Les pages d'articles ne comportent aucun titre principal</b> (<code>&lt;h1&gt;</code>). Le titre de l'article est balisé en <code>&lt;h3&gt;</code>, sous les blocs du pied de page en <code>&lt;h2&gt;</code>.</td>
+      <td><span class="b b-warn">Élevée</span></td>
+      <td>Handicap de référencement sur chacun des 1 019 articles</td></tr>
+  </tbody>
+</table>
+
+<div class="box ok">
+  <h4>Ce qui fonctionne bien — à préserver</h4>
+  <p>L'audit ne relève pas que des défauts. Plusieurs choix sont solides et méritent d'être conservés&nbsp;:
+  un <b>pare-feu anti-robots efficace</b> (LWS/Anubis) qui bloque l'énumération et les attaques automatisées ;
+  <b>HTTPS correctement imposé</b> avec redirection de <code>http://</code> et de <code>www</code> ;
+  les fichiers sensibles (<code>.env</code>, <code>.git</code>, <code>readme.html</code>, journaux de débogage) sont <b>inaccessibles</b> ;
+  <code>xmlrpc.php</code> est neutralisé ; le <b>mode sombre existe et persiste</b> d'une page à l'autre ;
+  la mise en page mobile <b>ne déborde pas</b> horizontalement ; le partage <b>WhatsApp est mis en avant</b>,
+  ce qui est le bon réflexe pour l'audience visée ; et surtout la <b>production éditoriale est réelle et régulière</b>.</p>
+</div>
+</section>
+
+<!-- ============ 02 ARCHITECTURE ============ -->
+<section class="page-break">
+<h2 class="sec"><span class="num">02</span>Architecture &amp; pile technique</h2>
+<p class="sec-intro">Réponse directe à la question posée : de quoi ce site est-il fait, et a-t-il été développé sur mesure&nbsp;?</p>
+
+<div class="box">
+  <h4>Est-ce un site WordPress ? Oui, sans ambiguïté.</h4>
+  <p>Le site tourne sous <b>WordPress 6.3.10</b>. L'empreinte est confirmée par trois sources indépendantes :
+  les balises <code>generator</code> du code source, l'API REST <code>/wp-json/</code> ouverte et fonctionnelle,
+  et les chemins de fichiers <code>/wp-content/</code> observés dans le trafic réseau réel.</p>
+  <p><b>Est-ce « monté de bout en bout » (sur mesure) ? Non.</b> Il s'agit d'un <b>assemblage</b> :
+  un thème commercial du marché (<code>newzin</code>, thème de magazine d'actualité vendu sur catalogue),
+  personnalisé via un thème enfant, et complété par un constructeur de pages visuel (Elementor).
+  Aucun développement spécifique structurant n'a été détecté. C'est un choix légitime et économique,
+  mais il implique une dépendance forte aux mises à jour de l'éditeur du thème et explique une bonne
+  partie des problèmes de performance constatés plus loin.</p>
+</div>
+
+<h3>Composants identifiés</h3>
+<table>
+  <thead><tr><th style="width:40mm">Composant</th><th style="width:26mm">Version</th><th>Rôle et observation</th><th style="width:20mm">État</th></tr></thead>
+  <tbody>
+    <tr><td><b>WordPress</b></td><td>6.3.10</td><td>Socle. La branche 6.3 date d'août 2023 : elle reçoit encore des correctifs de sécurité, mais le site est privé de deux ans d'améliorations de performance et de durcissement.</td><td><span class="b b-warn">Périmé</span></td></tr>
+    <tr><td><b>Thème <code>newzin</code></b></td><td>—</td><td>Thème magazine commercial + thème enfant <code>newzin-child</code>. Charge à lui seul une quarantaine de fichiers JavaScript distincts.</td><td><span class="b b-warn">Lourd</span></td></tr>
+    <tr><td><b>Elementor</b></td><td>3.21.7</td><td>Constructeur visuel de pages. Version de mai 2024.</td><td><span class="b b-warn">Périmé</span></td></tr>
+    <tr><td><b>WooCommerce</b></td><td>8.5.5</td><td><b>Boutique en ligne active sans boutique.</b> Charge React, ReactDOM, Lodash et toute la pile de blocs e-commerce sur chaque page — y compris les articles. Aucune fonction marchande n'est visible sur le site.</td><td><span class="b b-crit">Inutile</span></td></tr>
+    <tr><td><b>Slider Revolution</b></td><td>6.6.12</td><td>Module de carrousels. Ce composant a connu par le passé des vulnérabilités critiques largement exploitées ; le maintenir à jour est impératif.</td><td><span class="b b-warn">À surveiller</span></td></tr>
+    <tr><td><b>Yoast SEO</b></td><td>21.8.1</td><td>Référencement. Correctement configuré (balises, plan de site, données structurées).</td><td><span class="b b-ok">OK</span></td></tr>
+    <tr><td><b>MonsterInsights</b></td><td>—</td><td>Connecteur Google Analytics 4 (<code>G-7EDJHN210F</code>).</td><td><span class="b b-crit">Sans consentement</span></td></tr>
+    <tr><td><b>Contact Form 7</b></td><td>5.9.5</td><td>Module du formulaire de contact, seul réellement utilisé.</td><td><span class="b b-info">Actif</span></td></tr>
+    <tr><td><b>WPForms Lite</b></td><td>1.8.8.3</td><td><b>Second module de formulaires installé en parallèle</b>, chargé sur toutes les pages mais <b>sans aucun formulaire déployé</b>. Redondance à supprimer.</td><td><span class="b b-warn">Redondant</span></td></tr>
+    <tr><td><b>Instagram Feed / Redux</b></td><td>4.4.17</td><td>Flux Instagram et cadriciel d'options du thème.</td><td><span class="b b-info">Présent</span></td></tr>
+  </tbody>
+</table>
+
+<h3>Hébergement et infrastructure</h3>
+<table>
+  <thead><tr><th style="width:42mm">Élément</th><th>Constat</th></tr></thead>
+  <tbody>
+    <tr><td><b>Hébergeur</b></td><td><b>LWS</b> (hébergeur français) — serveurs de noms <code>ns21-24.lwsdns.com</code>, adresse IP <code>185.135.132.111</code>. Hébergement mutualisé avec cache en périphérie (<code>wpfastestcache</code>).</td></tr>
+    <tr><td><b>Localisation</b></td><td>Infrastructure européenne. <b>Point d'attention majeur pour l'audience visée</b> : chaque requête d'un lecteur à Libreville traverse l'Europe. La latence s'ajoute au poids de la page — voir section 04.</td></tr>
+    <tr><td><b>IPv6</b></td><td>Actif (<code>2a00:7ee0:1:0:3:2246:0:16c</code>) — bon point.</td></tr>
+    <tr><td><b>HTTP/3</b></td><td>Annoncé (<code>alt-svc: h3</code>) — bon point, réduit la latence sur réseaux mobiles.</td></tr>
+    <tr><td><b>Pare-feu</b></td><td><b>LWS Protection DDoS</b> basée sur <b>Anubis 1.25.0</b> : défi de calcul JavaScript imposé aux clients automatisés. Très efficace — il a bloqué l'intégralité des tentatives d'analyse par outils en ligne de commande pendant cet audit.</td></tr>
+    <tr><td><b>Certificat TLS</b></td><td>Let's Encrypt, valide du 21 juillet au <b>19 octobre 2026</b>, couvrant le domaine et son sous-domaine <code>www</code>. Renouvellement automatique à vérifier.</td></tr>
+    <tr><td><b>Messagerie</b></td><td>Serveur dédié <code>mail.le-corporate.com</code> (<code>83.229.19.97</code>), SPF strict, DMARC en quarantaine. Voir section 09.</td></tr>
+  </tbody>
+</table>
+
+<div class="box warn">
+  <h4>Le poids mort : WooCommerce sur un site de presse</h4>
+  <p>WooCommerce est installé et actif alors qu'<b>aucune fonction de vente n'existe sur le site</b>.
+  Conséquence mesurée : sur chaque page, y compris les articles, le navigateur télécharge la bibliothèque
+  React, ReactDOM 18.2, Lodash et l'ensemble des blocs de commande (<code>wc-blocks-registry</code>,
+  <code>blocks-checkout</code>, <code>order-attribution</code>). Ce module dépose en outre <b>sept cookies
+  de pistage publicitaire</b> (<code>sbjs_*</code>, dits « Sourcebuster ») sur le navigateur de chaque
+  visiteur — un traitement de données personnelles sans finalité ni base légale, puisqu'il n'y a rien à vendre.</p>
+  <p>Sa désactivation est le geste unique au meilleur rapport gain/risque de tout cet audit.</p>
+</div>
+</section>
+
+<!-- ============ 03 SÉCURITÉ ============ -->
+<section class="page-break">
+<h2 class="sec"><span class="num">03</span>Sécurité</h2>
+<p class="sec-intro">Ce qui protège correctement le site, et les brèches qui subsistent.</p>
+
+<h3>Ce qui est bien protégé</h3>
+<table>
+  <thead><tr><th style="width:52mm">Test effectué</th><th style="width:20mm">Résultat</th><th>Lecture</th></tr></thead>
+  <tbody>
+    <tr><td><code>/.env</code> (secrets applicatifs)</td><td><span class="b b-ok">403 bloqué</span></td><td>Correct</td></tr>
+    <tr><td><code>/.git/config</code> (code source)</td><td><span class="b b-ok">403 bloqué</span></td><td>Correct</td></tr>
+    <tr><td><code>/wp-config.php.bak</code></td><td><span class="b b-ok">403 bloqué</span></td><td>Correct</td></tr>
+    <tr><td><code>/wp-content/debug.log</code></td><td><span class="b b-ok">403 bloqué</span></td><td>Correct</td></tr>
+    <tr><td><code>/readme.html</code> (version WP)</td><td><span class="b b-ok">403 bloqué</span></td><td>Correct</td></tr>
+    <tr><td>Listage des répertoires <code>/uploads/</code></td><td><span class="b b-ok">Bloqué</span></td><td>Correct</td></tr>
+    <tr><td><code>/xmlrpc.php</code> (amplification d'attaques)</td><td><span class="b b-ok">406 bloqué</span></td><td>Correct — supprime un vecteur classique de force brute</td></tr>
+    <tr><td>Redirection <code>http://</code> → <code>https://</code></td><td><span class="b b-ok">301</span></td><td>Correct, mais gérée par PHP plutôt que par le serveur web (voir ci-dessous)</td></tr>
+    <tr><td>Divulgation de l'en-tête <code>Server</code></td><td><span class="b b-ok">Masquée</span></td><td>Correct</td></tr>
+  </tbody>
+</table>
+
+<h3>Les failles constatées</h3>
+
+<div class="box crit">
+  <h4>1. Le compte administrateur s'appelle « admin » — et le site le publie</h4>
+  <p>L'interface <code>/wp-json/wp/v2/users</code> est ouverte et retourne&nbsp;:
+  <code>{"id":1,"name":"Le corporate","slug":"admin"}</code>.</p>
+  <p>Deux problèmes se cumulent. D'abord, l'<b>énumération des comptes est possible</b> : n'importe qui peut
+  obtenir la liste des identifiants de connexion. Ensuite, l'identifiant est <b>« admin », la valeur par défaut
+  la plus attaquée au monde</b>. Un attaquant n'a donc plus qu'une seule inconnue à deviner : le mot de passe.
+  La moitié du travail lui est offerte.</p>
+  <p><b>À faire :</b> créer un nouveau compte administrateur avec un identifiant non devinable, transférer les
+  articles vers ce compte, supprimer le compte <code>admin</code>, puis désactiver l'énumération REST des utilisateurs.
+  Activer l'authentification à deux facteurs sur les comptes restants.</p>
+</div>
+
+<div class="box crit">
+  <h4>2. TLS 1.0 et TLS 1.1 sont encore acceptés</h4>
+  <p>Le serveur accepte les quatre versions du protocole de chiffrement, dont <b>TLS 1.0 et TLS 1.1</b>,
+  officiellement abandonnés par l'ensemble des navigateurs depuis 2020 et rejetés par les référentiels
+  de sécurité bancaire (PCI-DSS). Ces versions sont vulnérables à des attaques connues (BEAST, POODLE).</p>
+  <p><b>À faire :</b> demander à LWS la désactivation de TLS 1.0 et 1.1, et ne conserver que TLS 1.2 et 1.3.
+  Aucun lecteur réel ne sera affecté — aucun navigateur en circulation n'en dépend.</p>
+</div>
+
+<div class="box crit">
+  <h4>3. Aucun en-tête de sécurité HTTP n'est défini</h4>
+  <p>Les huit en-têtes de protection standard ont été testés : <b>les huit sont absents.</b></p>
+  <table style="margin-top:2mm;margin-bottom:2mm">
+    <thead><tr><th style="width:56mm">En-tête</th><th style="width:18mm">État</th><th>Ce que son absence autorise</th></tr></thead>
+    <tbody>
+      <tr><td><code>Strict-Transport-Security</code></td><td><span class="b b-crit">Absent</span></td><td>Interception possible lors de la toute première visite (avant redirection)</td></tr>
+      <tr><td><code>Content-Security-Policy</code></td><td><span class="b b-crit">Absent</span></td><td>Aucun garde-fou si un script malveillant est injecté</td></tr>
+      <tr><td><code>X-Frame-Options</code></td><td><span class="b b-crit">Absent</span></td><td>Le site peut être encadré par un tiers (détournement de clic)</td></tr>
+      <tr><td><code>X-Content-Type-Options</code></td><td><span class="b b-crit">Absent</span></td><td>Interprétation abusive de fichiers déposés</td></tr>
+      <tr><td><code>Referrer-Policy</code></td><td><span class="b b-crit">Absent</span></td><td>Fuite d'URL de navigation vers les sites tiers</td></tr>
+      <tr><td><code>Permissions-Policy</code></td><td><span class="b b-crit">Absent</span></td><td>Aucune restriction sur caméra, micro, géolocalisation</td></tr>
+    </tbody>
+  </table>
+  <p><b>À faire :</b> ces en-têtes s'ajoutent en quelques lignes dans le fichier <code>.htaccess</code> ou via
+  un module de sécurité. C'est un correctif rapide, à faible risque et à fort rendement.</p>
+</div>
+
+<div class="box warn">
+  <h4>4. Un socle logiciel en retard de plusieurs versions majeures</h4>
+  <p>WordPress 6.3.10, Elementor 3.21.7, WooCommerce 8.5.5 : chacun de ces composants accuse un retard
+  significatif. Sur WordPress, l'essentiel des intrusions réelles ne vise pas le cœur du logiciel mais
+  <b>les extensions non mises à jour</b>. Le site cumule ici huit extensions, dont un constructeur de pages
+  et un module de carrousel historiquement ciblés.</p>
+  <p><b>À faire :</b> planifier une campagne de mise à jour sur environnement de test, puis en production,
+  et activer les mises à jour automatiques au moins pour les correctifs de sécurité. Prévoir une sauvegarde
+  restaurable avant toute opération.</p>
+</div>
+
+<div class="box">
+  <h4>5. Point mineur : la redirection HTTPS est traitée par WordPress</h4>
+  <p>L'en-tête <code>X-Redirect-By: WordPress</code> indique que la redirection <code>http</code> → <code>https</code>
+  est effectuée par PHP, donc après démarrage complet du moteur WordPress. La traiter au niveau du serveur web
+  (<code>.htaccess</code>) serait plus rapide et plus sûr.</p>
+</div>
+</section>
+
+<!-- ============ 04 PERFORMANCE ============ -->
+<section class="page-break">
+<h2 class="sec"><span class="num">04</span>Performance — le point critique</h2>
+<p class="sec-intro">Mesures réalisées sur navigateur réel, connexion filaire. Pour un lecteur mobile gabonais, les chiffres sont nettement plus défavorables.</p>
+
+<div class="kpis">
+  <div class="kpi bad"><div class="v bad">9,35 Mo</div><div class="l">Transféré à l'accueil</div></div>
+  <div class="kpi bad"><div class="v bad">7,96 Mo</div><div class="l">Dont images</div></div>
+  <div class="kpi bad"><div class="v bad">169</div><div class="l">Requêtes réseau</div></div>
+  <div class="kpi bad"><div class="v bad">92</div><div class="l">Fichiers JavaScript</div></div>
+  <div class="kpi bad"><div class="v bad">4,46 s</div><div class="l">Premier affichage</div></div>
+</div>
+
+<div class="box crit">
+  <h4>Ce que 9,35 Mo signifient concrètement pour votre lecteur</h4>
+  <p>Le lectorat visé — cadres, dirigeants et décideurs gabonais — consulte massivement depuis un téléphone,
+  sur un forfait où <b>le mégaoctet a un coût réel et se décompte</b>.</p>
+  <p>Dans ces conditions&nbsp;: <b>une seule consultation de la page d'accueil consomme environ 9,35 Mo</b>.
+  Une centaine de visites dans le mois représentent donc près d'<b>un gigaoctet du forfait du lecteur</b>,
+  pour une page de titres d'actualité. À titre de comparaison, une page d'accueil de site de presse
+  correctement optimisée se situe entre 1 et 2 Mo.</p>
+  <p>S'y ajoute un facteur aggravant mesuré : <b>les images ne portent aucune consigne de cache navigateur</b>
+  (aucun en-tête <code>Cache-Control</code>). Le navigateur doit donc revalider chaque image auprès du serveur
+  européen à chaque visite — soit une cinquantaine d'allers-retours supplémentaires, à chaque fois,
+  depuis Libreville.</p>
+</div>
+
+<h3>Origine du poids : les images</h3>
+<p>Sur 51 images chargées à l'accueil, le total atteint 7,96 Mo. Quatre défauts se cumulent :</p>
+
+<table>
+  <thead><tr><th style="width:52mm">Défaut mesuré</th><th style="width:22mm">Ampleur</th><th>Explication</th></tr></thead>
+  <tbody>
+    <tr><td><b>Images surdimensionnées</b></td><td><span class="b b-crit">Ratio 30:1</span></td>
+      <td>Des photos de <b>2 560 px de large sont envoyées pour être affichées en 85 px</b>. Le navigateur télécharge 30 fois plus de pixels que nécessaire. Exemple relevé : une image de <b>775 Ko</b> pour une vignette.</td></tr>
+    <tr><td><b>Aucune image adaptative</b></td><td><span class="b b-crit">0 sur 64</span></td>
+      <td>Aucune image n'utilise l'attribut <code>srcset</code>. WordPress le génère pourtant automatiquement : <b>le thème neutralise ce mécanisme</b>. Conséquence : un téléphone reçoit exactement les mêmes fichiers qu'un grand écran.</td></tr>
+    <tr><td><b>Format obsolète</b></td><td><span class="b b-warn">100 % JPEG/PNG</span></td>
+      <td>Aucune image en WebP ou AVIF. La conversion réduirait le poids de 30 à 50 % <b>sans perte visible</b>.</td></tr>
+    <tr><td><b>Chargement différé quasi absent</b></td><td><span class="b b-warn">5 sur 64</span></td>
+      <td>59 images sont téléchargées immédiatement, y compris celles situées très bas dans la page, que la majorité des lecteurs ne verra jamais.</td></tr>
+    <tr><td><b>Dimensions non déclarées</b></td><td><span class="b b-warn">62 sur 64</span></td>
+      <td>Sans attributs <code>width</code>/<code>height</code>, la page « saute » pendant le chargement : le lecteur perd sa ligne ou clique à côté.</td></tr>
+  </tbody>
+</table>
+
+<div class="box warn">
+  <h4>La cause racine : des photos WhatsApp publiées telles quelles</h4>
+  <p>Les noms de fichiers sont éloquents : <code>WhatsApp-Image-2026-09-03-at-10.36.47.jpeg</code>,
+  <code>WhatsApp-Image-2026-08-13-at-02.13.10.jpeg</code>… La chaîne de production éditoriale consiste
+  manifestement à <b>recevoir la photo par WhatsApp et à la téléverser directement</b> dans WordPress,
+  sans redimensionnement ni compression.</p>
+  <p>Au-delà du poids, cette pratique a trois autres conséquences : les <b>noms de fichiers ne portent aucun
+  mot-clé</b> exploitable pour le référencement des images ; <b>aucune métadonnée de crédit photo</b> n'est
+  attachée, ce qui est problématique pour un organe de presse au regard du droit d'auteur ; et la même image
+  de couverture est réutilisée en partage social (balise <code>og:image</code>) dans sa version brute.</p>
+</div>
+
+<h3>Origine du poids : le JavaScript</h3>
+<p><b>92 fichiers JavaScript</b> et 16 feuilles de style sont chargés séparément, sans regroupement.
+Plusieurs bibliothèques sont chargées <b>en double</b>, le thème et son extension embarquant chacun leur copie :</p>
+<ul class="tight">
+  <li><code>swiper.min.js</code> — chargé <b>deux fois</b> (thème + extension <code>newzin_plugin</code>)</li>
+  <li><code>wow.min.js</code> — chargé <b>deux fois</b></li>
+  <li>Bootstrap — chargé deux fois sous deux formes (<code>bootstrap.min.js</code> et <code>bootstrap.bundle.min.js</code>)</li>
+  <li>La pile React complète de WooCommerce, <b>sur un site sans boutique</b></li>
+</ul>
+<p>Sur la page d'article, la situation est identique : <b>91 fichiers JavaScript</b>, WooCommerce et
+Slider Revolution compris, pour afficher 373 mots de texte.</p>
+
+<div class="box ok">
+  <h4>Gain réaliste attendu</h4>
+  <p>Les corrections listées en section 10 — recompression des images, activation du <code>srcset</code>,
+  conversion WebP, désactivation de WooCommerce, regroupement des scripts, cache des images —
+  permettent raisonnablement de ramener la page d'accueil <b>sous les 2 Mo</b> et le premier affichage
+  <b>sous les 2 secondes</b>, sans toucher ni à la maquette ni au contenu.
+  C'est une division du poids par quatre à cinq.</p>
+</div>
+</section>
+
+<!-- ============ 05 AFFICHAGE ============ -->
+<section class="page-break">
+<h2 class="sec"><span class="num">05</span>Affichage, interface &amp; responsivité</h2>
+<p class="sec-intro">Rendu constaté sur écran large, sur mobile 375 px, et dans les deux thèmes clair et sombre.</p>
+
+<h3>Impression générale</h3>
+<p>La maquette est <b>soignée et professionnelle</b>. La hiérarchie typographique est lisible, le traitement
+des titres est affirmé, la palette (bleu marine <code>#002060</code> / magenta <code>#c74794</code>) est
+cohérente et distinctive. Visuellement, le site tient son rang de publication économique.</p>
+
+<figure>
+  <img src="img/accueil-desktop.jpg" alt="Page d'accueil sur écran large">
+  <figcaption><b>Accueil sur écran large (1440 px).</b> Mise en page maîtrisée. À noter : l'en-tête et le menu
+  occupent environ 310 px avant le moindre contenu éditorial, soit près de 30 % du premier écran — le menu
+  se déploie sur deux lignes faute de place.</figcaption>
+</figure>
+
+<h3>Responsivité mobile</h3>
+<p>Vérification menée en émulation d'un écran de <b>375 × 812 px</b> dans un navigateur réel, avec rechargement
+complet de la page. Résultats mesurés :</p>
+
+<table>
+  <thead><tr><th style="width:58mm">Critère mesuré</th><th class="num" style="width:24mm">Valeur</th><th>Verdict</th></tr></thead>
+  <tbody>
+    <tr><td>Largeur du document vs écran</td><td class="num">375 / 375 px</td><td><span class="b b-ok">Conforme</span> — aucun défilement latéral</td></tr>
+    <tr><td>Débordement horizontal</td><td class="num">0 px</td><td><span class="b b-ok">Conforme</span> — carrousels bien confinés</td></tr>
+    <tr><td>Méta-balise <code>viewport</code></td><td class="num">présente</td><td><span class="b b-ok">Conforme</span></td></tr>
+    <tr><td>Bascule du menu en hamburger</td><td class="num">effective</td><td><span class="b b-ok">Conforme</span></td></tr>
+    <tr><td>Langue du document</td><td class="num">fr-FR</td><td><span class="b b-ok">Conforme</span></td></tr>
+    <tr><td><b>Cibles tactiles &lt; 40 px</b></td><td class="num"><b>154 / 220</b></td><td><span class="b b-warn">À revoir</span></td></tr>
+    <tr><td><b>Images adaptées à l'écran</b></td><td class="num"><b>0 / 64</b></td><td><span class="b b-crit">Non conforme</span> — mêmes fichiers qu'en version bureau</td></tr>
+  </tbody>
+</table>
+
+<div class="fig-row">
+  <div style="flex:1">
+    <p><b>Bon point — aucun débordement horizontal.</b> Le test mesuré à 375 px donne une largeur de document
+    strictement égale à celle de l'écran (375 px) : la page ne défile pas latéralement, défaut pourtant très
+    fréquent. Les carrousels sont correctement confinés.</p>
+    <p>La méta-balise <code>viewport</code> est bien présente, la langue du document est déclarée
+    (<code>lang="fr-FR"</code>), et le menu bascule proprement en hamburger.</p>
+    <p><b>Réserve — les cibles tactiles.</b> Sur 220 éléments interactifs, <b>154 mesurent moins de 40 px</b>
+    dans au moins une dimension. Une partie relève de liens en ligne dans le texte (tolérable), mais les
+    icônes sociales, les pastilles de rubrique et le sélecteur de thème sont concernés, alors qu'ils sont
+    conçus pour être touchés au doigt. Le seuil recommandé est de 44 px.</p>
+    <p><b>Réserve — le poids.</b> La mise en page mobile est réussie, mais elle sert les <b>mêmes images pleine
+    résolution</b> que la version bureau (voir section 04). La responsivité visuelle est là ; la responsivité
+    technique ne l'est pas.</p>
+  </div>
+</div>
+
+<div class="box">
+  <h4>Observation annexe : le cache sert des variantes selon l'appareil</h4>
+  <p>Le serveur renvoie un en-tête <code>Vary: User-Agent</code> et le cache (<code>wpfastestcache</code>)
+  distingue les variantes bureau et mobile. Ce mécanisme fonctionne, mais il <b>multiplie les versions à
+  maintenir en cache</b> et rend le comportement du site plus difficile à vérifier depuis l'extérieur.
+  À garder à l'esprit lors des tests de recette après correction.</p>
+</div>
+
+<h3 class="page-break">Défaut critique : le mode sombre rend les articles illisibles</h3>
+<p>Le site propose un sélecteur clair/sombre, fonctionnel et dont le choix persiste d'une page à l'autre.
+Mais une fois le mode sombre activé, <b>le corps des articles reste en texte noir sur le fond sombre</b>.</p>
+
+<div class="demo">
+  <div class="before">
+    <div class="tag">Mode clair — lisible</div>
+    <div class="darktext">Le gouvernement gabonais fait face depuis quelques jours à une nouvelle offensive judiciaire. La société Bosch Capital exige le paiement…</div>
+  </div>
+  <div class="after">
+    <div class="tag">Mode sombre — texte noir sur fond noir</div>
+    <div class="darktext">Le gouvernement gabonais fait face depuis quelques jours à une nouvelle offensive judiciaire. La société Bosch Capital exige le paiement…</div>
+  </div>
+</div>
+<p style="font-size:8pt;color:#5b6474;margin-top:-1mm">
+Reproduction fidèle des valeurs mesurées sur le site : texte <code>rgb(0,0,0)</code> sur fond
+<code>rgb(12,15,22)</code>. <b>Rapport de contraste : 1,1:1</b> — le minimum exigé est de 4,5:1.
+Constat confirmé visuellement sur la page d'article.</p>
+
+<p><b>Origine probable :</b> le texte des articles porte une couleur noire explicite, héritée d'un
+copier-coller depuis un traitement de texte ou une messagerie. Cette couleur en dur écrase la règle
+d'affichage du thème sombre. Le lien « Article précédent » est touché de la même manière
+(bleu marine sur fond noir, contraste 1,26:1).</p>
+
+<div class="box crit">
+  <h4>Conséquence</h4>
+  <p>Tout lecteur ayant activé le mode sombre — souvent par confort ou pour économiser sa batterie —
+  <b>ne peut pas lire les articles</b>. Il ne signalera pas le bug : il quittera le site.
+  Le correctif est simple (purge des couleurs en dur dans le contenu et règle CSS de repli en mode sombre)
+  mais il doit être traité en priorité.</p>
+</div>
+
+<h3>Défaut : le bloc « Interview » est illisible</h3>
+<div class="fig-row">
+  <figure style="flex:0 0 58mm">
+    <img src="img/interview-bug.jpg" alt="Bloc Interview au titre illisible">
+    <figcaption><b>Rubrique Interview.</b> Le titre blanc se superpose au texte déjà incrusté dans le visuel.</figcaption>
+  </figure>
+  <div style="flex:1">
+    <p>Le titre de la rubrique Interview est affiché <b>en blanc, posé directement sur l'image de fond,
+    sans voile d'assombrissement</b>. Deux conséquences observées :</p>
+    <ul class="tight">
+      <li>Lorsque l'image est chargée, le titre <b>chevauche la typographie déjà présente dans le visuel</b>
+      (« 5 QUESTIONS », le nom déjà incrusté) : les deux textes se superposent et deviennent illisibles.</li>
+      <li>Lorsque l'image n'est pas encore appliquée, le titre devient <b>blanc sur blanc</b> —
+      contraste mesuré à <b>1,0:1</b>, soit une disparition totale. Sur une capture réalisée à 1 024 px de large,
+      la section apparaît comme <b>une bande entièrement vide</b>.</li>
+    </ul>
+    <p><b>Correctif :</b> ajouter un voile dégradé sombre sous le texte, ou une couleur de fond de repli,
+    et cesser d'utiliser des visuels comportant déjà du texte incrusté sous un titre HTML.</p>
+  </div>
+</div>
+
+<h3>Autres observations d'interface</h3>
+<div class="fig-row">
+  <figure style="flex:0 0 42mm">
+    <img src="img/pub-invendue.jpg" alt="Encart publicitaire non commercialisé">
+    <figcaption><b>Encart resté en gabarit.</b></figcaption>
+  </figure>
+  <div style="flex:1">
+    <ul class="check">
+      <li><b>Emplacements publicitaires non commercialisés.</b> Plusieurs encarts affichent le gabarit brut :
+      « ESPACE PUBLICITAIRE — Contactez-nous — 250 X 250 » et « 1000 X 90 ». Afficher les dimensions techniques
+      au lecteur donne une impression d'inventaire invendu. Mieux vaut un visuel maison soigné
+      (auto-promotion, appel à abonnement WhatsApp) qu'un gabarit vide.</li>
+      <li><b>Compteur « 0 Commentaires » sur chaque article.</b> L'audit confirme <b>0 commentaire sur
+      l'ensemble du site</b>. Répéter ce zéro sous chaque article signale une audience inerte. Puisque la
+      fonction n'est pas utilisée, il vaut mieux <b>masquer le compteur</b>.</li>
+      <li><b>Compteurs de vues révélateurs.</b> Les articles récents affichent 13, 17 ou 28 vues, quand
+      les articles de 2024-2025 en affichent 1 200 à 2 000. Écart à investiguer côté audience.</li>
+      <li><b>Titre d'article placé sous la photo.</b> Choix inhabituel en presse en ligne : le lecteur voit
+      l'image avant de savoir de quoi il s'agit.</li>
+    </ul>
+  </div>
+</div>
+</section>
+
+<!-- ============ 06 ACCESSIBILITÉ ============ -->
+<section class="page-break">
+<h2 class="sec"><span class="num">06</span>Accessibilité</h2>
+<p class="sec-intro">Capacité du site à être consulté au clavier, par un lecteur d'écran, ou par une personne malvoyante.</p>
+
+<table>
+  <thead><tr><th style="width:56mm">Critère</th><th style="width:22mm">Constat</th><th>Portée</th></tr></thead>
+  <tbody>
+    <tr><td><b>Lien d'évitement</b> (« Aller au contenu »)</td><td><span class="b b-crit">Absent</span></td>
+      <td>Un utilisateur au clavier doit parcourir <b>l'intégralité des 220 éléments</b> du menu avant d'atteindre l'article. Sur chaque page.</td></tr>
+    <tr><td><b>Repère <code>&lt;main&gt;</code></b></td><td><span class="b b-crit">Absent</span></td>
+      <td>Aucun repère de contenu principal : un lecteur d'écran ne peut pas sauter directement à l'article.</td></tr>
+    <tr><td><b>Repère <code>&lt;header&gt;</code></b></td><td><span class="b b-crit">Absent</span></td>
+      <td>Structure de page non annoncée.</td></tr>
+    <tr><td><b>Liens sans intitulé</b></td><td><span class="b b-crit">23</span></td>
+      <td>23 liens n'ont ni texte, ni <code>aria-label</code>, ni image décrite. Un lecteur d'écran annonce « lien », sans plus.</td></tr>
+    <tr><td><b>Sélecteur de thème clair/sombre</b></td><td><span class="b b-crit">Inutilisable</span></td>
+      <td>Construit avec des balises <code>&lt;span&gt;</code> sans <code>role</code>, sans <code>aria-label</code> et sans <code>tabindex</code> : <b>impossible à atteindre ou à activer au clavier</b>, invisible pour un lecteur d'écran.</td></tr>
+    <tr><td><b>Hiérarchie des titres</b></td><td><span class="b b-crit">Incohérente</span></td>
+      <td>9 <code>&lt;h1&gt;</code> sur l'accueil, <b>aucun</b> sur les articles, et 8 sauts de niveau. Le plan du document est inexploitable.</td></tr>
+    <tr><td><b>Contrastes insuffisants</b></td><td><span class="b b-crit">13 cas</span></td>
+      <td>Voir le détail ci-dessous.</td></tr>
+    <tr><td><b>Cibles tactiles &lt; 40 px</b></td><td><span class="b b-warn">154 / 220</span></td>
+      <td>Précision de pointage exigée trop élevée sur mobile.</td></tr>
+    <tr><td><b>Champ de recherche sans étiquette</b></td><td><span class="b b-warn">1</span></td>
+      <td>Seul un <code>placeholder</code> est fourni, insuffisant.</td></tr>
+    <tr><td><b>Attributs <code>alt</code> des images</b></td><td><span class="b b-ok">Conformes</span></td>
+      <td>Aucune image dépourvue d'attribut ; 2 vides seulement. <b>Bon point.</b></td></tr>
+    <tr><td><b>Langue du document</b></td><td><span class="b b-ok">fr-FR</span></td><td>Correctement déclarée. <b>Bon point.</b></td></tr>
+    <tr><td><b>Étiquettes du formulaire de contact</b></td><td><span class="b b-ok">Liées</span></td><td>Correctement associées aux champs. <b>Bon point.</b></td></tr>
+  </tbody>
+</table>
+
+<h3>Contrastes les plus faibles (mode clair)</h3>
+<table>
+  <thead><tr><th>Élément</th><th class="num" style="width:20mm">Mesuré</th><th class="num" style="width:20mm">Requis</th><th style="width:46mm">Lecture</th></tr></thead>
+  <tbody>
+    <tr><td>Titre de la rubrique Interview</td><td class="num"><b style="color:#c0233c">1,0</b></td><td class="num">3,0</td><td>Invisible</td></tr>
+    <tr><td>Libellé « Linkedin » (icône sociale)</td><td class="num"><b style="color:#c0233c">1,3</b></td><td class="num">4,5</td><td>Invisible</td></tr>
+    <tr><td>Dates des articles (gris <code>#ccc</code>)</td><td class="num"><b style="color:#c0233c">1,6</b></td><td class="num">4,5</td><td>Quasi illisible</td></tr>
+    <tr><td>Chapôs des articles (gris <code>#999</code>)</td><td class="num"><b style="color:#c0233c">2,5</b></td><td class="num">4,5</td><td>Pénible à lire</td></tr>
+    <tr><td>Adresses e-mail du pied de page</td><td class="num"><b style="color:#c0233c">2,7</b></td><td class="num">4,5</td><td>Pénible — or c'est l'information de contact</td></tr>
+    <tr><td>Pastilles de rubrique (blanc sur magenta)</td><td class="num"><b style="color:#b8730d">4,4</b></td><td class="num">4,5</td><td>Juste sous le seuil — corrigeable en assombrissant légèrement le magenta</td></tr>
+  </tbody>
+</table>
+
+<div class="box">
+  <h4>Pourquoi cela compte au-delà du handicap</h4>
+  <p>Ces corrections ne bénéficient pas qu'aux personnes en situation de handicap. Un contraste
+  insuffisant devient <b>franchement illisible en plein soleil</b> sur un téléphone — condition de lecture
+  ordinaire à Libreville. Et les moteurs de recherche exploitent la structure des titres et les repères
+  sémantiques pour comprendre les pages : l'accessibilité et le référencement se corrigent ici d'un même geste.</p>
+</div>
+</section>
+
+<!-- ============ 07 SEO ============ -->
+<section class="page-break">
+<h2 class="sec"><span class="num">07</span>Référencement &amp; visibilité presse</h2>
+<p class="sec-intro">Ce qui est correctement en place, et ce qui prive le site d'audience.</p>
+
+<h3>Fondations saines</h3>
+<ul class="check">
+  <li><code>robots.txt</code> correct, plan de site déclaré, <b>aucun blocage d'indexation</b> involontaire.</li>
+  <li><b>Plan de site Yoast complet</b> : articles (2 fichiers), pages, catégories, étiquettes, auteurs.</li>
+  <li><b>URL canoniques présentes</b> et cohérentes sur les articles.</li>
+  <li><b>Balises Open Graph complètes</b> (titre, description, image, type, langue) — le partage Facebook, LinkedIn et WhatsApp s'affiche correctement.</li>
+  <li><b>Données structurées présentes</b> : <code>Organization</code>, <code>WebSite</code>, <code>BreadcrumbList</code>, <code>Article</code>, <code>Person</code>.</li>
+  <li><b>Flux RSS fonctionnel</b> (10 articles).</li>
+  <li><b>Erreur 404 correctement renvoyée</b> pour les URL inexistantes.</li>
+  <li>Métadescriptions présentes et de longueur convenable (~136 caractères).</li>
+</ul>
+
+<h3>Les manques</h3>
+<table>
+  <thead><tr><th style="width:50mm">Point</th><th style="width:20mm">Gravité</th><th>Constat et correctif</th></tr></thead>
+  <tbody>
+    <tr><td><b>Aucun <code>&lt;h1&gt;</code> sur les articles</b></td><td><span class="b b-crit">Élevée</span></td>
+      <td>Le titre de l'article est balisé <code>&lt;h3&gt;</code>. Les blocs du pied de page (« Régie commerciale », « Rédaction ») sont en <code>&lt;h2&gt;</code> et <b>dominent donc le titre de l'article</b> dans la hiérarchie du document. Défaut répliqué sur les <b>1 019 articles</b>. À corriger dans le gabarit du thème enfant.</td></tr>
+    <tr><td><b>9 <code>&lt;h1&gt;</code> sur l'accueil</b></td><td><span class="b b-warn">Moyenne</span></td>
+      <td>Situation symétriquement inverse : la page d'accueil dilue son sujet sur neuf titres principaux. Un seul doit subsister.</td></tr>
+    <tr><td><b>Schéma <code>Article</code> au lieu de <code>NewsArticle</code></b></td><td><span class="b b-warn">Moyenne</span></td>
+      <td>Pour un organe de presse, le type <code>NewsArticle</code> est celui attendu par Google Actualités et Discover. Réglable dans Yoast (type de contenu par défaut).</td></tr>
+    <tr><td><b>Pas de plan de site « Actualités »</b></td><td><span class="b b-warn">Moyenne</span></td>
+      <td><code>/news-sitemap.xml</code> renvoie 404. C'est le fichier qu'attend Google Actualités pour indexer rapidement les publications récentes. Indispensable pour une candidature à Google News.</td></tr>
+    <tr><td><b>Aucune balise Twitter Card</b></td><td><span class="b b-warn">Moyenne</span></td>
+      <td>Absentes sur les articles testés. Le partage sur X s'affiche en lien brut, sans visuel.</td></tr>
+    <tr><td><b>Métadescription absente sur l'accueil</b></td><td><span class="b b-warn">Moyenne</span></td>
+      <td>La page d'accueil n'a <b>aucune</b> <code>meta description</code> : Google compose lui-même l'extrait affiché, à partir de fragments de widgets. Elle est également absente sur une partie des articles — la couverture est incohérente.</td></tr>
+    <tr><td><b>Titre d'accueil trop court</b></td><td><span class="b b-warn">Moyenne</span></td>
+      <td><code>« Accueil - Le Corporate »</code> — 22 caractères, sans aucun mot-clé. C'est la page la mieux positionnée du site : elle devrait porter le positionnement (ex. « Le Corporate — L'actualité économique et des entreprises au Gabon »).</td></tr>
+    <tr><td><b>Image de partage de l'accueil inadaptée</b></td><td><span class="b b-warn">Moyenne</span></td>
+      <td>La balise <code>og:image</code> de l'accueil pointe vers le logo en <b>118 × 153 px</b>, au format portrait. Partagé sur WhatsApp ou LinkedIn, le lien s'affiche avec une vignette minuscule et déformée. Format attendu : 1 200 × 630 px.</td></tr>
+    <tr><td><b>Titres d'articles trop longs</b></td><td><span class="b b-info">Faible</span></td>
+      <td>115 et 136 caractères sur les articles testés : Google tronque au-delà d'environ 60. Le titre affiché en résultat de recherche est donc coupé.</td></tr>
+    <tr><td><b>Aucune signature de journaliste</b></td><td><span class="b b-warn">Moyenne</span></td>
+      <td>Les 50 derniers articles sont tous attribués au <b>même compte unique</b> (« Le corporate », <code>/author/admin/</code>). Aucun auteur nommé n'apparaît. Pour un média, la signature est un signal de crédibilité — et Google Actualités valorise explicitement les pages d'auteur identifiées.</td></tr>
+    <tr><td><b>Fil d'Ariane incomplet</b></td><td><span class="b b-info">Faible</span></td>
+      <td>Le <code>BreadcrumbList</code> des articles ne comporte pas le niveau « Accueil ».</td></tr>
+    <tr><td><b>Plan de site des fichiers joints</b></td><td><span class="b b-info">Faible</span></td>
+      <td>Deux fichiers <code>attachment-sitemap</code> proposent à l'indexation les pages de pièces jointes — pages sans contenu réel. À désactiver dans Yoast.</td></tr>
+    <tr><td><b>Vitesse de chargement</b></td><td><span class="b b-crit">Élevée</span></td>
+      <td>Rappel : 4,46 s de premier affichage et 9,35 Mo. Les signaux de performance (Core Web Vitals) sont un critère de classement, et la mise en page « saute » faute de dimensions d'images déclarées.</td></tr>
+  </tbody>
+</table>
+</section>
+
+<!-- ============ 08 CONFORMITÉ ============ -->
+<section class="page-break">
+<h2 class="sec"><span class="num">08</span>Conformité légale &amp; données personnelles</h2>
+<p class="sec-intro">Le domaine le plus déficitaire de l'audit. Les constats ci-dessous sont factuels ; leur qualification juridique définitive relève d'un conseil habilité.</p>
+
+<div class="box crit">
+  <h4>Aucune page légale n'existe sur le site</h4>
+  <p>Les URL suivantes ont été testées une à une : toutes renvoient une <b>erreur 404</b>.</p>
+  <table style="margin:2mm 0">
+    <thead><tr><th>Page attendue</th><th style="width:22mm">Résultat</th><th>Page attendue</th><th style="width:22mm">Résultat</th></tr></thead>
+    <tbody>
+      <tr><td><code>/mentions-legales/</code></td><td><span class="b b-crit">404</span></td><td><code>/cgu/</code></td><td><span class="b b-crit">404</span></td></tr>
+      <tr><td><code>/politique-de-confidentialite/</code></td><td><span class="b b-crit">404</span></td><td><code>/cookies/</code></td><td><span class="b b-crit">404</span></td></tr>
+      <tr><td><code>/privacy-policy/</code></td><td><span class="b b-crit">404</span></td><td><code>/conditions-generales/</code></td><td><span class="b b-crit">404</span></td></tr>
+      <tr><td><code>/politique-de-cookies/</code></td><td><span class="b b-crit">404</span></td><td><code>/editeur/</code>, <code>/equipe/</code></td><td><span class="b b-crit">404</span></td></tr>
+    </tbody>
+  </table>
+  <p>Seules <code>/a-propos/</code>, <code>/contacts/</code> et <code>/contact/</code> répondent. Le pied de page
+  renvoie bien vers « L'équipe », « Editeur » et « Blog de l'agence », mais <b>ces destinations n'existent pas</b>.</p>
+</div>
+
+<div class="box crit">
+  <h4>Traçage publicitaire activé sans consentement préalable</h4>
+  <p>Dès l'ouverture de la page d'accueil, <b>et avant toute action du lecteur</b>, les cookies suivants sont
+  déposés sur son navigateur :</p>
+  <ul class="tight">
+    <li><code>_ga</code> et <code>_ga_7EDJHN210F</code> — Google Analytics 4, identifiant de mesure <b>G-7EDJHN210F</b></li>
+    <li><code>sbjs_migrations</code>, <code>sbjs_current</code>, <code>sbjs_first</code>, <code>sbjs_current_add</code>,
+        <code>sbjs_first_add</code>, <code>sbjs_udata</code>, <code>sbjs_session</code> — sept cookies d'attribution
+        publicitaire déposés par <b>WooCommerce</b>, sur un site qui ne vend rien</li>
+  </ul>
+  <p>Des données sont effectivement transmises à <code>googletagmanager.com</code> et
+  <code>region1.google-analytics.com</code>.</p>
+  <p><b>Aucune bannière de consentement n'est affichée</b>, et le mécanisme de la panne a pu être identifié
+  précisément. Le thème embarque un fichier <code>gdpr.js</code>, effectivement chargé, dont le code cherche
+  un élément <code>.newzin-gdpr</code> à faire apparaître :</p>
+  <p style="font-family:Menlo,monospace;font-size:7.8pt;background:#fff;border:1px solid #e6dde0;padding:2.5mm 3mm;border-radius:2px;margin:2mm 0">
+  const gdprBar = $('.newzin-gdpr');<br>
+  if (!newzinGetCookie('newzin_gdpr')) { gdprBar.fadeIn('300'); }</p>
+  <p>Or <b>cet élément n'existe nulle part dans la page</b> : la sélection est vide, et l'ordre d'affichage
+  s'applique à rien. <b>La brique de consentement est installée mais n'a jamais été activée</b> — le site
+  se comporte donc exactement comme s'il n'en avait aucune, pendant que Google Analytics, lui, se déclenche
+  dès le chargement.</p>
+  <p>Le cumul « cookies de mesure déposés sans accord » + « aucune politique de confidentialité »
+  + « aucune information sur le traitement » constitue un manquement au regard du RGPD pour tout lecteur
+  européen, et de la loi gabonaise n°001/2011 relative à la protection des données à caractère personnel
+  (autorité de contrôle : la CNPDCP).</p>
+</div>
+
+<div class="box warn">
+  <h4>Identification de l'organe de presse incomplète</h4>
+  <p>Un organe de presse doit pouvoir être identifié par son lecteur. Le site indique bien une localisation
+  (« Centre ville », sans adresse postale précise), un téléphone (+241 77 86 10 08), des adresses e-mail
+  et l'éditeur « Up Concept ». En revanche, <b>ne sont mentionnés nulle part — ni sur le site, ni dans la
+  plaquette commerciale officielle de 10 pages téléchargeable depuis le pied de page</b> :</p>
+  <ul class="tight">
+    <li>le <b>directeur de publication</b> — mention centrale du régime de responsabilité de la presse ;</li>
+    <li>la <b>raison sociale complète et le numéro d'immatriculation</b> (RCCM) de l'éditeur ;</li>
+    <li>le <b>récépissé ou l'agrément</b> auprès de la Haute Autorité de la Communication (HAC) du Gabon ;</li>
+    <li>l'<b>hébergeur</b> et ses coordonnées ;</li>
+    <li>l'<b>ISSN</b> le cas échéant, et la composition de la rédaction.</li>
+  </ul>
+  <p>Le site se présente comme « une plateforme numérique d'information sur les entreprises » créée en
+  janvier 2023 : ces mentions sont la contrepartie normale de cette qualité.</p>
+</div>
+
+<h3>Formulaire de contact</h3>
+<table>
+  <thead><tr><th style="width:50mm">Point vérifié</th><th style="width:20mm">État</th><th>Observation</th></tr></thead>
+  <tbody>
+    <tr><td>Transmission chiffrée (HTTPS)</td><td><span class="b b-ok">OK</span></td><td>Envoi en POST sur HTTPS.</td></tr>
+    <tr><td>Étiquettes des champs</td><td><span class="b b-ok">OK</span></td><td>Correctement associées.</td></tr>
+    <tr><td><b>Case de consentement</b></td><td><span class="b b-crit">Absente</span></td><td>Aucune case n'informe l'utilisateur de l'usage de ses données.</td></tr>
+    <tr><td><b>Mention sur le traitement</b></td><td><span class="b b-crit">Absente</span></td><td>Aucun texte sur la finalité, la durée de conservation ou les droits d'accès.</td></tr>
+    <tr><td>Champs obligatoires</td><td><span class="b b-ok">OK</span></td><td>Nom, e-mail et sujet sont bien obligatoires — via le mécanisme propre à Contact Form 7 (validation serveur), et non l'attribut HTML5 <code>required</code>. Conséquence mineure : pas de validation native du navigateur avant envoi.</td></tr>
+    <tr><td><b>Protection anti-robot</b></td><td><span class="b b-warn">Faible</span></td><td>Seul un piège à robots (honeypot Akismet) est présent. Aucun CAPTCHA visible. Une option de CAPTCHA existe dans la configuration Elementor mais <b>aucun script n'est réellement chargé</b> : la protection est dormante.</td></tr>
+  </tbody>
+</table>
+</section>
+
+<!-- ============ 09 ÉDITORIAL ============ -->
+<section class="page-break">
+<h2 class="sec"><span class="num">09</span>Éditorial, navigation &amp; identité</h2>
+<p class="sec-intro">Volumétrie réelle, cohérence entre ce que le menu promet et ce que le lecteur obtient.</p>
+
+<div class="kpis">
+  <div class="kpi good"><div class="v good">1 019</div><div class="l">Articles publiés</div></div>
+  <div class="kpi good"><div class="v good">34</div><div class="l">Articles sur 30 jours</div></div>
+  <div class="kpi good"><div class="v good">542</div><div class="l">Articles sur 12 mois</div></div>
+  <div class="kpi mid"><div class="v mid">8 j</div><div class="l">Depuis la dernière publication</div></div>
+  <div class="kpi bad"><div class="v bad">0</div><div class="l">Commentaire sur tout le site</div></div>
+</div>
+
+<div class="box ok">
+  <h4>Le vrai actif du site : la production</h4>
+  <p>Avec <b>1 019 articles</b>, <b>542 publications sur les douze derniers mois</b> et <b>34 sur les trente
+  derniers jours</b>, la rédaction tient un rythme d'environ <b>1,1 article par jour ouvré</b>. Les sujets
+  relevés sont de fond et à valeur ajoutée : dette publique du Congo, masse monétaire CEMAC, rachat de
+  Tullow Oil, convention minière de Baniaka, inclusion financière. <b>C'est un actif éditorial réel</b> —
+  et c'est précisément ce que les défauts techniques empêchent d'exploiter.</p>
+</div>
+
+<h3>Déséquilibre de l'architecture de l'information</h3>
+<p>La répartition des 1 019 articles entre les rubriques est très concentrée :</p>
+<table>
+  <thead><tr><th>Rubrique</th><th class="num" style="width:22mm">Articles</th><th class="num" style="width:20mm">Part</th><th>Observation</th></tr></thead>
+  <tbody>
+    <tr><td><b>Editorial</b></td><td class="num"><b>904</b></td><td class="num"><b>88,7 %</b></td><td>Fourre-tout de fait</td></tr>
+    <tr><td>Dossier spécial</td><td class="num">30</td><td class="num">2,9 %</td><td>Rubrique vivante</td></tr>
+    <tr><td>Big deal</td><td class="num">24</td><td class="num">2,4 %</td><td>Rubrique vivante</td></tr>
+    <tr><td><b>Non classé</b></td><td class="num">15</td><td class="num">1,5 %</td><td><b>À reclasser</b> — catégorie technique par défaut</td></tr>
+    <tr><td>Intelligence économique &amp; Fortune d'Afrique</td><td class="num">9</td><td class="num">0,9 %</td><td>—</td></tr>
+    <tr><td>Femme dirigeante / Leader</td><td class="num">8 / 8</td><td class="num">1,6 %</td><td>—</td></tr>
+    <tr><td>Tribune</td><td class="num">6</td><td class="num">0,6 %</td><td>—</td></tr>
+    <tr><td>Formation / Technologie</td><td class="num">4 / 4</td><td class="num">0,8 %</td><td>—</td></tr>
+    <tr><td>Docuthèques, Entreprendre, Innovation, <b>Interview</b>, Réglementations</td><td class="num">1 chacune</td><td class="num">0,5 %</td><td>Rubriques symboliques</td></tr>
+    <tr><td><b>Startup, Graine de manager, Séminaires</b></td><td class="num"><b>0</b></td><td class="num">0 %</td><td><b>Vides — voir ci-dessous</b></td></tr>
+  </tbody>
+</table>
+
+<div class="box crit">
+  <h4>Les rubriques vides servent silencieusement un contenu sans rapport</h4>
+  <p>Trois rubriques du menu ne contiennent aucun article : <b>Startup</b>, <b>Graine de manager</b> et
+  <b>Séminaires</b>. Or, en les ouvrant, le lecteur ne voit <b>ni message d'absence de contenu, ni page vide</b> :
+  le site lui sert <b>le flux générique des dernières actualités</b>.</p>
+  <p>Concrètement, un lecteur qui clique sur « Startup » pour lire des sujets sur l'entrepreneuriat obtient
+  des articles sur l'affaire Bosch Capital, le Forum de l'épargne et le budget de la Nation. <b>La promesse
+  de navigation n'est pas tenue</b>, et le lecteur ne comprend pas pourquoi.</p>
+  <p>Aggravant : ce flux de repli est titré <b>« Our Journal — Get the latest articles »</b>, chaînes du thème
+  restées <b>en anglais</b> sur un site francophone.</p>
+</div>
+
+<h3>Défauts de traduction et de langue</h3>
+<p>Le thème n'est que partiellement traduit, et la navigation comporte des fautes visibles :</p>
+<table>
+  <thead><tr><th style="width:56mm">Constat</th><th style="width:20mm">Occurrences</th><th>Correction attendue</th></tr></thead>
+  <tbody>
+    <tr><td>« Views » sur la page d'accueil</td><td class="num">24</td><td>« vues »</td></tr>
+    <tr><td>« Posted » / « By » sur l'accueil</td><td class="num">10 / 10</td><td>« Publié le » / « Par »</td></tr>
+    <tr><td>« Our Journal » / « Get the latest articles »</td><td class="num">pages de rubrique</td><td>À traduire</td></tr>
+    <tr><td>« Categories »</td><td class="num">accueil + articles</td><td>« Catégories »</td></tr>
+    <tr><td><b>« Sucess story »</b> dans le menu principal</td><td class="num">1</td><td><b>« Succès story »</b> — double faute, très visible</td></tr>
+    <tr><td>« Succes story » sans accent</td><td class="num">2</td><td>« Succès »</td></tr>
+    <tr><td><b>« Reglémentations »</b></td><td class="num">3</td><td><b>« Réglementations »</b> — accent mal placé</td></tr>
+    <tr><td>« A propos » sans accent</td><td class="num">2</td><td>« À propos »</td></tr>
+  </tbody>
+</table>
+<p>Pour une publication qui s'adresse à des dirigeants et à des institutions financières, <b>des fautes
+d'orthographe dans la barre de navigation entament directement la crédibilité</b>. Le coût de correction
+est de quelques minutes.</p>
+
+<h3>Identité numérique et messagerie</h3>
+
+<div class="box crit">
+  <h4>Le pied de page ne permet de joindre personne</h4>
+  <p>Le pied de page affiche des coordonnées complètes — deux e-mails, un téléphone répété deux fois,
+  quatre icônes de réseaux sociaux. <b>Inspection des 9 liens qu'il contient : un seul fonctionne.</b></p>
+  <table style="margin:2mm 0">
+    <thead><tr><th style="width:46mm">Ce que le lecteur voit</th><th style="width:52mm">Lien réellement posé</th><th>Résultat au clic</th></tr></thead>
+    <tbody>
+      <tr><td><code>info@le-corporate.com</code></td><td><code>href=""</code> (vide)</td><td><span class="b b-crit">Ne fait rien</span></td></tr>
+      <tr><td><code>redaction@lecorporate.com</code></td><td><code>/a-propos/</code></td><td><span class="b b-crit">Ouvre « À propos »</span> au lieu du courriel</td></tr>
+      <tr><td><b>+241 77861008</b> (×2)</td><td><code>http://a%20href=tel=+24177861008/</code></td><td><span class="b b-crit">Lien malformé</span> — balise HTML imbriquée par erreur</td></tr>
+      <tr><td>Linkedin, Youtube et 2 icônes</td><td><code>#0</code> (×4)</td><td><span class="b b-crit">Liens morts</span></td></tr>
+      <tr><td>« L'équipe », « Editeur »</td><td>aucune balise de lien</td><td><span class="b b-crit">Texte inerte</span></td></tr>
+      <tr><td>Media kit (plaquette PDF)</td><td><code>/uploads/2024/01/Plaquette…pdf</code></td><td><span class="b b-ok">Fonctionne</span></td></tr>
+    </tbody>
+  </table>
+  <p><b>Bilan : 0 lien <code>mailto:</code> et 0 lien <code>tel:</code> valides sur tout le pied de page.</b>
+  Un lecteur sur mobile qui touche le numéro de téléphone n'appelle pas ; un annonceur qui clique sur
+  l'adresse commerciale n'ouvre pas sa messagerie ; qui cherche le journal sur LinkedIn n'arrive nulle part —
+  alors que les comptes existent réellement (ils figurent dans les données structurées du site).</p>
+  <p><b>À faire :</b> reprendre le bloc de pied de page — <code>mailto:</code> et <code>tel:</code> corrects,
+  URL réelles des réseaux sociaux, et suppression ou activation des entrées « L'équipe » et « Editeur ».
+  Correction d'une heure, à fort effet.</p>
+</div>
+
+<div class="box crit">
+  <h4>L'adresse de la rédaction n'existe pas</h4>
+  <p>Le pied de page et la page Contacts publient <b><code>redaction@lecorporate.com</code></b> —
+  sans tiret — alors que le site est <code>le-corporate.com</code>, avec tiret.</p>
+  <p>Vérification DNS du domaine <code>lecorporate.com</code> : <b>aucun enregistrement A, aucun
+  enregistrement MX, aucun serveur de noms</b> (réponse <code>NXDOMAIN</code>). La consultation du registre
+  public confirme : <b>« No match for domain LECORPORATE.COM »</b> — le domaine n'est pas seulement mal
+  configuré, il <b>n'a jamais été déposé</b> et reste libre à l'enregistrement par n'importe qui.</p>
+  <p>Deux conséquences :</p>
+  <ul class="tight">
+    <li><b>Opérationnelle</b> — tout message adressé à la rédaction (information, communiqué, droit de réponse,
+    proposition de tribune, sollicitation publicitaire) <b>est rejeté</b>. Pour un média, c'est une perte
+    sèche de sources et de recettes, invisible puisque personne ne reçoit d'alerte.</li>
+    <li><b>Sécuritaire</b> — le domaine étant libre, <b>un tiers peut l'enregistrer</b> et se mettre à recevoir
+    le courrier destiné à la rédaction, voire écrire au nom du journal. Risque d'usurpation caractérisé.</li>
+  </ul>
+  <p><b>À faire immédiatement :</b> corriger l'adresse en <code>redaction@le-corporate.com</code> partout,
+  vérifier que cette boîte existe, et <b>déposer le domaine <code>lecorporate.com</code></b> à titre défensif
+  pour le rediriger vers le domaine officiel.</p>
+</div>
+
+<h3>Authentification des e-mails sortants</h3>
+<table>
+  <thead><tr><th style="width:26mm">Mécanisme</th><th style="width:20mm">État</th><th>Constat</th></tr></thead>
+  <tbody>
+    <tr><td><b>SPF</b></td><td><span class="b b-ok">Correct</span></td>
+      <td><code>v=spf1 mx:le-corporate.com a:mail.le-corporate.com a:mailphp.lws-hosting.com -all</code> — politique stricte. Bien configuré.</td></tr>
+    <tr><td><b>DMARC</b></td><td><span class="b b-warn">Incomplet</span></td>
+      <td><code>v=DMARC1; p=quarantine;</code> — la politique existe, mais <b>sans adresse de rapport</b> (<code>rua=</code>) : la rédaction ne reçoit aucune alerte en cas de tentative d'usurpation de son domaine.</td></tr>
+    <tr><td><b>DKIM</b></td><td><span class="b b-crit">Introuvable</span></td>
+      <td>Aucun sélecteur courant ne répond. Sans signature DKIM, les messages transférés perdent leur authentification et <b>risquent le classement en indésirable</b> — problématique pour une newsletter ou un envoi de communiqués.</td></tr>
+  </tbody>
+</table>
+</section>
+
+<!-- ============ 10 PLAN D'ACTION ============ -->
+<section class="page-break">
+<h2 class="sec"><span class="num">10</span>Plan d'action priorisé</h2>
+<p class="sec-intro">Classement par rapport bénéfice/effort. Les priorités 0 sont traitables en une journée de travail cumulée.</p>
+
+<h3>Priorité 0 — à traiter cette semaine</h3>
+
+<div class="action">
+  <div class="action-head"><span class="b b-crit">P0</span><span class="t">Réparer intégralement le pied de page et l'adresse de la rédaction</span></div>
+  <div class="action-body">
+    <p>Remplacer <code>redaction@lecorporate.com</code> par <code>redaction@le-corporate.com</code> et vérifier
+    que la boîte reçoit. Rétablir de vrais liens <code>mailto:</code> et <code>tel:</code>, brancher les quatre
+    icônes sociales sur les comptes réels (Facebook, LinkedIn, WhatsApp existent déjà), traiter les entrées
+    mortes « L'équipe » et « Editeur ». Déposer <code>lecorporate.com</code> à titre défensif.</p>
+    <div class="action-meta"><span>Effort&nbsp;: <b>1 heure</b></span><span>Impact&nbsp;: <b>Très élevé</b></span><span>Risque&nbsp;: <b>Nul</b></span></div>
+  </div>
+</div>
+
+<div class="action">
+  <div class="action-head"><span class="b b-crit">P0</span><span class="t">Réparer la lisibilité du mode sombre</span></div>
+  <div class="action-body">
+    <p>Purger les couleurs de texte en dur dans le contenu des articles et ajouter une règle CSS de repli
+    forçant une couleur claire sur le corps de texte en mode sombre. Traiter aussi le lien « Article précédent ».</p>
+    <div class="action-meta"><span>Effort&nbsp;: <b>2 heures</b></span><span>Impact&nbsp;: <b>Très élevé</b></span><span>Risque&nbsp;: <b>Faible</b></span></div>
+  </div>
+</div>
+
+<div class="action">
+  <div class="action-head"><span class="b b-crit">P0</span><span class="t">Publier les mentions légales et la politique de confidentialité</span></div>
+  <div class="action-body">
+    <p>Créer les deux pages et les lier depuis le pied de page : identité et raison sociale de l'éditeur,
+    <b>directeur de publication</b>, coordonnées, hébergeur, référence HAC, finalités de traitement des données,
+    durée de conservation, droits d'accès et de rectification, usage des cookies.</p>
+    <div class="action-meta"><span>Effort&nbsp;: <b>½ journée</b></span><span>Impact&nbsp;: <b>Très élevé</b></span><span>Risque&nbsp;: <b>Nul</b></span></div>
+  </div>
+</div>
+
+<div class="action">
+  <div class="action-head"><span class="b b-crit">P0</span><span class="t">Désactiver WooCommerce</span></div>
+  <div class="action-body">
+    <p>Aucune fonction marchande n'existe. Sa désactivation supprime d'un coup la pile React, les blocs de
+    commande et <b>sept cookies de pistage</b> déposés sans base légale. Geste au meilleur rendement de l'audit.</p>
+    <div class="action-meta"><span>Effort&nbsp;: <b>15 minutes</b></span><span>Impact&nbsp;: <b>Élevé</b></span><span>Risque&nbsp;: <b>Faible</b> — sauvegarder avant</span></div>
+  </div>
+</div>
+
+<div class="action">
+  <div class="action-head"><span class="b b-crit">P0</span><span class="t">Sécuriser le compte administrateur</span></div>
+  <div class="action-body">
+    <p>Créer un administrateur au nom non devinable, y transférer les articles, supprimer le compte
+    <code>admin</code>, bloquer l'énumération REST des utilisateurs, activer la double authentification.</p>
+    <div class="action-meta"><span>Effort&nbsp;: <b>1 heure</b></span><span>Impact&nbsp;: <b>Élevé</b></span><span>Risque&nbsp;: <b>Faible</b></span></div>
+  </div>
+</div>
+
+<div class="action">
+  <div class="action-head"><span class="b b-crit">P0</span><span class="t">Corriger les fautes du menu principal</span></div>
+  <div class="action-body">
+    <p>« Sucess story » → « Succès story » ; « Reglémentations » → « Réglementations » ; « A propos » → « À propos ».</p>
+    <div class="action-meta"><span>Effort&nbsp;: <b>10 minutes</b></span><span>Impact&nbsp;: <b>Moyen</b> (crédibilité)</span><span>Risque&nbsp;: <b>Nul</b></span></div>
+  </div>
+</div>
+
+<h3>Priorité 1 — sous un mois</h3>
+
+<div class="action">
+  <div class="action-head"><span class="b b-warn">P1</span><span class="t">Campagne de compression des images</span></div>
+  <div class="action-body">
+    <p>Recompresser la médiathèque, régénérer les tailles intermédiaires, <b>rétablir le <code>srcset</code></b>
+    neutralisé par le thème, activer la conversion WebP, étendre le chargement différé et déclarer les
+    dimensions. Objectif&nbsp;: <b>page d'accueil sous 2 Mo</b>.</p>
+    <p>Instaurer en parallèle une consigne de rédaction&nbsp;: <b>aucune photo WhatsApp publiée telle quelle</b> —
+    redimensionnement à 1 600 px maximum, renommage descriptif, crédit photo renseigné.</p>
+    <div class="action-meta"><span>Effort&nbsp;: <b>1 journée</b></span><span>Impact&nbsp;: <b>Très élevé</b></span><span>Risque&nbsp;: <b>Faible</b></span></div>
+  </div>
+</div>
+
+<div class="action">
+  <div class="action-head"><span class="b b-warn">P1</span><span class="t">Activer le consentement aux cookies</span></div>
+  <div class="action-body">
+    <p>Configurer une bannière qui <b>bloque le dépôt de Google Analytics tant que le lecteur n'a pas accepté</b>,
+    avec refus aussi accessible que l'acceptation. La brique <code>gdpr.js</code> est déjà présente dans le thème.</p>
+    <div class="action-meta"><span>Effort&nbsp;: <b>3 heures</b></span><span>Impact&nbsp;: <b>Élevé</b></span><span>Risque&nbsp;: <b>Faible</b></span></div>
+  </div>
+</div>
+
+<div class="action">
+  <div class="action-head"><span class="b b-warn">P1</span><span class="t">Rétablir le <code>&lt;h1&gt;</code> sur les articles</span></div>
+  <div class="action-body">
+    <p>Modifier le gabarit du thème enfant pour que le titre de l'article soit un <code>&lt;h1&gt;</code> unique,
+    et rétrograder les titres du pied de page. Réduire l'accueil à un seul <code>&lt;h1&gt;</code>.
+    Bénéfice sur les 1 019 articles.</p>
+    <div class="action-meta"><span>Effort&nbsp;: <b>2 heures</b></span><span>Impact&nbsp;: <b>Élevé</b></span><span>Risque&nbsp;: <b>Faible</b></span></div>
+  </div>
+</div>
+
+<div class="action">
+  <div class="action-head"><span class="b b-warn">P1</span><span class="t">Ajouter les en-têtes de sécurité et durcir TLS</span></div>
+  <div class="action-body">
+    <p>Définir <code>Strict-Transport-Security</code>, <code>X-Frame-Options</code>,
+    <code>X-Content-Type-Options</code>, <code>Referrer-Policy</code> et <code>Permissions-Policy</code>
+    via <code>.htaccess</code>. Demander à LWS la désactivation de TLS 1.0 et 1.1.</p>
+    <div class="action-meta"><span>Effort&nbsp;: <b>2 heures</b></span><span>Impact&nbsp;: <b>Moyen</b></span><span>Risque&nbsp;: <b>Faible</b></span></div>
+  </div>
+</div>
+
+<div class="action">
+  <div class="action-head"><span class="b b-warn">P1</span><span class="t">Mettre à jour le socle logiciel</span></div>
+  <div class="action-body">
+    <p>Sur environnement de test puis en production&nbsp;: WordPress, Elementor, Slider Revolution et le thème.
+    Activer ensuite les mises à jour automatiques de sécurité. Supprimer l'un des deux modules de formulaires.</p>
+    <div class="action-meta"><span>Effort&nbsp;: <b>1 journée</b></span><span>Impact&nbsp;: <b>Élevé</b></span><span>Risque&nbsp;: <b>Moyen</b> — sauvegarde impérative</span></div>
+  </div>
+</div>
+
+<div class="action">
+  <div class="action-head"><span class="b b-warn">P1</span><span class="t">Réparer les rubriques vides</span></div>
+  <div class="action-body">
+    <p>Soit retirer du menu <b>Startup</b>, <b>Graine de manager</b> et <b>Séminaires</b>, soit les alimenter.
+    Dans tous les cas, remplacer le flux générique de repli par un véritable message d'absence de contenu.
+    Reclasser les <b>15 articles « Non classé »</b> et redistribuer une partie des 904 articles « Editorial ».</p>
+    <div class="action-meta"><span>Effort&nbsp;: <b>½ journée</b> + reclassement</span><span>Impact&nbsp;: <b>Moyen</b></span><span>Risque&nbsp;: <b>Nul</b></span></div>
+  </div>
+</div>
+
+<h3>Priorité 2 — trimestre</h3>
+<table>
+  <thead><tr><th style="width:62mm">Action</th><th>Détail</th></tr></thead>
+  <tbody>
+    <tr><td><b>Accessibilité</b></td><td>Ajouter un lien d'évitement, un repère <code>&lt;main&gt;</code>, convertir le sélecteur de thème en <code>&lt;button&gt;</code> avec <code>aria-label</code>, nommer les 23 liens sans intitulé, relever les contrastes faibles.</td></tr>
+    <tr><td><b>Candidature Google Actualités</b></td><td>Générer un plan de site « news », basculer le schéma en <code>NewsArticle</code>, ajouter les balises Twitter Card, <b>créer de vraies signatures de journalistes</b> avec pages d'auteur, publier l'ours complet — autant de conditions d'éligibilité.</td></tr>
+    <tr><td><b>Métadonnées de partage</b></td><td>Rédiger une <code>meta description</code> pour l'accueil, allonger son <code>&lt;title&gt;</code> avec le positionnement, et remplacer l'<code>og:image</code> de l'accueil (118 × 153 px) par un visuel 1 200 × 630 px.</td></tr>
+    <tr><td><b>Regroupement des ressources</b></td><td>Fusionner et différer les 92 fichiers JavaScript, supprimer les doublons (swiper, wow, bootstrap), purger le CSS inutilisé.</td></tr>
+    <tr><td><b>Cache des images</b></td><td>Définir un <code>Cache-Control</code> longue durée sur <code>/wp-content/uploads/</code> — gain majeur pour le lecteur mobile qui revient.</td></tr>
+    <tr><td><b>Traduction du thème</b></td><td>Traduire « Views », « Posted », « By », « Our Journal », « Categories ».</td></tr>
+    <tr><td><b>Emplacements publicitaires</b></td><td>Remplacer les gabarits « 250 X 250 » par des visuels d'auto-promotion.</td></tr>
+    <tr><td><b>Commentaires</b></td><td>Masquer le compteur « 0 Commentaires », ou animer réellement l'espace.</td></tr>
+    <tr><td><b>DKIM et rapports DMARC</b></td><td>Activer la signature DKIM chez LWS et ajouter une adresse <code>rua=</code> au DMARC.</td></tr>
+    <tr><td><b>Diffusion en périphérie</b></td><td>À terme, un réseau de diffusion de contenu rapprochera les fichiers des lecteurs africains et réduira la latence depuis l'Europe.</td></tr>
+  </tbody>
+</table>
+</section>
+
+<!-- ============ ANNEXE ============ -->
+<section class="page-break">
+<h2 class="sec"><span class="num">11</span>Annexe — méthode et limites</h2>
+
+<h3>Méthode</h3>
+<p>Audit conduit le <b>11 septembre 2026</b> en <b>boîte noire</b> : sans accès à l'administration WordPress,
+sans accès au serveur, sans code source privé. Toutes les constatations proviennent de ce qu'un visiteur
+ou un moteur de recherche peut observer publiquement.</p>
+<ul class="tight">
+  <li><b>Réseau et DNS</b> — interrogation directe des enregistrements A, AAAA, MX, NS, TXT, DMARC et DKIM.</li>
+  <li><b>TLS</b> — négociation des quatre versions du protocole et lecture du certificat.</li>
+  <li><b>En-têtes HTTP</b> — analyse des réponses et test des redirections.</li>
+  <li><b>Rendu réel</b> — chargement dans un navigateur Chromium, à 1 440 px, 1 024 px et 375 px, dans les
+  deux thèmes clair et sombre. Les constats mobiles proviennent d'une <b>émulation d'écran 375 × 812 px
+  dans un navigateur interactif</b> : les captures en mode automatisé se sont révélées non fiables, le cache
+  du site servant une variante bureau selon l'agent utilisateur.</li>
+  <li><b>Performance</b> — mesures issues des interfaces <i>Navigation Timing</i>, <i>Resource Timing</i> et
+  <i>Paint Timing</i> du navigateur, sur chargement sans cache.</li>
+  <li><b>Contrastes</b> — calcul du rapport de luminance selon la formule WCAG 2.1, sur les couleurs
+  effectivement calculées par le navigateur.</li>
+  <li><b>Volumétrie éditoriale</b> — interrogation de l'API REST publique de WordPress (comptages officiels
+  issus des en-têtes <code>X-WP-Total</code>), et non d'une estimation.</li>
+  <li><b>Surfaces d'exposition</b> — sollicitation en lecture seule des chemins sensibles connus. <b>Aucun test
+  intrusif, aucune tentative de connexion, aucune injection</b> n'a été effectué.</li>
+</ul>
+
+<h3>Limites à connaître</h3>
+<div class="box warn">
+  <p><b>1. Le pare-feu a restreint l'analyse automatisée.</b> La protection LWS/Anubis impose un défi de calcul
+  JavaScript. Les outils en ligne de commande ont donc été bloqués en cours d'audit, et l'ensemble des
+  constatations a dû être reprise via un navigateur réel. C'est un <b>bon signal de sécurité</b> pour le site,
+  mais cela signifie que certaines vérifications de masse n'ont pas pu être menées à grande échelle.</p>
+  <p><b>2. Les mesures de performance sont optimistes.</b> Elles ont été réalisées sur une connexion filaire
+  rapide. Sur un réseau mobile gabonais, les durées constatées seront <b>sensiblement supérieures</b>, et le
+  poids de 9,35 Mo pèsera d'autant plus.</p>
+  <p><b>3. Les versions des extensions sont celles déclarées</b> par le site lui-même. Des correctifs de sécurité
+  peuvent avoir été appliqués sans changement de numéro de version. Aucune vulnérabilité n'a été testée
+  activement ; l'analyse se fonde sur l'ancienneté déclarée des composants.</p>
+  <p><b>4. Les constats de conformité sont factuels, non juridiques.</b> L'absence de mentions légales, de
+  politique de confidentialité et de consentement aux cookies est établie par l'observation. Leur qualification
+  au regard du droit gabonais de la presse et de la loi n°001/2011 relève d'un conseil juridique habilité.</p>
+</div>
+
+<h3>Récapitulatif chiffré</h3>
+<table>
+  <thead><tr><th style="width:62mm">Indicateur</th><th class="num" style="width:26mm">Mesuré</th><th class="num" style="width:26mm">Cible</th></tr></thead>
+  <tbody>
+    <tr><td>Poids de la page d'accueil</td><td class="num" style="color:#c0233c"><b>9,35 Mo</b></td><td class="num">&lt; 2 Mo</td></tr>
+    <tr><td>Poids des images</td><td class="num" style="color:#c0233c"><b>7,96 Mo</b></td><td class="num">&lt; 1 Mo</td></tr>
+    <tr><td>Premier affichage (FCP)</td><td class="num" style="color:#c0233c"><b>4,46 s</b></td><td class="num">&lt; 1,8 s</td></tr>
+    <tr><td>Requêtes réseau</td><td class="num" style="color:#c0233c"><b>169</b></td><td class="num">&lt; 60</td></tr>
+    <tr><td>Fichiers JavaScript</td><td class="num" style="color:#c0233c"><b>92</b></td><td class="num">&lt; 15</td></tr>
+    <tr><td>Images avec <code>srcset</code></td><td class="num" style="color:#c0233c"><b>0 / 64</b></td><td class="num">64 / 64</td></tr>
+    <tr><td>Images en chargement différé</td><td class="num" style="color:#c0233c"><b>5 / 64</b></td><td class="num">&gt; 50</td></tr>
+    <tr><td>En-têtes de sécurité</td><td class="num" style="color:#c0233c"><b>0 / 8</b></td><td class="num">6 / 8</td></tr>
+    <tr><td>Pages légales publiées</td><td class="num" style="color:#c0233c"><b>0 / 4</b></td><td class="num">4 / 4</td></tr>
+    <tr><td><code>&lt;h1&gt;</code> par page d'article</td><td class="num" style="color:#c0233c"><b>0</b></td><td class="num">1</td></tr>
+    <tr><td>Échecs de contraste (mode clair)</td><td class="num" style="color:#c0233c"><b>13</b></td><td class="num">0</td></tr>
+    <tr><td>Contraste du texte en mode sombre</td><td class="num" style="color:#c0233c"><b>1,1:1</b></td><td class="num">&ge; 4,5:1</td></tr>
+    <tr><td>Débordement horizontal à 375 px</td><td class="num" style="color:#1a7a52"><b>0 px</b></td><td class="num">0 px</td></tr>
+    <tr><td>Articles publiés</td><td class="num" style="color:#1a7a52"><b>1 019</b></td><td class="num">—</td></tr>
+    <tr><td>Rythme sur 12 mois</td><td class="num" style="color:#1a7a52"><b>542</b></td><td class="num">—</td></tr>
+  </tbody>
+</table>
+
+<div class="note">
+  <b>Le Corporate</b> — plateforme numérique d'information sur les entreprises gabonaises, créée en janvier 2023,
+  éditée par Up Concept. Audit technique indépendant réalisé le 11 septembre 2026 sur la version publique
+  du site, sans accès privilégié. Les mesures sont reproductibles par les méthodes décrites ci-dessus.
+</div>
+</section>
+
+</body>
+</html>
