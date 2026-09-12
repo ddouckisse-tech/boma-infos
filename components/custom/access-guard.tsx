@@ -94,6 +94,17 @@ function PermissionGate({
     );
   }
 
+  if (viewer.passwordChangeRequired) {
+    return (
+      <Refusal
+        title="Mot de passe provisoire"
+        message={ACCESS_MESSAGE.PASSWORD_CHANGE_REQUIRED}
+        href="/compte#mot-de-passe"
+        cta="Choisir un mot de passe définitif"
+      />
+    );
+  }
+
   if (viewer.twoFactorRequired && !viewer.twoFactorEnabled) {
     return (
       <Refusal

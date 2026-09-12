@@ -266,6 +266,13 @@ export default defineSchema({
     /** Sections an Éditeur may publish in; empty means "all of them". */
     sectionSlugs: v.optional(v.array(v.string())),
     lastSeenAt: v.optional(v.number()),
+    /**
+     * Provisional password, set by the command line. Until the account holder
+     * replaces it with a definitive one (twelve characters, §4.3), every
+     * privileged function refuses with `PASSWORD_CHANGE_REQUIRED` — the same
+     * mechanism as the mandatory second factor.
+     */
+    mustChangePassword: v.optional(v.boolean()),
   })
     .index("by_subject", ["authSubject"])
     .index("by_email", ["email"])

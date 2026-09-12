@@ -148,6 +148,7 @@ export type AccessErrorCode =
   | "NO_PROFILE"
   | "SUSPENDED"
   | "TWO_FACTOR_REQUIRED"
+  | "PASSWORD_CHANGE_REQUIRED"
   | "FORBIDDEN"
   | "ORGANIZATION_REQUIRED"
   | "ORGANIZATION_PENDING";
@@ -240,6 +241,17 @@ export async function requirePermission(
   const viewer = await requireViewer(ctx);
 
   if (
+    viewer.profile.mustChangePassword === true &&
+    !SELF_SERVICE.includes(permission)
+  ) {
+    // Mot de passe provisoire, posé par la ligne de commande : le compte ne
+    // sert à rien tant qu'un mot de passe définitif n'a pas été choisi.
+    // Vérifié AVANT le second facteur — c'est le geste que le titulaire peut
+    // faire tout de suite, il connaît ce mot de passe-là.
+    throw accessError("PASSWORD_CHANGE_REQUIRED");
+  }
+
+  if (
     viewer.role.requiresTwoFactor &&
     !viewer.twoFactorEnabled &&
     !SELF_SERVICE.includes(permission)
@@ -270,6 +282,9 @@ export async function requireOrganizationScope(
   const viewer = await requireViewer(ctx);
 
   if (viewer.role.permissions.includes(PERMISSIONS.submissionsReview)) {
+    if (viewer.profile.mustChangePassword === true) {
+      throw accessError("PASSWORD_CHANGE_REQUIRED");
+    }
     if (viewer.role.requiresTwoFactor && !viewer.twoFactorEnabled) {
       throw accessError("TWO_FACTOR_REQUIRED");
     }

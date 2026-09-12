@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import {
   action,
+  internalAction,
   internalMutation,
   internalQuery,
   mutation,
@@ -53,6 +54,7 @@ const viewerShape = v.object({
   permissions: v.array(v.string()),
   twoFactorEnabled: v.boolean(),
   twoFactorRequired: v.boolean(),
+  passwordChangeRequired: v.boolean(),
   active: v.boolean(),
   home: v.string(),
   authorSlug: v.optional(v.string()),
@@ -125,6 +127,7 @@ export const me = query({
       permissions: [...viewer.role.permissions],
       twoFactorEnabled: viewer.twoFactorEnabled,
       twoFactorRequired: viewer.role.requiresTwoFactor,
+      passwordChangeRequired: viewer.profile.mustChangePassword === true,
       active: viewer.profile.active,
       home: viewer.role.home,
       authorSlug: viewer.profile.authorSlug,
@@ -558,6 +561,16 @@ export const registerCompany = action({
 
     if (!organizationId) return { status: "received" };
 
+    // CDC §4.3 : douze caractères pour un mot de passe définitif. La
+    // bibliothèque n'impose plus que le plancher des mots de passe
+    // provisoires (six), réservés à la ligne de commande — ici, la règle
+    // est tenue côté serveur, quoi que dise le formulaire.
+    if (args.password.length < 12) {
+      throw new Error(
+        "Le mot de passe doit compter au moins douze caractères."
+      );
+    }
+
     try {
       const auth = createAuth(ctx);
       const created = await auth.api.signUpEmail({
@@ -713,6 +726,8 @@ export const bootstrapProfile = internalMutation({
     roleSlug: v.string(),
     displayName: v.string(),
     authorSlug: v.optional(v.string()),
+    /** The password handed over is provisional: force its replacement. */
+    provisionalPassword: v.optional(v.boolean()),
   },
   returns: v.string(),
   handler: async (ctx, args) => {
@@ -738,6 +753,7 @@ export const bootstrapProfile = internalMutation({
         displayName: args.displayName,
         authorSlug: args.authorSlug,
         active: true,
+        mustChangePassword: args.provisionalPassword === true,
       });
       return `Profil mis à jour : ${email} → ${args.roleSlug}`;
     }
@@ -750,8 +766,127 @@ export const bootstrapProfile = internalMutation({
       sectionSlugs: [],
       active: true,
       createdAt: Date.now(),
+      mustChangePassword: args.provisionalPassword === true,
     });
     return `Profil créé : ${email} → ${args.roleSlug}`;
+  },
+});
+
+/**
+ * Called by the auth layer (`convex/auth.ts`, `hooks.after`) once a
+ * `/change-password` has actually succeeded: the provisional flag falls. The
+ * browser cannot call this — the flag only ever clears because Better Auth
+ * says the password changed, never because a client claimed it did.
+ */
+type AuthContext = Awaited<ReturnType<typeof createAuth>["$context"]>;
+
+/**
+ * Re-keys an account through Better Auth's own internals — its configured
+ * hasher, its session store — so nothing here depends on how the component
+ * lays out its tables. Every open session is revoked: whoever knew the
+ * previous password is out.
+ */
+async function rekey(context: AuthContext, subject: string, password: string) {
+  const hash = await context.password.hash(password);
+  await context.internalAdapter.updatePassword(subject, hash);
+  // La bibliothèque révoque par jetons : on les lit d'abord.
+  const sessions = await context.internalAdapter.listSessions(subject);
+  if (sessions.length > 0) {
+    await context.internalAdapter.deleteSessions(
+      sessions.map((session) => session.token)
+    );
+  }
+}
+
+/**
+ * Creates an account, or re-keys it if the address is already known — for
+ * the command line only (`scripts/create-account.ts`), the browser cannot
+ * call this.
+ *
+ * Why an action rather than an HTTP sign-up parsed by the script: Better Auth
+ * answers a sign-up for a known address exactly as it answers a new one (no
+ * account enumeration, §5.3), so a response cannot tell the two apart. This
+ * looks the account up itself. Under twelve characters the password is
+ * provisional and the profile is flagged (`bootstrapProfile` does it for a
+ * brand-new account, whose profile does not exist yet).
+ */
+export const ensureAccount = internalAction({
+  args: { email: v.string(), name: v.string(), password: v.string() },
+  returns: v.string(),
+  handler: async (ctx, args): Promise<string> => {
+    if (args.password.length < 6) {
+      throw new Error("Le mot de passe doit compter au moins six caractères.");
+    }
+    const email = args.email.trim().toLowerCase();
+    const provisional = args.password.length < 12;
+    const auth = createAuth(ctx);
+    const context = await auth.$context;
+    const found = await context.internalAdapter.findUserByEmail(email);
+    if (found) {
+      await rekey(context, found.user.id, args.password);
+      await ctx.runMutation(internal.accounts.flagProvisionalPassword, {
+        subject: found.user.id,
+        provisional,
+      });
+      return `Compte existant : mot de passe remplacé pour ${email}${provisional ? " (PROVISOIRE)" : ""}, sessions révoquées.`;
+    }
+    await auth.api.signUpEmail({
+      body: { email, password: args.password, name: args.name.trim() },
+    });
+    return `Compte créé : ${email}${provisional ? " (mot de passe PROVISOIRE)" : ""}.`;
+  },
+});
+
+/** Re-keys an existing account from the command line; see `ensureAccount`. */
+export const setProvisionalPassword = internalAction({
+  args: { email: v.string(), password: v.string() },
+  returns: v.string(),
+  handler: async (ctx, args): Promise<string> => {
+    if (args.password.length < 6) {
+      throw new Error("Le mot de passe doit compter au moins six caractères.");
+    }
+    const email = args.email.trim().toLowerCase();
+    const context = await createAuth(ctx).$context;
+    const found = await context.internalAdapter.findUserByEmail(email);
+    if (!found) throw new Error(`Aucun compte Better Auth pour ${email}.`);
+    await rekey(context, found.user.id, args.password);
+    const provisional = args.password.length < 12;
+    await ctx.runMutation(internal.accounts.flagProvisionalPassword, {
+      subject: found.user.id,
+      provisional,
+    });
+    return `Mot de passe remplacé pour ${email}${provisional ? " — PROVISOIRE, à changer à la première connexion" : ""}.`;
+  },
+});
+
+/** Sets or clears the provisional flag on a profile, if the profile exists. */
+export const flagProvisionalPassword = internalMutation({
+  args: { subject: v.string(), provisional: v.boolean() },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const profile = await ctx.db
+      .query("users")
+      .withIndex("by_subject", (q) => q.eq("authSubject", args.subject))
+      .unique();
+    if (profile) {
+      await ctx.db.patch(profile._id, { mustChangePassword: args.provisional });
+    }
+    return null;
+  },
+});
+
+export const clearPasswordChange = internalMutation({
+  args: { subject: v.string() },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const profile = await ctx.db
+      .query("users")
+      .withIndex("by_subject", (q) => q.eq("authSubject", args.subject))
+      .unique();
+    if (profile?.mustChangePassword) {
+      await ctx.db.patch(profile._id, { mustChangePassword: false });
+    }
+    return null;
   },
 });
 

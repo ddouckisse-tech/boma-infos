@@ -66,11 +66,9 @@ export default async function HomePage() {
         </Container>
       </div>
 
-      {lead && (
-        <Section spacing="loose" aria-label="Article à la une">
-          <FeaturedHero article={lead} />
-        </Section>
-      )}
+      {/* Pleine largeur, hors `Section` : la photo tapisse le bandeau d'un
+          bord à l'autre de l'écran, le texte reste dans la grille. */}
+      {lead && <FeaturedHero article={lead} />}
 
       {top.length > 0 && (
         <Section

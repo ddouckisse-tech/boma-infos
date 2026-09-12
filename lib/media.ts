@@ -81,16 +81,18 @@ export const DATA_SAVER_MAX_WIDTH = 480;
  */
 export const SIZES = {
   /**
-   * Full-bleed lead picture on the home page.
-   *
-   * Les valeurs mobiles sont en `92vw`, pas `100vw` : le contenu vit dans un
-   * conteneur à gouttières de 1 rem, donc une image « pleine largeur » occupe
-   * 380 px sur un écran de 412. Déclarer 100vw faisait choisir au navigateur
-   * la variante immédiatement supérieure — pour rien.
+   * Lead picture on the home page: the background of the `.lc-hero` band —
+   * the right three quarters of the viewport from 768 px, the whole width
+   * below, gutters included. Its worst case is bounded by the call site
+   * (`maxWidth={1280}`, the largest rendition).
    */
-  hero: "(min-width: 1280px) 620px, (min-width: 1024px) 55vw, 92vw",
-  /** Article opening picture, capped by the figure at 52 rem. */
-  articleHero: "(min-width: 1280px) 832px, (min-width: 1024px) 70vw, 92vw",
+  hero: "(min-width: 768px) 74vw, 100vw",
+  /**
+   * Article opening picture — the same band. Bounded at 960 px by the call
+   * site: the article page runs 12 Ko under its 400 Ko ceiling, and the
+   * dark scrim hides the mild upscale on wide screens.
+   */
+  articleHero: "(min-width: 768px) 74vw, 100vw",
   /** Three-per-row card grid. */
   card: "(min-width: 1024px) 380px, (min-width: 640px) 46vw, 92vw",
   /** Small list thumbnail. */

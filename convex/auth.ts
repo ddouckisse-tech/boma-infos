@@ -1,4 +1,5 @@
 import { betterAuth } from "better-auth";
+import { APIError, createAuthMiddleware } from "better-auth/api";
 import { twoFactor } from "better-auth/plugins";
 import { createClient, type GenericCtx } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
@@ -46,8 +47,11 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
     secret: process.env.BETTER_AUTH_SECRET,
     emailAndPassword: {
       enabled: true,
-      // CDC §4.3 : « mots de passe forts ». Douze caractères, pas huit.
-      minPasswordLength: 12,
+      // Plancher des mots de passe PROVISOIRES, que seule la ligne de
+      // commande pose (`scripts/create-account.ts`). La règle des douze
+      // caractères du §4.3 vaut pour tout mot de passe définitif : elle est
+      // tenue dans `hooks.before` ci-dessous et dans `registerCompany`.
+      minPasswordLength: 6,
       maxPasswordLength: 128,
       // Aucun courriel n'est encore expédié (aucun prestataire n'est câblé) :
       // exiger une vérification ici enfermerait tout le monde dehors.
@@ -100,6 +104,41 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
         "/forget-password": { window: 300, max: 3 },
         "/reset-password": { window: 300, max: 5 },
       },
+    },
+    hooks: {
+      /**
+       * CDC §4.3, côté serveur : douze caractères sur les deux chemins où
+       * un titulaire choisit lui-même son mot de passe. Le formulaire le dit
+       * aussi, mais le formulaire n'est pas une garantie.
+       */
+      before: createAuthMiddleware(async (hook) => {
+        if (
+          hook.path !== "/change-password" &&
+          hook.path !== "/reset-password"
+        ) {
+          return;
+        }
+        const next = (hook.body as { newPassword?: unknown } | undefined)
+          ?.newPassword;
+        if (typeof next !== "string" || next.length < 12) {
+          throw new APIError("BAD_REQUEST", {
+            message: "Le mot de passe doit compter au moins douze caractères.",
+          });
+        }
+      }),
+      /**
+       * Un mot de passe définitif vient d'être choisi : le drapeau
+       * `mustChangePassword` du profil tombe. C'est la couche d'authentification
+       * qui le dit, pas le navigateur.
+       */
+      after: createAuthMiddleware(async (hook) => {
+        if (hook.path !== "/change-password") return;
+        const subject = hook.context.session?.user.id;
+        if (!subject || !("runMutation" in ctx)) return;
+        await ctx.runMutation(internal.accounts.clearPasswordChange, {
+          subject,
+        });
+      }),
     },
     plugins: [
       twoFactor({

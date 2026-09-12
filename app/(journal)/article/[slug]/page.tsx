@@ -163,94 +163,106 @@ export default async function ArticlePage({
       <BreadcrumbStructuredData trail={trail} />
 
       <article>
-        <header className="border-b border-border py-8 md:py-10">
-          <Container>
-            <nav aria-label="Fil d'Ariane" className="mb-4 type-small">
-              <ol className="flex flex-wrap items-center gap-x-1">
-                {trail.slice(0, -1).map((item) => (
-                  <li key={item.href} className="flex items-center gap-1">
-                    <Link
-                      href={item.href}
-                      prefetch={false}
-                      className="inline-flex min-h-11 items-center text-accent underline-offset-4 hover:underline"
-                    >
-                      {item.name}
-                    </Link>
-                    <span aria-hidden="true" className="text-muted-foreground">
-                      ›
-                    </span>
+        {/* En-tête fondu dans la photo (`.lc-hero`) : fil d'Ariane en haut,
+            titre, chapeau et signature en bas, sur le voile sombre. `dark` en
+            fait une île sombre quel que soit le thème de la page. */}
+        <header className="lc-hero dark">
+          {hero && (
+            <ResponsiveImage
+              media={hero}
+              sizes={SIZES.articleHero}
+              maxWidth={960}
+              priority
+            />
+          )}
+
+          <Container className="lc-hero-body flex flex-col pt-4 pb-10 md:pb-12">
+            {/* La colonne de texte : 58 % de la grille dès 768 px, 54 % au-delà
+                de 1280 — le voile est opaque là où elle s'arrête. Le fil
+                d'Ariane y est enfermé aussi, pour ne pas courir sur la photo. */}
+            <div className="flex flex-1 flex-col md:max-w-[58%] xl:max-w-[54%]">
+              <nav aria-label="Fil d'Ariane" className="type-small">
+                <ol className="flex flex-wrap items-center gap-x-1">
+                  {trail.slice(0, -1).map((item) => (
+                    <li key={item.href} className="flex items-center gap-1">
+                      <Link
+                        href={item.href}
+                        prefetch={false}
+                        className="inline-flex min-h-11 items-center text-neutral-200 underline-offset-4 hover:underline"
+                      >
+                        {item.name}
+                      </Link>
+                      <span aria-hidden="true" className="text-neutral-400">
+                        ›
+                      </span>
+                    </li>
+                  ))}
+                  <li className="min-w-0 truncate text-neutral-300">
+                    {article.title}
                   </li>
-                ))}
-                <li className="min-w-0 truncate text-muted-foreground">
-                  {article.title}
-                </li>
-              </ol>
-            </nav>
+                </ol>
+              </nav>
 
-            <div className="max-w-[52rem]">
-              <div className="flex flex-wrap items-center gap-2">
-                <CategoryBadge
-                  slug={article.categorySlug}
-                  name={article.categoryName}
-                  accent={article.categoryAccent}
-                />
-                {article.subCategorySlug && article.subCategoryName && (
+              {/* En bas sur petit écran, centré dans l'espace restant au-delà. */}
+              <div className="mt-auto pt-12 md:my-auto md:pt-8">
+                <div className="flex flex-wrap items-center gap-2">
                   <CategoryBadge
-                    slug={article.subCategorySlug}
-                    name={article.subCategoryName}
+                    slug={article.categorySlug}
+                    name={article.categoryName}
                     accent={article.categoryAccent}
-                    parentSlug={article.categorySlug}
-                    variant="text"
                   />
-                )}
-                {article.origin === "partenaire" && <PartnerTag />}
-              </div>
+                  {article.subCategorySlug && article.subCategoryName && (
+                    <CategoryBadge
+                      slug={article.subCategorySlug}
+                      name={article.subCategoryName}
+                      accent={article.categoryAccent}
+                      parentSlug={article.categorySlug}
+                      variant="text"
+                    />
+                  )}
+                  {article.origin === "partenaire" && <PartnerTag />}
+                </div>
 
-              <h1 className="mt-4 font-serif type-h1 text-balance">
-                {article.title}
-              </h1>
+                <h1 className="mt-4 font-serif type-display text-balance text-white">
+                  {article.title}
+                </h1>
 
-              <p className="mt-4 type-body font-medium text-muted-foreground">
-                {article.dek}
-              </p>
-
-              <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
-                <AuthorByline
-                  authorSlug={article.authorSlug}
-                  authorName={article.authorName}
-                  authorRole={article.authorRole}
-                  publishedAt={article.publishedAt}
-                  updatedAt={article.updatedAt}
-                  readingMinutes={article.readingMinutes}
-                />
-                <p className="type-small text-muted-foreground" data-numeric>
-                  {formatViews(article.views)}
+                <p className="mt-4 max-w-[40rem] type-body font-medium text-neutral-100">
+                  {article.dek}
                 </p>
+
+                <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
+                  <AuthorByline
+                    authorSlug={article.authorSlug}
+                    authorName={article.authorName}
+                    authorRole={article.authorRole}
+                    publishedAt={article.publishedAt}
+                    updatedAt={article.updatedAt}
+                    readingMinutes={article.readingMinutes}
+                  />
+                  <p className="type-small text-neutral-300" data-numeric>
+                    {formatViews(article.views)}
+                  </p>
+                </div>
               </div>
             </div>
           </Container>
         </header>
 
-        {hero && (
-          <Container className="mt-6 md:mt-8">
-            <figure className="max-w-[52rem]">
-              <ResponsiveImage
-                media={hero}
-                sizes={SIZES.articleHero}
-                maxWidth={960}
-                priority
-                wrapperClassName="aspect-[16/9] rounded-md"
-              />
-              <figcaption className="mt-2 type-small text-muted-foreground">
-                {hero.caption}
-                {hero.credit && (
-                  <span>
-                    {hero.caption ? " " : ""}({hero.credit}
-                    {hero.license ? `, ${hero.license}` : ""})
-                  </span>
-                )}
-              </figcaption>
-            </figure>
+        {/* Légende et crédit sous le bandeau, pas dessus : une licence
+            Creative Commons exige la mention, et elle se lit mieux sur le fond
+            de la page que dans un coin de la photo. */}
+        {hero && (hero.caption || hero.credit) && (
+          <Container className="mt-3">
+            <p className="max-w-[52rem] type-small text-muted-foreground">
+              {hero.caption}
+              {hero.credit && (
+                <span>
+                  {hero.caption ? " " : ""}({hero.credit}
+                  {hero.license ? `, ${hero.license}` : ""})
+                </span>
+              )}
+            </p>
           </Container>
         )}
 

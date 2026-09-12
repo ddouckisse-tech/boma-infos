@@ -567,6 +567,119 @@
   block-size: 100%;
 }
 
+/* --------------------------------------------------------------------------
+   7 bis (suite). Bandeau photographique — une de l'accueil, en-tête d'article
+
+   Composition : le texte à gauche, sur un panneau neutre sombre ; la photo à
+   droite, qui se fond dans le panneau par un dégradé horizontal. Le tout
+   tient dans un écran, texte centré verticalement. Sous 768 px, il n'y a
+   pas de place pour deux colonnes : la photo passe derrière le texte, avec
+   un voile vertical.
+
+   Le voile n'est pas décoratif : il porte le contraste. Sous la colonne de
+   texte son opacité dépasse 0,72 (≥ 3:1 pour le titre large) et dépasse
+   0,9 là où vivent le chapeau et la signature (≥ 4,5:1 pour le blanc et
+   `#A3A3A3`, même sur une photo blanche). Avant le premier octet, le
+   bandeau est déjà peint (neutral-950, puis la couleur dominante de la
+   photo) : le texte n'attend jamais l'image pour être lisible, et la
+   hauteur est dictée par le texte, jamais par l'image — rien ne bouge.
+
+   Neutre et non navy : la v1.1 du cahier des charges a chassé le bleuté des
+   fonds, et le voile des dialogues a été neutralisé pour la même raison.
+
+   Le bandeau porte aussi la classe `dark` : c'est une île sombre quel que
+   soit le thème, et les composants qu'il contient (pastille de rubrique,
+   mention partenaire, signature, bouton) y prennent leurs jetons sombres.
+   -------------------------------------------------------------------------- */
+.lc-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background-color: var(--color-neutral-950);
+  color: #ffffff;
+}
+
+/* Un écran, pas plus : la bande tient sous l'en-tête (deux rangées et le
+   bandeau d'édition, ≈ 12 rem). `vh` d'abord, pour les navigateurs sans
+   `svh` ; le contenu peut toujours l'allonger. */
+.lc-hero-body {
+  min-block-size: clamp(28rem, calc(100vh - 12rem), 44rem);
+  min-block-size: clamp(28rem, calc(100svh - 12rem), 44rem);
+}
+
+/* La photo tapisse le fond ; sa boîte ne dicte plus la hauteur. `.lc-media`
+   étant hors couche, la surcharge doit l'être aussi, et venir après. */
+.lc-hero > .lc-media {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+}
+
+.lc-hero > .lc-media img {
+  /* Un peu au-dessus du centre : les visages sont rarement en bas. */
+  object-position: 50% 35%;
+}
+
+/* Petit écran — deux couches : du bas vers le haut, la zone de texte ; du
+   haut vers le bas, le fil d'Ariane. */
+.lc-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(
+      to top,
+      rgb(10 10 10 / 0.96) 0%,
+      rgb(10 10 10 / 0.9) 35%,
+      rgb(10 10 10 / 0.55) 65%,
+      rgb(10 10 10 / 0.3) 100%
+    ),
+    linear-gradient(
+      to bottom,
+      rgb(10 10 10 / 0.75) 0%,
+      rgb(10 10 10 / 0.5) 8%,
+      rgb(10 10 10 / 0) 30%
+    );
+}
+
+/* À partir de 768 px : la photo occupe les trois quarts droits et se fond,
+   vers la gauche, dans le panneau qui porte le texte. Le panneau est opaque
+   jusqu'à 30 %, la photo n'apparaît franchement qu'au-delà de 55 % — là où
+   la colonne de texte (54–58 % de la grille) s'arrête. Un léger fondu en
+   bas adoucit la jonction avec la section suivante. */
+@media (min-width: 768px) {
+  .lc-hero > .lc-media {
+    inset-inline-start: 26%;
+  }
+
+  .lc-hero::before {
+    background-image:
+      linear-gradient(
+        to right,
+        rgb(10 10 10 / 1) 0%,
+        rgb(10 10 10 / 1) 30%,
+        rgb(10 10 10 / 0.94) 42%,
+        rgb(10 10 10 / 0.72) 56%,
+        rgb(10 10 10 / 0.4) 70%,
+        rgb(10 10 10 / 0.22) 85%,
+        rgb(10 10 10 / 0.22) 100%
+      ),
+      linear-gradient(to top, rgb(10 10 10 / 0.6) 0%, rgb(10 10 10 / 0) 28%);
+  }
+}
+
+/* Contraste renforcé demandé par le système : la photo passe au second plan. */
+@media (prefers-contrast: more) {
+  .lc-hero::before {
+    background-image: linear-gradient(
+      rgb(10 10 10 / 0.92),
+      rgb(10 10 10 / 0.92)
+    );
+  }
+}
+
 /* Média lourd (vidéo, galerie) : remplacé par un espace réservé cliquable. */
 [data-data-saver="on"] [data-heavy-media="hide"] {
   display: none;

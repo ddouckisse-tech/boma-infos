@@ -90,6 +90,8 @@ export const ACCESS_MESSAGE: Record<string, string> = {
   SUSPENDED: "Ce compte a été révoqué.",
   TWO_FACTOR_REQUIRED:
     "La double authentification est obligatoire pour ce rôle : activez-la depuis votre compte.",
+  PASSWORD_CHANGE_REQUIRED:
+    "Votre mot de passe est provisoire : choisissez-en un définitif (douze caractères au minimum) depuis votre compte.",
   FORBIDDEN: "Vous n'avez pas accès à cet élément.",
   ORGANIZATION_REQUIRED: "Aucune entreprise n'est rattachée à ce compte.",
   ORGANIZATION_PENDING:

@@ -7,6 +7,7 @@ import { useConvexAuth, useQuery } from "convex/react";
 import QRCode from "qrcode";
 import {
   Copy,
+  KeyRound,
   LogOut,
   MonitorSmartphone,
   ShieldCheck,
@@ -58,6 +59,55 @@ export default function AccountPage() {
   const [busy, setBusy] = useState(false);
 
   const [sessionsTick, setSessionsTick] = useState(0);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  /**
+   * Password change — the way out of a provisional password (§4.3).
+   * Twelve characters are checked here for the message, and again by the
+   * server (`convex/auth.ts`, hooks.before), which is the check that counts.
+   * Other sessions are revoked: whoever knew the provisional one is out.
+   */
+  const changePassword = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setError("");
+    setMessage("");
+    if (newPassword.length < 12) {
+      setError(
+        "Le nouveau mot de passe doit compter au moins douze caractères."
+      );
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError("Les deux saisies du nouveau mot de passe diffèrent.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const result = await authClient.changePassword({
+        currentPassword,
+        newPassword,
+        revokeOtherSessions: true,
+      });
+      if (result.error) {
+        setError(
+          "Mot de passe actuel incorrect, ou nouveau mot de passe refusé."
+        );
+      } else {
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+        setMessage(
+          "Mot de passe remplacé. Vos autres sessions ont été fermées."
+        );
+        setSessionsTick((tick) => tick + 1);
+      }
+    } catch {
+      setError("Le changement de mot de passe n'a pas abouti.");
+    }
+    setBusy(false);
+  };
   const refreshSessions = useCallback(() => setSessionsTick((n) => n + 1), []);
 
   // La liste des sessions vient de Better Auth, pas de Convex : c'est le
@@ -233,6 +283,65 @@ export default function AccountPage() {
             {error || message}
           </p>
         )}
+
+        <section
+          id="mot-de-passe"
+          className={
+            "rounded-lg border bg-card p-6 " +
+            (viewer.passwordChangeRequired
+              ? "border-warning-token"
+              : "border-border")
+          }
+        >
+          <h2 className="flex items-center gap-2 font-serif type-h3">
+            <KeyRound
+              aria-hidden="true"
+              className={
+                "size-5 " +
+                (viewer.passwordChangeRequired
+                  ? "text-warning-token"
+                  : "text-muted-foreground")
+              }
+            />
+            Mot de passe
+          </h2>
+          <p className="mt-2 type-small text-muted-foreground">
+            {viewer.passwordChangeRequired
+              ? "Votre mot de passe est provisoire : choisissez-en un définitif maintenant. Tant qu'il n'est pas remplacé, le serveur refuse toute action de ce compte."
+              : "Douze caractères au minimum. Le changement ferme vos autres sessions."}
+          </p>
+          <form onSubmit={changePassword} className="mt-5 grid max-w-md gap-4">
+            <TextField
+              label="Mot de passe actuel"
+              type="password"
+              autoComplete="current-password"
+              required
+              value={currentPassword}
+              onChange={(event) => setCurrentPassword(event.target.value)}
+            />
+            <TextField
+              label="Nouveau mot de passe"
+              type="password"
+              autoComplete="new-password"
+              required
+              minLength={12}
+              hint="Douze caractères au minimum."
+              value={newPassword}
+              onChange={(event) => setNewPassword(event.target.value)}
+            />
+            <TextField
+              label="Confirmation du nouveau mot de passe"
+              type="password"
+              autoComplete="new-password"
+              required
+              value={confirmPassword}
+              onChange={(event) => setConfirmPassword(event.target.value)}
+            />
+            <ActionButton type="submit" disabled={busy}>
+              Remplacer le mot de passe
+            </ActionButton>
+          </form>
+        </section>
 
         <section className="rounded-lg border border-border bg-card p-6">
           <h2 className="flex items-center gap-2 font-serif type-h3">
