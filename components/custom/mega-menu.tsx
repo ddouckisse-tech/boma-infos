@@ -3,12 +3,14 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
+import { usePreferences } from "@/components/providers/preferences-provider";
 import {
   accentBorderClass,
   sectionHref,
   subSectionHref,
   type Section,
 } from "@/lib/navigation";
+import { categoryLabel, localize } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 /**
@@ -37,6 +39,7 @@ export function MegaMenu({
   sections: readonly Section[];
   className?: string;
 }) {
+  const { locale } = usePreferences();
   const baseId = useId();
   const [openSlug, setOpenSlug] = useState<string | null>(null);
   const navRef = useRef<HTMLElement | null>(null);
@@ -77,7 +80,10 @@ export function MegaMenu({
   return (
     <nav
       ref={navRef}
-      aria-label="Navigation principale"
+      aria-label={localize(locale, {
+        fr: "Navigation principale",
+        en: "Main navigation",
+      })}
       className={cn("relative", className)}
       onKeyDown={(event) => {
         if (event.key !== "Escape" || !openSlug) return;
@@ -107,7 +113,7 @@ export function MegaMenu({
                     setOpenSlug(null);
                   }}
                 >
-                  {section.label}
+                  {categoryLabel(locale, section.slug, section.label)}
                 </Link>
               </li>
             );
@@ -142,7 +148,7 @@ export function MegaMenu({
                   isOpen && "bg-surface-muted"
                 )}
               >
-                {section.label}
+                {categoryLabel(locale, section.slug, section.label)}
                 <ChevronDown
                   aria-hidden="true"
                   className={cn(
@@ -168,7 +174,10 @@ export function MegaMenu({
                       className="flex min-h-[44px] items-center rounded-xs px-2 type-small font-semibold text-accent hover:bg-surface-muted"
                       onClick={() => setOpenSlug(null)}
                     >
-                      Toute la rubrique
+                      {localize(locale, {
+                        fr: "Toute la rubrique",
+                        en: "View the full section",
+                      })}
                     </Link>
                   </li>
                   {section.children.map((child) => (
@@ -179,7 +188,7 @@ export function MegaMenu({
                         className="flex min-h-[44px] items-center rounded-xs px-2 type-small text-foreground hover:bg-surface-muted"
                         onClick={() => setOpenSlug(null)}
                       >
-                        {child.label}
+                        {categoryLabel(locale, child.slug, child.label)}
                       </Link>
                     </li>
                   ))}

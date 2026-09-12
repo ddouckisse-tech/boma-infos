@@ -6,7 +6,8 @@ import { ChevronDown, Menu } from "lucide-react";
 import { CloseButton } from "@/components/custom/close-button";
 import { Modal } from "@/components/custom/modal";
 import { DataSaverToggle } from "@/components/custom/data-saver-toggle";
-import { ThemeToggle } from "@/components/custom/theme-toggle";
+import { usePreferences } from "@/components/providers/preferences-provider";
+import { categoryLabel, navigationLabel } from "@/lib/i18n";
 import { sectionHref, subSectionHref, type Section } from "@/lib/navigation";
 
 /**
@@ -27,6 +28,8 @@ export function MobileNav({
   pages: readonly { label: string; href: string }[];
 }) {
   const [open, setOpen] = useState(false);
+  const { locale } = usePreferences();
+  const english = locale === "en";
 
   const leafLink =
     "flex min-h-11 items-center rounded-xs px-4 type-small text-muted-foreground hover:bg-surface-muted hover:text-foreground";
@@ -43,13 +46,15 @@ export function MobileNav({
         className="inline-flex items-center justify-center rounded-md border border-border text-foreground transition-colors touch-target hover:bg-surface-muted lg:hidden"
       >
         <Menu aria-hidden="true" className="size-5" />
-        <span className="sr-only">Ouvrir le menu de navigation</span>
+        <span className="sr-only">
+          {english ? "Open navigation menu" : "Ouvrir le menu de navigation"}
+        </span>
       </button>
 
       <Modal
         open={open}
         onClose={close}
-        label="Menu de navigation"
+        label={english ? "Navigation menu" : "Menu de navigation"}
         variant="drawer"
         className="pb-[env(safe-area-inset-bottom)]"
       >
@@ -57,20 +62,25 @@ export function MobileNav({
           <div className="min-w-0">
             <p className="font-display type-h3">Navigation</p>
             <p className="type-small text-muted-foreground">
-              Les {sections.length} rubriques du magazine.
+              {english
+                ? `${sections.length} magazine sections.`
+                : `Les ${sections.length} rubriques du magazine.`}
             </p>
           </div>
           <CloseButton onClick={close} />
         </div>
 
-        <nav aria-label="Navigation principale" className="p-2">
+        <nav
+          aria-label={english ? "Main navigation" : "Navigation principale"}
+          className="p-2"
+        >
           <ul className="flex flex-col">
             {sections.map((section) =>
               section.children.length > 0 ? (
                 <li key={section.slug} className="border-b border-border">
                   <details className="group/section">
                     <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 px-2 font-display type-body font-semibold [&::-webkit-details-marker]:hidden">
-                      {section.label}
+                      {categoryLabel(locale, section.slug, section.label)}
                       <ChevronDown
                         aria-hidden="true"
                         className="size-4 shrink-0 transition-transform group-open/section:rotate-180"
@@ -83,7 +93,7 @@ export function MobileNav({
                           onClick={close}
                           className="flex min-h-11 items-center rounded-xs px-4 type-small font-semibold text-accent hover:bg-surface-muted"
                         >
-                          Toute la rubrique
+                          {english ? "View full section" : "Toute la rubrique"}
                         </Link>
                       </li>
                       {section.children.map((child) => (
@@ -93,7 +103,7 @@ export function MobileNav({
                             onClick={close}
                             className={leafLink}
                           >
-                            {child.label}
+                            {categoryLabel(locale, child.slug, child.label)}
                           </Link>
                         </li>
                       ))}
@@ -107,7 +117,7 @@ export function MobileNav({
                     onClick={close}
                     className="flex min-h-11 items-center px-2 font-display type-body font-semibold hover:bg-surface-muted"
                   >
-                    {section.label}
+                    {categoryLabel(locale, section.slug, section.label)}
                   </Link>
                 </li>
               )
@@ -118,7 +128,7 @@ export function MobileNav({
             {pages.map((page) => (
               <li key={page.href}>
                 <Link href={page.href} onClick={close} className={leafLink}>
-                  {page.label}
+                  {navigationLabel(locale, page.href, page.label)}
                 </Link>
               </li>
             ))}
@@ -127,16 +137,22 @@ export function MobileNav({
                 Newsletter
               </Link>
             </li>
+            <li className="sm:hidden">
+              <Link href="/recherche" onClick={close} className={leafLink}>
+                {english ? "Search" : "Rechercher"}
+              </Link>
+            </li>
+            <li className="sm:hidden">
+              <Link href="/connexion" onClick={close} className={leafLink}>
+                {english
+                  ? "Sign in and company workspace"
+                  : "Connexion et espace entreprise"}
+              </Link>
+            </li>
           </ul>
         </nav>
 
         <div className="flex flex-col gap-4 border-t border-border p-4">
-          <div className="flex flex-col gap-2">
-            <span className="type-small font-medium text-muted-foreground">
-              Thème
-            </span>
-            <ThemeToggle labelled className="self-start" />
-          </div>
           <DataSaverToggle variant="block" />
         </div>
       </Modal>

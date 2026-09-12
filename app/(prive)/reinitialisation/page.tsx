@@ -11,12 +11,15 @@ import {
   FormNotice,
 } from "@/components/custom/auth-shell";
 import { TextField } from "@/components/custom/form-field";
+import { usePreferences } from "@/components/providers/preferences-provider";
 import { authClient } from "@/lib/auth-client";
+import { localize } from "@/lib/i18n";
 
 const MINIMUM = 12;
 
 function ResetForm() {
   const router = useRouter();
+  const { locale } = usePreferences();
   const params = useSearchParams();
   const token = params.get("token") ?? "";
   const [password, setPassword] = useState("");
@@ -29,11 +32,21 @@ function ResetForm() {
     event.preventDefault();
     setError("");
     if (password.length < MINIMUM) {
-      setError(`Le mot de passe doit compter au moins ${MINIMUM} caractères.`);
+      setError(
+        localize(locale, {
+          fr: `Le mot de passe doit compter au moins ${MINIMUM} caractères.`,
+          en: `The password must be at least ${MINIMUM} characters long.`,
+        })
+      );
       return;
     }
     if (password !== confirmation) {
-      setError("Les deux saisies diffèrent.");
+      setError(
+        localize(locale, {
+          fr: "Les deux saisies diffèrent.",
+          en: "The two entries do not match.",
+        })
+      );
       return;
     }
     setPending(true);
@@ -43,14 +56,24 @@ function ResetForm() {
         token,
       });
       if (result.error) {
-        setError("Ce lien n'est plus valable. Demandez-en un nouveau.");
+        setError(
+          localize(locale, {
+            fr: "Ce lien n'est plus valable. Demandez-en un nouveau.",
+            en: "This link is no longer valid. Request a new one.",
+          })
+        );
         setPending(false);
         return;
       }
       setDone(true);
       setTimeout(() => router.push("/connexion"), 1500);
     } catch {
-      setError("Ce lien n'est plus valable. Demandez-en un nouveau.");
+      setError(
+        localize(locale, {
+          fr: "Ce lien n'est plus valable. Demandez-en un nouveau.",
+          en: "This link is no longer valid. Request a new one.",
+        })
+      );
       setPending(false);
     }
   };
@@ -58,9 +81,15 @@ function ResetForm() {
   if (!token) {
     return (
       <FormError>
-        Ce lien est incomplet. Reprenez la procédure depuis{" "}
+        {localize(locale, {
+          fr: "Ce lien est incomplet. Reprenez la procédure depuis ",
+          en: "This link is incomplete. Restart the process from ",
+        })}
         <Link href="/mot-de-passe-oublie" className="underline">
-          « mot de passe oublié »
+          {localize(locale, {
+            fr: "« mot de passe oublié »",
+            en: "‘forgotten password’",
+          })}
         </Link>
         .
       </FormError>
@@ -70,7 +99,10 @@ function ResetForm() {
   if (done) {
     return (
       <FormNotice>
-        Mot de passe changé. Redirection vers la connexion…
+        {localize(locale, {
+          fr: "Mot de passe changé. Redirection vers la connexion…",
+          en: "Password changed. Redirecting to sign in…",
+        })}
       </FormNotice>
     );
   }
@@ -79,17 +111,23 @@ function ResetForm() {
     <form onSubmit={submit} className="grid gap-5">
       <FormError>{error}</FormError>
       <TextField
-        label="Nouveau mot de passe"
+        label={localize(locale, {
+          fr: "Nouveau mot de passe",
+          en: "New password",
+        })}
         type="password"
         autoComplete="new-password"
         required
         minLength={MINIMUM}
-        hint={`Douze caractères au minimum (CDC §4.3).`}
+        hint={localize(locale, {
+          fr: "Douze caractères au minimum.",
+          en: "At least twelve characters.",
+        })}
         value={password}
         onChange={(event) => setPassword(event.target.value)}
       />
       <TextField
-        label="Confirmation"
+        label={localize(locale, { fr: "Confirmation", en: "Confirm password" })}
         type="password"
         autoComplete="new-password"
         required
@@ -98,7 +136,12 @@ function ResetForm() {
       />
       <ActionButton type="submit" disabled={pending} className="w-full">
         <KeyRound aria-hidden="true" className="size-4" />
-        {pending ? "Enregistrement…" : "Changer le mot de passe"}
+        {pending
+          ? localize(locale, { fr: "Enregistrement…", en: "Saving…" })
+          : localize(locale, {
+              fr: "Changer le mot de passe",
+              en: "Change password",
+            })}
       </ActionButton>
     </form>
   );
@@ -106,9 +149,21 @@ function ResetForm() {
 
 /** Reset screen reached from the link of `/mot-de-passe-oublie`. */
 export default function ResetPasswordPage() {
+  const { locale } = usePreferences();
   return (
-    <AuthShell title="Nouveau mot de passe">
-      <Suspense fallback={<p className="type-small">Chargement…</p>}>
+    <AuthShell
+      title={localize(locale, {
+        fr: "Nouveau mot de passe",
+        en: "New password",
+      })}
+    >
+      <Suspense
+        fallback={
+          <p className="type-small">
+            {localize(locale, { fr: "Chargement…", en: "Loading…" })}
+          </p>
+        }
+      >
         <ResetForm />
       </Suspense>
     </AuthShell>

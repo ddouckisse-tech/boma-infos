@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Check } from "lucide-react";
 import { Container } from "@/components/custom/container";
+import { LocalizedText } from "@/components/custom/localized-text";
 import { NewsletterForm } from "@/components/custom/newsletter-form";
 import { PageHeader } from "@/components/custom/page-header";
 import { Section } from "@/components/custom/section";
@@ -15,10 +16,22 @@ export const metadata: Metadata = {
 };
 
 const PROMISES = [
-  "Un envoi par semaine, le vendredi matin. Jamais davantage.",
-  "Les articles à retenir, les échéances réglementaires de la semaine à venir et les appels d'offres encore ouverts.",
-  "Votre adresse n'est ni vendue, ni cédée, ni utilisée pour autre chose que cette lettre.",
-  "Un lien de désinscription en un clic dans chaque envoi — pas de formulaire, pas de compte à créer.",
+  {
+    fr: "Un envoi par semaine, le vendredi matin. Jamais davantage.",
+    en: "One issue a week, on Friday morning. Never more.",
+  },
+  {
+    fr: "Les articles à retenir, les échéances réglementaires de la semaine à venir et les appels d'offres encore ouverts.",
+    en: "Essential articles, upcoming regulatory deadlines and tenders that remain open.",
+  },
+  {
+    fr: "Votre adresse n'est ni vendue, ni cédée, ni utilisée pour autre chose que cette lettre.",
+    en: "Your address is never sold, shared or used for anything other than this newsletter.",
+  },
+  {
+    fr: "Un lien de désinscription en un clic dans chaque envoi — pas de formulaire, pas de compte à créer.",
+    en: "Every issue includes one-click unsubscribe, with no form or account required.",
+  },
 ];
 
 /**
@@ -31,9 +44,19 @@ export default function NewsletterPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Le journal"
-        title="La lettre hebdomadaire"
-        description="Un courriel par semaine, écrit par la rédaction, pour suivre l'économie gabonaise sans ouvrir le site tous les jours."
+        eyebrow={<LocalizedText fr="Le journal" en="The journal" />}
+        title={
+          <LocalizedText
+            fr="La lettre hebdomadaire"
+            en="The weekly newsletter"
+          />
+        }
+        description={
+          <LocalizedText
+            fr="Un courriel par semaine, écrit par la rédaction, pour suivre l'économie gabonaise sans ouvrir le site tous les jours."
+            en="One email a week from the editorial team, so you can follow Gabon's economy without checking the site every day."
+          />
+        }
         width="reading"
       />
 
@@ -41,12 +64,14 @@ export default function NewsletterPage() {
         <Container width="reading" className="px-0">
           <ul className="grid gap-3">
             {PROMISES.map((promise) => (
-              <li key={promise} className="flex gap-3 type-body">
+              <li key={promise.fr} className="flex gap-3 type-body">
                 <Check
                   aria-hidden="true"
                   className="mt-1 size-5 shrink-0 text-success-token"
                 />
-                <span className="min-w-0">{promise}</span>
+                <span className="min-w-0">
+                  <LocalizedText {...promise} />
+                </span>
               </li>
             ))}
           </ul>
@@ -57,30 +82,41 @@ export default function NewsletterPage() {
 
           <div className="article-body mt-10 type-body">
             <h2 className="font-display type-h2">
-              Comment fonctionne l&apos;inscription
+              <LocalizedText
+                fr="Comment fonctionne l'inscription"
+                en="How subscription works"
+              />
             </h2>
             <ol className="list-decimal space-y-2 ps-6">
               <li>
-                Vous saisissez votre adresse. Rien n&apos;est encore enregistré
-                comme un abonnement.
+                <LocalizedText
+                  fr="Vous saisissez votre adresse. Rien n'est encore enregistré comme un abonnement."
+                  en="Enter your email address. It is not yet recorded as a subscription."
+                />
               </li>
               <li>
-                Vous recevez un message de confirmation. Tant que vous ne
-                cliquez pas, vous ne recevez aucune lettre&nbsp;: c&apos;est ce
-                qu&apos;on appelle le double consentement, et cela protège les
-                personnes dont l&apos;adresse serait saisie par un tiers.
+                <LocalizedText
+                  fr="Vous recevez un message de confirmation. Tant que vous ne cliquez pas, vous ne recevez aucune lettre : ce double consentement protège les personnes dont l'adresse serait saisie par un tiers."
+                  en="You receive a confirmation message. No newsletter is sent until you click, protecting anyone whose address may have been entered by someone else."
+                />
               </li>
               <li>
-                Vous cliquez, l&apos;abonnement devient actif. Chaque envoi
-                porte un lien de désinscription qui fonctionne en un clic.
+                <LocalizedText
+                  fr="Vous cliquez, l'abonnement devient actif. Chaque envoi porte un lien de désinscription qui fonctionne en un clic."
+                  en="Click to activate the subscription. Every issue includes a one-click unsubscribe link."
+                />
               </li>
             </ol>
             <p>
-              Vos données&nbsp;: seule votre adresse électronique est conservée,
-              le temps de votre abonnement. Elle sert uniquement à vous envoyer
-              cette lettre. Voir la{" "}
+              <LocalizedText
+                fr="Vos données : seule votre adresse électronique est conservée pendant votre abonnement. Elle sert uniquement à vous envoyer cette lettre. Voir la "
+                en="Your data: only your email address is stored while you subscribe. It is used solely to send this newsletter. Read the "
+              />
               <Link href="/confidentialite" prefetch={false}>
-                politique de confidentialité
+                <LocalizedText
+                  fr="politique de confidentialité"
+                  en="privacy policy"
+                />
               </Link>
               .
             </p>

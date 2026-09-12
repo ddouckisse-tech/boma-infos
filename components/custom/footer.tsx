@@ -9,15 +9,11 @@ import {
 import { BrandWordmark } from "@/components/custom/brand-wordmark";
 import { Container } from "@/components/custom/container";
 import { DataSaverToggle } from "@/components/custom/data-saver-toggle";
+import { LocalizedText } from "@/components/custom/localized-text";
 import { NewsletterForm } from "@/components/custom/newsletter-form";
 import { ThemeToggle } from "@/components/custom/theme-toggle";
 import { cn } from "@/lib/utils";
-import {
-  DEMO_CONTENT_NOTICE,
-  NAV_LEGAL_PAGES,
-  NAV_STATIC_PAGES,
-  SITE,
-} from "@/lib/site";
+import { NAV_LEGAL_PAGES, NAV_STATIC_PAGES, SITE } from "@/lib/site";
 
 const SOCIAL_ICONS = {
   whatsapp: WhatsAppIcon,
@@ -30,6 +26,16 @@ const SOCIAL_LINKS = [
   { key: "linkedin", label: "LinkedIn", href: "https://www.linkedin.com/" },
   { key: "facebook", label: "Facebook", href: "https://www.facebook.com/" },
 ] as const;
+
+const PAGE_LABELS_EN: Readonly<Record<string, string>> = {
+  "/a-propos": "About",
+  "/docutheque": "Document library",
+  "/contacts": "Contact",
+  "/mentions-legales": "Legal notice",
+  "/confidentialite": "Privacy policy",
+  "/newsletter": "Newsletter",
+  "/design-system": "Design system",
+};
 
 /**
  * Site footer — deliberately short.
@@ -73,8 +79,10 @@ export function Footer() {
           <div className="min-w-0">
             <BrandWordmark />
             <p className="mt-1 max-w-[60ch] type-small text-muted-foreground">
-              Magazine économique gabonais, édité par {SITE.publisher}.{" "}
-              {SITE.tagline}.
+              <LocalizedText
+                fr={`Magazine économique gabonais, édité par ${SITE.publisher}. ${SITE.tagline}.`}
+                en={`Gabonese business magazine published by ${SITE.publisher}. Gabon and CEMAC economic news.`}
+              />
             </p>
           </div>
 
@@ -113,7 +121,12 @@ export function Footer() {
                     >
                       <Icon className="size-4 shrink-0" />
                       <span className="type-small">{label}</span>
-                      <span className="sr-only">(nouvelle fenêtre)</span>
+                      <span className="sr-only">
+                        <LocalizedText
+                          fr="(nouvelle fenêtre)"
+                          en="(opens in a new window)"
+                        />
+                      </span>
                     </a>
                   </li>
                 );
@@ -121,13 +134,18 @@ export function Footer() {
               <li>
                 <a href="/rss.xml" className={pill}>
                   <Rss aria-hidden="true" className="size-4 shrink-0" />
-                  <span className="type-small">Flux RSS</span>
+                  <span className="type-small">
+                    <LocalizedText fr="Flux RSS" en="RSS feed" />
+                  </span>
                 </a>
               </li>
             </ul>
           </div>
 
-          <nav aria-label="Le journal" className={twoLines}>
+          <nav aria-labelledby="footer-navigation-label" className={twoLines}>
+            <span id="footer-navigation-label" className="sr-only">
+              <LocalizedText fr="Le journal" en="The journal" />
+            </span>
             <ul className="flex flex-wrap gap-x-5">
               {NAV_STATIC_PAGES.map((page) => (
                 <li key={page.href}>
@@ -136,7 +154,10 @@ export function Footer() {
                     prefetch={false}
                     className={cn(pageLink, "text-foreground")}
                   >
-                    {page.label}
+                    <LocalizedText
+                      fr={page.label}
+                      en={PAGE_LABELS_EN[page.href] ?? page.label}
+                    />
                   </Link>
                 </li>
               ))}
@@ -152,7 +173,10 @@ export function Footer() {
                       "text-muted-foreground hover:text-foreground"
                     )}
                   >
-                    {page.label}
+                    <LocalizedText
+                      fr={page.label}
+                      en={PAGE_LABELS_EN[page.href] ?? page.label}
+                    />
                   </Link>
                 </li>
               ))}
@@ -164,22 +188,22 @@ export function Footer() {
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
             <DataSaverToggle />
             <div className="flex items-center gap-3">
-              <span className="type-small text-muted-foreground">Thème</span>
+              <span className="type-small text-muted-foreground">
+                <LocalizedText fr="Thème" en="Theme" />
+              </span>
               <ThemeToggle />
             </div>
           </div>
           <div className="flex items-center gap-1">
             <p className="type-small text-muted-foreground">
-              © {new Date().getFullYear()} {SITE.name} — {SITE.publisher}. Tous
-              droits réservés.
+              <LocalizedText
+                fr={`© ${new Date().getFullYear()} ${SITE.name} — ${SITE.publisher}. Tous droits réservés.`}
+                en={`© ${new Date().getFullYear()} ${SITE.name} — ${SITE.publisher}. All rights reserved.`}
+              />
             </p>
             <AdminEntry />
           </div>
         </div>
-
-        <p className="mt-1 type-small text-muted-foreground">
-          {DEMO_CONTENT_NOTICE}
-        </p>
       </Container>
     </footer>
   );

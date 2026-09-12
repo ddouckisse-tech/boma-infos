@@ -3,6 +3,7 @@
 import { useId } from "react";
 import { Gauge } from "lucide-react";
 import { usePreferences } from "@/components/providers/preferences-provider";
+import { localize } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 /**
@@ -28,7 +29,7 @@ export function DataSaverToggle({
   variant?: "inline" | "block";
 }) {
   const id = useId();
-  const { dataSaver, setDataSaver, ready } = usePreferences();
+  const { dataSaver, locale, setDataSaver, ready } = usePreferences();
 
   return (
     <div
@@ -72,12 +73,19 @@ export function DataSaverToggle({
               className="pointer-events-none absolute top-1/2 left-0.5 size-3.5 -translate-y-1/2 rounded-full bg-foreground transition-transform peer-checked:translate-x-[1.1rem] peer-checked:bg-primary-foreground peer-disabled:opacity-50"
             />
           </span>
-          <span>Économie de données</span>
+          <span>
+            {localize(locale, {
+              fr: "Économie de données",
+              en: "Data saver",
+            })}
+          </span>
         </label>
         {variant === "block" && (
           <p id={`${id}-help`} className="type-small text-muted-foreground">
-            Images en basse définition et vidéos jamais préchargées. Utile sur
-            forfait limité ou réseau lent.
+            {localize(locale, {
+              fr: "Images en basse définition et vidéos jamais préchargées. Utile sur forfait limité ou réseau lent.",
+              en: "Lower-resolution images and no video preloading. Useful with limited data or a slow connection.",
+            })}
           </p>
         )}
       </div>

@@ -80,7 +80,14 @@ export default defineSchema({
      */
     storage: v.optional(v.array(storedRenditionValidator)),
     uploadedAt: v.optional(v.number()),
-  }).index("by_key", ["key"]),
+    /** WordPress provenance and the unmodified uploaded source file. */
+    wordpressId: v.optional(v.number()),
+    originalStorageId: v.optional(v.id("_storage")),
+    originalMimeType: v.optional(v.string()),
+    originalBytes: v.optional(v.number()),
+  })
+    .index("by_key", ["key"])
+    .index("by_wordpress_id", ["wordpressId"]),
 
   articles: defineTable({
     title: v.string(),
@@ -107,8 +114,14 @@ export default defineSchema({
     views: v.number(),
     /** Title + dek + body, flattened once so the search index stays cheap. */
     searchText: v.string(),
+    /** Stable source identity, used to safely resume the WordPress migration. */
+    wordpressId: v.optional(v.number()),
+    sourceUrl: v.optional(v.string()),
+    sourceModifiedAt: v.optional(v.number()),
+    sourceCategorySlugs: v.optional(v.array(v.string())),
   })
     .index("by_slug", ["slug"])
+    .index("by_wordpress_id", ["wordpressId"])
     .index("by_status_date", ["status", "publishedAt"])
     .index("by_category", ["status", "categorySlug", "publishedAt"])
     .index("by_subcategory", ["status", "subCategorySlug", "publishedAt"])
@@ -132,8 +145,14 @@ export default defineSchema({
     pages: v.optional(v.number()),
     publisher: v.string(),
     publishedAt: v.number(),
+    /** Migration provenance; inactive documents stay archived in the database. */
+    wordpressId: v.optional(v.number()),
+    sourceUrl: v.optional(v.string()),
+    originalStorageId: v.optional(v.id("_storage")),
+    isActive: v.optional(v.boolean()),
   })
     .index("by_slug", ["slug"])
+    .index("by_wordpress_id", ["wordpressId"])
     .index("by_date", ["publishedAt"]),
 
   /* ------------------------------------------------------------- newsletter */

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Container } from "@/components/custom/container";
+import { LocalizedText } from "@/components/custom/localized-text";
 import { PageHeader } from "@/components/custom/page-header";
 import { Section } from "@/components/custom/section";
 import { SITE } from "@/lib/site";
@@ -25,15 +26,27 @@ export default function PrivacyPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Informations légales"
-        title="Politique de confidentialité"
-        description="Ce que le site enregistre, ce qu'il n'enregistre pas, et comment exercer vos droits."
+        eyebrow={
+          <LocalizedText fr="Informations légales" en="Legal information" />
+        }
+        title={
+          <LocalizedText
+            fr="Politique de confidentialité"
+            en="Privacy policy"
+          />
+        }
+        description={
+          <LocalizedText
+            fr="Ce que le site enregistre, ce qu'il n'enregistre pas, et comment exercer vos droits."
+            en="What the site stores, what it does not store, and how to exercise your rights."
+          />
+        }
         width="reading"
       />
 
       <Section width="reading">
         <Container width="reading" className="px-0">
-          <div className="article-body type-body">
+          <div className="lc-fr article-body type-body" lang="fr">
             <h2 className="font-display type-h2">Aucun traçage par défaut</h2>
             <p>
               La lecture du journal ne dépose <strong>aucun cookie</strong> et
@@ -141,6 +154,90 @@ export default function PrivacyPage() {
               L&apos;autorité de contrôle compétente au Gabon est la Commission
               nationale pour la protection des données à caractère personnel
               (CNPDCP).
+            </p>
+          </div>
+          <div className="lc-en article-body type-body" lang="en">
+            <h2 className="font-display type-h2">No tracking by default</h2>
+            <p>
+              Reading the journal sets <strong>no cookies</strong> and makes
+              <strong> no requests to third parties</strong>. There is no
+              audience tracking, advertising network or social button that
+              follows you. Fonts and images are served from this domain.
+            </p>
+            <p>
+              No consent banner is shown because there is nothing to consent to.
+            </p>
+
+            <h2 className="font-display type-h2">What your browser stores</h2>
+            <p>
+              Two preferences are stored locally on your device and are never
+              transmitted:
+            </p>
+            <ul className="list-disc space-y-2 ps-6">
+              <li>
+                <strong>theme</strong> (light, dark or system);
+              </li>
+              <li>
+                <strong>data saver</strong>, which lowers image resolution.
+              </li>
+            </ul>
+            <p>
+              They disappear when you clear browsing data. They are not cookies
+              and nothing is sent to the server.
+            </p>
+            <p>
+              A service worker also keeps copies of recently opened pages so
+              they remain readable offline. These copies stay on your device.
+            </p>
+
+            <h2 className="font-display type-h2">Information you provide</h2>
+            <h3 className="font-display type-h3">Contact form</h3>
+            <ul className="list-disc space-y-2 ps-6">
+              <li>
+                Data: name, email address, optional organisation, subject and
+                message.
+              </li>
+              <li>Purpose: to respond to your request.</li>
+              <li>Recipient: the Le Corporate editorial team only.</li>
+              <li>Retention: twelve months.</li>
+              <li>
+                Legal basis: your consent, collected through the form checkbox.
+              </li>
+            </ul>
+            <h3 className="font-display type-h3">Weekly newsletter</h3>
+            <ul className="list-disc space-y-2 ps-6">
+              <li>Data: your email address.</li>
+              <li>
+                Purpose: to send the newsletter only. It is not sold, shared or
+                used for targeting.
+              </li>
+              <li>Legal basis: your consent, confirmed by a second click.</li>
+              <li>
+                Retention: until you unsubscribe using the link in any issue.
+              </li>
+            </ul>
+
+            <h2 className="font-display type-h2">Data hosting</h2>
+            <p>
+              Articles, contact messages and newsletter subscriptions are held
+              by our database provider. Its name and hosting location will be
+              stated in the{" "}
+              <Link href="/mentions-legales" prefetch={false}>
+                legal notice
+              </Link>
+              .
+            </p>
+
+            <h2 className="font-display type-h2">Your rights</h2>
+            <p>
+              You may request access, correction, deletion or object to the use
+              of your personal data under the GDPR and Gabonese Law no.
+              001/2011. Email <a href={`mailto:${SITE.email}`}>{SITE.email}</a>;
+              we reply within one month.
+            </p>
+            <p>
+              Gabon&apos;s competent authority is the CNPDCP, the national
+              personal-data protection commission.
             </p>
           </div>
         </Container>

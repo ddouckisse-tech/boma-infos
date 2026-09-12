@@ -7,11 +7,14 @@ import { CloseButton } from "@/components/custom/close-button";
 import { Modal } from "@/components/custom/modal";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { usePreferences } from "@/components/providers/preferences-provider";
+import { categoryLabel, localize } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 type Hit = {
   slug: string;
   title: string;
+  categorySlug: string;
   categoryName: string;
   readingMinutes: number;
 };
@@ -35,6 +38,7 @@ type Hit = {
  * on a slow link never queues eight round trips while typing one word.
  */
 export function SearchDialog({ className }: { className?: string }) {
+  const { locale } = usePreferences();
   const inputId = useId();
   const [open, setOpen] = useState(false);
   const [term, setTerm] = useState("");
@@ -115,25 +119,40 @@ export function SearchDialog({ className }: { className?: string }) {
         )}
       >
         <Search aria-hidden="true" className="size-4 shrink-0" />
-        <span className="hidden type-small lg:inline">Rechercher</span>
+        <span className="hidden type-small lg:inline">
+          {localize(locale, { fr: "Rechercher", en: "Search" })}
+        </span>
         <kbd className="ml-1 hidden rounded-xs border border-border px-1.5 py-0.5 text-[0.75rem] text-muted-foreground lg:inline">
           ⌘ K
         </kbd>
-        <span className="sr-only lg:hidden">Rechercher sur le site</span>
+        <span className="sr-only lg:hidden">
+          {localize(locale, {
+            fr: "Rechercher sur le site",
+            en: "Search the site",
+          })}
+        </span>
       </Link>
 
       <Modal
         open={open}
         onClose={() => setOpen(false)}
-        label="Rechercher un article"
+        label={localize(locale, {
+          fr: "Rechercher un article",
+          en: "Search for an article",
+        })}
         variant="panel"
       >
         <div className="p-5">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <p className="font-display type-h3">Rechercher</p>
+              <p className="font-display type-h3">
+                {localize(locale, { fr: "Rechercher", en: "Search" })}
+              </p>
               <p className="type-small text-muted-foreground">
-                Titres, chapôs et corps des articles publiés.
+                {localize(locale, {
+                  fr: "Titres, chapôs et corps des articles publiés.",
+                  en: "Titles, summaries and text of published articles.",
+                })}
               </p>
             </div>
             <CloseButton onClick={() => setOpen(false)} />
@@ -141,7 +160,7 @@ export function SearchDialog({ className }: { className?: string }) {
 
           <form method="get" action="/recherche" className="mt-4 grid gap-2">
             <Label htmlFor={inputId} className="type-small">
-              Mots-clés
+              {localize(locale, { fr: "Mots-clés", en: "Keywords" })}
             </Label>
             <Input
               ref={field}
@@ -162,7 +181,10 @@ export function SearchDialog({ className }: { className?: string }) {
                   setState("loading");
                 }
               }}
-              placeholder="Ex. : manganèse, CEMAC, contenu local…"
+              placeholder={localize(locale, {
+                fr: "Ex. : manganèse, CEMAC, contenu local…",
+                en: "E.g. manganese, CEMAC, local content…",
+              })}
               aria-describedby={statusId}
               className="h-11 type-body"
             />
@@ -173,14 +195,31 @@ export function SearchDialog({ className }: { className?: string }) {
             role="status"
             className="mt-2 type-small text-muted-foreground"
           >
-            {state === "idle" && "Saisissez au moins deux caractères."}
-            {state === "loading" && "Recherche en cours…"}
+            {state === "idle" &&
+              localize(locale, {
+                fr: "Saisissez au moins deux caractères.",
+                en: "Enter at least two characters.",
+              })}
+            {state === "loading" &&
+              localize(locale, {
+                fr: "Recherche en cours…",
+                en: "Searching…",
+              })}
             {state === "error" &&
-              "La recherche est momentanément indisponible."}
+              localize(locale, {
+                fr: "La recherche est momentanément indisponible.",
+                en: "Search is temporarily unavailable.",
+              })}
             {state === "done" &&
               (hits.length === 0
-                ? `Aucun article ne correspond à « ${term.trim()} ».`
-                : `${hits.length} article${hits.length > 1 ? "s" : ""} trouvé${hits.length > 1 ? "s" : ""}.`)}
+                ? localize(locale, {
+                    fr: `Aucun article ne correspond à « ${term.trim()} ».`,
+                    en: `No article matches “${term.trim()}”.`,
+                  })
+                : localize(locale, {
+                    fr: `${hits.length} article${hits.length > 1 ? "s" : ""} trouvé${hits.length > 1 ? "s" : ""}.`,
+                    en: `${hits.length} article${hits.length > 1 ? "s" : ""} found.`,
+                  }))}
           </p>
 
           {hits.length > 0 && (
@@ -192,11 +231,23 @@ export function SearchDialog({ className }: { className?: string }) {
                     onClick={() => setOpen(false)}
                     className="flex min-h-11 flex-col justify-center rounded-md px-2 py-2 hover:bg-surface-muted"
                   >
-                    <span className="type-small font-semibold text-foreground">
+                    <span
+                      lang="fr"
+                      className="type-small font-semibold text-foreground"
+                    >
                       {hit.title}
                     </span>
                     <span className="type-small text-muted-foreground">
-                      {hit.categoryName} · {hit.readingMinutes} min
+                      {categoryLabel(
+                        locale,
+                        hit.categorySlug,
+                        hit.categoryName
+                      )}{" "}
+                      ·{" "}
+                      {localize(locale, {
+                        fr: `${hit.readingMinutes} min`,
+                        en: `${hit.readingMinutes} min read`,
+                      })}
                     </span>
                   </Link>
                 </li>
@@ -210,7 +261,10 @@ export function SearchDialog({ className }: { className?: string }) {
               onClick={() => setOpen(false)}
               className="mt-4 inline-flex items-center justify-center rounded-md border border-border px-4 type-small font-semibold transition-colors touch-target hover:bg-surface-muted"
             >
-              Voir tous les résultats
+              {localize(locale, {
+                fr: "Voir tous les résultats",
+                en: "View all results",
+              })}
             </Link>
           )}
         </div>

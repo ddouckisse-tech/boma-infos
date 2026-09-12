@@ -46,6 +46,7 @@ import type * as seeding from "../seeding.js";
 import type * as settings from "../settings.js";
 import type * as stats from "../stats.js";
 import type * as taxonomy from "../taxonomy.js";
+import type * as wordpressImport from "../wordpressImport.js";
 
 import type {
   ApiFromModules,
@@ -92,6 +93,7 @@ declare const fullApi: ApiFromModules<{
   settings: typeof settings;
   stats: typeof stats;
   taxonomy: typeof taxonomy;
+  wordpressImport: typeof wordpressImport;
 }>;
 
 /**

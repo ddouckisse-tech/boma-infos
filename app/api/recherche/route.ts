@@ -38,6 +38,7 @@ export async function GET(request: Request) {
         results: results.map((item) => ({
           slug: item.slug,
           title: item.title,
+          categorySlug: item.categorySlug,
           categoryName: item.categoryName,
           readingMinutes: item.readingMinutes,
         })),

@@ -515,6 +515,17 @@ Elle n'est pas indexée (`robots: noindex`).
 Source de vérité des jetons : `app/globals.css`. `lib/design-tokens.ts` en est
 un miroir destiné à l'affichage ; garder les deux synchronisés.
 
+### Logo éditorial
+
+Le logo choisi est partagé par les en-têtes, le pied de page, la connexion,
+le compte et les espaces privés via `BrandWordmark` : « Le » italique rose,
+« Corporate » en serif gras et point rose. Le nom passe du marine au blanc
+selon le thème. Le dessin est vectoriel, sans police supplémentaire.
+
+Le [maître et ses exports](assets/brand/README.md) alimentent aussi les icônes
+et les aperçus de partage. `bun run brand` les régénère ; le budget comptabilise
+une seule ressource SVG partagée par les emplacements de l’interface.
+
 ### Palette (cahier des charges v1.1)
 
 Les deux couleurs de marque sont inchangées — navy `#002060`, magenta

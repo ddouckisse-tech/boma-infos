@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { BrandWordmark } from "@/components/custom/brand-wordmark";
 import { Container } from "@/components/custom/container";
+import { LocalizedText } from "@/components/custom/localized-text";
 
 /**
  * Error boundary of the public journal.
@@ -40,11 +41,16 @@ export default function ErrorBoundary({
         />
         <div className="min-w-0">
           <h1 className="font-display type-h2">
-            Le journal n&apos;a pas pu être affiché
+            <LocalizedText
+              fr="Le journal n'a pas pu être affiché"
+              en="The journal could not be displayed"
+            />
           </h1>
           <p className="mt-3 type-body text-muted-foreground">
-            Une erreur est survenue en chargeant cette page. Ce n&apos;est pas
-            votre connexion&nbsp;: le problème est de notre côté.
+            <LocalizedText
+              fr="Une erreur est survenue en chargeant cette page. Ce n'est pas votre connexion : le problème est de notre côté."
+              en="An error occurred while loading this page. Your connection is not the problem; the issue is on our side."
+            />
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <button
@@ -53,19 +59,22 @@ export default function ErrorBoundary({
               className="inline-flex items-center gap-2 rounded-md bg-primary px-4 type-small font-semibold text-primary-foreground transition-colors touch-target hover:bg-primary/90"
             >
               <RefreshCw aria-hidden="true" className="size-4" />
-              Réessayer
+              <LocalizedText fr="Réessayer" en="Try again" />
             </button>
             <Link
               href="/"
               prefetch={false}
               className="inline-flex items-center rounded-md border border-border px-4 type-small font-semibold transition-colors touch-target hover:bg-surface-muted"
             >
-              Retour à l&apos;accueil
+              <LocalizedText fr="Retour à l'accueil" en="Back to home" />
             </Link>
           </div>
           {error.digest && (
             <p className="mt-4 type-small text-muted-foreground">
-              Référence technique&nbsp;:{" "}
+              <LocalizedText
+                fr="Référence technique : "
+                en="Technical reference: "
+              />
               <code className="font-mono">{error.digest}</code>
             </p>
           )}

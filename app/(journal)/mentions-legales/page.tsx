@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { AlertTriangle } from "lucide-react";
 import { Container } from "@/components/custom/container";
+import { LocalizedText } from "@/components/custom/localized-text";
 import { PageHeader } from "@/components/custom/page-header";
 import { Section } from "@/components/custom/section";
 import { SITE } from "@/lib/site";
@@ -36,9 +37,16 @@ export default function LegalPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Informations légales"
-        title="Mentions légales"
-        description="Identification de l'éditeur et conditions d'utilisation du site."
+        eyebrow={
+          <LocalizedText fr="Informations légales" en="Legal information" />
+        }
+        title={<LocalizedText fr="Mentions légales" en="Legal notice" />}
+        description={
+          <LocalizedText
+            fr="Identification de l'éditeur et conditions d'utilisation du site."
+            en="Publisher identification and terms of use for this site."
+          />
+        }
         width="reading"
       />
 
@@ -53,14 +61,14 @@ export default function LegalPage() {
               className="mt-0.5 size-5 shrink-0 text-warning-token"
             />
             <p className="type-small">
-              Page en cours de constitution. Les mentions ci-dessous sont celles
-              dont la rédaction dispose&nbsp;; les éléments listés plus bas
-              doivent être fournis par l&apos;éditeur avant la mise en ligne
-              publique. Aucune information n&apos;est inventée ici.
+              <LocalizedText
+                fr="Page en cours de constitution. Les mentions ci-dessous sont celles dont la rédaction dispose ; les éléments listés plus bas doivent être fournis par l'éditeur avant la mise en ligne publique. Aucune information n'est inventée ici."
+                en="This page is still being completed. The information below is what the editorial team currently has; the publisher must supply the remaining items. No information has been invented."
+              />
             </p>
           </div>
 
-          <div className="article-body mt-8 type-body">
+          <div className="lc-fr article-body mt-8 type-body" lang="fr">
             <h2 className="font-display type-h2">Éditeur du site</h2>
             <p>
               {SITE.name}, magazine économique en ligne, édité par{" "}
@@ -115,6 +123,64 @@ export default function LegalPage() {
               Toute personne nommée dans un article dispose d&apos;un droit de
               réponse. Adressez votre demande à la rédaction&nbsp;: elle sera
               traitée dans les délais prévus par la loi gabonaise.
+            </p>
+          </div>
+          <div className="lc-en article-body mt-8 type-body" lang="en">
+            <h2 className="font-display type-h2">Site publisher</h2>
+            <p>
+              {SITE.name}, an online business magazine published by{" "}
+              {SITE.publisher}, {SITE.address}.
+            </p>
+            <ul className="list-disc space-y-2 ps-6">
+              <li>
+                Editorial email:{" "}
+                <a href={`mailto:${SITE.email}`}>{SITE.email}</a>
+              </li>
+              <li>
+                Phone: <a href={SITE.phoneHref}>{SITE.phone}</a>
+              </li>
+            </ul>
+            <h2 className="font-display type-h2">
+              Information to be completed
+            </h2>
+            <p>
+              A press publication must be identifiable to its readers. The
+              publisher must provide:
+            </p>
+            <ul className="list-disc space-y-2 ps-6">
+              <li>Name of the publication director</li>
+              <li>Publisher&apos;s full legal name and legal form</li>
+              <li>
+                Trade register number (RCCM) and tax identification number
+              </li>
+              <li>
+                Receipt or accreditation number from the High Authority for
+                Communication (HAC)
+              </li>
+              <li>Full postal address of the editorial office</li>
+              <li>Legal name and contact details of the hosting provider</li>
+              <li>ISSN, where applicable</li>
+            </ul>
+            <h2 className="font-display type-h2">Intellectual property</h2>
+            <p>
+              Texts published on this site belong to their authors and the
+              publisher. Full reproduction requires permission; short quotations
+              with a link to the original article are permitted.
+            </p>
+            <p>
+              Photographs from Wikimedia Commons are published under open
+              licences. The author and licence are shown beneath each image.
+            </p>
+            <h2 className="font-display type-h2">Liability</h2>
+            <p>
+              Signed opinion pieces commit only their authors. Commercial
+              material is labelled “Partner content” wherever it appears.
+            </p>
+            <h2 className="font-display type-h2">Right of reply</h2>
+            <p>
+              Anyone named in an article has a right of reply. Send your request
+              to the editorial team; it will be handled within the time limits
+              set by Gabonese law.
             </p>
           </div>
         </Container>

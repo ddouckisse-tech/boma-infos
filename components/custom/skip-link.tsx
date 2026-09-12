@@ -5,7 +5,11 @@
 export function SkipLink() {
   return (
     <a href="#contenu" className="skip-link type-small">
-      Aller au contenu principal
+      <LocalizedText
+        fr="Aller au contenu principal"
+        en="Skip to main content"
+      />
     </a>
   );
 }
+import { LocalizedText } from "@/components/custom/localized-text";

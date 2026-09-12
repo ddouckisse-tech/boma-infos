@@ -305,9 +305,7 @@ export const homepage = query({
       lead,
       top,
       dossier,
-      latest: summaries
-        .filter((item) => !taken.has(item.slug))
-        .slice(0, 6),
+      latest: summaries.filter((item) => !taken.has(item.slug)).slice(0, 6),
       bySection,
       espacePro: summaries
         .filter((item) => item.categorySlug === "espace-pro")
@@ -563,31 +561,33 @@ export const documents = query({
       .withIndex("by_date")
       .order("desc")
       .collect();
-    return rows.map(
-      ({
-        slug,
-        title,
-        description,
-        kind,
-        fileUrl,
-        fileFormat,
-        fileBytes,
-        pages,
-        publisher,
-        publishedAt,
-      }) => ({
-        slug,
-        title,
-        description,
-        kind,
-        fileUrl,
-        fileFormat,
-        fileBytes,
-        pages,
-        publisher,
-        publishedAt,
-      })
-    );
+    return rows
+      .filter((row) => row.isActive !== false)
+      .map(
+        ({
+          slug,
+          title,
+          description,
+          kind,
+          fileUrl,
+          fileFormat,
+          fileBytes,
+          pages,
+          publisher,
+          publishedAt,
+        }) => ({
+          slug,
+          title,
+          description,
+          kind,
+          fileUrl,
+          fileFormat,
+          fileBytes,
+          pages,
+          publisher,
+          publishedAt,
+        })
+      );
   },
 });
 

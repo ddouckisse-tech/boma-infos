@@ -44,7 +44,7 @@ import {
 const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
 
 /** `/article/<slug>` and nothing else — no query, no trailing segment. */
-const ARTICLE = /^\/article\/([a-z0-9-]{3,120})$/;
+const ARTICLE = /^\/article\/([a-z0-9-]{1,501})$/;
 
 function countView(pathname: string): Promise<unknown> | null {
   if (!convexUrl) return null;

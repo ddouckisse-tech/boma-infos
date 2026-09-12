@@ -1,4 +1,5 @@
 import { absoluteUrl, SITE } from "@/lib/site";
+import { BRAND_LOGO } from "@/lib/brand";
 
 /**
  * schema.org payloads (CDC §4.2 / audit §07).
@@ -33,9 +34,9 @@ export const organizationNode = (): JsonLd => ({
   url: absoluteUrl("/"),
   logo: {
     "@type": "ImageObject",
-    url: absoluteUrl("/icons/icon-512.png"),
-    width: 512,
-    height: 512,
+    url: absoluteUrl(BRAND_LOGO.social),
+    width: BRAND_LOGO.socialWidth,
+    height: BRAND_LOGO.socialHeight,
   },
   email: SITE.email,
   telephone: SITE.phone,

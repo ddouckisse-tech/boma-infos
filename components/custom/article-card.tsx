@@ -1,11 +1,23 @@
 import Link from "next/link";
 import { CategoryBadge } from "@/components/custom/category-badge";
+import { LocalizedText } from "@/components/custom/localized-text";
 import { PartnerTag } from "@/components/custom/partner-tag";
 import { ResponsiveImage } from "@/components/custom/responsive-image";
 import { formatDate, formatReadingTime, isoDate } from "@/lib/format";
+import { localeDate } from "@/lib/i18n";
 import { getMediaAsset, SIZES } from "@/lib/media";
 import { cn } from "@/lib/utils";
 import type { ArticleSummary } from "@/convex/model/content";
+
+const englishDate = (value: number) =>
+  localeDate(value, "en", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "Africa/Libreville",
+  });
+
+const englishReadingTime = (minutes: number) => `${minutes}\u00a0min read`;
 
 type ArticleCardProps = {
   article: ArticleSummary;
@@ -53,16 +65,22 @@ export function ArticleCard({
   const meta = (
     <p className="type-small text-muted-foreground">
       <time dateTime={isoDate(article.publishedAt)}>
-        {formatDate(article.publishedAt)}
+        <LocalizedText
+          fr={formatDate(article.publishedAt)}
+          en={englishDate(article.publishedAt)}
+        />
       </time>
       <span aria-hidden="true"> · </span>
-      {formatReadingTime(article.readingMinutes)}
+      <LocalizedText
+        fr={formatReadingTime(article.readingMinutes)}
+        en={englishReadingTime(article.readingMinutes)}
+      />
     </p>
   );
 
   if (variant === "compact") {
     return (
-      <article className={cn("group/card relative py-3", className)}>
+      <article lang="fr" className={cn("group/card relative py-3", className)}>
         <div className="flex items-baseline gap-3">
           <span
             aria-hidden="true"
@@ -91,6 +109,7 @@ export function ArticleCard({
   if (variant === "list") {
     return (
       <article
+        lang="fr"
         className={cn(
           "group/card relative grid grid-cols-[96px_1fr] gap-4 py-4 sm:grid-cols-[160px_1fr] sm:gap-6",
           className
@@ -144,6 +163,7 @@ export function ArticleCard({
 
   return (
     <article
+      lang="fr"
       className={cn(
         "group/card relative flex h-full flex-col overflow-hidden rounded-md border border-border bg-card",
         className

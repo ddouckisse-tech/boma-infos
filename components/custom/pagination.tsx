@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { LocalizedText } from "@/components/custom/localized-text";
 import { cn } from "@/lib/utils";
 
 /**
@@ -45,13 +46,19 @@ export function Pagination({
               className={cn(base, "hover:bg-surface-muted")}
             >
               <ChevronLeft aria-hidden="true" className="size-4" />
-              <span className="ms-1 hidden sm:inline">Précédente</span>
-              <span className="sr-only sm:hidden">Page précédente</span>
+              <span className="ms-1 hidden sm:inline">
+                <LocalizedText fr="Précédente" en="Previous" />
+              </span>
+              <span className="sr-only sm:hidden">
+                <LocalizedText fr="Page précédente" en="Previous page" />
+              </span>
             </Link>
           ) : (
             <span aria-hidden="true" className={cn(base, "opacity-40")}>
               <ChevronLeft className="size-4" />
-              <span className="ms-1 hidden sm:inline">Précédente</span>
+              <span className="ms-1 hidden sm:inline">
+                <LocalizedText fr="Précédente" en="Previous" />
+              </span>
             </span>
           )}
         </li>
@@ -84,7 +91,9 @@ export function Pagination({
                 data-numeric
                 className={cn(base, "hover:bg-surface-muted")}
               >
-                <span className="sr-only">Page </span>
+                <span className="sr-only">
+                  <LocalizedText fr="Page " en="Page " />
+                </span>
                 {number}
               </Link>
             )}
@@ -99,20 +108,29 @@ export function Pagination({
               rel="next"
               className={cn(base, "hover:bg-surface-muted")}
             >
-              <span className="me-1 hidden sm:inline">Suivante</span>
-              <span className="sr-only sm:hidden">Page suivante</span>
+              <span className="me-1 hidden sm:inline">
+                <LocalizedText fr="Suivante" en="Next" />
+              </span>
+              <span className="sr-only sm:hidden">
+                <LocalizedText fr="Page suivante" en="Next page" />
+              </span>
               <ChevronRight aria-hidden="true" className="size-4" />
             </Link>
           ) : (
             <span aria-hidden="true" className={cn(base, "opacity-40")}>
-              <span className="me-1 hidden sm:inline">Suivante</span>
+              <span className="me-1 hidden sm:inline">
+                <LocalizedText fr="Suivante" en="Next" />
+              </span>
               <ChevronRight className="size-4" />
             </span>
           )}
         </li>
       </ul>
       <p className="mt-3 text-center type-small text-muted-foreground">
-        Page {page} sur {pageCount}
+        <LocalizedText
+          fr={`Page ${page} sur ${pageCount}`}
+          en={`Page ${page} of ${pageCount}`}
+        />
       </p>
     </nav>
   );

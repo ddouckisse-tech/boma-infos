@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { BrandWordmark } from "@/components/custom/brand-wordmark";
+import { LocaleToggle } from "@/components/custom/locale-toggle";
+import { LocalizedText } from "@/components/custom/localized-text";
+import { ThemeToggle } from "@/components/custom/theme-toggle";
 
 /**
  * Frame of the sign-in, reset and registration screens — CDC §4.3.
@@ -22,13 +25,17 @@ export function AuthShell({
     <div className="flex min-h-dvh flex-col bg-surface-muted">
       <div className="border-b border-border bg-background">
         <div className="mx-auto flex w-full max-w-page items-center justify-between page-gutter py-3">
-          <BrandWordmark />
-          <Link
-            href="/"
-            className="inline-flex items-center rounded-md px-3 type-small font-semibold text-muted-foreground transition-colors touch-target hover:text-foreground"
-          >
-            Retour au journal
-          </Link>
+          <BrandWordmark className="w-36 sm:w-56" />
+          <div className="flex items-center gap-1 sm:gap-2">
+            <ThemeToggle compact />
+            <LocaleToggle />
+            <Link
+              href="/"
+              className="hidden items-center rounded-md px-3 type-small font-semibold text-muted-foreground transition-colors touch-target hover:text-foreground sm:inline-flex"
+            >
+              <LocalizedText fr="Retour au journal" en="Back to the journal" />
+            </Link>
+          </div>
         </div>
       </div>
 

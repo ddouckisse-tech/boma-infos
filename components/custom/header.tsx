@@ -3,6 +3,7 @@ import { BrandWordmark } from "@/components/custom/brand-wordmark";
 import { Container } from "@/components/custom/container";
 import { MegaMenu } from "@/components/custom/mega-menu";
 import { MobileNav } from "@/components/custom/mobile-nav";
+import { LocaleToggle } from "@/components/custom/locale-toggle";
 import { SearchDialog } from "@/components/custom/search-dialog";
 import { ThemeToggle } from "@/components/custom/theme-toggle";
 import { NAV_STATIC_PAGES } from "@/lib/site";
@@ -23,20 +24,23 @@ import type { Section } from "@/lib/navigation";
 export function Header({ sections }: { sections: readonly Section[] }) {
   return (
     <header className="sticky top-0 z-40 border-b border-border/70 bg-background/85 backdrop-blur-md supports-[backdrop-filter]:bg-background/75">
-      <Container className="flex min-h-[64px] items-center justify-between gap-4 py-2">
+      <Container className="flex min-h-[64px] items-center justify-between gap-2 py-2 sm:gap-4">
         <div className="flex min-w-0 items-center gap-2">
-          <MobileNav sections={sections} pages={NAV_STATIC_PAGES} />
           <BrandWordmark />
         </div>
 
-        <div className="flex shrink-0 items-center gap-2">
-          <SearchDialog />
-          <ThemeToggle className="hidden sm:inline-flex" />
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+          <SearchDialog className="hidden sm:inline-flex" />
+          <ThemeToggle compact />
+          <LocaleToggle />
           <span
             aria-hidden="true"
             className="hidden h-5 w-px bg-border md:block"
           />
-          <AccessMenu />
+          <div className="hidden sm:contents">
+            <AccessMenu />
+          </div>
+          <MobileNav sections={sections} pages={NAV_STATIC_PAGES} />
         </div>
       </Container>
 

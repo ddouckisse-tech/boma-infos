@@ -30,9 +30,11 @@ import { BrandWordmark } from "@/components/custom/brand-wordmark";
 import { CloseButton } from "@/components/custom/close-button";
 import { Container } from "@/components/custom/container";
 import { Modal } from "@/components/custom/modal";
+import { LocaleToggle } from "@/components/custom/locale-toggle";
 import { NewContentDialog } from "@/components/custom/new-content-dialog";
 import { SecurityReminder } from "@/components/custom/security-reminder";
 import { ThemeToggle } from "@/components/custom/theme-toggle";
+import { usePreferences } from "@/components/providers/preferences-provider";
 
 type Area = "newsroom" | "portal";
 
@@ -46,10 +48,13 @@ type Counts = {
 type Entry = {
   href: string;
   label: string;
+  labelEn?: string;
   /** Shorter label for the phone's tab bar. */
   short?: string;
+  shortEn?: string;
   /** One line under the label, in the drawer: what the section is for. */
   hint: string;
+  hintEn?: string;
   icon: LucideIcon;
   permission: string;
   exact?: boolean;
@@ -57,7 +62,7 @@ type Entry = {
   badge?: (counts: Counts) => number;
 };
 
-type Group = { title: string; entries: Entry[] };
+type Group = { title: string; titleEn?: string; entries: Entry[] };
 
 /**
  * The newsroom, grouped by what a person is trying to do — publish, review,
@@ -171,12 +176,16 @@ const NEWSROOM: Group[] = [
 const PORTAL: Group[] = [
   {
     title: "Espace entreprise",
+    titleEn: "Company workspace",
     entries: [
       {
         href: "/entreprise",
         label: "Mes dépôts",
+        labelEn: "My submissions",
         short: "Dépôts",
+        shortEn: "Submissions",
         hint: "Vos actualités et leur statut",
+        hintEn: "Your news and its status",
         icon: Building2,
         permission: "portal:access",
         exact: true,
@@ -184,8 +193,11 @@ const PORTAL: Group[] = [
       {
         href: "/entreprise/statistiques",
         label: "Statistiques",
+        labelEn: "Analytics",
         short: "Stats",
+        shortEn: "Analytics",
         hint: "Audience de vos publications",
+        hintEn: "Audience for your publications",
         icon: ChartNoAxesColumn,
         permission: "stats:read:own",
       },
@@ -205,8 +217,11 @@ const ACCOUNT: Record<Area, Entry> = {
   portal: {
     href: "/compte",
     label: "Mon compte",
+    labelEn: "My account",
     short: "Compte",
+    shortEn: "Account",
     hint: "Profil, mot de passe, appareils connectés",
+    hintEn: "Profile, password and connected devices",
     icon: UserRound,
     permission: "portal:access",
   },
@@ -244,6 +259,8 @@ export function PrivateShell({
   // client Convex : sinon elle part non authentifiée et la navigation
   // clignote à vide au premier rendu.
   const { isAuthenticated } = useConvexAuth();
+  const { locale } = usePreferences();
+  const english = area === "portal" && locale === "en";
   const viewer = useQuery(api.accounts.me, isAuthenticated ? {} : "skip");
   const permissions = (viewer?.permissions ?? []) as readonly string[];
   const counts = useQuery(
@@ -258,12 +275,27 @@ export function PrivateShell({
   const groups = (area === "newsroom" ? NEWSROOM : PORTAL)
     .map((group) => ({
       ...group,
-      entries: group.entries.filter((entry) =>
-        permissions.includes(entry.permission)
-      ),
+      title: english && group.titleEn ? group.titleEn : group.title,
+      entries: group.entries
+        .filter((entry) => permissions.includes(entry.permission))
+        .map((entry) => ({
+          ...entry,
+          label: english && entry.labelEn ? entry.labelEn : entry.label,
+          short: english && entry.shortEn ? entry.shortEn : entry.short,
+          hint: english && entry.hintEn ? entry.hintEn : entry.hint,
+        })),
     }))
     .filter((group) => group.entries.length > 0);
-  const account = ACCOUNT[area];
+  const rawAccount = ACCOUNT[area];
+  const account = {
+    ...rawAccount,
+    label:
+      english && rawAccount.labelEn ? rawAccount.labelEn : rawAccount.label,
+    short:
+      english && rawAccount.shortEn ? rawAccount.shortEn : rawAccount.short,
+    hint: english && rawAccount.hintEn ? rawAccount.hintEn : rawAccount.hint,
+  };
+  const areaLabel = english ? "Company workspace" : AREA_LABEL[area];
   const showAccount = permissions.includes(account.permission);
   const canCreate =
     area === "newsroom" && permissions.includes("articles:write");
@@ -288,34 +320,26 @@ export function PrivateShell({
     <div className="flex min-h-dvh flex-col bg-surface-muted">
       <header className="z-30 border-b border-border bg-background lg:sticky lg:top-0">
         <Container width="wide" className="flex items-center gap-3 py-2">
-          <button
-            type="button"
-            onClick={() => setDrawer(true)}
-            aria-expanded={drawer}
-            aria-haspopup="dialog"
-            className="inline-flex items-center justify-center rounded-md border border-border text-foreground transition-colors touch-target hover:bg-surface-muted lg:hidden"
-          >
-            <Menu aria-hidden="true" className="size-5" />
-            <span className="sr-only">Ouvrir le menu</span>
-          </button>
           <BrandWordmark
             href={area === "newsroom" ? "/redaction" : "/entreprise"}
+            className="w-32 sm:w-44 lg:w-56"
           />
           <span
             aria-hidden="true"
             className="hidden h-6 w-px bg-border lg:block"
           />
           <p className="hidden type-small font-semibold whitespace-nowrap text-muted-foreground lg:block">
-            {AREA_LABEL[area]}
+            {areaLabel}
           </p>
           <div className="ms-auto flex items-center gap-2">
-            <ThemeToggle className="hidden sm:inline-flex" />
+            <ThemeToggle compact />
+            {area === "portal" && <LocaleToggle />}
             {showAccount && (
               <Link
                 href={account.href}
                 aria-current={isActive(account) ? "page" : undefined}
                 className={cn(
-                  "inline-flex items-center gap-2 rounded-md border px-2 type-small font-semibold transition-colors touch-target sm:px-3",
+                  "hidden items-center gap-2 rounded-md border px-2 type-small font-semibold transition-colors touch-target sm:inline-flex sm:px-3",
                   isActive(account)
                     ? "border-foreground/40 bg-surface-muted"
                     : "border-border hover:bg-surface-muted"
@@ -323,17 +347,31 @@ export function PrivateShell({
               >
                 <Avatar name={viewer?.name} />
                 <span className="hidden max-w-40 truncate md:inline">
-                  {viewer?.name ?? "Mon compte"}
+                  {viewer?.name ?? (english ? "My account" : "Mon compte")}
                 </span>
               </Link>
             )}
             <button
               type="button"
               onClick={() => void signOut()}
-              className="inline-flex items-center gap-2 rounded-md border border-border px-2 type-small font-semibold transition-colors touch-target hover:bg-surface-muted sm:px-3"
+              className="hidden items-center gap-2 rounded-md border border-border px-2 type-small font-semibold transition-colors touch-target hover:bg-surface-muted sm:inline-flex sm:px-3"
             >
               <LogOut aria-hidden="true" className="size-4" />
-              <span className="sr-only md:not-sr-only">Déconnexion</span>
+              <span className="sr-only md:not-sr-only">
+                {english ? "Sign out" : "Déconnexion"}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setDrawer(true)}
+              aria-expanded={drawer}
+              aria-haspopup="dialog"
+              className="inline-flex items-center justify-center rounded-md border border-border text-foreground transition-colors touch-target hover:bg-surface-muted lg:hidden"
+            >
+              <Menu aria-hidden="true" className="size-5" />
+              <span className="sr-only">
+                {english ? "Open menu" : "Ouvrir le menu"}
+              </span>
             </button>
           </div>
         </Container>
@@ -365,7 +403,9 @@ export function PrivateShell({
               label={
                 area === "newsroom"
                   ? "Sections du back-office"
-                  : "Sections de l'espace entreprise"
+                  : english
+                    ? "Company workspace sections"
+                    : "Sections de l'espace entreprise"
               }
             />
             {viewer && showAccount && (
@@ -392,7 +432,7 @@ export function PrivateShell({
       {/* Téléphone et tablette : les quatre entrées les plus utilisées, et le reste derrière « Menu ». */}
       {tabs.length > 0 && (
         <nav
-          aria-label="Navigation rapide"
+          aria-label={english ? "Quick navigation" : "Navigation rapide"}
           className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background pb-[env(safe-area-inset-bottom)] lg:hidden"
         >
           <ul
@@ -452,9 +492,7 @@ export function PrivateShell({
         <div className="flex items-center justify-between gap-4 border-b border-border p-4">
           <div className="min-w-0">
             <p className="font-display type-h3">Menu</p>
-            <p className="type-small text-muted-foreground">
-              {AREA_LABEL[area]}
-            </p>
+            <p className="type-small text-muted-foreground">{areaLabel}</p>
           </div>
           <CloseButton onClick={closeDrawer} />
         </div>
@@ -478,7 +516,9 @@ export function PrivateShell({
             label={
               area === "newsroom"
                 ? "Sections du back-office"
-                : "Sections de l'espace entreprise"
+                : english
+                  ? "Company workspace sections"
+                  : "Sections de l'espace entreprise"
             }
           />
         </div>
@@ -491,15 +531,14 @@ export function PrivateShell({
               onNavigate={closeDrawer}
             />
           )}
-          <div className="flex items-center justify-between gap-3">
-            <ThemeToggle labelled />
+          <div className="flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={() => void signOut()}
               className="inline-flex items-center gap-2 rounded-md border border-border px-3 type-small font-semibold touch-target hover:bg-surface-muted"
             >
               <LogOut aria-hidden="true" className="size-4" />
-              Déconnexion
+              {english ? "Sign out" : "Déconnexion"}
             </button>
           </div>
         </div>
@@ -654,9 +693,10 @@ function Badge({
   inverted?: boolean;
   floating?: boolean;
 }) {
+  const { locale } = usePreferences();
   return (
     <span
-      aria-label={`${count} en attente`}
+      aria-label={locale === "en" ? `${count} pending` : `${count} en attente`}
       className={cn(
         "inline-flex min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] leading-5 font-bold tabular-nums",
         inverted

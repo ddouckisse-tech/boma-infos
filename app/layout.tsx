@@ -49,6 +49,7 @@ export const metadata: Metadata = {
   generator: undefined,
   formatDetection: { telephone: false },
   manifest: "/manifest.webmanifest",
+  icons: { apple: "/icons/apple-touch-icon.png?v=editorial-1" },
   alternates: {
     canonical: "/",
     types: {

@@ -100,21 +100,56 @@ export const ACCESS_MESSAGE: Record<string, string> = {
     "Votre espace entreprise attend la validation d'un administrateur.",
 };
 
-/** Pulls the French sentence out of a Convex error, whatever its shape. */
-export function humanError(error: unknown): string {
+const ACCESS_MESSAGE_EN: Record<string, string> = {
+  UNAUTHENTICATED: "Your session has expired. Please sign in again.",
+  NO_PROFILE: "This account is not linked to a profile. Contact the newsroom.",
+  SUSPENDED: "This account has been revoked.",
+  TWO_FACTOR_REQUIRED:
+    "This account requires app verification. Enable it from My account.",
+  PASSWORD_CHANGE_REQUIRED:
+    "Your access code is temporary. Choose your own from My account.",
+  FORBIDDEN: "You do not have access to this item.",
+  ORGANIZATION_REQUIRED: "No company is linked to this account.",
+  ORGANIZATION_PENDING: "Your company workspace is awaiting approval.",
+};
+
+const APPLICATION_MESSAGE_EN: Record<string, string> = {
+  "Ce dépôt est en cours d'examen par la rédaction : il n'est plus modifiable.":
+    "This submission is being reviewed and can no longer be edited.",
+  "Ce dépôt a déjà été transmis.": "This submission has already been sent.",
+  "Le titre est trop court.": "The title is too short.",
+  "Le corps du dépôt doit compter au moins deux cents caractères.":
+    "The submission body must contain at least two hundred characters.",
+  "Le mot de passe doit compter au moins douze caractères.":
+    "The password must contain at least twelve characters.",
+};
+
+/** Pulls a safe sentence out of a Convex error, whatever its shape. */
+export function humanError(error: unknown, locale: "fr" | "en" = "fr"): string {
   const raw =
     typeof error === "object" && error !== null && "data" in error
       ? String((error as { data: unknown }).data ?? "")
       : "";
-  if (raw && ACCESS_MESSAGE[raw]) return ACCESS_MESSAGE[raw];
+  if (raw && ACCESS_MESSAGE[raw]) {
+    return locale === "en" ? ACCESS_MESSAGE_EN[raw] : ACCESS_MESSAGE[raw];
+  }
 
   const message = error instanceof Error ? error.message : String(error ?? "");
   for (const [code, sentence] of Object.entries(ACCESS_MESSAGE)) {
-    if (message.includes(code)) return sentence;
+    if (message.includes(code)) {
+      return locale === "en" ? ACCESS_MESSAGE_EN[code] : sentence;
+    }
   }
   // Convex préfixe les erreurs applicatives ; on ne montre que la phrase.
   const applicative = /Uncaught Error:\s*([^\n]+)/.exec(message);
-  if (applicative) return applicative[1].replace(/\s+at handler.*$/, "").trim();
+  if (applicative) {
+    const sentence = applicative[1].replace(/\s+at handler.*$/, "").trim();
+    return locale === "en"
+      ? (APPLICATION_MESSAGE_EN[sentence] ??
+          "The operation could not be completed.")
+      : sentence;
+  }
+  if (locale === "en") return "The operation could not be completed.";
   return message || "L'opération n'a pas abouti.";
 }
 

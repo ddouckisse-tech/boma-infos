@@ -2,12 +2,24 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { CategoryBadge } from "@/components/custom/category-badge";
 import { Container } from "@/components/custom/container";
+import { LocalizedText } from "@/components/custom/localized-text";
 import { PartnerTag } from "@/components/custom/partner-tag";
 import { ResponsiveImage } from "@/components/custom/responsive-image";
 import { formatDate, formatReadingTime, isoDate } from "@/lib/format";
+import { localeDate } from "@/lib/i18n";
 import { getMediaAsset, SIZES } from "@/lib/media";
 import { cn } from "@/lib/utils";
 import type { ArticleSummary } from "@/convex/model/content";
+
+const englishDate = (value: number) =>
+  localeDate(value, "en", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "Africa/Libreville",
+  });
+
+const englishReadingTime = (minutes: number) => `${minutes}\u00a0min read`;
 
 /**
  * The lead story: headline and dek on a dark panel at the left, the
@@ -36,7 +48,13 @@ export function FeaturedHero({
   return (
     // `dark` : île sombre — les composants imbriqués prennent leurs jetons
     // sombres quel que soit le thème de la page (voir `.lc-hero`).
-    <section aria-label="Article à la une" className={cn("lc-hero", className)}>
+    <section
+      aria-labelledby="featured-article-label"
+      className={cn("lc-hero", className)}
+    >
+      <span id="featured-article-label" className="sr-only">
+        <LocalizedText fr="Article à la une" en="Featured article" />
+      </span>
       {media && (
         <ResponsiveImage
           media={media}
@@ -51,6 +69,7 @@ export function FeaturedHero({
           bandeau, pas seulement à la colonne de texte. */}
       <Container
         as="article"
+        lang="fr"
         className="lc-hero-body flex flex-col justify-end py-10 md:justify-center md:py-14"
       >
         {/* La colonne de texte : 58 % de la grille dès 768 px, 54 % au-delà
@@ -62,7 +81,7 @@ export function FeaturedHero({
                 aria-hidden="true"
                 className="inline-block h-[3px] w-6 bg-brand-magenta dark:bg-brand-magenta-dark"
               />
-              À la une
+              <LocalizedText fr="À la une" en="Featured" />
             </span>
             <CategoryBadge
               slug={article.categorySlug}
@@ -87,7 +106,7 @@ export function FeaturedHero({
           </p>
 
           <p className="relative z-10 mt-4 type-small text-muted-foreground">
-            Par{" "}
+            <LocalizedText fr="Par " en="By " />
             <Link
               href={`/auteur/${article.authorSlug}`}
               prefetch={false}
@@ -97,10 +116,16 @@ export function FeaturedHero({
             </Link>
             <span aria-hidden="true"> · </span>
             <time dateTime={isoDate(article.publishedAt)}>
-              {formatDate(article.publishedAt)}
+              <LocalizedText
+                fr={formatDate(article.publishedAt)}
+                en={englishDate(article.publishedAt)}
+              />
             </time>
             <span aria-hidden="true"> · </span>
-            {formatReadingTime(article.readingMinutes)}
+            <LocalizedText
+              fr={formatReadingTime(article.readingMinutes)}
+              en={englishReadingTime(article.readingMinutes)}
+            />
           </p>
 
           <div className="mt-6">
@@ -109,7 +134,7 @@ export function FeaturedHero({
               prefetch={false}
               className="relative z-10 inline-flex items-center gap-2 rounded-md bg-primary px-4 type-small font-semibold text-primary-foreground transition-colors touch-target hover:bg-primary/90"
             >
-              Lire l&apos;article
+              <LocalizedText fr="Lire l'article" en="Read article" />
               <ArrowRight aria-hidden="true" className="size-4" />
             </Link>
           </div>

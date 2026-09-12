@@ -1,3 +1,4 @@
+import { LocalizedText } from "@/components/custom/localized-text";
 import { slugifyHeading } from "@/lib/headings";
 import { cn } from "@/lib/utils";
 import type { Block } from "@/convex/model/content";
@@ -33,7 +34,7 @@ export function TableOfContents({
         id="sommaire"
         className="font-display type-small font-semibold tracking-wide text-foreground uppercase"
       >
-        Sommaire
+        <LocalizedText fr="Sommaire" en="Contents" />
       </h2>
       <ol className="mt-3 space-y-1">
         {headings.map((heading, index) => (
@@ -45,7 +46,9 @@ export function TableOfContents({
               <span aria-hidden="true" data-numeric className="text-accent">
                 {String(index + 1).padStart(2, "0")}
               </span>
-              <span className="min-w-0">{heading.text}</span>
+              <span lang="fr" className="min-w-0">
+                {heading.text}
+              </span>
             </a>
           </li>
         ))}

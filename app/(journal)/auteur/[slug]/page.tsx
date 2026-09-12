@@ -6,6 +6,7 @@ import { ArticleCard } from "@/components/custom/article-card";
 import { AuthorMonogram } from "@/components/custom/author-byline";
 import { Container } from "@/components/custom/container";
 import { EmptyState } from "@/components/custom/empty-state";
+import { LocalizedText } from "@/components/custom/localized-text";
 import { Section } from "@/components/custom/section";
 import { BreadcrumbStructuredData } from "@/components/custom/structured-data";
 import { getAuthor, getAuthors } from "@/lib/content/server";
@@ -90,7 +91,11 @@ export default async function AuthorPage({
 
       <header className="border-b border-border py-8 md:py-10">
         <Container>
-          <nav aria-label="Fil d'Ariane" className="mb-4 type-small">
+          <nav
+            aria-label="Fil d'Ariane"
+            className="lc-fr mb-4 type-small"
+            lang="fr"
+          >
             <Link
               href="/"
               prefetch={false}
@@ -103,8 +108,25 @@ export default async function AuthorPage({
             </span>
             <span className="text-muted-foreground">{author.name}</span>
           </nav>
+          <nav
+            aria-label="Breadcrumb"
+            className="lc-en mb-4 type-small"
+            lang="en"
+          >
+            <Link
+              href="/"
+              prefetch={false}
+              className="inline-flex min-h-11 items-center text-accent underline-offset-4 hover:underline"
+            >
+              Home
+            </Link>
+            <span aria-hidden="true" className="text-muted-foreground">
+              {" › "}
+            </span>
+            <span className="text-muted-foreground">{author.name}</span>
+          </nav>
 
-          <div className="flex flex-wrap items-start gap-5">
+          <div lang="fr" className="flex flex-wrap items-start gap-5">
             <AuthorMonogram
               name={author.name}
               className="size-16 type-h2 sm:size-20"
@@ -122,9 +144,15 @@ export default async function AuthorPage({
                 {author.bio}
               </p>
               <p className="mt-4 type-small text-muted-foreground">
-                <span data-numeric>{articles.length}</span> article
-                {articles.length > 1 ? "s" : ""} publié
-                {articles.length > 1 ? "s" : ""}.
+                <span className="lc-fr" lang="fr">
+                  <span data-numeric>{articles.length}</span> article
+                  {articles.length > 1 ? "s" : ""} publié
+                  {articles.length > 1 ? "s" : ""}.
+                </span>
+                <span className="lc-en" lang="en">
+                  <span data-numeric>{articles.length}</span> published article
+                  {articles.length === 1 ? "" : "s"}.
+                </span>
               </p>
               {author.links.length > 0 && (
                 <ul className="mt-4 flex flex-wrap gap-2">
@@ -147,14 +175,26 @@ export default async function AuthorPage({
         </Container>
       </header>
 
-      <Section title="Ses articles">
+      <Section
+        title={<LocalizedText fr="Ses articles" en="Articles by this author" />}
+      >
         {articles.length === 0 ? (
-          <EmptyState
-            title="Aucun article publié"
-            description="Cette signature n'a pas encore d'article en ligne."
-          />
+          <>
+            <div className="lc-fr" lang="fr">
+              <EmptyState
+                title="Aucun article publié"
+                description="Cette signature n'a pas encore d'article en ligne."
+              />
+            </div>
+            <div className="lc-en" lang="en">
+              <EmptyState
+                title="No published articles"
+                description="This author does not have an article online yet."
+              />
+            </div>
+          </>
         ) : (
-          <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <ul lang="fr" className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {articles.map((article) => (
               <li key={article.slug} className="min-w-0">
                 <ArticleCard article={article} headingLevel={2} />

@@ -89,9 +89,27 @@ const gzipCache = new Map<string, number>();
 
 /** Transferred size of a file under `.next` or `public`. */
 async function transferBytes(url: string): Promise<number | null> {
-  const clean = url.split("?")[0];
+  const clean = url.split(/[?#]/)[0];
   const cached = gzipCache.get(clean);
   if (cached !== undefined) return cached;
+
+  if (/^https:\/\//.test(clean)) {
+    // Uploaded WordPress images must count toward the same transfer budget.
+    const allowed = process.env.NEXT_PUBLIC_CONVEX_URL;
+    if (!allowed || new URL(clean).origin !== new URL(allowed).origin)
+      return null;
+    try {
+      const response = await fetch(clean, {
+        signal: AbortSignal.timeout(30_000),
+      });
+      if (!response.ok) return null;
+      const bytes = (await response.arrayBuffer()).byteLength;
+      gzipCache.set(clean, bytes);
+      return bytes;
+    } catch {
+      return null;
+    }
+  }
 
   const candidates = clean.startsWith("/_next/")
     ? [path.join(NEXT_DIR, clean.replace("/_next/", ""))]
@@ -182,8 +200,12 @@ async function analyse(route: string, file: string): Promise<PageReport> {
   let legacyBytes = 0;
 
   const push = async (url: string, kind: string) => {
-    if (!url.startsWith("/") || url.startsWith("//")) return;
-    const clean = url.split("?")[0];
+    if (
+      (!url.startsWith("/") && !url.startsWith("https://")) ||
+      url.startsWith("//")
+    )
+      return;
+    const clean = url.split(/[?#]/)[0];
     if (seen.has(clean)) return;
     seen.add(clean);
     const bytes = await transferBytes(clean);
@@ -235,13 +257,12 @@ async function analyse(route: string, file: string): Promise<PageReport> {
   // navigateur moderne), sinon le <img> de repli.
   for (const picture of html.match(/<picture[\s\S]*?<\/picture>/g) ?? []) {
     const avif = /<source[^>]*type="image\/avif"[^>]*>/.exec(picture)?.[0];
-    const source = avif ?? /<img[^>]*>/.exec(picture)?.[0];
+    const webp = /<source[^>]*type="image\/webp"[^>]*>/.exec(picture)?.[0];
+    const source = avif ?? webp ?? /<img[^>]*>/.exec(picture)?.[0];
     if (!source) continue;
     const srcset = attr(source, "srcset") ?? attr(source, "srcSet");
     const sizes = attr(source, "sizes") ?? "100vw";
-    const url = srcset
-      ? pickFromSrcSet(srcset, sizes)
-      : attr(source, "src");
+    const url = srcset ? pickFromSrcSet(srcset, sizes) : attr(source, "src");
     if (url) await push(url, "image");
   }
 
@@ -252,6 +273,12 @@ async function analyse(route: string, file: string): Promise<PageReport> {
   for (const tag of outsidePictures.match(/<img\b[^>]*>/g) ?? []) {
     const src = attr(tag, "src");
     if (src) await push(src, "image");
+  }
+
+  // Les fragments d'un même sprite SVG ne déclenchent qu'une seule requête.
+  for (const tag of html.match(/<use\b[^>]*>/g) ?? []) {
+    const href = attr(tag, "href");
+    if (href) await push(href, "image");
   }
 
   // Garde-fou : un `href` malformé (espace, accolade échappée) produit un
@@ -326,8 +353,7 @@ function line(
   unit: string
 ): { ok: boolean; text: string } {
   const ok = value <= limit;
-  const rendered =
-    unit === "Ko" ? value.toFixed(1) : String(Math.round(value));
+  const rendered = unit === "Ko" ? value.toFixed(1) : String(Math.round(value));
   return {
     ok,
     text: `${ok ? "✓" : "✗"} ${label.padEnd(34)} ${rendered.padStart(7)} ${unit}  (plafond ${limit} ${unit})`,
@@ -368,7 +394,12 @@ async function main() {
       BUDGETS.javascriptKb,
       "Ko"
     ),
-    line("Poids article", KB(article.totalBytes), BUDGETS.articleWeightKb, "Ko"),
+    line(
+      "Poids article",
+      KB(article.totalBytes),
+      BUDGETS.articleWeightKb,
+      "Ko"
+    ),
     line("Requêtes article", article.requests, BUDGETS.articleRequests, ""),
     line(
       "JavaScript article",

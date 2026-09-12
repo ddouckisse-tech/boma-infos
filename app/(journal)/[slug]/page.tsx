@@ -29,7 +29,7 @@ export default async function LegacyArticleRedirect({
 
   // Un slug WordPress est en minuscules, sans accent ni caractère exotique ;
   // tout le reste part directement en 404, sans interroger la base.
-  if (!/^[a-z0-9][a-z0-9-]{2,120}$/.test(slug)) notFound();
+  if (!/^[a-z0-9][a-z0-9-]{0,500}$/.test(slug)) notFound();
 
   const article = await getArticle(slug);
   if (!article) notFound();

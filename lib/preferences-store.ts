@@ -1,8 +1,11 @@
 import {
   DATA_SAVER_STORAGE_KEY,
+  LOCALE_STORAGE_KEY,
   THEME_STORAGE_KEY,
   dataSaverCookie,
   isThemeChoice,
+  isLocaleChoice,
+  type LocaleChoice,
   type ResolvedTheme,
   type ThemeChoice,
 } from "@/lib/preferences";
@@ -22,6 +25,7 @@ export type PreferencesSnapshot = {
   theme: ThemeChoice;
   resolvedTheme: ResolvedTheme;
   dataSaver: boolean;
+  locale: LocaleChoice;
   /** False until the DOM has been read — i.e. during SSR and hydration. */
   ready: boolean;
 };
@@ -30,6 +34,7 @@ const SERVER_SNAPSHOT: PreferencesSnapshot = {
   theme: "system",
   resolvedTheme: "light",
   dataSaver: false,
+  locale: "fr",
   ready: false,
 };
 
@@ -62,6 +67,7 @@ const readDom = (): PreferencesSnapshot => {
     theme: isThemeChoice(stored) ? stored : "system",
     resolvedTheme: root.classList.contains("dark") ? "dark" : "light",
     dataSaver: root.dataset.dataSaver === "on",
+    locale: isLocaleChoice(root.dataset.locale) ? root.dataset.locale : "fr",
     ready: true,
   };
 };
@@ -120,5 +126,14 @@ export const setDataSaver = (enabled: boolean) => {
   } catch {
     // Pas de service worker (développement, navigation privée) : rien à faire.
   }
+  emit();
+};
+
+export const setLocale = (locale: LocaleChoice) => {
+  const root = document.documentElement;
+  root.dataset.locale = locale;
+  root.lang = locale === "en" ? "en" : "fr-FR";
+  snapshot = { ...snapshot, locale, ready: true };
+  persist(LOCALE_STORAGE_KEY, locale);
   emit();
 };

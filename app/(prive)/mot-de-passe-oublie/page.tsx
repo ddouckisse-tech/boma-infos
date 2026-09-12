@@ -6,7 +6,9 @@ import { Mail } from "lucide-react";
 import { ActionButton } from "@/components/custom/action-button";
 import { AuthShell, FormNotice } from "@/components/custom/auth-shell";
 import { TextField } from "@/components/custom/form-field";
+import { usePreferences } from "@/components/providers/preferences-provider";
 import { authClient } from "@/lib/auth-client";
+import { localize } from "@/lib/i18n";
 
 /**
  * Password reset request — CDC §5.3.
@@ -21,6 +23,7 @@ import { authClient } from "@/lib/auth-client";
  * is better than an inbox nobody is watching.
  */
 export default function ForgotPasswordPage() {
+  const { locale } = usePreferences();
   const [email, setEmail] = useState("");
   const [done, setDone] = useState(false);
   const [pending, setPending] = useState(false);
@@ -42,30 +45,42 @@ export default function ForgotPasswordPage() {
 
   return (
     <AuthShell
-      title="Mot de passe oublié"
-      intro="Indiquez l'adresse de votre compte. Si elle correspond à un compte, un lien de réinitialisation est préparé."
+      title={localize(locale, {
+        fr: "Mot de passe oublié",
+        en: "Forgotten password",
+      })}
+      intro={localize(locale, {
+        fr: "Indiquez l'adresse de votre compte. Si elle correspond à un compte, un lien de réinitialisation est préparé.",
+        en: "Enter your account email address. If it matches an account, a reset link will be prepared.",
+      })}
       footer={
         <p>
           <Link
             href="/connexion"
             className="underline underline-offset-2 hover:text-foreground"
           >
-            Revenir à la connexion
+            {localize(locale, {
+              fr: "Revenir à la connexion",
+              en: "Back to sign in",
+            })}
           </Link>
         </p>
       }
     >
       {done ? (
         <FormNotice>
-          Si un compte existe pour cette adresse, un lien de réinitialisation a
-          été préparé. Aucun prestataire de courriel n&apos;est encore branché
-          sur ce déploiement&nbsp;: le message attend dans la corbeille de
-          sortie que la rédaction consulte.
+          {localize(locale, {
+            fr: "Si un compte existe pour cette adresse, un lien de réinitialisation a été préparé. Aucun prestataire de courriel n’est encore branché sur ce déploiement : le message attend dans la boîte d’envoi consultée par la rédaction.",
+            en: "If an account exists for this address, a reset link has been prepared. No email provider is connected to this deployment yet: the message is waiting in the newsroom outbox.",
+          })}
         </FormNotice>
       ) : (
         <form onSubmit={submit} className="grid gap-5">
           <TextField
-            label="Adresse électronique"
+            label={localize(locale, {
+              fr: "Adresse électronique",
+              en: "Email address",
+            })}
             type="email"
             name="email"
             inputMode="email"
@@ -76,7 +91,12 @@ export default function ForgotPasswordPage() {
           />
           <ActionButton type="submit" disabled={pending} className="w-full">
             <Mail aria-hidden="true" className="size-4" />
-            {pending ? "Envoi…" : "Demander un lien"}
+            {pending
+              ? localize(locale, { fr: "Envoi…", en: "Sending…" })
+              : localize(locale, {
+                  fr: "Demander un lien",
+                  en: "Request a link",
+                })}
           </ActionButton>
         </form>
       )}

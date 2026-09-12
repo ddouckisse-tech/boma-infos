@@ -5,10 +5,12 @@ import { Container } from "@/components/custom/container";
 import { EmptyState } from "@/components/custom/empty-state";
 import { FeaturedHero } from "@/components/custom/featured-hero";
 import { NewsletterForm } from "@/components/custom/newsletter-form";
+import { LocalizedText } from "@/components/custom/localized-text";
 import { Section } from "@/components/custom/section";
 import { SiteStructuredData } from "@/components/custom/structured-data";
 import { getHomepage } from "@/lib/content/server";
 import { formatDate } from "@/lib/format";
+import { categoryDescription, categoryLabel } from "@/lib/i18n";
 import { accentTextClass, sectionHref, toAccent } from "@/lib/navigation";
 import { SITE } from "@/lib/site";
 import { cn } from "@/lib/utils";
@@ -17,6 +19,14 @@ import { cn } from "@/lib/utils";
 // exports de configuration de segment et n'en résout pas les identifiants
 // importés. La valeur de référence est dans `lib/content/server.ts`.
 export const revalidate = 300;
+
+const formatDateEn = (value: number) =>
+  new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "Africa/Libreville",
+  }).format(value);
 
 /**
  * Home page (CDC §4.2).
@@ -37,10 +47,18 @@ export default async function HomePage() {
   if (!lead && latest.length === 0) {
     return (
       <Section>
-        <EmptyState
-          title="Aucun article publié"
-          description="Le journal est en place mais le fonds éditorial n'a pas encore été chargé. Exécutez « bunx convex run seeding:run » pour installer le jeu de démonstration."
-        />
+        <div className="lc-fr" lang="fr">
+          <EmptyState
+            title="Aucun article publié"
+            description="Les publications du journal seront bientôt disponibles."
+          />
+        </div>
+        <div className="lc-en" lang="en">
+          <EmptyState
+            title="No published articles"
+            description="The journal's articles will be available soon."
+          />
+        </div>
       </Section>
     );
   }
@@ -57,10 +75,20 @@ export default async function HomePage() {
       {/* Bandeau de une : porte l'unique <h1> de la page. */}
       <div className="border-b border-border bg-surface-subtle py-4">
         <Container className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-          <h1 className="font-display type-h3 text-foreground">{SITE.tagline}</h1>
+          <h1 className="font-display type-h3 text-foreground">
+            <LocalizedText
+              fr={SITE.tagline}
+              en="Gabon and CEMAC economic news"
+            />
+          </h1>
           {editionDate !== undefined && (
             <p className="type-small text-muted-foreground">
-              Édition du {formatDate(editionDate)}
+              <span className="lc-fr" lang="fr">
+                Édition du {formatDate(editionDate)}
+              </span>
+              <span className="lc-en" lang="en">
+                Edition of {formatDateEn(editionDate)}
+              </span>
             </p>
           )}
         </Container>
@@ -73,15 +101,20 @@ export default async function HomePage() {
       {top.length > 0 && (
         <Section
           tone="muted"
-          title="À la une"
-          description="La sélection de la rédaction."
+          title={<LocalizedText fr="À la une" en="Top stories" />}
+          description={
+            <LocalizedText
+              fr="La sélection de la rédaction."
+              en="Selected by our editorial team."
+            />
+          }
           action={
             <Link
               href="/rubrique/business-lifestyle"
               prefetch={false}
               className="inline-flex min-h-11 items-center gap-1 type-small font-semibold text-accent underline-offset-4 hover:underline"
             >
-              Toute l&apos;actualité
+              <LocalizedText fr="Toute l'actualité" en="View all news" />
               <ArrowRight aria-hidden="true" className="size-4" />
             </Link>
           }
@@ -99,9 +132,9 @@ export default async function HomePage() {
       {dossier && (
         <Section spacing="loose">
           <div className="grid gap-6 rounded-md border border-l-2 border-border border-l-brand-magenta bg-card p-6 lg:grid-cols-[2fr_1fr] lg:items-center lg:gap-10 lg:p-8">
-            <div className="min-w-0">
+            <div className="min-w-0" lang="fr">
               <p className="type-small font-semibold tracking-wide text-accent uppercase">
-                Dossier spécial
+                <LocalizedText fr="Dossier spécial" en="Special report" />
               </p>
               <h2 className="mt-3 font-display type-h1 text-balance">
                 <Link
@@ -120,21 +153,30 @@ export default async function HomePage() {
                 prefetch={false}
                 className="mt-5 inline-flex items-center gap-2 rounded-md border border-border px-4 type-small font-semibold transition-colors touch-target hover:bg-surface-muted"
               >
-                Ouvrir le dossier
+                <LocalizedText fr="Ouvrir le dossier" en="Open the report" />
                 <ArrowRight aria-hidden="true" className="size-4" />
               </Link>
             </div>
             <dl className="grid grid-cols-2 gap-4 lg:grid-cols-1">
               <div className="rounded-md bg-surface-muted p-4">
-                <dt className="type-small text-muted-foreground">Signature</dt>
+                <dt className="type-small text-muted-foreground">
+                  <LocalizedText fr="Signature" en="Byline" />
+                </dt>
                 <dd className="mt-1 type-body font-semibold">
                   {dossier.authorName}
                 </dd>
               </div>
               <div className="rounded-md bg-surface-muted p-4">
-                <dt className="type-small text-muted-foreground">Lecture</dt>
+                <dt className="type-small text-muted-foreground">
+                  <LocalizedText fr="Lecture" en="Reading time" />
+                </dt>
                 <dd data-numeric className="mt-1 type-body font-semibold">
-                  {dossier.readingMinutes} minutes
+                  <span className="lc-fr" lang="fr">
+                    {dossier.readingMinutes} minutes
+                  </span>
+                  <span className="lc-en" lang="en">
+                    {dossier.readingMinutes} min
+                  </span>
                 </dd>
               </div>
             </dl>
@@ -144,10 +186,18 @@ export default async function HomePage() {
 
       {latest.length > 0 && (
         <Section
-          title="Derniers articles"
-          description="Ce qui vient d'être publié, toutes rubriques confondues."
+          title={<LocalizedText fr="Derniers articles" en="Latest articles" />}
+          description={
+            <LocalizedText
+              fr="Ce qui vient d'être publié, toutes rubriques confondues."
+              en="The latest articles from across the journal."
+            />
+          }
         >
-          <ul className="divide-y divide-border border-y border-border">
+          <ul
+            lang="fr"
+            className="divide-y divide-border border-y border-border"
+          >
             {latest.map((article) => (
               <li key={article.slug}>
                 <ArticleCard article={article} variant="list" />
@@ -162,18 +212,25 @@ export default async function HomePage() {
           key={section.slug}
           tone={index % 2 === 0 ? "muted" : "default"}
           title={
-            <span className={cn(accentTextClass[toAccent(section.accent)])}>
-              {section.name}
-            </span>
+            <LocalizedText
+              fr={section.name}
+              en={categoryLabel("en", section.slug, section.name)}
+              className={cn(accentTextClass[toAccent(section.accent)])}
+            />
           }
-          description={section.description}
+          description={
+            <LocalizedText
+              fr={section.description}
+              en={categoryDescription("en", section.slug, section.description)}
+            />
+          }
           action={
             <Link
               href={sectionHref(section.slug)}
               prefetch={false}
               className="inline-flex min-h-11 items-center gap-1 type-small font-semibold text-accent underline-offset-4 hover:underline"
             >
-              Voir la rubrique
+              <LocalizedText fr="Voir la rubrique" en="View section" />
               <ArrowRight aria-hidden="true" className="size-4" />
             </Link>
           }
@@ -206,15 +263,23 @@ export default async function HomePage() {
 
       {espacePro.length > 0 && (
         <Section
-          title="Espace pro"
-          description="Réglementation, appels d'offres, formation et documentation — l'information directement utilisable."
+          title={<LocalizedText fr="Espace pro" en="Business resources" />}
+          description={
+            <LocalizedText
+              fr="Réglementation, appels d'offres, formation et documentation — l'information directement utilisable."
+              en="Regulation, tenders, training and documentation — practical information for businesses."
+            />
+          }
           action={
             <Link
               href="/rubrique/espace-pro"
               prefetch={false}
               className="inline-flex min-h-11 items-center gap-1 type-small font-semibold text-accent underline-offset-4 hover:underline"
             >
-              Tout l&apos;espace pro
+              <LocalizedText
+                fr="Tout l'espace pro"
+                en="View all business resources"
+              />
               <ArrowRight aria-hidden="true" className="size-4" />
             </Link>
           }
@@ -228,17 +293,24 @@ export default async function HomePage() {
               ))}
             </ul>
             <div className="rounded-md border border-border bg-surface-muted p-6">
-              <h3 className="font-display type-h3">Docuthèque</h3>
+              <h3 className="font-display type-h3">
+                <LocalizedText fr="Docuthèque" en="Document library" />
+              </h3>
               <p className="mt-2 type-small text-muted-foreground">
-                Rapports, textes réglementaires et études, téléchargeables — le
-                poids du fichier est annoncé avant le clic.
+                <LocalizedText
+                  fr="Rapports, textes réglementaires et études, téléchargeables — le poids du fichier est annoncé avant le clic."
+                  en="Downloadable reports, regulations and studies, with the file size shown before you click."
+                />
               </p>
               <Link
                 href="/docutheque"
                 prefetch={false}
                 className="mt-4 inline-flex items-center gap-2 rounded-md bg-primary px-4 type-small font-semibold text-primary-foreground transition-colors touch-target hover:bg-primary/90"
               >
-                Ouvrir la docuthèque
+                <LocalizedText
+                  fr="Ouvrir la docuthèque"
+                  en="Open the document library"
+                />
                 <ArrowRight aria-hidden="true" className="size-4" />
               </Link>
             </div>
@@ -249,11 +321,17 @@ export default async function HomePage() {
       <Section tone="muted" spacing="loose">
         <div className="grid gap-6 lg:grid-cols-[1fr_1fr] lg:items-center lg:gap-12">
           <div className="min-w-0">
-            <h2 className="font-display type-h2">La lettre hebdomadaire</h2>
+            <h2 className="font-display type-h2">
+              <LocalizedText
+                fr="La lettre hebdomadaire"
+                en="The weekly newsletter"
+              />
+            </h2>
             <p className="mt-2 max-w-reading type-body text-muted-foreground">
-              Un courriel par semaine : les articles à retenir, les échéances
-              réglementaires, les appels d&apos;offres ouverts. Inscription
-              confirmée par courriel, désinscription en un clic.
+              <LocalizedText
+                fr="Un courriel par semaine : les articles à retenir, les échéances réglementaires, les appels d'offres ouverts. Inscription confirmée par courriel, désinscription en un clic."
+                en="One email a week with essential articles, regulatory deadlines and open tenders. Confirm by email and unsubscribe in one click."
+              />
             </p>
           </div>
           <NewsletterForm source="accueil" variant="block" />

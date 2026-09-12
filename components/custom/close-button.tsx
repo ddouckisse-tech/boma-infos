@@ -1,4 +1,5 @@
 import { X } from "lucide-react";
+import { LocalizedText } from "@/components/custom/localized-text";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -22,7 +23,9 @@ export function CloseButton({
       {...props}
     >
       <X aria-hidden="true" className="size-5" />
-      <span className="sr-only">Fermer</span>
+      <span className="sr-only">
+        <LocalizedText fr="Fermer" en="Close" />
+      </span>
     </Button>
   );
 }

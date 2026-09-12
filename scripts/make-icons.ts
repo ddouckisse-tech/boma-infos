@@ -3,8 +3,8 @@
  *
  *   bun run scripts/make-icons.ts
  *
- * The wordmark is typographic, so the icon is too: "LC" in Source Serif over
- * the brand navy, with the magenta point of the lock-up. Drawn as SVG and
+ * The icon uses the approved wordmark's capital C and magenta point over
+ * the brand navy. The C is the original vector path, with no font dependency,
  * rasterised by sharp — four PNG files, none above 12 Ko, committed to
  * `public/icons/`.
  *
@@ -12,26 +12,46 @@
  * crops to, so the letters are never clipped by a circular mask.
  */
 
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
+import dimensions from "../assets/brand/dimensions.json";
 
 const OUT_DIR = path.resolve(import.meta.dirname, "..", "public", "icons");
 
 const NAVY = "#002060";
 const MAGENTA = "#C74794";
+const artwork = await readFile(
+  path.resolve(
+    import.meta.dirname,
+    "..",
+    "assets",
+    "brand",
+    "le-corporate.svg"
+  ),
+  "utf8"
+);
+const capitalC = artwork
+  .match(/<path\b[^>]*\bid="capital-c"[^>]*>/)?.[0]
+  .match(/\bd="([^"]+)"/)?.[1];
+if (!capitalC) throw new Error("The approved logo has no capital-c path.");
 
 /** `safe` is the fraction of the canvas the glyph is allowed to occupy. */
 function icon(size: number, safe: number, rounded: boolean): string {
-  const glyph = Math.round(size * safe * 0.46);
+  const bounds = dimensions.capitalC;
+  const glyphHeight = size * safe * 0.66;
+  const scale = glyphHeight / bounds.height;
+  const glyphWidth = bounds.width * scale;
+  const dot = size * safe * 0.055;
+  const gap = size * safe * 0.025;
+  const left = (size - glyphWidth - gap - dot * 2) / 2;
+  const top = (size - glyphHeight) / 2;
   const radius = rounded ? Math.round(size * 0.18) : 0;
-  const dot = Math.round(size * safe * 0.055);
+  // Even the bounding rectangle fits inside the maskable 80 % safe circle.
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
   <rect width="${size}" height="${size}" rx="${radius}" fill="${NAVY}"/>
-  <text x="50%" y="50%" dy="0.34em" text-anchor="middle"
-        font-family="'Inter Tight', Inter, Helvetica, Arial, sans-serif" font-weight="800"
-        font-size="${glyph}" fill="#FFFFFF" letter-spacing="${-glyph * 0.05}">LC</text>
-  <circle cx="${size / 2 + glyph * 0.74}" cy="${size / 2 + glyph * 0.33}" r="${dot}" fill="${MAGENTA}"/>
+  <path d="${capitalC}" fill="#FFFFFF" transform="translate(${left} ${top}) scale(${scale}) translate(${-bounds.x} ${-bounds.y})"/>
+  <circle cx="${left + glyphWidth + gap + dot}" cy="${top + glyphHeight - dot}" r="${dot}" fill="${MAGENTA}"/>
 </svg>`;
 }
 

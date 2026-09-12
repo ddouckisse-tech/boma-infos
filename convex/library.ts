@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import type { Doc } from "./_generated/dataModel";
 import { accessError, PERMISSIONS, requirePermission } from "./model/access";
 import { recordAudit } from "./model/audit";
 import {
@@ -289,21 +290,47 @@ const publicAssetShape = v.object({
  * session to check.
  */
 export const publicAssets = query({
-  args: {},
+  args: { articleSlugs: v.optional(v.array(v.string())) },
   returns: v.array(publicAssetShape),
-  handler: async (ctx) => {
-    const rows = await ctx.db.query("media").collect();
-    const uploaded = rows.filter((row) => row.storage && row.storage.length);
-    if (uploaded.length === 0) return [];
-
-    const published = await ctx.db
-      .query("articles")
-      .withIndex("by_status_date", (q) => q.eq("status", "published"))
-      .collect();
+  handler: async (ctx, { articleSlugs }) => {
+    if (articleSlugs && articleSlugs.length > 100) {
+      throw new Error("Cent articles maximum par lot de médias.");
+    }
+    // A page needs its pictures, not every image in the WordPress archive.
+    const published = articleSlugs
+      ? (
+          await Promise.all(
+            [...new Set(articleSlugs)].map((slug) =>
+              ctx.db
+                .query("articles")
+                .withIndex("by_slug", (q) => q.eq("slug", slug))
+                .unique()
+            )
+          )
+        ).filter(
+          (row): row is Doc<"articles"> =>
+            row !== null && row.status === "published"
+        )
+      : await ctx.db
+          .query("articles")
+          .withIndex("by_status_date", (q) => q.eq("status", "published"))
+          .collect();
     const visible = mediaKeysUsedBy(published);
+    const rows = await Promise.all(
+      [...visible.keys()].map((key) =>
+        ctx.db
+          .query("media")
+          .withIndex("by_key", (q) => q.eq("key", key))
+          .unique()
+      )
+    );
+    const uploaded = rows.filter(
+      (row) => row !== null && row.storage && row.storage.length
+    );
 
     const assets = [];
     for (const row of uploaded) {
+      if (!row) continue;
       if (!visible.has(row.key)) continue;
       const renditions = await resolveRenditions(ctx, row);
       if (!renditions || renditions.length === 0) continue;

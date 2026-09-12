@@ -53,3 +53,6 @@ next-env.d.ts
 
 # explorations générées (logos, imagegen) — jamais versionnées
 /output/
+
+# archives et sauvegardes de migration (contenu volumineux)
+/.migration/

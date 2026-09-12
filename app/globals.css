@@ -1,6 +1,19 @@
 @import "tailwindcss";
 @import "shadcn/tailwind.css";
 
+/* The saved language is applied in <head>, before the browser paints. */
+.lc-en {
+  display: none;
+}
+
+html[data-locale="en"] .lc-fr {
+  display: none;
+}
+
+html[data-locale="en"] .lc-en {
+  display: revert;
+}
+
 /* ==========================================================================
    Le Corporate — jetons de design
    Référence : CAHIER-DES-CHARGES.md §3 (identité visuelle et design system).

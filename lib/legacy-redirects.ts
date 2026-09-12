@@ -45,6 +45,7 @@ type Mapping = { from: string; to: string };
 export const LEGACY_CATEGORY_SLUGS: Record<string, string> = {
   // Business & Lifestyle
   "business-lifestyle": "/rubrique/business-lifestyle",
+  "business-life-style": "/rubrique/business-lifestyle",
   "business-and-lifestyle": "/rubrique/business-lifestyle",
   "big-deal": "/rubrique/business-lifestyle/big-deal",
   entreprendre: "/rubrique/business-lifestyle/entreprendre",
@@ -80,6 +81,7 @@ export const LEGACY_CATEGORY_SLUGS: Record<string, string> = {
   tribune: "/rubrique/tribune",
   tribunes: "/rubrique/tribune",
   "dossier-special": "/rubrique/dossier-special",
+  "gabon-infini-pfp": "/rubrique/dossier-special/gabon-infini-pfp",
   dossiers: "/rubrique/dossier-special",
   "intelligence-economique": "/rubrique/intelligence-economique",
   "intelligence-economique-fortune-dafrique":
@@ -90,12 +92,13 @@ export const LEGACY_CATEGORY_SLUGS: Record<string, string> = {
 
   // « Non classé » : 15 articles y étaient rangés par défaut. Ils repartent
   // vers l'accueil plutôt que vers une rubrique qui n'existe plus.
-  "non-classe": "/",
-  uncategorized: "/",
+  "non-classe": "/rubrique/non-classe",
+  uncategorized: "/rubrique/non-classe",
 };
 
 /** Standing pages, feeds and WordPress endpoints. */
 const STATIC_MAPPINGS: readonly Mapping[] = [
+  { from: "/actualite", to: "/" },
   // Pages éditoriales existantes. `/a-propos/` et `/contacts/` avec la barre
   // oblique finale sont déjà ramenés à leur forme sans barre par Next
   // (`trailingSlash: false`) : les redéclarer produirait une boucle.
@@ -169,6 +172,25 @@ export function legacyRedirects(): Redirect[] {
       destination,
       statusCode: PERMANENT,
     });
+    const segments = destination.split("/").filter(Boolean);
+    if (segments.length === 3 && segments[0] === "rubrique") {
+      const parents =
+        segments[1] === "business-lifestyle"
+          ? ["business-life-style", "business-lifestyle"]
+          : [segments[1]];
+      for (const parent of parents) {
+        redirects.push({
+          source: `/category/${parent}/${slug}`,
+          destination,
+          statusCode: PERMANENT,
+        });
+        redirects.push({
+          source: `/category/${parent}/${slug}/page/:page`,
+          destination,
+          statusCode: PERMANENT,
+        });
+      }
+    }
   }
 
   for (const { from, to } of STATIC_MAPPINGS) {
@@ -178,7 +200,7 @@ export function legacyRedirects(): Redirect[] {
   // Archives d'auteur : le fonds est signé « admin », qui n'existe plus.
   redirects.push({
     source: "/author/admin",
-    destination: "/a-propos",
+    destination: "/auteur/le-corporate",
     statusCode: PERMANENT,
   });
   redirects.push({
