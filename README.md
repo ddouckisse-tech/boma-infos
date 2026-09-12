@@ -221,17 +221,19 @@ plafond dépassé :
 
 | Indicateur       | Plafond §5.4 | Constaté                            |
 | ---------------- | ------------ | ----------------------------------- |
-| Poids accueil    | 600 Ko       | 486 Ko                              |
-| Poids article    | 400 Ko       | 385 Ko                              |
-| Requêtes accueil | 50           | 29                                  |
+| Poids accueil    | 600 Ko       | 478 Ko                              |
+| Poids article    | 400 Ko       | 384 Ko                              |
+| Requêtes accueil | 50           | 28                                  |
 | Requêtes article | 50           | 20                                  |
 | JavaScript       | 180 Ko       | 159 Ko (accueil) · 169 Ko (article) |
 
-> Chiffres **re-mesurés à la fin du lot 3**. L'accueil a légèrement maigri
-> (489 → 486 Ko, 31 → 29 requêtes) parce que la mise en page racine ne
-> contient plus l'en-tête ni le pied : le découpage des lots JavaScript a
-> changé. L'article a pris 5 Ko, dont 1,2 Ko de JavaScript : c'est la balise
-> d'audience, qui remplace les deux traqueurs tiers de l'ancien site.
+> Chiffres **re-mesurés à la fin du lot 3**. L'accueil a maigri (489 → 478 Ko,
+> 31 → 28 requêtes) : la mise en page racine ne contient plus l'en-tête ni le
+> pied, le découpage des lots JavaScript a changé. Le poids de l'accueil suit
+> aussi la photographie de la une — il bouge de quelques kilo-octets d'un jeu
+> de contenu à l'autre. L'article a pris 5 Ko, dont 1,2 Ko de JavaScript :
+> c'est la balise d'audience, qui remplace les deux traqueurs tiers de
+> l'ancien site.
 
 Deux partis pris de mesure, tous deux du côté sévère :
 
