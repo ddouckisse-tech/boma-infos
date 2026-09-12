@@ -172,14 +172,14 @@ export function PrivateShell({
               ? "Back-office rédaction"
               : "Espace entreprise"}
           </p>
-          <div className="ms-auto flex items-center gap-2">
+          <div className="ms-auto flex flex-wrap items-center justify-end gap-2">
             <ThemeToggle />
             <Link
               href="/compte"
               className="inline-flex items-center gap-2 rounded-md border border-border px-3 type-small font-semibold transition-colors touch-target hover:bg-surface-muted"
             >
               <UserRound aria-hidden="true" className="size-4" />
-              <span className="max-w-40 truncate">
+              <span className="max-w-24 truncate sm:max-w-40">
                 {viewer?.name ?? "Mon compte"}
               </span>
             </Link>

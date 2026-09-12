@@ -138,7 +138,10 @@ export default function NewsroomDashboard() {
               visite d&apos;un article publié.
             </p>
           ) : (
-            <ol className="mt-2 grid gap-1">
+            <ol className="mt-2 grid grid-cols-[minmax(0,1fr)] gap-1">
+              {/* `minmax(0,1fr)` et non `1fr` : une colonne de grille se
+                  dimensionne sinon sur son contenu le plus large, et le titre
+                  pourtant tronqué débordait la page à 320 px. */}
               {data.audience.topArticles.map((item) => (
                 <li
                   key={item.slug}
