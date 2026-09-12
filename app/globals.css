@@ -184,8 +184,8 @@
   /* Le navy de marque tombe à 1,23:1 sur #121212 : proscrit en sombre.
      L'action primaire passe à navy-300 (10,04:1), texte navy-950 (9,72:1) ;
      titres et texte fort passent à --foreground. */
-  --primary: #a2bff1;
-  --primary-foreground: #00123f;
+  --primary: #e06bad; /* magenta de marque — 6,13:1 sur le fond */
+  --primary-foreground: #121212; /* 6,13:1 sur l'aplat */
 
   --secondary: #1f1f1f;
   --secondary-foreground: #ededed;
@@ -517,7 +517,7 @@
 @utility shadow-floating {
   box-shadow:
     0 1px 0 0 var(--border),
-    0 8px 16px -8px color-mix(in oklab, var(--color-navy-950) 28%, transparent);
+    0 8px 16px -8px color-mix(in oklab, var(--color-neutral-950) 30%, transparent);
 }
 
 /* Lien d'évitement : hors écran jusqu'au focus clavier. */
@@ -605,7 +605,11 @@ dialog.lc-dialog {
 }
 
 dialog.lc-dialog::backdrop {
-  background-color: color-mix(in oklab, var(--color-navy-950) 55%, transparent);
+  /* Voile NEUTRE. Il a longtemps été tiré de navy-950 : à 55 % d'opacité sur
+     toute la surface, c'est toute la page qui virait au bleu nuit dès qu'une
+     boîte s'ouvrait — la dominante bleutée que la v1.1 du cahier des charges
+     avait justement chassée des fonds. */
+  background-color: color-mix(in oklab, var(--color-neutral-950) 72%, transparent);
 }
 
 /* Tiroir latéral : plein écran en hauteur, contre le bord de départ. */
@@ -645,7 +649,7 @@ dialog.lc-auth {
   position: fixed;
   inset: 0;
   margin: auto;
-  inline-size: min(36rem, calc(100vw - 2rem));
+  inline-size: min(34rem, calc(100vw - 2rem));
   block-size: fit-content;
   max-block-size: min(
     calc(100dvh - 2rem - env(safe-area-inset-top) - env(safe-area-inset-bottom)),
@@ -654,6 +658,25 @@ dialog.lc-auth {
   background-color: var(--popover);
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);
+  /* Le défilement appartient au CORPS, pas à la boîte : l'en-tête et le pied
+     restent en place, et le lien du bas n'est plus rasé par le bord quand le
+     formulaire d'inscription déroule ses onze champs. */
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+
+dialog.lc-auth[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.lc-auth-body {
+  /* `0 1 auto` et non `1 1 auto` : le corps garde sa hauteur naturelle et ne
+     rétrécit que s'il dépasse le plafond. Avec `flex-grow: 1` il gonflait pour
+     remplir la boîte, et une carte de connexion à deux champs s'étirait sur
+     toute la hauteur de l'écran. */
+  flex: 0 1 auto;
+  min-block-size: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
 }

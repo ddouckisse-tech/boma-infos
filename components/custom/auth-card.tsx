@@ -53,92 +53,97 @@ export function AuthCard({
       : "Ouvrir un espace entreprise";
 
   return (
-    <Modal open onClose={onClose} label={title} variant="panel" className="lc-auth">
+    <Modal
+      open
+      onClose={onClose}
+      label={title}
+      variant="panel"
+      className="lc-auth"
+    >
       <ConvexClientProvider>
-        <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-border bg-popover px-5 py-4 md:px-7">
-          <div className="min-w-0">
-            <h2 id={titleId} className="font-serif type-h3 text-foreground">
-              {title}
-            </h2>
-            <span
-              aria-hidden="true"
-              className="mt-2 block h-[3px] w-10 rounded-xs bg-brand-magenta"
-            />
-          </div>
+        {/* En-tête discret : les onglets portent la hiérarchie, lui ne fait
+            qu'identifier la boîte et offrir la sortie. Un gros titre répéterait
+            l'onglet actif mot pour mot. */}
+        <div className="flex items-center justify-between gap-3 border-b border-border py-3 ps-5 pe-3 md:ps-7 md:pe-4">
+          <h2
+            id={titleId}
+            className="type-small font-semibold tracking-wide text-muted-foreground uppercase"
+          >
+            {done ? title : "Espace privé"}
+          </h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="Fermer"
-            className="-me-1 inline-flex shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors touch-target hover:text-foreground"
+            className="inline-flex size-11 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground"
           >
             <X aria-hidden="true" className="size-5" />
           </button>
         </div>
 
-        <div className="px-5 py-5 md:px-7 md:py-6">
+        <div className="lc-auth-body px-5 py-6 md:px-7">
           {!done && (
-            <div
-              role="tablist"
-              aria-label="Accès à l'espace privé"
-              className="mb-6 grid grid-cols-2 gap-1 rounded-lg bg-surface-muted p-1"
-            >
-              {(
-                [
-                  ["connexion", "Connexion"],
-                  ["entreprise", "Espace entreprise"],
-                ] as const
-              ).map(([value, label]) => (
-                <button
-                  key={value}
-                  type="button"
-                  role="tab"
-                  aria-selected={tab === value}
-                  onClick={() => onTabChange(value)}
-                  className={
-                    "rounded-md px-3 py-2 type-small font-semibold transition-colors touch-target " +
-                    (tab === value
-                      ? "bg-background text-foreground shadow-xs"
-                      : "text-muted-foreground hover:text-foreground")
-                  }
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
+            <>
+              {/* Onglets soulignés plutôt qu'en pastilles : en thème sombre,
+                  un conteneur `surface-muted` a exactement la couleur de la
+                  carte (#1F1F1F) et disparaissait. Un filet sous l'onglet actif
+                  se lit dans les deux thèmes et tient le rythme éditorial. */}
+              <div
+                role="tablist"
+                aria-label="Accès à l'espace privé"
+                className="-mt-1 flex gap-6 border-b border-border"
+              >
+                {(
+                  [
+                    ["connexion", "Connexion"],
+                    ["entreprise", "Espace entreprise"],
+                  ] as const
+                ).map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    role="tab"
+                    aria-selected={tab === value}
+                    onClick={() => onTabChange(value)}
+                    className={
+                      "-mb-px border-b-2 px-0.5 pb-3 type-small font-semibold transition-colors " +
+                      (tab === value
+                        ? "border-accent text-foreground"
+                        : "border-transparent text-muted-foreground hover:text-foreground")
+                    }
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              <p className="mt-5 mb-6 type-small text-muted-foreground">
+                {signingIn
+                  ? "Espace réservé à la rédaction et aux entreprises partenaires."
+                  : "Déposez vos communiqués, nominations, résultats et annonces d'événements. La rédaction garde la main éditoriale : tout contenu partenaire est publié avec la mention « Contenu partenaire »."}
+              </p>
+            </>
           )}
 
           {signingIn ? (
-            <>
-              <p className="mb-5 type-small text-muted-foreground">
-                Espace réservé à la rédaction et aux entreprises partenaires.
-              </p>
-              <SignInForm onSwitchToRegister={() => onTabChange("entreprise")} />
-            </>
+            <SignInForm onSwitchToRegister={() => onTabChange("entreprise")} />
           ) : (
-            <>
-              {!done && (
-                <p className="mb-5 type-small text-muted-foreground">
-                  Déposez vos communiqués, nominations, résultats et annonces
-                  d&apos;événements. La rédaction garde la main éditoriale&nbsp;:
-                  tout contenu partenaire est publié avec la mention
-                  «&nbsp;Contenu partenaire&nbsp;».
-                </p>
-              )}
-              <CompanyRegistrationForm
-                onDone={() => setDoneFor("entreprise")}
-                onSwitchToSignIn={() => onTabChange("connexion")}
-              />
-            </>
+            <CompanyRegistrationForm
+              onDone={() => setDoneFor("entreprise")}
+              onSwitchToSignIn={() => onTabChange("connexion")}
+            />
           )}
+        </div>
 
-          <p className="mt-6 border-t border-border pt-4 type-small text-muted-foreground">
-            <Link
-              href={signingIn ? "/connexion" : "/inscription-entreprise"}
-              className="underline underline-offset-2 hover:text-foreground"
-            >
-              Ouvrir dans une page entière
-            </Link>
-          </p>
+        {/* Pied fixe : la sortie vers la page entière reste atteignable même
+            quand le formulaire d'inscription fait défiler le corps. */}
+        <div className="border-t border-border px-5 py-3 md:px-7">
+          <Link
+            href={signingIn ? "/connexion" : "/inscription-entreprise"}
+            className="type-small text-muted-foreground underline underline-offset-2 hover:text-foreground"
+          >
+            Ouvrir dans une page entière
+          </Link>
         </div>
       </ConvexClientProvider>
     </Modal>
