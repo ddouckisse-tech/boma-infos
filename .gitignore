@@ -50,3 +50,6 @@ next-env.d.ts
 
 # le gabarit d'environnement est versionne
 !.env.example
+
+# explorations générées (logos, imagegen) — jamais versionnées
+/output/
