@@ -67,6 +67,10 @@ export const list = query({
     const rows = await ctx.db.query("media").collect();
     const articles = await ctx.db.query("articles").collect();
     const usage = mediaKeysUsedBy(articles);
+    const campaigns = await ctx.db.query("adCampaigns").collect();
+    for (const campaign of campaigns) {
+      usage.set(campaign.mediaKey, (usage.get(campaign.mediaKey) ?? 0) + 1);
+    }
 
     const suggestions = await ctx.db.query("agentSuggestions").collect();
     const pending = new Map<string, number>();
@@ -245,6 +249,15 @@ export const remove = mutation({
     const viewer = await requirePermission(ctx, PERMISSIONS.mediaWrite);
     const row = await ctx.db.get(id);
     if (!row) throw accessError("FORBIDDEN");
+    const campaign = await ctx.db
+      .query("adCampaigns")
+      .withIndex("by_media", (q) => q.eq("mediaKey", row.key))
+      .first();
+    if (campaign) {
+      throw new Error(
+        "Cette image est encore utilisée par une campagne publicitaire, même inactive : remplacez son média avant de la supprimer."
+      );
+    }
     if (!row.storage || row.storage.length === 0) {
       throw new Error(
         "Cette photographie fait partie de la bibliothèque de démonstration : elle se retire depuis scripts/media-sources.ts."

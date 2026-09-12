@@ -10,8 +10,10 @@
  *
  * ## What it measures, and why the numbers are real
  *
- * It reads the **prerendered HTML** of `.next/server/app/**` and adds up
- * exactly what a cold mobile visit downloads:
+ * It reads the **prerendered HTML** of `.next/server/app/**`. When a configured
+ * AdSense integration needs a request nonce, it instead fetches the dynamic
+ * HTML from the local production build, without running browser scripts.
+ * It then adds up what a cold mobile visit downloads before consent:
  *
  *  - the document, the stylesheets and the scripts, **gzipped**, because that
  *    is how they cross the network — except the `nomodule` core-js bundle,
@@ -38,7 +40,12 @@
 
 import { gzipSync } from "node:zlib";
 import { readdir, readFile, stat } from "node:fs/promises";
+import { spawn } from "node:child_process";
+import { createConnection, createServer } from "node:net";
+import { setTimeout as delay } from "node:timers/promises";
 import path from "node:path";
+import { loadEnvConfig } from "@next/env";
+import { getAdSenseRuntimeConfig } from "../lib/ads/adsense-config";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 const NEXT_DIR = path.join(ROOT, ".next");
@@ -190,8 +197,12 @@ function attr(tag: string, name: string): string | null {
   return match ? match[1] : null;
 }
 
-async function analyse(route: string, file: string): Promise<PageReport> {
-  const raw = await readFile(file, "utf8");
+async function analyse(
+  route: string,
+  file: string,
+  renderedHtml?: string
+): Promise<PageReport> {
+  const raw = renderedHtml ?? (await readFile(file, "utf8"));
   const html = raw;
 
   const assets: Asset[] = [];
@@ -346,6 +357,180 @@ async function firstArticle(): Promise<string | null> {
   return null;
 }
 
+/** Reserve an ephemeral loopback port, releasing it immediately before Next starts. */
+async function availablePort(): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const server = createServer();
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", () => {
+      const address = server.address();
+      if (!address || typeof address === "string") {
+        server.close();
+        reject(new Error("Budget : port local indisponible."));
+        return;
+      }
+      server.close((error) => (error ? reject(error) : resolve(address.port)));
+    });
+  });
+}
+
+/** Readiness probes use only TCP: no page render, tracking or external request. */
+async function portIsReady(port: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    const socket = createConnection({ host: "127.0.0.1", port });
+    const finish = (ready: boolean) => {
+      socket.destroy();
+      resolve(ready);
+    };
+    socket.setTimeout(500);
+    socket.once("connect", () => finish(true));
+    socket.once("error", () => finish(false));
+    socket.once("timeout", () => finish(false));
+  });
+}
+
+/** Use a real article link from the rendered home, never a guessed slug. */
+function articleFromHome(html: string, origin: string): string | null {
+  for (const tag of html.match(/<a\b[^>]*href="[^"]*"[^>]*>/g) ?? []) {
+    const href = attr(tag, "href") ?? "";
+    if (!href.startsWith("/article/") || /[\s\\{}]|%7[bd]/i.test(href))
+      continue;
+    const url = new URL(href.replaceAll("&amp;", "&"), origin);
+    if (url.origin === origin && /^\/article\/[^/]+\/?$/.test(url.pathname)) {
+      return url.pathname;
+    }
+  }
+  return null;
+}
+
+/**
+ * Dynamic AdSense pages cannot be found under `.next/server/app/*.html`.
+ * Render the production build on loopback, then reuse exactly the same disk
+ * asset accounting and ceilings. Fetch does not execute Google or CMP code,
+ * does not grant consent, and the child explicitly disables audience writes.
+ */
+async function dynamicReports(): Promise<PageReport[]> {
+  const port = await availablePort();
+  const origin = `http://127.0.0.1:${port}`;
+  const child = spawn(
+    process.execPath,
+    [
+      path.join(ROOT, "node_modules", "next", "dist", "bin", "next"),
+      "start",
+      ROOT,
+      "--hostname",
+      "127.0.0.1",
+      "--port",
+      String(port),
+    ],
+    {
+      cwd: ROOT,
+      env: {
+        ...process.env,
+        NODE_ENV: "production",
+        AUDIENCE_DISABLED: "1",
+        NEXT_TELEMETRY_DISABLED: "1",
+      },
+      stdio: ["ignore", "ignore", "pipe"],
+    }
+  );
+  // Drain stderr without echoing server errors that could contain deployment
+  // configuration. A bounded local failure is enough to refuse the budget.
+  child.stderr?.resume();
+  let ended = false;
+  let spawnError: Error | undefined;
+  const closed = new Promise<void>((resolve) => {
+    child.once("error", (error) => {
+      spawnError = error;
+      ended = true;
+      resolve();
+    });
+    child.once("close", () => {
+      ended = true;
+      resolve();
+    });
+  });
+  const controller = new AbortController();
+  const interrupt = () => {
+    controller.abort(new Error("Budget : mesure locale interrompue."));
+    child.kill("SIGTERM");
+    process.exitCode = 130;
+  };
+  process.once("SIGINT", interrupt);
+  process.once("SIGTERM", interrupt);
+
+  try {
+    const deadline = Date.now() + 20_000;
+    while (true) {
+      controller.signal.throwIfAborted();
+      if (ended || spawnError)
+        throw new Error(
+          "Budget : impossible de démarrer le build Next local ; vérifiez que `next build` a terminé."
+        );
+      if (await portIsReady(port)) break;
+      if (Date.now() >= deadline)
+        throw new Error(
+          "Budget : le serveur Next local n'a pas démarré en 20 secondes."
+        );
+      await delay(100, undefined, { signal: controller.signal });
+    }
+
+    const fetchHtml = async (route: string) => {
+      const url = new URL(route, origin);
+      if (url.origin !== origin)
+        throw new Error("Budget : seule une URL locale peut être mesurée.");
+      const response = await fetch(url, {
+        redirect: "error",
+        headers: { Accept: "text/html" },
+        signal: AbortSignal.any([
+          controller.signal,
+          AbortSignal.timeout(15_000),
+        ]),
+      });
+      if (
+        !response.ok ||
+        !response.headers.get("content-type")?.includes("text/html")
+      ) {
+        throw new Error(
+          `Budget : la page locale ${route} n'a pas renvoyé de HTML valide (HTTP ${response.status}).`
+        );
+      }
+      return response.text();
+    };
+    const homeHtml = await fetchHtml("/");
+    const articleRoute = articleFromHome(homeHtml, origin);
+    if (!articleRoute)
+      throw new Error(
+        "Budget : aucun lien d'article interne trouvé dans l'accueil dynamique."
+      );
+    const articleHtml = await fetchHtml(articleRoute);
+    const reports = await Promise.all([
+      analyse("/", `${origin}/`, homeHtml),
+      analyse(articleRoute, `${origin}${articleRoute}`, articleHtml),
+    ]);
+    controller.signal.throwIfAborted();
+    return reports;
+  } finally {
+    try {
+      if (!ended) {
+        child.kill("SIGTERM");
+        await Promise.race([closed, delay(3_000, undefined, { ref: false })]);
+        if (!ended) {
+          child.kill("SIGKILL");
+          await Promise.race([closed, delay(1_000, undefined, { ref: false })]);
+        }
+        if (!ended)
+          throw new Error(
+            "Budget : le serveur Next local n'a pas pu être arrêté."
+          );
+      }
+    } finally {
+      process.removeListener("SIGINT", interrupt);
+      process.removeListener("SIGTERM", interrupt);
+    }
+  }
+}
+
 function line(
   label: string,
   value: number,
@@ -361,27 +546,37 @@ function line(
 }
 
 async function main() {
-  const articleRoute = await firstArticle();
-  const routes = ["/", articleRoute].filter((r): r is string => r !== null);
-
-  if (routes.length < 2) {
-    console.error(
-      "✗ Budget : impossible de trouver une page d'article prérendue dans .next/server/app/article."
+  loadEnvConfig(ROOT, false);
+  const dynamicAdvertising = getAdSenseRuntimeConfig() !== null;
+  let reports: PageReport[];
+  if (dynamicAdvertising) {
+    console.log(
+      "Budget propriétaire avant consentement, poids Google/CMP à mesurer après configuration réelle."
     );
-    console.error(
-      "  Le journal est-il vide ? Exécutez `bunx convex run seeding:run` puis recompilez."
-    );
-    process.exit(1);
-  }
+    reports = await dynamicReports();
+  } else {
+    const articleRoute = await firstArticle();
+    const routes = ["/", articleRoute].filter((r): r is string => r !== null);
 
-  const reports: PageReport[] = [];
-  for (const route of routes) {
-    const file = await findHtml(route);
-    if (!file) {
-      console.error(`✗ Budget : page ${route} non prérendue.`);
+    if (routes.length < 2) {
+      console.error(
+        "✗ Budget : impossible de trouver une page d'article prérendue dans .next/server/app/article."
+      );
+      console.error(
+        "  Le journal est-il vide ? Exécutez `bunx convex run seeding:run` puis recompilez."
+      );
       process.exit(1);
     }
-    reports.push(await analyse(route, file));
+
+    reports = [];
+    for (const route of routes) {
+      const file = await findHtml(route);
+      if (!file) {
+        console.error(`✗ Budget : page ${route} non prérendue.`);
+        process.exit(1);
+      }
+      reports.push(await analyse(route, file));
+    }
   }
 
   const [home, article] = reports;
@@ -453,7 +648,18 @@ async function main() {
     `\n  Hors budget, signalé : ${fmt(home.legacyBytes)} de prothèses ` +
       `\`nomodule\` (core-js), servies aux seuls navigateurs sans modules ES.`
   );
-  console.log("\n✓ Tous les plafonds du §5.4 sont tenus.\n");
+  console.log(
+    dynamicAdvertising
+      ? "\n✓ Les plafonds du §5.4 sont tenus pour le budget propriétaire avant consentement.\n"
+      : "\n✓ Tous les plafonds du §5.4 sont tenus.\n"
+  );
 }
 
-await main();
+try {
+  await main();
+} catch (error) {
+  console.error(
+    `✗ ${error instanceof Error ? error.message : "Budget : mesure impossible."}`
+  );
+  process.exitCode = process.exitCode || 1;
+}

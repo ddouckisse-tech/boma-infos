@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Advertising } from "@/components/custom/advertising";
+import { ReadingRail } from "@/components/custom/reading-rail";
 import { ArticleBody } from "@/components/custom/article-body";
 import { ArticleCard } from "@/components/custom/article-card";
 import {
@@ -13,7 +15,6 @@ import { KeyPoints } from "@/components/custom/key-points";
 import { LocalizedText } from "@/components/custom/localized-text";
 import { PartnerTag } from "@/components/custom/partner-tag";
 import { ResponsiveImage } from "@/components/custom/responsive-image";
-import { Section } from "@/components/custom/section";
 import { AudienceBeacon } from "@/components/custom/audience-beacon";
 import { ShareBar } from "@/components/custom/share-bar";
 import {
@@ -107,7 +108,7 @@ export default async function ArticlePage({
   const article = await getArticle(slug);
   if (!article) notFound();
 
-  const related = await getRelated(slug, 3);
+  const related = await getRelated(slug, 2);
   const hero = getMediaAsset(article.heroMediaKey);
   const url = absoluteUrl(`/article/${article.slug}`);
   // Image des données structurées : la plus large rendition disponible. Une
@@ -291,7 +292,7 @@ export default async function ArticlePage({
         )}
 
         <Container className="py-8 md:py-10">
-          <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-12">
+          <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-12">
             <div className="max-w-reading min-w-0">
               {article.keyPoints.length > 0 && (
                 <KeyPoints points={article.keyPoints} className="mb-8" />
@@ -355,53 +356,56 @@ export default async function ArticlePage({
               </aside>
             </div>
 
-            {/* Sommaire seulement : les articles liés sont en fin de page,
-                les répéter ici les faisait apparaître deux fois. */}
-            <aside className="min-w-0 lg:sticky lg:top-32 lg:self-start">
-              <TableOfContents blocks={article.body} />
-            </aside>
+            <div className="min-w-0">
+              <TableOfContents blocks={article.body} className="mb-6" />
+              <ReadingRail>
+                {related.length > 0 && (
+                  <section
+                    aria-labelledby="a-lire-aussi"
+                    className="rounded-md border border-border bg-surface-subtle p-5"
+                  >
+                    <p className="type-small font-semibold tracking-wide text-accent uppercase">
+                      <LocalizedText
+                        fr="La sélection de la rédaction"
+                        en="Editor’s picks"
+                      />
+                    </p>
+                    <h2 id="a-lire-aussi" className="mt-2 font-display type-h3">
+                      <LocalizedText fr="À lire aussi" en="Read next" />
+                    </h2>
+                    <ul
+                      lang="fr"
+                      className="lc-reading-related mt-2 divide-y divide-border"
+                    >
+                      {related.map((item) => (
+                        <li key={item.slug}>
+                          <ArticleCard
+                            article={item}
+                            variant="compact"
+                            showCategory={false}
+                          />
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                )}
+                <Advertising
+                  placement="article"
+                  pageKey={`/article/${article.slug}`}
+                  className={related.length > 0 ? "mt-8" : undefined}
+                />
+              </ReadingRail>
+            </div>
           </div>
         </Container>
       </article>
 
-      {related.length > 0 && (
-        <Section
-          tone="muted"
-          title={
-            <LocalizedText
-              fr="Dans la même rubrique"
-              en="In the same section"
-            />
-          }
-          description={
-            <LocalizedText
-              fr="Trois articles choisis pour leur proximité de sujet."
-              en="Three articles selected for their related subject matter."
-            />
-          }
-        >
-          {/* Variante en ligne : la vignette de 160 px coûte 6 Ko contre 25
-              pour une carte pleine largeur, et trois cartes en fin
-              d'article ne méritent pas un dixième du budget de la page. */}
-          <ul lang="fr" className="grid gap-x-8 sm:grid-cols-2 lg:grid-cols-3">
-            {related.map((item) => (
-              <li key={item.slug} className="min-w-0">
-                <ArticleCard
-                  article={item}
-                  variant="list"
-                  headingLevel={3}
-                  className="h-full"
-                />
-              </li>
-            ))}
-          </ul>
-        </Section>
-      )}
-
       {/* Mesure d'audience sans traqueur tiers (CDC §4.4, §5.4) : les vues
           sont comptées par `proxy.ts`, ce script n'ajoute que la durée de
           lecture et le canal de partage. */}
-      <AudienceBeacon slug={article.slug} />
+      {process.env.AUDIENCE_DISABLED !== "1" && (
+        <AudienceBeacon slug={article.slug} />
+      )}
     </>
   );
 }

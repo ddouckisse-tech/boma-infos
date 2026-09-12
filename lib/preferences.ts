@@ -1,3 +1,5 @@
+import { AD_PREFERENCES_SCRIPT } from "@/lib/ads/browser";
+
 /**
  * Reader preferences persisted in `localStorage`.
  *
@@ -58,7 +60,8 @@ export const isLocaleChoice = (value: unknown): value is LocaleChoice =>
  * project owns, which keeps the Content-Security-Policy surface auditable
  * (see `lib/security-headers.ts`).
  */
-export const PREFERENCES_SCRIPT = `(function(){try{
+export const PREFERENCES_SCRIPT =
+  `(function(){try{
 var d=document.documentElement;
 var t=localStorage.getItem(${JSON.stringify(THEME_STORAGE_KEY)})||"system";
 if(t!=="light"&&t!=="dark"&&t!=="system"){t="system";}
@@ -74,4 +77,4 @@ var l=localStorage.getItem(${JSON.stringify(LOCALE_STORAGE_KEY)});
 if(l!=="fr"&&l!=="en"){l=navigator.language&&navigator.language.toLowerCase().startsWith("en")?"en":"fr";}
 d.dataset.locale=l;
 d.lang=l==="en"?"en":"fr-FR";
-}catch(e){}})();`;
+}catch(e){}})();` + AD_PREFERENCES_SCRIPT;

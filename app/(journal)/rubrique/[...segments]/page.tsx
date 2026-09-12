@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowDownWideNarrow, ArrowUpNarrowWide } from "lucide-react";
+import { Advertising } from "@/components/custom/advertising";
 import { ArticleCard } from "@/components/custom/article-card";
 import { Container } from "@/components/custom/container";
 import { EmptyState } from "@/components/custom/empty-state";
@@ -434,6 +435,13 @@ export default async function SectionPage({
           </>
         )}
       </Section>
+      {list.items.length >= 4 && (
+        <Advertising
+          placement="listing"
+          pageKey={`/rubrique/${segments.join("/")}`}
+          className="mx-auto my-10 w-[calc(100%-2rem)] max-w-[728px] md:my-14"
+        />
+      )}
     </>
   );
 }

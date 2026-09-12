@@ -1,6 +1,7 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 import { agentKey } from "./model/agents";
+import { campaignFields } from "./model/advertising";
 import {
   articleFeature,
   articleOrigin,
@@ -88,6 +89,15 @@ export default defineSchema({
   })
     .index("by_key", ["key"])
     .index("by_wordpress_id", ["wordpressId"]),
+
+  /** Image campaigns managed with site settings; no external creative HTML. */
+  adCampaigns: defineTable({
+    ...campaignFields,
+    updatedAt: v.number(),
+    updatedBy: v.string(),
+  })
+    .index("by_enabled_priority", ["enabled", "priority"])
+    .index("by_media", ["mediaKey"]),
 
   articles: defineTable({
     title: v.string(),

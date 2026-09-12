@@ -6,8 +6,8 @@ import { JournalChrome } from "@/components/custom/journal-chrome";
  * The route group keeps the URLs unchanged — `/`, `/article/…`, `/rubrique/…`
  * are exactly where they were — while giving the private areas of milestone 3
  * a different shell. Nothing here is a client component, and no Convex
- * browser client is mounted: these pages are prerendered and the budget of
- * CDC §5.4 pays for no WebSocket.
+ * browser client is mounted. Campaigns keep editorial prerendering; a fully
+ * configured AdSense mode uses dynamic HTML for its CSP nonce.
  */
 export default function JournalLayout({
   children,

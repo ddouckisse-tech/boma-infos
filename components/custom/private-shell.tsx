@@ -13,6 +13,7 @@ import {
   Inbox,
   LayoutDashboard,
   LogOut,
+  Megaphone,
   Menu,
   Plus,
   ScrollText,
@@ -153,6 +154,13 @@ const NEWSROOM: Group[] = [
         icon: UserCog,
         permission: "accounts:manage",
         badge: (counts) => counts.organizationsWaiting,
+      },
+      {
+        href: "/redaction/publicites",
+        label: "Publicités",
+        hint: "Affiches, emplacements et calendrier de diffusion",
+        icon: Megaphone,
+        permission: "settings:manage",
       },
       {
         href: "/redaction/reglages",
