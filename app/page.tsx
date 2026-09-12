@@ -45,7 +45,10 @@ export default async function HomePage() {
     );
   }
 
-  const today = Date.now();
+  // Date de la dernière publication, et non l'horloge du serveur : c'est la
+  // date d'édition du journal, et le rendu reste pur (règle React 19).
+  const editionDate =
+    lead?.publishedAt ?? top[0]?.publishedAt ?? latest[0]?.publishedAt;
 
   return (
     <>
@@ -55,9 +58,11 @@ export default async function HomePage() {
       <div className="border-b border-border bg-surface-subtle py-4">
         <Container className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
           <h1 className="font-serif type-h3 text-foreground">{SITE.tagline}</h1>
-          <p className="type-small text-muted-foreground">
-            Édition du {formatDate(today)}
-          </p>
+          {editionDate !== undefined && (
+            <p className="type-small text-muted-foreground">
+              Édition du {formatDate(editionDate)}
+            </p>
+          )}
         </Container>
       </div>
 
@@ -102,7 +107,8 @@ export default async function HomePage() {
               </p>
               <h2 className="mt-3 font-serif type-h1 text-balance">
                 <Link
-                  href={`/article/${dossier.slug} prefetch={false}`}
+                  href={`/article/${dossier.slug}`}
+                  prefetch={false}
                   className="underline-offset-4 hover:underline"
                 >
                   {dossier.title}
@@ -112,7 +118,8 @@ export default async function HomePage() {
                 {dossier.dek}
               </p>
               <Link
-                href={`/article/${dossier.slug} prefetch={false}`}
+                href={`/article/${dossier.slug}`}
+                prefetch={false}
                 className="mt-5 inline-flex items-center gap-2 rounded-md border border-border px-4 type-small font-semibold transition-colors touch-target hover:bg-surface-muted"
               >
                 Ouvrir le dossier

@@ -36,7 +36,8 @@ export function HeavyMedia({
   if (playing) {
     return (
       <figure className="not-prose">
-        {/* eslint-disable-next-line jsx-a11y/media-has-caption -- la piste de sous-titres est fournie par la rédaction au lot 3 ; la vidéo n'est jamais lue automatiquement */}
+        {/* La piste de sous-titres viendra de la rédaction au lot 3 ; la
+            vidéo n'est jamais lue automatiquement. */}
         <video
           src={src}
           controls

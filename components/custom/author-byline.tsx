@@ -72,7 +72,8 @@ export function AuthorByline({
         <p className="type-small">
           <span className="text-muted-foreground">Par </span>
           <Link
-            href={`/auteur/${authorSlug} prefetch={false}`}
+            href={`/auteur/${authorSlug}`}
+            prefetch={false}
             className="inline-flex min-h-11 items-center font-semibold text-foreground underline-offset-4 hover:underline"
             rel="author"
           >

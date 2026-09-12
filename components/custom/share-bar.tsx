@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { Check, Copy, Share2 } from "lucide-react";
 import {
   FacebookIcon,
@@ -8,6 +8,9 @@ import {
   WhatsAppIcon,
 } from "@/components/custom/brand-icons";
 import { cn } from "@/lib/utils";
+
+/** La capacité de partage natif ne change jamais : rien à écouter. */
+const subscribeNothing = () => () => {};
 
 /**
  * Sharing, WhatsApp first.
@@ -30,15 +33,14 @@ export function ShareBar({
   className?: string;
 }) {
   const [copied, setCopied] = useState(false);
-  // Décidé après hydratation : lire `navigator` pendant le rendu produirait
-  // un balisage serveur différent du balisage client.
-  const [canShareNatively, setCanShareNatively] = useState(false);
-
-  useEffect(() => {
-    setCanShareNatively(
-      typeof navigator !== "undefined" && "share" in navigator
-    );
-  }, []);
+  // Lu par `useSyncExternalStore` : le serveur rend `false`, le client la
+  // vraie valeur, sans effet ni rendu en cascade — et sans divergence
+  // d'hydratation, que lire `navigator` pendant le rendu provoquerait.
+  const canShareNatively = useSyncExternalStore(
+    subscribeNothing,
+    () => "share" in navigator,
+    () => false
+  );
 
   const encodedUrl = encodeURIComponent(url);
   const encodedTitle = encodeURIComponent(title);

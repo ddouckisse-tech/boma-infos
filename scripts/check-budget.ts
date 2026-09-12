@@ -27,6 +27,10 @@
  * saver on — the expensive case. With it on, `proxy.ts` rewrites every
  * picture to its 480 px rendition and the page is lighter still.
  *
+ * It also refuses a page that contains a malformed internal link — a `href`
+ * carrying a space or an escaped brace. Such a link is a silent 404 for the
+ * reader, and one was really introduced here by an automated rewrite.
+ *
  * Two things it deliberately does **not** do: it does not run a browser, and
  * it does not guess. Anything it cannot resolve is reported as unresolved and
  * fails the run rather than being silently dropped.
@@ -248,6 +252,18 @@ async function analyse(route: string, file: string): Promise<PageReport> {
   for (const tag of outsidePictures.match(/<img\b[^>]*>/g) ?? []) {
     const src = attr(tag, "src");
     if (src) await push(src, "image");
+  }
+
+  // Garde-fou : un `href` malformé (espace, accolade échappée) produit un
+  // lien mort que rien d'autre ne signale. Un tel lien a réellement été
+  // introduit par une réécriture automatique — la compilation le refuse
+  // désormais plutôt que de servir des 404 au lecteur.
+  for (const tag of raw.match(/<a\b[^>]*href="[^"]*"[^>]*>/g) ?? []) {
+    const href = attr(tag, "href") ?? "";
+    if (!href.startsWith("/")) continue;
+    if (/\s|%7B|%7D|\{|\}/.test(href)) {
+      unresolved.push(`lien malformé : ${href}`);
+    }
   }
 
   const totalBytes = assets.reduce((sum, asset) => sum + asset.bytes, 0);

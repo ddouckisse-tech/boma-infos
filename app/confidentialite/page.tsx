@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Container } from "@/components/custom/container";
 import { PageHeader } from "@/components/custom/page-header";
 import { Section } from "@/components/custom/section";
@@ -119,7 +120,10 @@ export default function PrivacyPage() {
               Les articles, les messages de contact et les inscriptions à la
               lettre sont stockés chez notre prestataire de base de données. Le
               nom et la localisation de l&apos;hébergement retenu seront
-              précisés dans les <a href="/mentions-legales">mentions légales</a>{" "}
+              précisés dans les{" "}
+              <Link href="/mentions-legales" prefetch={false}>
+                mentions légales
+              </Link>{" "}
               avant la mise en ligne publique.
             </p>
 

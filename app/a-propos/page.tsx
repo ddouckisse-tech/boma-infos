@@ -120,7 +120,8 @@ export default async function AboutPage() {
                   <div className="min-w-0">
                     <h3 className="font-serif type-h3">
                       <Link
-                        href={`/auteur/${author.slug} prefetch={false}`}
+                        href={`/auteur/${author.slug}`}
+                        prefetch={false}
                         className="underline-offset-4 hover:underline"
                       >
                         {author.name}

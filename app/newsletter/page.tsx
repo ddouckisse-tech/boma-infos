@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Check } from "lucide-react";
 import { Container } from "@/components/custom/container";
 import { NewsletterForm } from "@/components/custom/newsletter-form";
@@ -78,7 +79,10 @@ export default function NewsletterPage() {
               Vos données&nbsp;: seule votre adresse électronique est conservée,
               le temps de votre abonnement. Elle sert uniquement à vous envoyer
               cette lettre. Voir la{" "}
-              <a href="/confidentialite">politique de confidentialité</a>.
+              <Link href="/confidentialite" prefetch={false}>
+                politique de confidentialité
+              </Link>
+              .
             </p>
           </div>
         </Container>

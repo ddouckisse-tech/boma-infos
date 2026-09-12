@@ -83,7 +83,8 @@ export default async function ConfirmationPage({
                 <p className="mt-4 type-small text-muted-foreground">
                   Conservez ce lien de désinscription&nbsp;:{" "}
                   <Link
-                    href={`/newsletter/desinscription?jeton=${result.unsubscribeToken} prefetch={false}`}
+                    href={`/newsletter/desinscription?jeton=${result.unsubscribeToken}`}
+                    prefetch={false}
                     className="text-accent underline underline-offset-4"
                   >
                     se désinscrire en un clic

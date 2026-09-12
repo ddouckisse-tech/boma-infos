@@ -277,7 +277,8 @@ export default async function ArticlePage({
                     {article.tags.map((tag) => (
                       <li key={tag}>
                         <Link
-                          href={`/recherche?q=${encodeURIComponent(tag)} prefetch={false}`}
+                          href={`/recherche?q=${encodeURIComponent(tag)}`}
+                          prefetch={false}
                           className="inline-flex items-center rounded-xs border border-border px-3 type-small text-muted-foreground transition-colors touch-target hover:border-border-strong hover:text-foreground"
                         >
                           {tag}
@@ -302,7 +303,8 @@ export default async function ArticlePage({
                 <div className="min-w-0">
                   <h2 className="font-serif type-h3">
                     <Link
-                      href={`/auteur/${article.authorSlug} prefetch={false}`}
+                      href={`/auteur/${article.authorSlug}`}
+                      prefetch={false}
                       className="underline-offset-4 hover:underline"
                     >
                       {article.authorName}

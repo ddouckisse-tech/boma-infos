@@ -29,6 +29,14 @@ import { MEDIA_SOURCES, type MediaSource } from "./media-sources";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 const OUT_DIR = path.join(ROOT, "public", "medias");
+/**
+ * Fonds des cartes Open Graph. En JPEG, et hors de `public/` : satori ne
+ * sait décoder ni AVIF ni WebP (« Spread syntax requires ...iterable »
+ * quand on lui en donne un), et ces fichiers ne sont jamais servis au
+ * lecteur — seul `app/article/[slug]/opengraph-image.tsx` les lit sur le
+ * disque, à la composition de la carte 1200×630.
+ */
+const OG_DIR = path.join(ROOT, "assets", "og");
 const CACHE_DIR = path.join(ROOT, "node_modules", ".cache", "lecorporate-media");
 const MANIFEST = path.join(ROOT, "convex", "mediaManifest.ts");
 
@@ -236,6 +244,14 @@ async function encodeVariants(
     webp.push({ w, h, bytes: webpBuffer.byteLength });
   }
 
+  if (!square) {
+    const og = await sharp(original)
+      .resize(1200, 630, { fit: "cover", position: "attention" })
+      .jpeg({ quality: 72, mozjpeg: true })
+      .toBuffer();
+    await writeFile(path.join(OG_DIR, `${source.id}.jpg`), og);
+  }
+
   const largest = widths[widths.length - 1];
   return {
     id: source.id,
@@ -270,6 +286,7 @@ async function resolve(
 
 async function main() {
   await mkdir(OUT_DIR, { recursive: true });
+  await mkdir(OG_DIR, { recursive: true });
   await mkdir(path.dirname(MANIFEST), { recursive: true });
 
   const entries: Entry[] = [];

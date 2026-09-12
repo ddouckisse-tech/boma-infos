@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useId, useMemo } from "react";
+import { useActionState, useEffect, useId, useRef } from "react";
 import { CheckCircle2, Send } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -28,7 +28,10 @@ export function ContactForm() {
     sendContactMessage,
     { status: "idle" }
   );
-  const openedAt = useMemo(() => String(Date.now()), []);
+  const openedAt = useRef<HTMLInputElement | null>(null);
+  useEffect(() => {
+    if (openedAt.current) openedAt.current.value = String(Date.now());
+  }, []);
 
   if (state.status === "sent") {
     return (
@@ -57,7 +60,12 @@ export function ContactForm() {
 
   return (
     <form action={action} className="grid gap-5">
-      <input type="hidden" name={antiRobot.timestampField} value={openedAt} />
+      <input
+        ref={openedAt}
+        type="hidden"
+        name={antiRobot.timestampField}
+        defaultValue="0"
+      />
       <div aria-hidden="true" className="sr-only">
         <label htmlFor={`${id}-hp`}>Ne pas remplir</label>
         <input

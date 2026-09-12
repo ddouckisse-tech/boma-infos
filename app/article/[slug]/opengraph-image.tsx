@@ -37,21 +37,17 @@ export default async function OpengraphImage({
   const kicker = article?.categoryName ?? SITE.tagline;
   const byline = article ? `Par ${article.authorName}` : SITE.publisher;
 
-  // La photo est lue sur le disque : `ImageResponse` ne suit pas d'URL
-  // relative, et un aller-retour HTTP pendant la compilation serait à la fois
-  // plus lent et plus fragile.
+  // La photo est lue sur le disque, en **JPEG** : satori ne décode ni AVIF
+  // ni WebP — lui en donner un fait échouer tout le rendu. Les fonds
+  // dédiés 1200×630 sont produits par `scripts/fetch-media.ts` dans
+  // `assets/og/`, hors de `public/` : ils ne sont jamais servis au lecteur.
   let background: string | undefined;
   if (article?.heroMediaKey) {
     try {
       const file = await readFile(
-        path.join(
-          process.cwd(),
-          "public",
-          "medias",
-          `${article.heroMediaKey}-960.webp`
-        )
+        path.join(process.cwd(), "assets", "og", `${article.heroMediaKey}.jpg`)
       );
-      background = `data:image/webp;base64,${file.toString("base64")}`;
+      background = `data:image/jpeg;base64,${file.toString("base64")}`;
     } catch {
       // Média absent : la carte reste lisible sur aplat navy.
     }
@@ -82,7 +78,7 @@ export default async function OpengraphImage({
       }}
     >
       {background && (
-        // eslint-disable-next-line @next/next/no-img-element -- satori ne connaît que <img>
+        // satori ne connaît que <img>, jamais next/image.
         <img
           src={background}
           alt=""

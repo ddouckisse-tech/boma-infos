@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useId, useMemo } from "react";
+import { useActionState, useEffect, useId, useRef } from "react";
 import Link from "next/link";
 import { CheckCircle2, Send } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -33,9 +33,13 @@ export function NewsletterForm({
     { status: "idle" }
   );
 
-  // Figé au premier rendu : l'horodatage sert à repérer une soumission
+  // Horodatage posé après montage : lire l'horloge pendant le rendu est un
+  // appel impur (React 19). La valeur sert à repérer une soumission
   // instantanée, donc robotique.
-  const openedAt = useMemo(() => String(Date.now()), []);
+  const openedAt = useRef<HTMLInputElement | null>(null);
+  useEffect(() => {
+    if (openedAt.current) openedAt.current.value = String(Date.now());
+  }, []);
 
   if (state.status === "pending" || state.status === "already") {
     return (
@@ -84,7 +88,12 @@ export function NewsletterForm({
       </Label>
 
       <input type="hidden" name="source" value={source} />
-      <input type="hidden" name={antiRobot.timestampField} value={openedAt} />
+      <input
+        ref={openedAt}
+        type="hidden"
+        name={antiRobot.timestampField}
+        defaultValue="0"
+      />
       {/* Piège à robots : hors écran, hors ordre de tabulation, hors arbre
           d'accessibilité. Un lecteur d'écran ne le rencontre jamais. */}
       <div aria-hidden="true" className="sr-only">

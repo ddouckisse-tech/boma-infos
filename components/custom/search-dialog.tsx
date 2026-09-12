@@ -65,12 +65,9 @@ export function SearchDialog({ className }: { className?: string }) {
     const value = term.trim();
     if (value.length < 2) {
       abort.current?.abort();
-      setHits([]);
-      setState("idle");
       return;
     }
 
-    setState("loading");
     const timer = window.setTimeout(async () => {
       abort.current?.abort();
       const controller = new AbortController();
@@ -148,7 +145,18 @@ export function SearchDialog({ className }: { className?: string }) {
               type="search"
               autoComplete="off"
               value={term}
-              onChange={(event) => setTerm(event.target.value)}
+              onChange={(event) => {
+                const value = event.target.value;
+                setTerm(value);
+                // L'état est décidé ici, à la frappe : le fixer dans l'effet
+                // déclencherait un rendu en cascade (règle React 19).
+                if (value.trim().length < 2) {
+                  setHits([]);
+                  setState("idle");
+                } else {
+                  setState("loading");
+                }
+              }}
               placeholder="Ex. : manganèse, CEMAC, contenu local…"
               aria-describedby={statusId}
               className="h-11 type-body"
