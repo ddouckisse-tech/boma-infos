@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { AlertTriangle, RefreshCw } from "lucide-react";
+import { BrandWordmark } from "@/components/custom/brand-wordmark";
 import { Container } from "@/components/custom/container";
 
 /**
@@ -25,7 +26,13 @@ export default function ErrorBoundary({
   }, [error]);
 
   return (
-    <Container width="reading" className="py-16">
+    <Container width="reading" className="py-8">
+      {/* Cette limite d'erreur est celle de la racine : elle attrape aussi
+          les pannes de la mise en page du journal, donc elle ne peut pas
+          compter sur l'en-tête. Elle porte son propre bandeau. */}
+      <div className="mb-8 border-b border-border pb-4">
+        <BrandWordmark />
+      </div>
       <div className="flex gap-4 rounded-md border border-l-2 border-border border-l-destructive bg-card p-6">
         <AlertTriangle
           aria-hidden="true"

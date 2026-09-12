@@ -13,6 +13,7 @@ import { KeyPoints } from "@/components/custom/key-points";
 import { PartnerTag } from "@/components/custom/partner-tag";
 import { ResponsiveImage } from "@/components/custom/responsive-image";
 import { Section } from "@/components/custom/section";
+import { AudienceBeacon } from "@/components/custom/audience-beacon";
 import { ShareBar } from "@/components/custom/share-bar";
 import {
   BreadcrumbStructuredData,
@@ -350,6 +351,11 @@ export default async function ArticlePage({
           </ul>
         </Section>
       )}
+
+      {/* Mesure d'audience sans traqueur tiers (CDC §4.4, §5.4) : les vues
+          sont comptées par `proxy.ts`, ce script n'ajoute que la durée de
+          lecture et le canal de partage. */}
+      <AudienceBeacon slug={article.slug} />
     </>
   );
 }

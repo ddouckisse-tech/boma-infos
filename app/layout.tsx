@@ -1,13 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Source_Serif_4 } from "next/font/google";
-import { Footer } from "@/components/custom/footer";
-import { Header } from "@/components/custom/header";
 import { PreferencesScript } from "@/components/custom/preferences-script";
 import { ServiceWorker } from "@/components/custom/service-worker";
-import { SkipLink } from "@/components/custom/skip-link";
 import { PreferencesProvider } from "@/components/providers/preferences-provider";
-import { getNavigation } from "@/lib/content/server";
-import { buildSections } from "@/lib/navigation";
 import { SITE, siteUrl } from "@/lib/site";
 import "./globals.css";
 
@@ -93,9 +88,18 @@ export const viewport: Viewport = {
   ],
 };
 
-export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const sections = buildSections(await getNavigation());
-
+/**
+ * Root layout — document shell only.
+ *
+ * The masthead and the footer moved to `app/(journal)/layout.tsx` at
+ * milestone 3: the back office and the company portal are applications, not
+ * pages of the newspaper, and they need their own chrome. What stays here is
+ * what every route shares — the language, the two typefaces, the reader
+ * preferences and the service worker — and **nothing that would grow the
+ * shared JavaScript chunk**, since the public journal pays for it on every
+ * page (CDC §5.4).
+ */
+export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="fr-FR"
@@ -111,20 +115,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             page pour des retours que le journal public rend en ligne, dans
             le contrôle lui-même. Le budget du §5.4 ne les finance pas. La
             galerie /design-system monte son propre TooltipProvider. */}
-        <PreferencesProvider>
-          <SkipLink />
-          <Header sections={sections} />
-          {/* tabIndex={-1} : cible du lien d'évitement, focalisable par
-              programme mais hors de l'ordre de tabulation. */}
-          <main
-            id="contenu"
-            tabIndex={-1}
-            className="flex-1 focus-visible:outline-none"
-          >
-            {children}
-          </main>
-          <Footer sections={sections} />
-        </PreferencesProvider>
+        <PreferencesProvider>{children}</PreferencesProvider>
         <ServiceWorker />
       </body>
     </html>

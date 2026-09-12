@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Container } from "@/components/custom/container";
 import { PageHeader } from "@/components/custom/page-header";
 import { Section } from "@/components/custom/section";
-import { ComponentStates } from "@/app/design-system/_components/component-states";
+import { ComponentStates } from "./_components/component-states";
 import {
   BRAND_SWATCHES,
   BREAKPOINTS,
