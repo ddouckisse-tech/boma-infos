@@ -3,14 +3,26 @@
 import { useActionState, useEffect, useId, useRef } from "react";
 import Link from "next/link";
 import { CheckCircle2, Send } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { ActionButton } from "@/components/custom/action-button";
 import { usePreferences } from "@/components/providers/preferences-provider";
 import { subscribeToNewsletter, type NewsletterState } from "@/lib/actions";
 import { antiRobot } from "@/lib/anti-robot";
+import { cx } from "@/lib/cx";
 import { localize } from "@/lib/i18n";
-import { cn } from "@/lib/utils";
+
+/**
+ * The classes shadcn's `Label`, `Input` and the house `ActionButton` produced
+ * here once merged with this form's overrides — computed with the `cn`
+ * engine and frozen on native elements. The form sits on the home page and
+ * in the footer of every page: it no longer pulls Radix, the shadcn button,
+ * class-variance-authority or the merge engine into what readers download
+ * (§5.4). Visually identical.
+ */
+const FIELD_LABEL =
+  "flex items-center gap-2 text-sm leading-none select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50 type-small font-medium";
+const FIELD_INPUT =
+  "rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 h-11 w-full min-w-0 type-body sm:flex-1";
+const SUBMIT_BUTTON =
+  "group/button inline-flex shrink-0 items-center justify-center border border-transparent bg-clip-padding text-sm whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-9 gap-1.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 rounded-md type-small font-semibold touch-target px-4";
 
 function newsletterError(message: string, locale: "fr" | "en") {
   if (locale === "fr") return message;
@@ -62,7 +74,7 @@ export function NewsletterForm({
   if (state.status === "pending" || state.status === "already") {
     return (
       <div
-        className={cn(
+        className={cx(
           "rounded-md border border-border bg-background p-4",
           className
         )}
@@ -110,13 +122,13 @@ export function NewsletterForm({
   const hasError = state.status === "error";
 
   return (
-    <form action={action} className={cn("grid gap-2", className)}>
-      <Label htmlFor={id} className="type-small font-medium">
+    <form action={action} className={cx("grid gap-2", className)}>
+      <label htmlFor={id} data-slot="label" className={FIELD_LABEL}>
         {localize(locale, {
           fr: "Recevoir la lettre hebdomadaire",
           en: "Receive the weekly newsletter",
         })}
-      </Label>
+      </label>
 
       <input type="hidden" name="source" value={source} />
       <input
@@ -144,12 +156,13 @@ export function NewsletterForm({
           colonne, il s'applique à la hauteur et écrase les 44 px de la
           cible tactile (§3.5). D'où la grille en dessous de `sm`. */}
       <div
-        className={cn(
+        className={cx(
           "gap-2",
           variant === "inline" ? "flex flex-wrap" : "grid sm:flex"
         )}
       >
-        <Input
+        <input
+          data-slot="input"
           id={id}
           type="email"
           name="email"
@@ -163,14 +176,21 @@ export function NewsletterForm({
           })}
           aria-invalid={hasError || undefined}
           aria-describedby={hasError ? errorId : `${id}-aide`}
-          className="h-11 w-full min-w-0 type-body sm:flex-1"
+          className={FIELD_INPUT}
         />
-        <ActionButton type="submit" disabled={pending}>
+        <button
+          type="submit"
+          disabled={pending}
+          data-slot="button"
+          data-variant="default"
+          data-size="lg"
+          className={SUBMIT_BUTTON}
+        >
           <Send aria-hidden="true" className="size-4" />
           {pending
             ? localize(locale, { fr: "Envoi…", en: "Sending…" })
             : localize(locale, { fr: "S'inscrire", en: "Subscribe" })}
-        </ActionButton>
+        </button>
       </div>
 
       {hasError && (

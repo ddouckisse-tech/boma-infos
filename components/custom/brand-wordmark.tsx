@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePreferences } from "@/components/providers/preferences-provider";
 import { BRAND_LOGO } from "@/lib/brand";
-import { cn } from "@/lib/utils";
+import { cx } from "@/lib/cx";
 
 /**
  * Approved editorial artwork. Both paths share one cached SVG request and
@@ -26,10 +26,12 @@ export function BrandWordmark({
       aria-label={
         locale === "en" ? "Le Corporate — home" : "Le Corporate — accueil"
       }
-      className={cn(
+      // Un `className` fourni remplace la largeur par défaut (les écrans
+      // privés passent la leur) : sans fusion de classes, deux largeurs
+      // côte à côte laisseraient l'ordre de la feuille de style trancher.
+      className={cx(
         "inline-flex min-h-11 max-w-full min-w-0 items-center",
-        size === "large" ? "w-72 sm:w-80" : "w-44 sm:w-56",
-        className
+        className ?? (size === "large" ? "w-72 sm:w-80" : "w-44 sm:w-56")
       )}
     >
       <svg

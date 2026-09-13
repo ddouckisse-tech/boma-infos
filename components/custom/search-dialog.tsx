@@ -5,11 +5,20 @@ import Link from "next/link";
 import { Search } from "lucide-react";
 import { CloseButton } from "@/components/custom/close-button";
 import { Modal } from "@/components/custom/modal";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { usePreferences } from "@/components/providers/preferences-provider";
+import { cx } from "@/lib/cx";
 import { categoryLabel, localize } from "@/lib/i18n";
-import { cn } from "@/lib/utils";
+
+/**
+ * The classes shadcn's `Label` and `Input` produced here once merged with this
+ * component's overrides — computed with the `cn` engine, frozen as native
+ * elements so the search box stops shipping Radix and the merge engine to
+ * every reader (§5.4). Visually identical.
+ */
+const FIELD_LABEL =
+  "flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50 type-small";
+const FIELD_INPUT =
+  "w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 h-11 type-body";
 
 type Hit = {
   slug: string;
@@ -113,9 +122,11 @@ export function SearchDialog({ className }: { className?: string }) {
           event.preventDefault();
           setOpen(true);
         }}
-        className={cn(
-          "inline-flex items-center gap-2 rounded-md border border-border px-3 text-muted-foreground transition-colors touch-target hover:border-border-strong hover:text-foreground",
-          className
+        // Le `className` de l'appelant porte l'affichage (l'en-tête passe
+        // `hidden sm:inline-flex`) ; sans lui, `inline-flex`.
+        className={cx(
+          "items-center gap-2 rounded-md border border-border px-3 text-muted-foreground transition-colors touch-target hover:border-border-strong hover:text-foreground",
+          className ?? "inline-flex"
         )}
       >
         <Search aria-hidden="true" className="size-4 shrink-0" />
@@ -159,11 +170,12 @@ export function SearchDialog({ className }: { className?: string }) {
           </div>
 
           <form method="get" action="/recherche" className="mt-4 grid gap-2">
-            <Label htmlFor={inputId} className="type-small">
+            <label htmlFor={inputId} data-slot="label" className={FIELD_LABEL}>
               {localize(locale, { fr: "Mots-clés", en: "Keywords" })}
-            </Label>
-            <Input
+            </label>
+            <input
               ref={field}
+              data-slot="input"
               id={inputId}
               name="q"
               type="search"
@@ -186,7 +198,7 @@ export function SearchDialog({ className }: { className?: string }) {
                 en: "E.g. manganese, CEMAC, local content…",
               })}
               aria-describedby={statusId}
-              className="h-11 type-body"
+              className={FIELD_INPUT}
             />
           </form>
 

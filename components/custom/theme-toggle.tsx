@@ -2,7 +2,7 @@
 
 import { Moon, Sun } from "lucide-react";
 import { usePreferences } from "@/components/providers/preferences-provider";
-import { cn } from "@/lib/utils";
+import { cx } from "@/lib/cx";
 
 /**
  * Light / dark switch.
@@ -46,7 +46,7 @@ export function ThemeToggle({
       aria-label={action}
       title={action}
       onClick={() => setTheme(dark ? "light" : "dark")}
-      className={cn(
+      className={cx(
         "group inline-flex min-h-11 items-center gap-2 rounded-full",
         compact &&
           "size-11 shrink-0 justify-center border border-border bg-background hover:border-border-strong hover:bg-surface-muted",

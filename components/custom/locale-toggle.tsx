@@ -1,7 +1,7 @@
 "use client";
 
 import { usePreferences } from "@/components/providers/preferences-provider";
-import { cn } from "@/lib/utils";
+import { cx } from "@/lib/cx";
 
 /** Round FR/EN toggle shared by the journal and company workspace. */
 export function LocaleToggle({ className }: { className?: string }) {
@@ -17,7 +17,7 @@ export function LocaleToggle({ className }: { className?: string }) {
         english ? "Afficher le site en français" : "Display the site in English"
       }
       title={english ? "Français" : "English"}
-      className={cn(
+      className={cx(
         "relative inline-flex size-11 shrink-0 items-center justify-center rounded-full border border-border bg-background font-display text-[0.6875rem] font-bold tracking-wide text-foreground transition-colors hover:border-border-strong hover:bg-surface-muted",
         className
       )}

@@ -11,7 +11,7 @@ import {
   type Section,
 } from "@/lib/navigation";
 import { categoryLabel, localize } from "@/lib/i18n";
-import { cn } from "@/lib/utils";
+import { cx } from "@/lib/cx";
 
 /**
  * Desktop section bar with its mega-menus.
@@ -84,7 +84,7 @@ export function MegaMenu({
         fr: "Navigation principale",
         en: "Main navigation",
       })}
-      className={cn("relative", className)}
+      className={cx("relative", className)}
       onKeyDown={(event) => {
         if (event.key !== "Escape" || !openSlug) return;
         event.stopPropagation();
@@ -143,7 +143,7 @@ export function MegaMenu({
                   clearTimer();
                   setOpenSlug(isOpen ? null : section.slug);
                 }}
-                className={cn(
+                className={cx(
                   "flex items-center gap-1 rounded-xs px-2 type-small font-medium transition-colors touch-target hover:bg-surface-muted",
                   isOpen && "bg-surface-muted"
                 )}
@@ -151,7 +151,7 @@ export function MegaMenu({
                 {categoryLabel(locale, section.slug, section.label)}
                 <ChevronDown
                   aria-hidden="true"
-                  className={cn(
+                  className={cx(
                     "size-3.5 shrink-0 transition-transform",
                     isOpen && "rotate-180"
                   )}
@@ -161,7 +161,7 @@ export function MegaMenu({
               <div
                 id={panelId}
                 hidden={!isOpen}
-                className={cn(
+                className={cx(
                   "absolute top-full left-0 z-50 w-[min(20rem,80vw)] rounded-md border-t-2 bg-popover p-2 shadow-floating",
                   accentBorderClass[section.accent]
                 )}

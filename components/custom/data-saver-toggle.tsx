@@ -4,7 +4,7 @@ import { useId } from "react";
 import { Gauge } from "lucide-react";
 import { usePreferences } from "@/components/providers/preferences-provider";
 import { localize } from "@/lib/i18n";
-import { cn } from "@/lib/utils";
+import { cx } from "@/lib/cx";
 
 /**
  * Data saver switch (CDC §2.2).
@@ -33,7 +33,7 @@ export function DataSaverToggle({
 
   return (
     <div
-      className={cn(
+      className={cx(
         "flex items-start gap-3",
         variant === "block" &&
           "rounded-md border border-border bg-surface-muted p-4",

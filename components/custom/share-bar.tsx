@@ -9,7 +9,7 @@ import {
 } from "@/components/custom/brand-icons";
 import { usePreferences } from "@/components/providers/preferences-provider";
 import { localize } from "@/lib/i18n";
-import { cn } from "@/lib/utils";
+import { cx } from "@/lib/cx";
 
 /** La capacité de partage natif ne change jamais : rien à écouter. */
 const subscribeNothing = () => () => {};
@@ -80,7 +80,7 @@ export function ShareBar({
     "inline-flex items-center gap-2 rounded-md border border-border bg-background px-3 type-small font-medium text-foreground transition-colors touch-target hover:border-border-strong";
 
   return (
-    <div className={cn("flex flex-wrap items-center gap-2", className)}>
+    <div className={cx("flex flex-wrap items-center gap-2", className)}>
       <span className="me-1 type-small font-semibold text-muted-foreground">
         {localize(locale, { fr: "Partager", en: "Share" })}
       </span>
@@ -165,7 +165,7 @@ export function ShareBar({
         <button
           type="button"
           onClick={nativeShare}
-          className={cn(secondary, "sm:hidden")}
+          className={cx(secondary, "sm:hidden")}
         >
           <Share2 aria-hidden="true" className="size-4 shrink-0" />
           {localize(locale, { fr: "Autre", en: "More" })}
