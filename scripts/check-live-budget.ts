@@ -78,11 +78,17 @@ function worstCase(srcset: string): string | null {
   return candidates.at(-1)?.url ?? null;
 }
 
-async function measure(path: string): Promise<{ result: Measure; html: string }> {
+async function measure(
+  path: string
+): Promise<{ result: Measure; html: string }> {
   const html = (await download(`${BASE}${path}`)).toString("utf8");
   const seen = new Set<string>();
   const assets: Asset[] = [
-    { url: path, bytes: gzipSync(Buffer.from(html)).byteLength, kind: "document" },
+    {
+      url: path,
+      bytes: gzipSync(Buffer.from(html)).byteLength,
+      kind: "document",
+    },
   ];
   const unresolved: string[] = [];
 
@@ -93,7 +99,8 @@ async function measure(path: string): Promise<{ result: Measure; html: string }>
     seen.add(url);
     try {
       const body = await download(url);
-      const compressible = kind === "js" || kind === "css" || /\.svg(\?|$)/.test(url);
+      const compressible =
+        kind === "js" || kind === "css" || /\.svg(\?|$)/.test(url);
       assets.push({
         url,
         bytes: compressible ? gzipSync(body).byteLength : body.byteLength,
@@ -170,24 +177,58 @@ const articles: Measure[] = [];
 for (const path of articlePaths) articles.push((await measure(path)).result);
 
 const lines: Line[] = [
-  { label: "Poids accueil", value: home.result.weightKb, cap: CAPS.homeWeightKb, unit: "Ko" },
-  { label: "Requêtes accueil", value: home.result.requests, cap: CAPS.requests, unit: "" },
-  { label: "JavaScript accueil", value: home.result.javascriptKb, cap: CAPS.javascriptKb, unit: "Ko" },
+  {
+    label: "Poids accueil",
+    value: home.result.weightKb,
+    cap: CAPS.homeWeightKb,
+    unit: "Ko",
+  },
+  {
+    label: "Requêtes accueil",
+    value: home.result.requests,
+    cap: CAPS.requests,
+    unit: "",
+  },
+  {
+    label: "JavaScript accueil",
+    value: home.result.javascriptKb,
+    cap: CAPS.javascriptKb,
+    unit: "Ko",
+  },
 ];
 for (const article of articles) {
   const name = article.path.replace("/article/", "").slice(0, 48);
   lines.push(
-    { label: `Poids article ${name}`, value: article.weightKb, cap: CAPS.articleWeightKb, unit: "Ko" },
-    { label: `Requêtes article ${name}`, value: article.requests, cap: CAPS.requests, unit: "" },
-    { label: `JavaScript article ${name}`, value: article.javascriptKb, cap: CAPS.javascriptKb, unit: "Ko" }
+    {
+      label: `Poids article ${name}`,
+      value: article.weightKb,
+      cap: CAPS.articleWeightKb,
+      unit: "Ko",
+    },
+    {
+      label: `Requêtes article ${name}`,
+      value: article.requests,
+      cap: CAPS.requests,
+      unit: "",
+    },
+    {
+      label: `JavaScript article ${name}`,
+      value: article.javascriptKb,
+      cap: CAPS.javascriptKb,
+      unit: "Ko",
+    }
   );
 }
 
 const format = (line: Line) =>
-  line.unit ? `${line.value.toFixed(1)} ${line.unit}` : String(Math.round(line.value));
+  line.unit
+    ? `${line.value.toFixed(1)} ${line.unit}`
+    : String(Math.round(line.value));
 const icon = { ok: "✓", vigilance: "!", dépassé: "✗" } as const;
 
-console.log(`Budget §5.4 en production — ${BASE} (${new Date().toISOString()})\n`);
+console.log(
+  `Budget §5.4 en production — ${BASE} (${new Date().toISOString()})\n`
+);
 for (const line of lines) {
   const state = status(line);
   const ratio = Math.round((line.value / line.cap) * 100);
@@ -196,7 +237,9 @@ for (const line of lines) {
   );
 }
 
-const heaviest = [...home.result.assets].sort((a, b) => b.bytes - a.bytes).slice(0, 8);
+const heaviest = [...home.result.assets]
+  .sort((a, b) => b.bytes - a.bytes)
+  .slice(0, 8);
 console.log("\n  Accueil — ressources les plus lourdes :");
 for (const asset of heaviest) {
   console.log(
@@ -212,11 +255,16 @@ const inGitHub = Boolean(process.env.GITHUB_ACTIONS);
 if (inGitHub) {
   for (const line of alerts) {
     const level = status(line) === "dépassé" ? "error" : "warning";
-    console.log(`::${level} title=Budget §5.4::${line.label} : ${format(line)} pour un plafond de ${line.cap}${line.unit ? ` ${line.unit}` : ""}`);
+    console.log(
+      `::${level} title=Budget §5.4::${line.label} : ${format(line)} pour un plafond de ${line.cap}${line.unit ? ` ${line.unit}` : ""}`
+    );
   }
   if (process.env.GITHUB_STEP_SUMMARY) {
     const rows = lines
-      .map((line) => `| ${icon[status(line)]} ${line.label} | ${format(line)} | ${line.cap}${line.unit ? ` ${line.unit}` : ""} | ${Math.round((line.value / line.cap) * 100)} % |`)
+      .map(
+        (line) =>
+          `| ${icon[status(line)]} ${line.label} | ${format(line)} | ${line.cap}${line.unit ? ` ${line.unit}` : ""} | ${Math.round((line.value / line.cap) * 100)} % |`
+      )
       .join("\n");
     appendFileSync(
       process.env.GITHUB_STEP_SUMMARY,
@@ -231,4 +279,6 @@ if (alerts.length > 0 || unresolved.length > 0) {
   );
   process.exit(1);
 }
-console.log(`\n✓ Tous les indicateurs sont sous ${VIGILANCE * 100} % de leur plafond.`);
+console.log(
+  `\n✓ Tous les indicateurs sont sous ${VIGILANCE * 100} % de leur plafond.`
+);
