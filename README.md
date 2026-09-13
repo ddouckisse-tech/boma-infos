@@ -83,24 +83,24 @@ demande explicite.
 
 ### Scripts
 
-| Script               | Effet                                        |
-| -------------------- | -------------------------------------------- |
-| `bun run dev`        | Serveur de développement Next.js (port 3000) |
-| `bun run build`      | Compilation de production                    |
-| `bun run start`      | Serveur de production                        |
-| `bun run typecheck`  | `next typegen` puis `tsc --noEmit`           |
-| `bun run lint`       | ESLint                                       |
-| `bun run format`     | Prettier (écriture)                          |
-| `bun run verify`     | typecheck + lint + build                     |
-| `bun run budget`     | Contrôle du budget de performance (§5.4)     |
-| `bun run seed`       | Charge le jeu de démonstration dans Convex   |
-| `bun run media`      | Retélécharge et ré-encode les photographies  |
-| `bun run documents`  | Régénère les PDF de la docuthèque            |
-| `bun run icons`      | Régénère les icônes de la PWA                |
-| `bun run convex:dev` | Backend Convex, en veille                    |
-| `bun run dev:full`   | Convex + Next dans un seul processus         |
-| `bun run compte`     | Crée un compte nominatif (lot 3)             |
-| `bun run agents:cle` | Copie `ANTHROPIC_API_KEY` sur le déploiement |
+| Script               | Effet                                                    |
+| -------------------- | -------------------------------------------------------- |
+| `bun run dev`        | Serveur de développement Next.js (port 3000)             |
+| `bun run build`      | Compilation de production                                |
+| `bun run start`      | Serveur de production                                    |
+| `bun run typecheck`  | `next typegen` puis `tsc --noEmit`                       |
+| `bun run lint`       | ESLint                                                   |
+| `bun run format`     | Prettier (écriture)                                      |
+| `bun run verify`     | typecheck + lint + build                                 |
+| `bun run budget`     | Contrôle du budget de performance (§5.4)                 |
+| `bun run seed`       | Charge le jeu de démonstration dans Convex               |
+| `bun run media`      | Retélécharge et ré-encode les photographies              |
+| `bun run documents`  | Régénère les PDF de la docuthèque                        |
+| `bun run icons`      | Régénère les icônes de la PWA                            |
+| `bun run convex:dev` | Backend Convex, en veille                                |
+| `bun run dev:full`   | Convex + Next dans un seul processus                     |
+| `bun run compte`     | Crée un compte nominatif (lot 3) ; `--revoquer` le ferme |
+| `bun run agents:cle` | Copie `ANTHROPIC_API_KEY` sur le déploiement             |
 
 `bun run build` enchaîne `next build` **puis** `bun run budget` : une
 compilation qui dépasse un plafond du §5.4 échoue, elle n'avertit pas.
@@ -202,6 +202,8 @@ scripts/
   make-documents.ts            produit les PDF de la docuthèque
   make-icons.ts                produit les icônes de la PWA
   check-budget.ts              contrôle du §5.4 — fait échouer la compilation
+  check-live-budget.ts         même contrôle sur le site servi (workflow quotidien)
+  media-thumbnails.ts          rattrapage des vignettes de 240 px (stockage Convex)
 next.config.ts                 en-têtes, cache des médias, redirections 301
 ```
 
@@ -231,11 +233,11 @@ plafond dépassé :
 
 | Indicateur       | Plafond §5.4 | Constaté                            |
 | ---------------- | ------------ | ----------------------------------- |
-| Poids accueil    | 600 Ko       | 491 Ko                              |
-| Poids article    | 400 Ko       | 385 Ko                              |
-| Requêtes accueil | 50           | 33                                  |
+| Poids accueil    | 600 Ko       | 542 Ko                              |
+| Poids article    | 400 Ko       | 366 Ko                              |
+| Requêtes accueil | 50           | 40                                  |
 | Requêtes article | 50           | 25                                  |
-| JavaScript       | 180 Ko       | 169 Ko (accueil) · 174 Ko (article) |
+| JavaScript       | 180 Ko       | 164 Ko (accueil) · 168 Ko (article) |
 
 > Chiffres **re-mesurés à la fin du lot 3**. L'accueil a maigri (489 → 478 Ko,
 > 31 → 28 requêtes) : la mise en page racine ne contient plus l'en-tête ni le
@@ -256,6 +258,27 @@ plafond dépassé :
 > de JavaScript (187 Ko). Trois requêtes de plus par page, mais plus aucune
 > duplication ; l'envoi d'images depuis la médiathèque n'ajoute rien au
 > journal, dont la vignette vidéo n'embarque plus le manifeste des photos.
+>
+> Chiffres **re-mesurés le 13/09/2026 en production, archive WordPress en
+> ligne** (compilation Vercel). L'arrivée des 1 019 articles avait porté
+> l'accueil à 595 Ko et le JavaScript des articles à 179,9 Ko ; un article à
+> photo lourde dépassait même 400 Ko **sans aucune compilation**, par simple
+> régénération ISR. Trois corrections : vignettes de liste en 240 px au lieu
+> de 320 (`scripts/media-thumbnails.ts`, −50 Ko à l'accueil) ; plus de moteur
+> de fusion de classes ni de primitive shadcn dans le JavaScript public
+> (`lib/cx.ts`, −12 Ko sur chaque page — la page introuvable de la racine,
+> présente partout, les tirait via le formulaire de recherche) ; et un
+> contrôle quotidien du site servi, décrit ci-dessous.
+
+**Surveillance en production.** La compilation ne voit pas ce que l'ISR
+change ensuite. `scripts/check-live-budget.ts` mesure l'accueil et les trois
+derniers articles réellement servis, avec les mêmes règles, et sort en erreur
+dès **95 %** d'un plafond. `.github/workflows/budget-production.yml` le lance
+chaque matin et sur demande ; GitHub prévient par courriel en cas d'échec.
+
+```bash
+bun run scripts/check-live-budget.ts https://lecorporate.com
+```
 
 Deux partis pris de mesure, tous deux du côté sévère :
 
@@ -373,7 +396,9 @@ Trois points tiennent aux défauts que l'audit avait relevés :
 
 - **Aucun identifiant par défaut.** Le dépôt ne contient aucun compte.
   `bun run compte` en crée un, nominatif, avec un mot de passe choisi à cet
-  instant. `POST /api/auth/sign-up/*` est **fermé au navigateur** : cet appel
+  instant ; `bun run compte -- --email=… --revoquer` le ferme (profil
+  désactivé, sessions supprimées, geste inscrit au journal d'audit au nom de
+  la ligne de commande). `POST /api/auth/sign-up/*` est **fermé au navigateur** : cet appel
   répond différemment selon que l'adresse existe déjà, c'est un oracle. Les deux
   créations légitimes — un administrateur qui ouvre un compte, une entreprise
   qui demande un espace — passent par des fonctions serveur.
@@ -427,9 +452,12 @@ n'envoyer rien.
 ### Médiathèque — envoi d'images
 
 Les images s'ajoutent depuis l'écran (`/redaction/medias`, `convex/library.ts`),
-sans script à lancer. Chaque photo est décodée et encodée en **WebP à 320,
-640, 960 et 1280 px** par le navigateur lui-même — aucun traitement serveur —
-puis chaque taille est envoyée au stockage de fichiers Convex. Le texte
+sans script à lancer. Chaque photo est décodée et encodée en **WebP à 240,
+320, 640, 960 et 1280 px** par le navigateur lui-même — aucun traitement
+serveur — puis chaque taille est envoyée au stockage de fichiers Convex. La
+largeur de 240 px sert les vignettes de liste (96 px sur un téléphone) ; pour
+les images importées sans elle, `bun run scripts/media-thumbnails.ts --prod`
+la rajoute, de façon idempotente (`--simulation` pour compter d'abord). Le texte
 alternatif reste **obligatoire avant de placer l'image** dans un article : le
 champ est requis à l'écran, et le validateur Convex ne l'accepte pas vide.
 
