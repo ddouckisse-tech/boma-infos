@@ -1,0 +1,43 @@
+# Budget de performance du site en production — CAHIER-DES-CHARGES.md §5.4.
+#
+# La compilation refuse déjà un dépassement (`bun run build`), mais l'accueil
+# et les articles se régénèrent depuis Convex toutes les cinq minutes (ISR) :
+# une photographie plus lourde en une change le poids servi sans aucune
+# compilation. Ce contrôle mesure les pages réellement servies chaque matin
+# (7 h 17 à Libreville) et échoue dès 95 % d'un plafond — GitHub prévient alors
+# par courriel. Une fois par jour et non plus : un journal qui publie un article
+# par jour n'en demande pas davantage, et une alerte répétée toutes les six
+# heures finit ignorée.
+name: Budget §5.4 — production
+
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+    inputs:
+      site:
+        description: Adresse du site à mesurer
+        required: false
+        default: https://lecorporate.com
+
+permissions:
+  contents: read
+
+concurrency:
+  group: budget-production
+  cancel-in-progress: true
+
+jobs:
+  mesure:
+    name: Mesure de l'accueil et des derniers articles
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - name: Mesurer le site servi
+        env:
+          SITE: ${{ inputs.site || 'https://lecorporate.com' }}
+        run: bun run scripts/check-live-budget.ts "$SITE"
