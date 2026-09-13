@@ -22,6 +22,7 @@ import type * as http from "../http.js";
 import type * as journal from "../journal.js";
 import type * as library from "../library.js";
 import type * as mediaManifest from "../mediaManifest.js";
+import type * as mediaRenditions from "../mediaRenditions.js";
 import type * as model_access from "../model/access.js";
 import type * as model_advertising from "../model/advertising.js";
 import type * as model_agentEngine from "../model/agentEngine.js";
@@ -71,6 +72,7 @@ declare const fullApi: ApiFromModules<{
   journal: typeof journal;
   library: typeof library;
   mediaManifest: typeof mediaManifest;
+  mediaRenditions: typeof mediaRenditions;
   "model/access": typeof model_access;
   "model/advertising": typeof model_advertising;
   "model/agentEngine": typeof model_agentEngine;

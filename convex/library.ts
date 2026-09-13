@@ -20,7 +20,7 @@ import { mediaKeysUsedBy, resolveRenditions, thumbUrlOf } from "./model/media";
  *    is what makes the performance budget of §5.4 computable at build time,
  *    and it does not change.
  *  - **Uploads** from the médiathèque: the browser encodes the picture in
- *    WebP at up to four widths (320, 640, 960, 1280) and sends each file to
+ *    WebP at up to five widths (240, 320, 640, 960, 1280) and sends each file to
  *    Convex file storage; the row records the renditions and the journal
  *    resolves their URLs at render time. No image pipeline at request time,
  *    no native library on the server.

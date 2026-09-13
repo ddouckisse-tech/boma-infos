@@ -127,7 +127,11 @@ export function ArticleCard({
                 media={media}
                 alt=""
                 sizes={SIZES.thumb}
-                maxWidth={320}
+                // 240 et non 320 : la vignette fait 96 px de large sur un
+                // téléphone (192 px physiques) et 160 px au-delà. La
+                // rendition de 240 px pèse un tiers de moins, et le budget
+                // facture la plus grande que le <picture> peut demander.
+                maxWidth={240}
                 wrapperClassName="aspect-[16/9] rounded-md"
               />
             ) : (

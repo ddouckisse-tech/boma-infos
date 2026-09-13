@@ -8,8 +8,11 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { humanError } from "@/lib/private";
 import { cn } from "@/lib/utils";
 
-/** The widths the journal serves, ascending; a picture only gets the ones it can fill. */
-const WIDTHS = [320, 640, 960, 1280] as const;
+/**
+ * The widths the journal serves, ascending; a picture only gets the ones it
+ * can fill. 240 is the list thumbnail (96 px on a phone, 160 px beyond).
+ */
+const WIDTHS = [240, 320, 640, 960, 1280] as const;
 const QUALITY = 0.82;
 const MAX_FILES = 12;
 
@@ -25,7 +28,7 @@ type Job = {
  * adds images from the screen.
  *
  * The browser does the work the offline script used to do. The picture is
- * decoded, drawn at up to four widths and encoded in WebP by the canvas
+ * decoded, drawn at up to five widths and encoded in WebP by the canvas
  * (AVIF is not something browsers write); each rendition goes to Convex
  * file storage through a short-lived upload URL, and one mutation records
  * the row. Nothing is resized on the server, and nothing native is needed
