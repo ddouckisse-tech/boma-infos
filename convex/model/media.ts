@@ -41,16 +41,42 @@ export async function resolveRenditions(
   return resolved.sort((a, b) => a.w - b.w);
 }
 
+/**
+ * URL of ONE rendition — the smallest at least `minWidth` wide, else the
+ * largest — for a single storage lookup; `undefined` for the demo library.
+ *
+ * Every `storage.getUrl` counts among the 4,096 reads a Convex query may
+ * make. Resolving the five renditions of every picture to keep one crossed
+ * that line in production on 19/09/2026, once the WordPress archive had
+ * brought 1,297 pictures: the médiathèque, the article editor and the
+ * advertising screen all failed. The other renditions are only tried when
+ * the preferred file is gone, in the order `resolveRenditions` would have
+ * picked them.
+ */
+export async function renditionUrlOf(
+  ctx: Pick<QueryCtx, "storage">,
+  row: Pick<Doc<"media">, "storage">,
+  minWidth: number
+): Promise<string | undefined> {
+  if (!row.storage || row.storage.length === 0) return undefined;
+  const bySize = [...row.storage].sort((a, b) => a.w - b.w);
+  const candidates = [
+    ...bySize.filter((rendition) => rendition.w >= minWidth),
+    ...bySize.filter((rendition) => rendition.w < minWidth).reverse(),
+  ];
+  for (const rendition of candidates) {
+    const url = await ctx.storage.getUrl(rendition.storageId);
+    if (url) return url;
+  }
+  return undefined;
+}
+
 /** A small rendition for a grid or a picker; `undefined` when the file lives under `public/medias/`. */
 export async function thumbUrlOf(
   ctx: QueryCtx,
   row: Doc<"media">
 ): Promise<string | undefined> {
-  const renditions = await resolveRenditions(ctx, row);
-  if (!renditions || renditions.length === 0) return undefined;
-  return (
-    renditions.find((r) => r.w >= 320) ?? renditions[renditions.length - 1]
-  ).url;
+  return await renditionUrlOf(ctx, row, 320);
 }
 
 /** Keys of every picture a set of articles displays (hero, gallery, blocks). */

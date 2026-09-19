@@ -7,7 +7,12 @@ import {
   mediaVariantValidator,
   storedRenditionValidator,
 } from "./model/content";
-import { mediaKeysUsedBy, resolveRenditions, thumbUrlOf } from "./model/media";
+import {
+  mediaKeysUsedBy,
+  renditionUrlOf,
+  resolveRenditions,
+  thumbUrlOf,
+} from "./model/media";
 
 /**
  * Media library — CDC §4.4, and the client's request of 12/09/2026: an
@@ -52,9 +57,10 @@ const mediaShape = v.object({
   variants: v.array(mediaVariantValidator),
   usedBy: v.number(),
   pendingSuggestions: v.number(),
-  /** Storage-backed renditions, a signed URL each; absent for the demo library. */
-  renditions: v.optional(v.array(renditionShape)),
-  /** Small rendition for the grid; the demo library computes its own client-side. */
+  /**
+   * Small rendition for the grid, the only URL resolved per picture (see
+   * `renditionUrlOf`); the demo library computes its own client-side.
+   */
   thumbUrl: v.optional(v.string()),
   uploadedAt: v.optional(v.number()),
 });
@@ -104,30 +110,44 @@ export const list = query({
       );
 
     return await Promise.all(
-      selected.map(async (row) => {
-        const renditions = await resolveRenditions(ctx, row);
-        return {
-          _id: row._id,
-          key: row.key,
-          alt: row.alt,
-          caption: row.caption,
-          credit: row.credit,
-          license: row.license,
-          source: row.source,
-          width: row.width,
-          height: row.height,
-          color: row.color,
-          variants: row.variants,
-          usedBy: usage.get(row.key) ?? 0,
-          pendingSuggestions: pending.get(row._id) ?? 0,
-          renditions,
-          thumbUrl: renditions
-            ? (renditions.find((r) => r.w >= 320) ?? renditions.at(-1))?.url
-            : undefined,
-          uploadedAt: row.uploadedAt,
-        };
-      })
+      selected.map(async (row) => ({
+        _id: row._id,
+        key: row.key,
+        alt: row.alt,
+        caption: row.caption,
+        credit: row.credit,
+        license: row.license,
+        source: row.source,
+        width: row.width,
+        height: row.height,
+        color: row.color,
+        variants: row.variants,
+        usedBy: usage.get(row.key) ?? 0,
+        pendingSuggestions: pending.get(row._id) ?? 0,
+        thumbUrl: await thumbUrlOf(ctx, row),
+        uploadedAt: row.uploadedAt,
+      }))
     );
+  },
+});
+
+/**
+ * The advertising preview's file: the rendition at least 640 px wide of
+ * one picture, looked up for the picture on screen rather than for the
+ * whole library (see `renditionUrlOf`). `null` for the demo library, whose
+ * files the screen derives from the key.
+ */
+export const previewUrl = query({
+  args: { key: v.string() },
+  returns: v.union(v.string(), v.null()),
+  handler: async (ctx, { key }) => {
+    await requirePermission(ctx, PERMISSIONS.newsroom);
+    const row = await ctx.db
+      .query("media")
+      .withIndex("by_key", (q) => q.eq("key", key))
+      .unique();
+    if (!row) return null;
+    return (await renditionUrlOf(ctx, row, 640)) ?? null;
   },
 });
 

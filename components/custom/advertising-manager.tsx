@@ -68,11 +68,9 @@ function dateFromInput(value: string, original: number | undefined) {
   return value === "" ? undefined : new Date(value).getTime();
 }
 
-function previewSource(media: LibraryMedia): string {
-  if (media.renditions?.length) {
-    return (media.renditions.find((rendition) => rendition.w >= 640) ??
-      media.renditions.at(-1))!.url;
-  }
+function previewSource(media: LibraryMedia, stored?: string | null): string {
+  // Uploaded picture: its 640 px file once looked up, the thumbnail meanwhile.
+  if (media.thumbUrl) return stored ?? media.thumbUrl;
   const variants = media.variants.filter(
     (variant) => variant.format === "webp"
   );
@@ -89,6 +87,12 @@ function CampaignPreview({
   format: AdFormat;
   compact?: boolean;
 }) {
+  // The library list carries thumbnails only; the full-width preview asks
+  // for the larger file of its one picture, a list row keeps the thumbnail.
+  const stored = useQuery(
+    api.library.previewUrl,
+    media?.thumbUrl && !compact ? { key: media.key } : "skip"
+  );
   return (
     <div
       className={cn(
@@ -108,7 +112,7 @@ function CampaignPreview({
         {media ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={previewSource(media)}
+            src={previewSource(media, stored)}
             alt={media.alt}
             width={media.width}
             height={media.height}
