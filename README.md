@@ -461,6 +461,21 @@ la rajoute, de façon idempotente (`--simulation` pour compter d'abord). Le text
 alternatif reste **obligatoire avant de placer l'image** dans un article : le
 champ est requis à l'écran, et le validateur Convex ne l'accepte pas vide.
 
+**Aucun écran ne charge toute la photothèque** (depuis le 19/09/2026, après la
+panne « Too many reads » due aux 1 297 images de l'archive WordPress). La
+médiathèque et le sélecteur d'images lisent des pages de 48 et 24 images
+(`library.list`, `library.pick`), cherchées et filtrées sur le serveur (index
+`search_media`, `by_uploaded`, `by_alt_missing`) ; une image déjà choisie est
+retrouvée par sa clé (`library.byKeys`). Le nombre d'articles qui affichent une
+image vient de la table `mediaUsages`, tenue par `syncArticleMedia` à chaque
+écriture d'article : toute nouvelle mutation qui modifie la une, la galerie ou
+le corps d'un article doit l'appeler. Les compteurs sont bornés (« 999+ »).
+Après un déploiement qui ajoute ces index, ou pour réparer une dérive, lancer
+`bunx convex run --prod library:reindex` (par lots cadencés, idempotent ; il
+tourne aussi chaque nuit) : tant qu'il n'a pas terminé une première fois,
+l'écran le signale, l'usage n'est pas affiché et la suppression d'une image
+relit les articles.
+
 ### Les agents
 
 Les sept agents du §4.6 tournent dans une **action Convex** — l'ordonnanceur
