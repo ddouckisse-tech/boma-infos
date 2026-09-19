@@ -86,9 +86,42 @@ export default defineSchema({
     originalStorageId: v.optional(v.id("_storage")),
     originalMimeType: v.optional(v.string()),
     originalBytes: v.optional(v.number()),
+    /**
+     * Derived by every writer (`mediaDerivedFields`) so the médiathèque is
+     * searched, filtered and counted by index rather than in the browser.
+     * Optional because rows written before 19/09/2026 get them from
+     * `library.reindex`.
+     */
+    searchText: v.optional(v.string()),
+    altMissing: v.optional(v.boolean()),
   })
     .index("by_key", ["key"])
-    .index("by_wordpress_id", ["wordpressId"]),
+    .index("by_wordpress_id", ["wordpressId"])
+    .index("by_uploaded", ["uploadedAt"])
+    .index("by_alt_missing", ["altMissing", "uploadedAt"])
+    .searchIndex("search_media", {
+      searchField: "searchText",
+      filterFields: ["altMissing"],
+    }),
+
+  /**
+   * Which article displays which picture — one row per pair, rewritten by
+   * `syncArticleMedia` after every article write. It answers « used by N
+   * articles » for the pictures on screen, and guards their deletion,
+   * without reading the `articles` table.
+   */
+  mediaUsages: defineTable({
+    mediaKey: v.string(),
+    articleId: v.id("articles"),
+  })
+    .index("by_media", ["mediaKey"])
+    .index("by_article", ["articleId"]),
+
+  /** Derived indexes rebuilt in full at least once (`library.reindex`). */
+  indexBuilds: defineTable({
+    name: v.string(),
+    completedAt: v.number(),
+  }).index("by_name", ["name"]),
 
   /** Image campaigns managed with site settings; no external creative HTML. */
   adCampaigns: defineTable({

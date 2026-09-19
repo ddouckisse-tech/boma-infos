@@ -12,7 +12,7 @@ import {
   requirePermission,
   type Viewer,
 } from "./model/access";
-import { thumbUrlOf } from "./model/media";
+import { countMissingAlt, syncArticleMedia } from "./model/media";
 import { recordAudit } from "./model/audit";
 import {
   articleFeature,
@@ -205,7 +205,6 @@ export const dashboard = query({
       .filter((a) => a.status === "in_review" || a.status === "submitted")
       .slice(0, 5)
       .map(toRow);
-    const media = await ctx.db.query("media").collect();
     let pendingSuggestions = 0;
     for (const count of pending.values()) pendingSuggestions += count;
 
@@ -226,7 +225,7 @@ export const dashboard = query({
       organizationsWaiting: organizations.filter((o) => !o.approved).length,
       tasks: {
         pendingSuggestions,
-        mediaMissingAlt: media.filter((m) => m.alt.trim() === "").length,
+        mediaMissingAlt: await countMissingAlt(ctx),
         hasLead: articles.some(
           (a) => a.status === "published" && a.feature === "lead"
         ),
@@ -551,6 +550,7 @@ export const save = mutation({
       searchText: searchText(title, args.dek, args.tags, args.body),
       updatedAt: now,
     });
+    await syncArticleMedia(ctx, args.id);
 
     if (!args.auto) {
       await recordAudit(
@@ -663,6 +663,7 @@ export const remove = mutation({
       throw new Error("Dépubliez l'article avant de le supprimer.");
     }
     await ctx.db.delete(id);
+    await syncArticleMedia(ctx, id, null);
     await recordAudit(ctx, viewer, "article.delete", "article", id, row.title);
     return null;
   },
@@ -693,6 +694,7 @@ export const restoreVersion = mutation({
       ),
       updatedAt: Date.now(),
     });
+    await syncArticleMedia(ctx, article._id);
     await recordAudit(
       ctx,
       viewer,
@@ -723,16 +725,6 @@ export const editorOptions = query({
       })
     ),
     authors: v.array(v.object({ slug: v.string(), name: v.string() })),
-    media: v.array(
-      v.object({
-        key: v.string(),
-        alt: v.string(),
-        caption: v.string(),
-        credit: v.string(),
-        /** Small rendition of an uploaded picture; the demo library has none. */
-        thumbUrl: v.optional(v.string()),
-      })
-    ),
   }),
   handler: async (ctx) => {
     const viewer = await requirePermission(ctx, PERMISSIONS.articlesRead);
@@ -740,10 +732,13 @@ export const editorOptions = query({
     const unrestricted =
       viewer.role.slug === "administrateur" || allowed.length === 0;
 
-    const [categories, authors, media] = await Promise.all([
+    // Les images ne sont plus livrées ici : le sélecteur les cherche page
+    // par page (`library.pick`) et retrouve les siennes par clé
+    // (`library.byKeys`). Toute la photothèque à chaque ouverture de
+    // l'éditeur, c'est ce qui a fait tomber le back-office le 19/09/2026.
+    const [categories, authors] = await Promise.all([
       ctx.db.query("categories").collect(),
       ctx.db.query("authors").collect(),
-      ctx.db.query("media").collect(),
     ]);
 
     return {
@@ -758,21 +753,6 @@ export const editorOptions = query({
           allowed: unrestricted || allowed.includes(row.slug),
         })),
       authors: authors.map((row) => ({ slug: row.slug, name: row.name })),
-      media: await Promise.all(
-        [...media]
-          .sort(
-            (a, b) =>
-              (b.uploadedAt ?? 0) - (a.uploadedAt ?? 0) ||
-              a.key.localeCompare(b.key, "fr")
-          )
-          .map(async (row) => ({
-            key: row.key,
-            alt: row.alt,
-            caption: row.caption,
-            credit: row.credit,
-            thumbUrl: await thumbUrlOf(ctx, row),
-          }))
-      ),
     };
   },
 });

@@ -17,7 +17,11 @@ import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import { ActionButton } from "@/components/custom/action-button";
 import { SelectField, TextField } from "@/components/custom/form-field";
-import { MediaPicker } from "@/components/custom/media-picker";
+import {
+  MediaPicker,
+  useMediaByKey,
+  type PickedMedia,
+} from "@/components/custom/media-picker";
 import { OfficeHeader, OfficeSection } from "@/components/custom/office-header";
 import type { AdFormat, AdPlacement } from "@/lib/ads/types";
 import { mediaUrl } from "@/lib/media-core";
@@ -25,7 +29,6 @@ import { formatDateTime, humanError } from "@/lib/private";
 import { cn } from "@/lib/utils";
 
 type Campaign = FunctionReturnType<typeof api.advertising.list>[number];
-type LibraryMedia = FunctionReturnType<typeof api.library.list>[number];
 
 const PLACEMENTS: readonly { value: AdPlacement; label: string }[] = [
   { value: "home-primary", label: "Accueil · entre les grands blocs" },
@@ -68,7 +71,7 @@ function dateFromInput(value: string, original: number | undefined) {
   return value === "" ? undefined : new Date(value).getTime();
 }
 
-function previewSource(media: LibraryMedia, stored?: string | null): string {
+function previewSource(media: PickedMedia, stored?: string | null): string {
   // Uploaded picture: its 640 px file once looked up, the thumbnail meanwhile.
   if (media.thumbUrl) return stored ?? media.thumbUrl;
   const variants = media.variants.filter(
@@ -83,12 +86,13 @@ function CampaignPreview({
   format,
   compact = false,
 }: {
-  media?: LibraryMedia;
+  media?: PickedMedia;
   format: AdFormat;
   compact?: boolean;
 }) {
-  // The library list carries thumbnails only; the full-width preview asks
-  // for the larger file of its one picture, a list row keeps the thumbnail.
+  // A picture is looked up with its thumbnail only; the full-width preview
+  // asks for the larger file of its one picture, a list row keeps the
+  // thumbnail.
   const stored = useQuery(
     api.library.previewUrl,
     media?.thumbUrl && !compact ? { key: media.key } : "skip"
@@ -130,9 +134,20 @@ function CampaignPreview({
   );
 }
 
+/** A campaign row's preview: its poster looked up by key, not in the whole library. */
+function CampaignRowPreview({
+  mediaKey,
+  format,
+}: {
+  mediaKey: string;
+  format: AdFormat;
+}) {
+  const media = useMediaByKey(mediaKey);
+  return <CampaignPreview media={media ?? undefined} format={format} compact />;
+}
+
 export function AdvertisingManager() {
   const campaigns = useQuery(api.advertising.list, {});
-  const media = useQuery(api.library.list, {});
   const setEnabled = useMutation(api.advertising.setEnabled);
   const [editing, setEditing] = useState<Campaign | null>(null);
   const [editorVersion, setEditorVersion] = useState(0);
@@ -199,7 +214,7 @@ export function AdvertisingManager() {
         icon={Megaphone}
         description="Le statut suit l’activation et les dates, dans l’heure locale de votre navigateur."
       >
-        {campaigns === undefined || media === undefined ? (
+        {campaigns === undefined ? (
           <p className="type-body text-muted-foreground" role="status">
             Chargement des campagnes…
           </p>
@@ -217,10 +232,9 @@ export function AdvertisingManager() {
                   key={campaign._id}
                   className="flex flex-col gap-4 rounded-lg border border-border p-4 sm:flex-row sm:items-start"
                 >
-                  <CampaignPreview
-                    media={media.find((item) => item.key === campaign.mediaKey)}
+                  <CampaignRowPreview
+                    mediaKey={campaign.mediaKey}
                     format={campaign.format}
-                    compact
                   />
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
@@ -317,19 +331,12 @@ export function AdvertisingManager() {
         icon={editing ? Pencil : Plus}
         className="mt-6"
       >
-        {media === undefined ? (
-          <p role="status" className="type-small text-muted-foreground">
-            Chargement de la médiathèque…
-          </p>
-        ) : (
-          <CampaignForm
-            key={editorVersion}
-            campaign={editing}
-            media={media}
-            onSaved={() => openEditor(null, false)}
-            onCancel={() => openEditor(null)}
-          />
-        )}
+        <CampaignForm
+          key={editorVersion}
+          campaign={editing}
+          onSaved={() => openEditor(null, false)}
+          onCancel={() => openEditor(null)}
+        />
       </OfficeSection>
     </>
   );
@@ -337,12 +344,10 @@ export function AdvertisingManager() {
 
 function CampaignForm({
   campaign,
-  media,
   onSaved,
   onCancel,
 }: {
   campaign: Campaign | null;
-  media: LibraryMedia[];
   onSaved: () => void;
   onCancel: () => void;
 }) {
@@ -362,7 +367,9 @@ function CampaignForm({
   const [enabled, setEnabled] = useState(campaign?.enabled ?? false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const selectedMedia = media.find((item) => item.key === mediaKey);
+  // `undefined` pendant la recherche, `null` si la clé n'existe plus.
+  const lookup = useMediaByKey(mediaKey);
+  const selectedMedia = lookup ?? undefined;
   const availablePlacements = PLACEMENTS.filter(
     (item) => format === "banner" || item.value === "article"
   );
@@ -477,7 +484,6 @@ function CampaignForm({
             label="Affiche publicitaire"
             value={mediaKey}
             onChange={setMediaKey}
-            media={media}
             allowNone={false}
           />
           {missingAlt && (
@@ -495,7 +501,7 @@ function CampaignForm({
               automatiquement.
             </p>
           )}
-          {mediaKey && !selectedMedia && (
+          {mediaKey && lookup === null && (
             <p role="status" className="type-small text-warning-token">
               L’affiche sélectionnée n’est pas encore disponible dans la
               médiathèque.

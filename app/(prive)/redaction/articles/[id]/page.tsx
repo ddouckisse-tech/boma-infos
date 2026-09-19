@@ -234,7 +234,6 @@ export default function ArticleEditorPage({
   const children = categories.filter(
     (row) => row.parentSlug === form.categorySlug
   );
-  const media = options?.media ?? [];
   const pending = (agent?.suggestions ?? []).filter(
     (item) => item.status === "pending"
   );
@@ -366,7 +365,6 @@ export default function ArticleEditorPage({
                 <Editor
                   blocks={form.body}
                   onChange={(blocks) => update("body", blocks)}
-                  media={media}
                 />
               </div>
               <TextAreaField
@@ -444,7 +442,6 @@ export default function ArticleEditorPage({
                 label="Image principale"
                 value={form.heroMediaKey}
                 onChange={(key) => update("heroMediaKey", key)}
-                media={media}
                 className="sm:col-span-2"
               />
               <SelectField

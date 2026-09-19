@@ -2,7 +2,12 @@
 
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useAction, useMutation, useQuery } from "convex/react";
+import {
+  useAction,
+  useMutation,
+  usePaginatedQuery,
+  useQuery,
+} from "convex/react";
 import {
   ImagePlus,
   Images,
@@ -15,22 +20,36 @@ import {
 import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { MISSING_ALT_CAP, USAGE_CAP } from "@/convex/model/media";
 import { ActionButton } from "@/components/custom/action-button";
 import { AgentSuggestionCard } from "@/components/custom/agent-suggestion-card";
 import { TextField } from "@/components/custom/form-field";
 import { MediaUploader } from "@/components/custom/media-uploader";
 import { thumbOf } from "@/components/custom/media-picker";
 import { OfficeHeader, OfficeSection } from "@/components/custom/office-header";
-import { humanError } from "@/lib/private";
+import { formatCapped, humanError } from "@/lib/private";
+import { useDebouncedValue } from "@/lib/use-debounced-value";
 import { cn } from "@/lib/utils";
 
 type Filter = "tous" | "ajoutes" | "sans-alt";
 
-const FILTERS: { value: Filter; label: string }[] = [
-  { value: "tous", label: "Toutes" },
-  { value: "ajoutes", label: "Ajoutées ici" },
-  { value: "sans-alt", label: "Sans texte alternatif" },
+/** The screen's filters, and the name `library.list` gives each. */
+const FILTERS: {
+  value: Filter;
+  label: string;
+  server: "all" | "uploaded" | "missingAlt";
+}[] = [
+  { value: "tous", label: "Toutes", server: "all" },
+  { value: "ajoutes", label: "Ajoutées ici", server: "uploaded" },
+  { value: "sans-alt", label: "Sans texte alternatif", server: "missingAlt" },
 ];
+
+/** Pictures per page: two, three or four columns, never the whole library. */
+const PAGE = 48;
+
+/** « 3 articles », « 99+ articles ». */
+const articlesLabel = (count: number) =>
+  `${formatCapped(count, USAGE_CAP)} article${count > 1 ? "s" : ""}`;
 
 /**
  * Médiathèque — CDC §4.4, §3.5 (alternative text mandatory), and the
@@ -41,6 +60,11 @@ const FILTERS: { value: Filter; label: string }[] = [
  * demo library (pre-encoded offline) and the uploads share the same grid
  * and the same editing panel; only deletion is reserved to uploads, since
  * the demo files are not in storage.
+ *
+ * Since 19/09/2026 the grid is read page by page — searched, filtered and
+ * counted on the server (`library.list`, `library.counts`) — and the
+ * editing panel reads its picture on its own (`library.get`), so it stays
+ * open when the picture leaves the filtered page.
  */
 export default function MediaLibraryPage() {
   return (
@@ -71,7 +95,24 @@ function MediaLibrary() {
   const [launching, setLaunching] = useState(false);
   const [removing, setRemoving] = useState(false);
 
-  const media = useQuery(api.library.list, { term: term.trim() || undefined });
+  const search = useDebouncedValue(term.trim());
+  const {
+    results: media,
+    status,
+    loadMore,
+  } = usePaginatedQuery(
+    api.library.list,
+    {
+      term: search || undefined,
+      filter: FILTERS.find((option) => option.value === filter)?.server,
+    },
+    { initialNumItems: PAGE }
+  );
+  const counts = useQuery(api.library.counts, {});
+  const opened = useQuery(
+    api.library.get,
+    selectedId ? { id: selectedId } : "skip"
+  );
   const updateMedia = useMutation(api.library.update);
   const removeMedia = useMutation(api.library.remove);
   const runOnMedia = useAction(api.agentRuntime.runOnMedia);
@@ -82,19 +123,15 @@ function MediaLibrary() {
       : "skip"
   );
 
-  const selected = media?.find((item) => item._id === selectedId) ?? null;
-  const shown = (media ?? []).filter((item) =>
-    filter === "tous"
-      ? true
-      : filter === "sans-alt"
-        ? item.alt.trim() === ""
-        : item.uploadedAt !== undefined
-  );
-  const missingAlt = (media ?? []).filter(
-    (item) => item.alt.trim() === ""
-  ).length;
+  // The card clicked is shown at once, then its own query takes over.
+  const selected =
+    opened === undefined
+      ? (media.find((item) => item._id === selectedId) ?? null)
+      : opened;
+  const missingAlt = counts?.missingAlt ?? 0;
+  const loading = status === "LoadingFirstPage";
 
-  const select = (item: NonNullable<typeof media>[number]) => {
+  const select = (item: (typeof media)[number]) => {
     setSelectedId(item._id);
     setAlt(item.alt);
     setCaption(item.caption);
@@ -112,7 +149,9 @@ function MediaLibrary() {
     setAlt("");
     setCaption("");
     setCredit("");
+    // La nouvelle image arrive en tête de « Toutes », sans recherche.
     setFilter("tous");
+    setTerm("");
   };
 
   const handleSave = async () => {
@@ -161,6 +200,8 @@ function MediaLibrary() {
     setRemoving(false);
   };
 
+  const usedBy = selected?.usedBy ?? 0;
+
   return (
     <>
       <OfficeHeader
@@ -193,16 +234,18 @@ function MediaLibrary() {
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <h2 id="bibliotheque" className="font-display type-h2">
                 Bibliothèque
-                {media && (
+                {!loading && (
                   <span className="ms-2 type-small font-normal text-muted-foreground">
-                    {shown.length} image{shown.length > 1 ? "s" : ""}
+                    {status === "Exhausted"
+                      ? `${media.length} image${media.length > 1 ? "s" : ""}`
+                      : `${media.length} premières images`}
                   </span>
                 )}
               </h2>
               <TextField
                 label="Rechercher"
                 type="search"
-                placeholder="Clé, texte alternatif, légende…"
+                placeholder="Clé, texte alternatif, légende, crédit…"
                 value={term}
                 onChange={(event) => setTerm(event.target.value)}
                 className="sm:w-72"
@@ -233,7 +276,7 @@ function MediaLibrary() {
                     {option.label}
                     {count !== undefined && count > 0 && (
                       <span className="rounded-full bg-warning-token/20 px-1.5 text-[11px] text-warning-token tabular-nums">
-                        {count}
+                        {formatCapped(count, MISSING_ALT_CAP)}
                       </span>
                     )}
                   </button>
@@ -241,14 +284,25 @@ function MediaLibrary() {
               })}
             </div>
 
-            {media === undefined ? (
+            {counts?.indexReady === false && (
+              <p
+                role="status"
+                className="mt-3 rounded-md border border-warning-token/40 bg-warning-token/10 px-3 py-2 type-small"
+              >
+                La médiathèque termine son indexation&nbsp;: d&apos;ici là, la
+                recherche, le filtre « Sans texte alternatif » et le nombre
+                d&apos;articles par image peuvent être incomplets.
+              </p>
+            )}
+
+            {loading ? (
               <p className="mt-4 type-body text-muted-foreground" role="status">
                 Chargement de la médiathèque…
               </p>
-            ) : shown.length === 0 ? (
+            ) : media.length === 0 ? (
               <p className="mt-4 rounded-xl border border-dashed border-border-strong p-6 text-center type-small text-muted-foreground">
-                {term.trim() !== ""
-                  ? `Aucune image ne correspond à « ${term.trim()} ».`
+                {search !== ""
+                  ? `Aucune image ne correspond à « ${search} ».`
                   : filter === "sans-alt"
                     ? "Toutes les images ont un texte alternatif."
                     : filter === "ajoutes"
@@ -257,7 +311,7 @@ function MediaLibrary() {
               </p>
             ) : (
               <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-3 2xl:grid-cols-4">
-                {shown.map((item) => {
+                {media.map((item) => {
                   const active = selectedId === item._id;
                   const noAlt = item.alt.trim() === "";
                   return (
@@ -303,10 +357,9 @@ function MediaLibrary() {
                           </span>
                           <span className="flex flex-wrap items-center gap-x-2 text-[11px] text-muted-foreground tabular-nums">
                             {item.width} × {item.height}
-                            <span>
-                              · {item.usedBy} article
-                              {item.usedBy > 1 ? "s" : ""}
-                            </span>
+                            {item.usedBy !== null && (
+                              <span>· {articlesLabel(item.usedBy)}</span>
+                            )}
                             {item.pendingSuggestions > 0 && (
                               <span className="inline-flex items-center gap-1 text-accent">
                                 <Sparkles
@@ -323,6 +376,21 @@ function MediaLibrary() {
                   );
                 })}
               </ul>
+            )}
+
+            {(status === "CanLoadMore" || status === "LoadingMore") && (
+              <div className="mt-4 flex justify-center">
+                <ActionButton
+                  type="button"
+                  variant="outline"
+                  disabled={status === "LoadingMore"}
+                  onClick={() => loadMore(PAGE)}
+                >
+                  {status === "LoadingMore"
+                    ? "Chargement…"
+                    : "Afficher plus d'images"}
+                </ActionButton>
+              </div>
             )}
           </section>
         </div>
@@ -393,18 +461,26 @@ function MediaLibrary() {
                     <ActionButton
                       type="button"
                       variant="destructive"
-                      disabled={removing || selected.usedBy > 0}
+                      disabled={
+                        removing || usedBy > 0 || selected.usedByCampaign
+                      }
                       onClick={() => void handleRemove()}
                     >
                       <Trash2 aria-hidden="true" className="size-4" />
                       Supprimer l&apos;image
                     </ActionButton>
-                    {selected.usedBy > 0 && (
+                    {usedBy > 0 ? (
                       <p className="mt-2 type-small text-muted-foreground">
-                        Encore utilisée par {selected.usedBy} article
-                        {selected.usedBy > 1 ? "s" : ""} : retirez-la
-                        d&apos;abord.
+                        Encore utilisée par {articlesLabel(usedBy)}&nbsp;:
+                        retirez-la d&apos;abord.
                       </p>
+                    ) : (
+                      selected.usedByCampaign && (
+                        <p className="mt-2 type-small text-muted-foreground">
+                          Encore utilisée par une campagne publicitaire&nbsp;:
+                          remplacez son affiche d&apos;abord.
+                        </p>
+                      )
                     )}
                   </div>
                 )}

@@ -37,4 +37,17 @@ crons.interval(
   {}
 );
 
+/**
+ * 02:30 UTC — rebuilds what the médiathèque derives from the other tables
+ * (search text, alternative-text flag, which article shows which picture),
+ * in bounded batches. Every writer keeps them up to date; this repairs what
+ * a forgotten path or a manual edit in the dashboard would have left behind.
+ */
+crons.daily(
+  "rebuild media index",
+  { hourUTC: 2, minuteUTC: 30 },
+  internal.library.reindex,
+  {}
+);
+
 export default crons;

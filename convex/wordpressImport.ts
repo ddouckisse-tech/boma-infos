@@ -11,6 +11,7 @@ import {
   seoValidator,
   storedRenditionValidator,
 } from "./model/content";
+import { mediaDerivedFields, syncArticleMedia } from "./model/media";
 import {
   ARTICLES_1,
   ARTICLES_2,
@@ -379,11 +380,12 @@ export const upsertMedia = internalMutation({
           `ID WordPress ${item.wordpressId} déjà importé sous « ${identity.key} ».`
         );
       }
+      const fields = { ...item, ...mediaDerivedFields(item) };
       if (row) {
-        await ctx.db.patch(row._id, item);
+        await ctx.db.patch(row._id, fields);
         result.updated += 1;
       } else {
-        await ctx.db.insert("media", item);
+        await ctx.db.insert("media", fields);
         result.inserted += 1;
       }
     }
@@ -474,9 +476,10 @@ export const upsertArticles = internalMutation({
           heroMediaKey: item.heroMediaKey,
           views: Math.max(row.views, item.views),
         });
+        await syncArticleMedia(ctx, row._id);
         result.updated += 1;
       } else {
-        await ctx.db.insert("articles", item);
+        await syncArticleMedia(ctx, await ctx.db.insert("articles", item));
         result.inserted += 1;
       }
     }

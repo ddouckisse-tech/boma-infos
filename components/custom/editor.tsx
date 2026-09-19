@@ -11,10 +11,7 @@ import {
   Trash2,
 } from "lucide-react";
 import type { Block } from "@/convex/model/content";
-import {
-  MediaPicker,
-  type PickableMedia,
-} from "@/components/custom/media-picker";
+import { MediaPicker } from "@/components/custom/media-picker";
 import { cn } from "@/lib/utils";
 
 /**
@@ -59,11 +56,9 @@ const EMPTY: Record<BlockKind, Block> = {
 export function Editor({
   blocks,
   onChange,
-  media,
 }: {
   blocks: readonly Block[];
   onChange: (blocks: Block[]) => void;
-  media: readonly PickableMedia[];
 }) {
   const refs = useRef(new Map<number, HTMLTextAreaElement | null>());
 
@@ -274,7 +269,6 @@ export function Editor({
                   onChange={(key) =>
                     replace(index, { ...block, mediaKey: key })
                   }
-                  media={media}
                   allowNone={false}
                 />
                 <input
@@ -353,7 +347,6 @@ export function Editor({
                   onChange={(key) =>
                     replace(index, { ...block, posterMediaKey: key })
                   }
-                  media={media}
                 />
               </div>
             )}

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import * as migration from "../convex/wordpressImport";
+import { mediaDerivedFields } from "../convex/model/media";
 import { documents as publicDocuments } from "../convex/journal";
 import { ARTICLES_1, DOCUMENTS } from "../convex/seed";
 
@@ -15,6 +16,7 @@ function context(initial: Rows = {}) {
     authors: [],
     articles: [],
     media: [],
+    mediaUsages: [],
     documents: [],
     ...initial,
   };
@@ -69,6 +71,23 @@ function context(initial: Rows = {}) {
             return matches[0] ?? null;
           },
         };
+      },
+      async get(id: string) {
+        for (const rows of Object.values(data)) {
+          const row = rows.find((row) => row._id === id);
+          if (row) return row;
+        }
+        return null;
+      },
+      async delete(id: string) {
+        for (const [table, rows] of Object.entries(data)) {
+          const index = rows.findIndex((row) => row._id === id);
+          if (index >= 0) {
+            rows.splice(index, 1);
+            writes.push([table, id]);
+            return;
+          }
+        }
       },
       async insert(table: string, value: Row) {
         const row = {
@@ -331,6 +350,10 @@ await check(
       updated: 1,
     });
     assert.equal(ctx.data.media.length, 1);
+    // Recherche et filtre « Sans texte alternatif » de la médiathèque.
+    const derived = mediaDerivedFields(item);
+    assert.equal(ctx.data.media[0].searchText, derived.searchText);
+    assert.equal(ctx.data.media[0].altMissing, derived.altMissing);
     for (const bad of [
       { ...item, originalBytes: 99 },
       { ...item, originalMimeType: "image/png" },
@@ -369,6 +392,11 @@ await check(
       }),
       { inserted: 1, updated: 0 }
     );
+    // La médiathèque sait quel article affiche l'image (`mediaUsages`).
+    assert.deepEqual(
+      ctx.data.mediaUsages.map((row) => [row.mediaKey, row.articleId]),
+      [[media.key, ctx.data.articles[0]._id]]
+    );
     assert.deepEqual(
       await call("upsertArticles", ctx, { items: [{ ...article, views: 2 }] }),
       { inserted: 0, updated: 1 }
@@ -377,6 +405,7 @@ await check(
     assert.equal(ctx.data.articles[0].heroMediaKey, undefined);
     assert.equal(ctx.data.articles[0].subCategorySlug, undefined);
     assert.equal(ctx.data.articles.length, 1);
+    assert.equal(ctx.data.mediaUsages.length, 0);
   }
 );
 await check(

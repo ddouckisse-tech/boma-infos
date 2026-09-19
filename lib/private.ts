@@ -187,6 +187,13 @@ export const formatCost = (micros: number): string =>
 export const formatNumber = (value: number): string =>
   value.toLocaleString("fr-FR");
 
+/**
+ * A count the server stopped reading at `cap` — its queries are bounded,
+ * whatever the size of the table: « 999+ » past the cap.
+ */
+export const formatCapped = (value: number, cap: number): string =>
+  value > cap ? `${formatNumber(cap)}+` : formatNumber(value);
+
 export const formatDuration = (seconds: number): string => {
   if (seconds <= 0) return "—";
   const minutes = Math.floor(seconds / 60);

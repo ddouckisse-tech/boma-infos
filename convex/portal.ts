@@ -11,6 +11,7 @@ import {
 } from "./model/access";
 import { queueNotification, recordAudit } from "./model/audit";
 import { articleStatus, blockValidator } from "./model/content";
+import { syncArticleMedia } from "./model/media";
 import { plainText, readingMinutes, searchText, slugify } from "./model/text";
 
 /**
@@ -628,6 +629,7 @@ export const publishSubmission = mutation({
         views: 0,
       });
     }
+    await syncArticleMedia(ctx, articleId);
 
     await ctx.db.patch(args.id, {
       status,

@@ -52,10 +52,6 @@ export default function SubmissionReviewPage({
     value: row.slug,
     label: row.name,
   }));
-  const media = (options?.media ?? []).map((row) => ({
-    value: row.key,
-    label: `${row.key} — ${row.alt.slice(0, 48)}`,
-  }));
 
   const moderationRun = agent?.runs.find(
     (run) => run.agentKey === "moderation"
@@ -189,7 +185,6 @@ export default function SubmissionReviewPage({
                 suggestedCategorySlug={submission.requestedCategorySlug}
                 categories={categories}
                 authors={authors}
-                media={media}
                 requestedPublishAt={submission.requestedPublishAt}
               />
             </div>
