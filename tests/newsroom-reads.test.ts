@@ -103,8 +103,8 @@ async function newsroom(count: number, seed: number) {
   return fake;
 }
 
-const run = async <Result>(fn: unknown, fake: FakeDb, args = {}) =>
-  handlerOf<typeof args, Result>(fn)(await signedIn(fake), args);
+const run = <Result>(fn: unknown, fake: FakeDb, args = {}) =>
+  handlerOf<typeof args, Result>(fn)(signedIn(fake), args);
 
 /* --------------------------------------------- reference (882d2c3) */
 
