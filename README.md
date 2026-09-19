@@ -363,6 +363,30 @@ servis à la racine par WordPress, sont traités par la route attrape-tout
 `app/[slug]/page.tsx`, qui interroge la base plutôt que d'embarquer une
 liste de 1 019 entrées.
 
+### Volume de l'archive — aucune lecture de toute la table
+
+Un article pèse environ 6 Ko et une fonction Convex ne lit pas plus de
+16 Mio : jusqu'au 19/09/2026, l'accueil, les articles liés, les rubriques et
+tout le back-office relisaient la table `articles` entière, et seraient tombés
+vers 2 500 articles (panne reproduite sur un backend local à 3 057). Depuis :
+
+- les listes lisent ce qu'elles montrent par leur index (`take`,
+  `paginate`) ; le plan du site parcourt les slugs par pages de 200
+  (`journal.publishedSlugPage`) ;
+- les comptes (badges, tableau de bord, filtres de rubrique, pagination,
+  auteurs) viennent de la table `articleCounts`, tenue dans la transaction
+  de chaque écriture. **Toute écriture sur `articles` passe par
+  `convex/model/articleWrites.ts`** (`insertArticle`, `patchArticle`,
+  `deleteArticle`) ; sinon les comptes dérivent ;
+- après le déploiement qui introduit `articleCounts`, ou pour réparer une
+  dérive : `bunx convex run --prod articleCounts:rebuild` (par pages, rapide ;
+  la vérification horaire `ensureBuilt` le lance si personne ne l'a fait).
+
+Mesuré sur le fonds réel (1 019 articles, octets lus par exécution) :
+accueil 6,4 Mio → 377 Kio, articles liés 6,4 Mio → 34 Kio, `navCounts`
+6,3 Mio → 0,6 Kio. Tests d'équivalence avec les anciens parcours complets :
+`tests/journal-reads.test.ts`, `tests/newsroom-reads.test.ts`.
+
 ### Contenu de démonstration
 
 Le corpus de `convex/seed/` est **fictif** : entreprises, personnes,
@@ -545,6 +569,16 @@ Aucune ligne enregistrée ne décrit un lecteur : trois compteurs par article et
 un seau par jour. La rédaction voit l'audience par article, par rubrique et par
 jour ; l'entreprise voit **ses** publications, le périmètre étant résolu dans
 Convex à partir de la session.
+
+**Une vue n'écrit jamais l'article** (depuis le 19/09/2026) : elle ne touche
+que `articleStats` et `articleStatDays`, et l'article n'est lu qu'à la
+première vue, pour créer sa ligne. Réécrire l'article à chaque visite
+invalidait toutes les requêtes qui l'avaient lu, pour chaque onglet ouvert.
+Le compte affiché au lecteur est `articles.views` (gelé : import WordPress et
+vues antérieures) plus les vues comptées depuis (`displayedViews`,
+`convex/model/audience.ts`). Le tableau de bord lit un instantané,
+`audienceSnapshots`, recalculé toutes les 15 minutes à partir des seaux du
+jour (`stats.refreshAudience`).
 
 ---
 

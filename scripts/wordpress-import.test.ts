@@ -15,6 +15,9 @@ function context(initial: Rows = {}) {
     categories: [],
     authors: [],
     articles: [],
+    // Moved with every article write (convex/model/articleWrites.ts).
+    articleCounts: [],
+    articleStats: [],
     media: [],
     mediaUsages: [],
     documents: [],

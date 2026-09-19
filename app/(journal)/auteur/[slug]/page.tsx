@@ -25,7 +25,8 @@ export const dynamicParams = true;
  * and had no author page at all — which the audit flagged twice: as a
  * credibility problem for a press outlet, and as a condition of eligibility
  * for Google Actualités. Each signature now has a page, a job title, a
- * biography and its archive.
+ * biography and its latest pieces — 24 of them beside the total, since the
+ * whole archive still bears one signature and the sections carry it.
  */
 
 export async function generateStaticParams() {
@@ -40,7 +41,7 @@ export async function generateMetadata({
   const data = await getAuthor(slug);
   if (!data) return { title: "Auteur introuvable" };
 
-  const { author, articles } = data;
+  const { author, total } = data;
   return {
     title: author.name,
     description: `${author.role} au Corporate. ${author.bio}`.slice(0, 158),
@@ -48,7 +49,7 @@ export async function generateMetadata({
     openGraph: {
       type: "profile",
       title: `${author.name} — ${author.role}`,
-      description: `${articles.length} article${articles.length > 1 ? "s" : ""} publié${articles.length > 1 ? "s" : ""} au Corporate.`,
+      description: `${total} article${total > 1 ? "s" : ""} publié${total > 1 ? "s" : ""} au Corporate.`,
       url: `/auteur/${author.slug}`,
     },
   };
@@ -61,7 +62,9 @@ export default async function AuthorPage({
   const data = await getAuthor(slug);
   if (!data) notFound();
 
-  const { author, articles } = data;
+  const { author, articles, total } = data;
+  // The page lists the newest pieces; the sections carry the whole archive.
+  const partial = total > articles.length;
 
   return (
     <>
@@ -145,13 +148,13 @@ export default async function AuthorPage({
               </p>
               <p className="mt-4 type-small text-muted-foreground">
                 <span className="lc-fr" lang="fr">
-                  <span data-numeric>{articles.length}</span> article
-                  {articles.length > 1 ? "s" : ""} publié
-                  {articles.length > 1 ? "s" : ""}.
+                  <span data-numeric>{total}</span> article
+                  {total > 1 ? "s" : ""} publié
+                  {total > 1 ? "s" : ""}.
                 </span>
                 <span className="lc-en" lang="en">
-                  <span data-numeric>{articles.length}</span> published article
-                  {articles.length === 1 ? "" : "s"}.
+                  <span data-numeric>{total}</span> published article
+                  {total === 1 ? "" : "s"}.
                 </span>
               </p>
               {author.links.length > 0 && (
@@ -176,7 +179,16 @@ export default async function AuthorPage({
       </header>
 
       <Section
-        title={<LocalizedText fr="Ses articles" en="Articles by this author" />}
+        title={
+          partial ? (
+            <LocalizedText
+              fr="Ses derniers articles"
+              en="Latest articles by this author"
+            />
+          ) : (
+            <LocalizedText fr="Ses articles" en="Articles by this author" />
+          )
+        }
       >
         {articles.length === 0 ? (
           <>

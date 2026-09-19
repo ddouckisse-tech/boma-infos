@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { internalMutation } from "./_generated/server";
+import { patchArticle } from "./model/articleWrites";
 
 /**
  * Honours the publication dates the newsroom set — CDC §4.4 step 5
@@ -23,7 +24,7 @@ export const releaseDue = internalMutation({
       .take(20);
 
     for (const article of due) {
-      await ctx.db.patch(article._id, { status: "published", updatedAt: now });
+      await patchArticle(ctx, article, { status: "published", updatedAt: now });
       await ctx.db.insert("auditLog", {
         at: now,
         actorSubject: "-",

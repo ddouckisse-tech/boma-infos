@@ -702,9 +702,20 @@ function Badge({
   floating?: boolean;
 }) {
   const { locale } = usePreferences();
+  // `newsroom.navCounts` stops counting at 100: past 99, the exact figure is
+  // neither shown nor known.
+  const many = count > 99;
   return (
     <span
-      aria-label={locale === "en" ? `${count} pending` : `${count} en attente`}
+      aria-label={
+        locale === "en"
+          ? many
+            ? "More than 99 pending"
+            : `${count} pending`
+          : many
+            ? "Plus de 99 en attente"
+            : `${count} en attente`
+      }
       className={cn(
         "inline-flex min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] leading-5 font-bold tabular-nums",
         inverted
@@ -713,7 +724,7 @@ function Badge({
         floating && "absolute -top-1.5 -right-2.5"
       )}
     >
-      {count > 99 ? "99+" : count}
+      {many ? "99+" : count}
     </span>
   );
 }

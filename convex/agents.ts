@@ -8,6 +8,7 @@ import {
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
 import { accessError, PERMISSIONS, requirePermission } from "./model/access";
+import { patchArticle } from "./model/articleWrites";
 import { recordAudit } from "./model/audit";
 import { agentKey, AGENTS, AGENT_MODELS } from "./model/agents";
 import { mediaDerivedFields, syncArticleMedia } from "./model/media";
@@ -412,7 +413,7 @@ async function apply(
     return false;
   }
 
-  await ctx.db.patch(article._id, {
+  await patchArticle(ctx, article, {
     title,
     slug,
     dek,

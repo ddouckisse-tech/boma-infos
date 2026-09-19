@@ -1,12 +1,16 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
-import type { MutationCtx } from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
 import {
   PERMISSIONS,
   requireOrganizationScope,
   requirePermission,
 } from "./model/access";
-import { dayOf } from "./model/text";
+import {
+  AUDIENCE_DAYS,
+  bumpAudience,
+  computeAudience,
+  countView,
+} from "./model/audience";
 
 /**
  * Audience — CDC §4.4 point 6 and §5.4.
@@ -20,88 +24,21 @@ import { dayOf } from "./model/text";
  *
  * What is stored is three counters per article and a daily bucket. There is
  * no row anywhere that describes a reader.
+ *
+ * **A view never writes the article** (19/09/2026). Adding 1 to
+ * `articles.views` rewrote a 6 Ko row on every visit and invalidated every
+ * query that had read it — home page, related reading, every back-office
+ * list — for every open tab. The article is only read once, when its first
+ * view creates its audience row (`model/audience.ts`).
  */
 
 const MAX_READING_SECONDS = 1800;
-
-async function bump(
-  ctx: MutationCtx,
-  slug: string,
-  patch: (row: {
-    views: number;
-    readingSeconds: number;
-    readingSamples: number;
-    shares: number;
-    sharesByChannel: { channel: string; count: number }[];
-  }) => void
-): Promise<boolean> {
-  const article = await ctx.db
-    .query("articles")
-    .withIndex("by_slug", (q) => q.eq("slug", slug))
-    .unique();
-  // On ne compte que des articles réellement publiés : sinon le compteur
-  // devient un moyen de deviner les slugs en préparation.
-  if (!article || article.status !== "published") return false;
-
-  const existing = await ctx.db
-    .query("articleStats")
-    .withIndex("by_slug", (q) => q.eq("slug", slug))
-    .unique();
-
-  const row = existing
-    ? {
-        views: existing.views,
-        readingSeconds: existing.readingSeconds,
-        readingSamples: existing.readingSamples,
-        shares: existing.shares,
-        sharesByChannel: existing.sharesByChannel.map((entry) => ({
-          ...entry,
-        })),
-      }
-    : {
-        views: 0,
-        readingSeconds: 0,
-        readingSamples: 0,
-        shares: 0,
-        sharesByChannel: [] as { channel: string; count: number }[],
-      };
-
-  patch(row);
-
-  if (existing) {
-    await ctx.db.patch(existing._id, { ...row, updatedAt: Date.now() });
-  } else {
-    await ctx.db.insert("articleStats", {
-      slug,
-      ...row,
-      updatedAt: Date.now(),
-    });
-  }
-  return true;
-}
 
 export const recordView = mutation({
   args: { slug: v.string() },
   returns: v.null(),
   handler: async (ctx, { slug }) => {
-    const counted = await bump(ctx, slug, (row) => {
-      row.views += 1;
-    });
-    if (!counted) return null;
-
-    const day = dayOf(Date.now());
-    const bucket = await ctx.db
-      .query("articleStatDays")
-      .withIndex("by_slug_day", (q) => q.eq("slug", slug).eq("day", day))
-      .unique();
-    if (bucket) await ctx.db.patch(bucket._id, { views: bucket.views + 1 });
-    else await ctx.db.insert("articleStatDays", { slug, day, views: 1 });
-
-    const article = await ctx.db
-      .query("articles")
-      .withIndex("by_slug", (q) => q.eq("slug", slug))
-      .unique();
-    if (article) await ctx.db.patch(article._id, { views: article.views + 1 });
+    await countView(ctx, slug);
     return null;
   },
 });
@@ -115,7 +52,7 @@ export const recordReading = mutation({
     if (!Number.isFinite(value) || value < 5 || value > MAX_READING_SECONDS) {
       return null;
     }
-    await bump(ctx, slug, (row) => {
+    await bumpAudience(ctx, slug, (row) => {
       row.readingSeconds += value;
       row.readingSamples += 1;
     });
@@ -129,7 +66,7 @@ export const recordShare = mutation({
   handler: async (ctx, { slug, channel }) => {
     const known = ["whatsapp", "linkedin", "facebook", "email", "lien"];
     const name = known.includes(channel) ? channel : "autre";
-    await bump(ctx, slug, (row) => {
+    await bumpAudience(ctx, slug, (row) => {
       row.shares += 1;
       const entry = row.sharesByChannel.find((item) => item.channel === name);
       if (entry) entry.count += 1;
@@ -169,24 +106,74 @@ export const overview = query({
   }),
   handler: async (ctx) => {
     await requirePermission(ctx, PERMISSIONS.statsAll);
-    const [stats, days, articles, categories] = await Promise.all([
+    // One small row per article that was ever read, the section tree and the
+    // quarter-hourly snapshot — never the articles themselves (6 Ko each):
+    // only the sixty listed below are opened, for their title.
+    const [stats, categories, snapshot] = await Promise.all([
       ctx.db.query("articleStats").collect(),
-      ctx.db.query("articleStatDays").collect(),
-      ctx.db.query("articles").collect(),
       ctx.db.query("categories").collect(),
+      ctx.db
+        .query("audienceSnapshots")
+        .withIndex("by_key", (q) => q.eq("key", "site"))
+        .unique(),
     ]);
-    const byslug = new Map(articles.map((a) => [a.slug, a]));
     const categoryName = new Map(categories.map((c) => [c.slug, c.name]));
+    const nameOf = (slug: string | undefined) =>
+      slug === undefined ? "—" : (categoryName.get(slug) ?? slug);
 
-    const rows = stats
-      .map((row) => {
-        const article = byslug.get(row.slug);
+    const ranked = [...stats].sort((a, b) => b.views - a.views);
+    const listed = ranked.slice(0, 60);
+    // The listed rows, and the rows whose section was never recorded (only
+    // until `articleCounts.rebuild` has run once, and for slugs no article
+    // carries any more).
+    const opened = ranked.filter(
+      (row, index) => index < listed.length || row.categorySlug === undefined
+    );
+    const articles = new Map(
+      (
+        await Promise.all(
+          opened.map((row) =>
+            ctx.db
+              .query("articles")
+              .withIndex("by_slug", (q) => q.eq("slug", row.slug))
+              .unique()
+          )
+        )
+      )
+        .filter((row) => row !== null)
+        .map((row) => [row.slug, row])
+    );
+
+    const sectionTotals = new Map<string, number>();
+    for (const row of ranked) {
+      const article = articles.get(row.slug);
+      const name = article
+        ? nameOf(article.categorySlug)
+        : nameOf(row.categorySlug);
+      sectionTotals.set(name, (sectionTotals.get(name) ?? 0) + row.views);
+    }
+
+    const samples = stats.reduce((sum, row) => sum + row.readingSamples, 0);
+    const seconds = stats.reduce((sum, row) => sum + row.readingSeconds, 0);
+
+    return {
+      totalViews: stats.reduce((sum, row) => sum + row.views, 0),
+      totalShares: stats.reduce((sum, row) => sum + row.shares, 0),
+      averageReadingSeconds: samples > 0 ? Math.round(seconds / samples) : 0,
+      // Une ligne par jour, tirée de l'instantané : `articleStatDays` en
+      // porte une par article ET par jour, et grossit sans fin.
+      byDay: (
+        snapshot ?? (await computeAudience(ctx, Date.now(), null))
+      ).days.slice(-AUDIENCE_DAYS),
+      bySection: [...sectionTotals.entries()]
+        .map(([name, views]) => ({ name, views }))
+        .sort((a, b) => b.views - a.views),
+      articles: listed.map((row) => {
+        const article = articles.get(row.slug);
         return {
           slug: row.slug,
           title: article?.title ?? row.slug,
-          categoryName: article
-            ? (categoryName.get(article.categorySlug) ?? article.categorySlug)
-            : "—",
+          categoryName: article ? nameOf(article.categorySlug) : "—",
           origin: article?.origin ?? "redaction",
           publishedAt: article?.publishedAt ?? 0,
           views: row.views,
@@ -197,43 +184,67 @@ export const overview = query({
           shares: row.shares,
           sharesByChannel: row.sharesByChannel,
         };
-      })
-      .sort((a, b) => b.views - a.views);
-
-    const sectionTotals = new Map<string, number>();
-    for (const row of rows) {
-      sectionTotals.set(
-        row.categoryName,
-        (sectionTotals.get(row.categoryName) ?? 0) + row.views
-      );
-    }
-
-    const samples = stats.reduce((sum, row) => sum + row.readingSamples, 0);
-    const seconds = stats.reduce((sum, row) => sum + row.readingSeconds, 0);
-
-    return {
-      totalViews: rows.reduce((sum, row) => sum + row.views, 0),
-      totalShares: rows.reduce((sum, row) => sum + row.shares, 0),
-      averageReadingSeconds: samples > 0 ? Math.round(seconds / samples) : 0,
-      // Une ligne par jour : `articleStatDays` en porte une par article ET par
-      // jour, ce qui doublait les points de la courbe et les clés de la liste.
-      byDay: [
-        ...days
-          .reduce(
-            (totals, row) =>
-              totals.set(row.day, (totals.get(row.day) ?? 0) + row.views),
-            new Map<string, number>()
-          )
-          .entries(),
-      ]
-        .map(([day, views]) => ({ day, views }))
-        .sort((a, b) => a.day.localeCompare(b.day))
-        .slice(-30),
-      bySection: [...sectionTotals.entries()]
-        .map(([name, views]) => ({ name, views }))
-        .sort((a, b) => b.views - a.views),
-      articles: rows.slice(0, 60),
+      }),
     };
+  },
+});
+
+/** Section of each audience row, from the articles (`articleCounts.rebuild`). */
+export const syncSections = internalMutation({
+  args: {
+    sections: v.array(v.object({ slug: v.string(), categorySlug: v.string() })),
+  },
+  returns: v.number(),
+  handler: async (ctx, { sections }) => {
+    let changed = 0;
+    for (const { slug, categorySlug } of sections) {
+      const row = await ctx.db
+        .query("articleStats")
+        .withIndex("by_slug", (q) => q.eq("slug", slug))
+        .unique();
+      if (row && row.categorySlug !== categorySlug) {
+        await ctx.db.patch(row._id, { categorySlug });
+        changed += 1;
+      }
+    }
+    return changed;
+  },
+});
+
+/**
+ * Every quarter of an hour (`crons.ts`): the site-wide figures of the
+ * dashboard, so that a public view re-runs no back-office query. Written
+ * only when something changed.
+ */
+export const refreshAudience = internalMutation({
+  args: {},
+  returns: v.boolean(),
+  handler: async (ctx) => {
+    const previous = await ctx.db
+      .query("audienceSnapshots")
+      .withIndex("by_key", (q) => q.eq("key", "site"))
+      .unique();
+    const now = Date.now();
+    const next = await computeAudience(ctx, now, previous);
+    if (!previous) {
+      await ctx.db.insert("audienceSnapshots", {
+        key: "site",
+        ...next,
+        updatedAt: now,
+      });
+      return true;
+    }
+    const same =
+      JSON.stringify([previous.days, previous.topArticles]) ===
+      JSON.stringify([next.days, next.topArticles]);
+    // Même inchangé, l'horodatage avance au moins toutes les heures : c'est
+    // lui qui dit qu'une journée est close (`computeAudience`).
+    if (same && now - previous.updatedAt < 3_600_000) return false;
+    await ctx.db.patch(previous._id, {
+      ...next,
+      updatedAt: now,
+    });
+    return true;
   },
 });
 

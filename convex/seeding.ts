@@ -1,6 +1,7 @@
 import { internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 import { MEDIA } from "./mediaManifest";
+import { insertArticle } from "./model/articleWrites";
 import {
   MEDIA_INDEX_BUILD,
   mediaDerivedFields,
@@ -194,6 +195,10 @@ export const run = internalMutation({
       for (const row of await ctx.db.query("mediaUsages").collect()) {
         await ctx.db.delete(row._id);
       }
+      // Les comptes partent avec les articles ; les insertions les refont.
+      for (const row of await ctx.db.query("articleCounts").collect()) {
+        await ctx.db.delete(row._id);
+      }
       for (const row of await ctx.db.query("documents").collect()) {
         await ctx.db.delete(row._id);
       }
@@ -238,7 +243,7 @@ export const run = internalMutation({
     const now = Date.now();
     for (const article of ALL_ARTICLES) {
       const publishedAt = now - article.daysAgo * DAY;
-      const articleId = await ctx.db.insert("articles", {
+      const articleId = await insertArticle(ctx, {
         title: article.title,
         slug: article.slug,
         dek: article.dek,

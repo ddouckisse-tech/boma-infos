@@ -141,9 +141,36 @@ export const getHomepage = cache(() =>
   withMedia(run(api.journal.homepage, {}, "journal.homepage"))
 );
 
-export const getPublishedSlugs = cache(() =>
-  run(api.journal.publishedSlugs, {}, "journal.publishedSlugs")
-);
+type SlugPage = FunctionReturnType<typeof api.journal.publishedSlugPage>;
+
+/**
+ * Every published slug, newest first — the sitemap. Read 200 at a time: one
+ * call over the whole archive would reach the 16 Mio a Convex query may read.
+ */
+export const getPublishedSlugs = cache(async () => {
+  const slugs: SlugPage["page"] = [];
+  let cursor: string | null = null;
+  for (;;) {
+    const result: SlugPage = await run(
+      api.journal.publishedSlugPage,
+      { cursor, numItems: 200 },
+      "journal.publishedSlugPage"
+    );
+    slugs.push(...result.page);
+    if (result.isDone) return slugs;
+    cursor = result.continueCursor;
+  }
+});
+
+/** The newest published slugs — what the build prerenders. */
+export const getRecentSlugs = cache(async (count: number) => {
+  const result = await run(
+    api.journal.publishedSlugPage,
+    { cursor: null, numItems: count },
+    "journal.publishedSlugPage"
+  );
+  return result.page;
+});
 
 export const getLatest = cache((limit: number) =>
   withMedia(run(api.journal.latest, { limit }, "journal.latest"))

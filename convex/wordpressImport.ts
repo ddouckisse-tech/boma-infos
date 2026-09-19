@@ -11,6 +11,7 @@ import {
   seoValidator,
   storedRenditionValidator,
 } from "./model/content";
+import { insertArticle, patchArticle } from "./model/articleWrites";
 import { mediaDerivedFields, syncArticleMedia } from "./model/media";
 import {
   ARTICLES_1,
@@ -470,7 +471,7 @@ export const upsertArticles = internalMutation({
         checkedMedia.add(key);
       }
       if (row) {
-        await ctx.db.patch(row._id, {
+        await patchArticle(ctx, row, {
           ...item,
           subCategorySlug: item.subCategorySlug,
           heroMediaKey: item.heroMediaKey,
@@ -479,7 +480,7 @@ export const upsertArticles = internalMutation({
         await syncArticleMedia(ctx, row._id);
         result.updated += 1;
       } else {
-        await syncArticleMedia(ctx, await ctx.db.insert("articles", item));
+        await syncArticleMedia(ctx, await insertArticle(ctx, item));
         result.inserted += 1;
       }
     }
@@ -690,7 +691,10 @@ export const retireDemo = internalMutation({
       } else if (row.status === "draft") {
         result.alreadyDraft.push(seed.slug);
       } else {
-        await ctx.db.patch(row._id, { status: "draft", updatedAt: Date.now() });
+        await patchArticle(ctx, row, {
+          status: "draft",
+          updatedAt: Date.now(),
+        });
         result.drafted.push(seed.slug);
       }
     }

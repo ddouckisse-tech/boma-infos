@@ -22,11 +22,7 @@ import {
   NewsArticleStructuredData,
 } from "@/components/custom/structured-data";
 import { TableOfContents } from "@/components/custom/table-of-contents";
-import {
-  getArticle,
-  getPublishedSlugs,
-  getRelated,
-} from "@/lib/content/server";
+import { getArticle, getRecentSlugs, getRelated } from "@/lib/content/server";
 import { formatViews } from "@/lib/format";
 import { fallbackVariant, getMediaAsset, SIZES, variantUrl } from "@/lib/media";
 import { sectionHref, subSectionHref } from "@/lib/navigation";
@@ -55,9 +51,9 @@ const formatViewsEn = (views: number) =>
  */
 
 export async function generateStaticParams() {
-  const slugs = await getPublishedSlugs();
   // The archive renders on first visit with ISR; prebuild the latest edition.
-  return slugs.slice(0, 30).map((item) => ({ slug: item.slug }));
+  const slugs = await getRecentSlugs(30);
+  return slugs.map((item) => ({ slug: item.slug }));
 }
 
 export async function generateMetadata({
