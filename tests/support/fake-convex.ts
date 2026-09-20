@@ -16,6 +16,10 @@ import schema from "../../convex/schema";
  * reads is counted, with its size in bytes, including those a `.filter()`
  * then drops.
  *
+ * Stored files are described by `files`: their `_storage` metadata, what
+ * `db.system.get` answers about them, and the URLs `storage.getUrl` and
+ * `storage.generateUploadUrl` hand out.
+ *
  * It proves bounds; it does not emulate Convex. Validators do not run, a
  * handler that throws keeps the writes it made (no rollback), a cursor is a
  * position (a write between two pages shifts it), and `maximumRowsRead` /
@@ -275,7 +279,7 @@ export type ReadStats = {
    * or loop.
    */
   ranges: number;
-  /** `db.get` calls, the document found or not. */
+  /** `db.get` and `db.system.get` calls, the document found or not. */
   gets: number;
   /** `storage.getUrl` calls. */
   urls: number;
@@ -302,6 +306,9 @@ export type Scheduled = {
   args: Record<string, Value>;
 };
 
+/** A file in storage, as its `_storage` row describes it. */
+export type StoredFile = { size: number; contentType: string };
+
 export function createFakeDb(options: { start?: number } = {}) {
   const tables = new Map<string, Map<string, FakeDoc>>();
   let clock = options.start ?? 1_700_000_000_000;
@@ -309,6 +316,9 @@ export function createFakeDb(options: { start?: number } = {}) {
   const reads = noReads();
   const writes: { table: string; op: string; id: string }[] = [];
   const scheduled: Scheduled[] = [];
+  const files = new Map<string, StoredFile>();
+  const removedFiles = new Set<string>();
+  let uploads = 0;
 
   const rowsOf = (table: string) => {
     specOf(table);
@@ -524,6 +534,19 @@ export function createFakeDb(options: { start?: number } = {}) {
 
   const db = {
     query,
+    /**
+     * Convex's system tables, read by id. Only `_storage` is modelled, and
+     * of a file only what the handlers read: its size and its type. Called
+     * with the table (`get("_storage", id)`) or with the id alone.
+     */
+    system: {
+      async get(tableOrId: string, maybeId?: string) {
+        const id = maybeId ?? tableOrId;
+        reads.gets += 1;
+        const file = files.get(id);
+        return file ? { _id: id, ...file } : null;
+      },
+    },
     async get(tableOrId: string, maybeId?: string) {
       const [table, id] = resolve(tableOrId, maybeId);
       reads.gets += 1;
@@ -587,9 +610,19 @@ export function createFakeDb(options: { start?: number } = {}) {
     /** Each URL counts among the 4,096 reads (production, 19/09/2026). */
     async getUrl(storageId: string) {
       reads.urls += 1;
-      return `https://files.test/${storageId}`;
+      return removedFiles.has(storageId)
+        ? null
+        : `https://files.test/${storageId}`;
     },
-    async delete() {},
+    /** One URL per file to upload, as the back office and the import ask. */
+    async generateUploadUrl() {
+      return `https://upload.test/${(uploads += 1)}`;
+    },
+    /** The file is gone: `getUrl` and `db.system.get` answer `null`. */
+    async delete(storageId: string) {
+      files.delete(storageId);
+      removedFiles.add(storageId);
+    },
   };
 
   const scheduler = {
@@ -611,6 +644,12 @@ export function createFakeDb(options: { start?: number } = {}) {
     writes,
     /** What the scheduler received, oldest first. */
     scheduled,
+    /**
+     * The files storage holds, by id — add one before a handler verifies
+     * it. A file this map does not describe still resolves to a URL;
+     * `getUrl` answers `null` only for one `storage.delete` removed.
+     */
+    files,
     /**
      * Adds documents as they stood before the call measured: no read, no
      * write is counted.

@@ -3,127 +3,36 @@ import * as migration from "../convex/wordpressImport";
 import { mediaDerivedFields } from "../convex/model/media";
 import { documents as publicDocuments } from "../convex/journal";
 import { ARTICLES_1, DOCUMENTS } from "../convex/seed";
+import { createFakeDb, type FakeDoc } from "../tests/support/fake-convex";
 
 /** Run with `bun scripts/wordpress-import.test.ts`. No deployment or storage is contacted.
- * The mock exercises handler safeguards; Convex owns transaction rollback and validator execution.
+ * The handlers run on the database every test simulates; Convex owns transaction rollback and validator execution.
  */
 type Row = Record<string, unknown>;
 type Rows = Record<string, Row[]>;
-type IndexRange = { eq(field: string, value: unknown): IndexRange };
+
+/**
+ * A context on the simulated database (`tests/support/fake-convex.ts`): the
+ * indexes of `convex/schema.ts`, ids of the form `table:n`, documents read
+ * as copies, and every table a write reaches — `articleCounts`,
+ * `mediaUsages` — without this file having to list it.
+ */
 function context(initial: Rows = {}) {
-  const initialRows: Rows = {
-    categories: [],
-    authors: [],
-    articles: [],
-    // Moved with every article write (convex/model/articleWrites.ts).
-    articleCounts: [],
-    articleStats: [],
-    media: [],
-    mediaUsages: [],
-    documents: [],
-    ...initial,
-  };
-  const data: Rows = Object.fromEntries(
-    Object.entries(initialRows).map(([table, rows]) => [
-      table,
-      rows.map((row, i) => ({
-        _id: `${table}-${i}`,
-        _creationTime: i,
-        ...structuredClone(row),
-      })),
-    ])
-  );
-  const files = new Map<string, { size: number; contentType: string }>();
-  let sequence = 1000;
-  let uploadCount = 0;
-  const writes: [string, string][] = [];
+  const fake = createFakeDb();
+  for (const [table, rows] of Object.entries(initial)) fake.seed(table, rows);
   return {
-    data,
-    files,
-    writes,
-    db: {
-      system: {
-        get: async (_table: string, id: string) => files.get(id) ?? null,
-      },
-      query(table: string) {
-        let filter: (row: Row) => boolean = () => true;
-        return {
-          withIndex(_name: string, build?: (q: IndexRange) => IndexRange) {
-            if (!build) return this;
-            const conditions: [string, unknown][] = [];
-            const q: IndexRange = {
-              eq(field: string, value: unknown) {
-                conditions.push([field, value]);
-                return q;
-              },
-            };
-            build(q);
-            filter = (row) =>
-              conditions.every(([field, value]) => row[field] === value);
-            return this;
-          },
-          order() {
-            return this;
-          },
-          async collect() {
-            return (data[table] ?? []).filter(filter);
-          },
-          async unique() {
-            const matches = (data[table] ?? []).filter(filter);
-            assert.ok(matches.length <= 1);
-            return matches[0] ?? null;
-          },
-        };
-      },
-      async get(id: string) {
-        for (const rows of Object.values(data)) {
-          const row = rows.find((row) => row._id === id);
-          if (row) return row;
-        }
-        return null;
-      },
-      async delete(id: string) {
-        for (const [table, rows] of Object.entries(data)) {
-          const index = rows.findIndex((row) => row._id === id);
-          if (index >= 0) {
-            rows.splice(index, 1);
-            writes.push([table, id]);
-            return;
-          }
-        }
-      },
-      async insert(table: string, value: Row) {
-        const row = {
-          _id: `${table}-${sequence++}`,
-          _creationTime: 1,
-          ...structuredClone(value),
-        };
-        data[table].push(row);
-        writes.push([table, row._id]);
-        return row._id;
-      },
-      async patch(id: string, patch: Row) {
-        for (const [table, rows] of Object.entries(data)) {
-          const row = rows.find((row) => row._id === id);
-          if (row) {
-            for (const [key, value] of Object.entries(patch)) {
-              if (value === undefined) delete row[key];
-              else row[key] = structuredClone(value);
-            }
-            writes.push([table, id]);
-            return;
-          }
-        }
-        throw new Error(`Missing row ${id}`);
-      },
-    },
-    storage: {
-      async getUrl(id: string) {
-        return files.has(id) ? `https://storage.test/${id}` : null;
-      },
-      async generateUploadUrl() {
-        return `https://upload.test/${++uploadCount}`;
-      },
+    db: fake.db,
+    storage: fake.storage,
+    /** The files storage holds, by id: `ctx.files.set(id, metadata)`. */
+    files: fake.files,
+    /** Every row of a table, as it stands: `ctx.data.articles`. */
+    data: new Proxy({} as Record<string, FakeDoc[]>, {
+      get: (_target, table) =>
+        typeof table === "string" ? fake.all(table) : undefined,
+    }),
+    /** Table and id of each write the handlers made, oldest first. */
+    get writes(): [string, string][] {
+      return fake.writes.map(({ table, id }) => [table, id]);
     },
   };
 }
@@ -533,7 +442,12 @@ await check(
     const repeat = await call("retireDemo", ctx);
     assert.deepEqual(repeat.drafted, []);
     assert.deepEqual(repeat.alreadyDraft, [seeds[0].slug]);
-    assert.ok(ctx.writes.every(([table]) => table === "articles"));
+    // Nothing but the articles and the counts `patchArticle` moves with them.
+    assert.ok(
+      ctx.writes.every(
+        ([table]) => table === "articles" || table === "articleCounts"
+      )
+    );
     assert.equal(ctx.data.articles.length, 4);
   }
 );
@@ -573,7 +487,7 @@ await check(
     assert.equal(ctx.data.documents.length, 1);
     assert.equal(
       ctx.data.documents[0].fileUrl,
-      "https://storage.test/pdf-original"
+      "https://files.test/pdf-original"
     );
     assert.equal(ctx.data.documents[0].originalStorageId, "pdf-original");
     assert.equal(ctx.data.documents[0].isActive, true);
@@ -661,11 +575,12 @@ await check(
 await check(
   "Public documents hide inactive rows while retaining legacy rows and active PDFs",
   async () => {
+    // The public list reads `by_date` backwards: the newest first.
     const ctx = withPdf({
       documents: [
         document,
-        { ...document, slug: "hidden", isActive: false },
-        { ...document, slug: "legacy", isActive: undefined },
+        { ...document, slug: "hidden", publishedAt: 200, isActive: false },
+        { ...document, slug: "legacy", publishedAt: 100, isActive: undefined },
       ],
     });
     const result = await (
