@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery } from "convex/react";
-import { Save, Send } from "lucide-react";
+import { Megaphone, Save, Send } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -13,7 +13,8 @@ import {
   TextAreaField,
   TextField,
 } from "@/components/custom/form-field";
-import { PartnerTag } from "@/components/custom/partner-tag";
+import { usePreferences } from "@/components/providers/preferences-provider";
+import { categoryLabel, localize } from "@/lib/i18n";
 import {
   SUBMISSION_KINDS,
   blocksToText,
@@ -58,6 +59,7 @@ export function SubmissionForm({
   onSaved?: (id: Id<"submissions">) => void;
 }) {
   const router = useRouter();
+  const { locale } = usePreferences();
   const categories = useQuery(api.journal.navigation, {});
   const save = useMutation(api.portal.saveDraft);
   const submit = useMutation(api.portal.submitForReview);
@@ -79,7 +81,10 @@ export function SubmissionForm({
   const options = (categories ?? [])
     .filter((row) => !row.parentSlug)
     .sort((a, b) => a.order - b.order)
-    .map((row) => ({ value: row.slug, label: row.name }));
+    .map((row) => ({
+      value: row.slug,
+      label: categoryLabel(locale, row.slug, row.name),
+    }));
 
   const payload = () => ({
     id: draft?._id,
@@ -99,7 +104,7 @@ export function SubmissionForm({
       const id = await save(payload());
       return id;
     } catch (error) {
-      toast.error(humanError(error));
+      toast.error(humanError(error, locale));
       return null;
     }
   };
@@ -109,7 +114,12 @@ export function SubmissionForm({
     const id = await persist();
     setBusy(false);
     if (!id) return;
-    toast.success("Brouillon enregistré. Vous pourrez le reprendre plus tard.");
+    toast.success(
+      localize(locale, {
+        fr: "Brouillon enregistré. Vous pourrez le reprendre plus tard.",
+        en: "Draft saved. You can return to it later.",
+      })
+    );
     onSaved?.(id);
     if (!draft) router.replace(`/entreprise/depot/${id}`);
   };
@@ -124,12 +134,15 @@ export function SubmissionForm({
     try {
       await submit({ id });
       toast.success(
-        "Dépôt transmis à la rédaction. Vous serez prévenu à chaque étape."
+        localize(locale, {
+          fr: "Dépôt transmis à la rédaction. Vous serez prévenu à chaque étape.",
+          en: "Submission sent to the newsroom. You will be notified at every stage.",
+        })
       );
       router.push(`/entreprise/depot/${id}`);
       router.refresh();
     } catch (error) {
-      toast.error(humanError(error));
+      toast.error(humanError(error, locale));
     }
     setBusy(false);
   };
@@ -144,36 +157,52 @@ export function SubmissionForm({
     >
       <div className="rounded-md border border-warning-token/40 bg-warning-token/10 p-4">
         <p className="flex flex-wrap items-center gap-2 type-small">
-          <PartnerTag size="small" />
-          Toute publication issue d&apos;un dépôt porte cette mention, sur
-          l&apos;article comme dans les listes. Elle est posée par la rédaction
-          et ne peut pas être retirée depuis cet espace.
+          <span className="inline-flex items-center gap-1.5 rounded-xs border border-warning-token/40 bg-warning-token/10 px-1.5 py-0.5 type-small font-semibold tracking-wide text-warning-token uppercase">
+            <Megaphone aria-hidden="true" className="size-3" />
+            {localize(locale, {
+              fr: "Contenu partenaire",
+              en: "Partner content",
+            })}
+          </span>
+          {localize(locale, {
+            fr: "Toute publication issue d’un dépôt porte cette mention, sur l’article comme dans les listes. Elle est posée par la rédaction et ne peut pas être retirée depuis cet espace.",
+            en: "Every publication created from a submission carries this label on the article and in lists. The newsroom applies it and it cannot be removed from this space.",
+          })}
         </p>
       </div>
 
       <TextField
-        label="Titre"
+        label={localize(locale, { fr: "Titre", en: "Title" })}
         required
         minLength={8}
         maxLength={140}
-        hint="Huit caractères au minimum. La rédaction peut le retravailler."
+        hint={localize(locale, {
+          fr: "Huit caractères au minimum. La rédaction peut le retravailler.",
+          en: "At least eight characters. The newsroom may edit it.",
+        })}
         value={title}
         onChange={(event) => setTitle(event.target.value)}
       />
 
       <TextAreaField
-        label="Chapô"
+        label={localize(locale, { fr: "Chapô", en: "Summary" })}
         required
         maxLength={400}
-        hint="Deux ou trois phrases : de quoi s'agit-il, et pourquoi maintenant."
+        hint={localize(locale, {
+          fr: "Deux ou trois phrases : de quoi s'agit-il, et pourquoi maintenant.",
+          en: "Two or three sentences: what is this about, and why now?",
+        })}
         value={dek}
         onChange={(event) => setDek(event.target.value)}
       />
 
       <TextAreaField
-        label="Corps du texte"
+        label={localize(locale, { fr: "Corps du texte", en: "Body" })}
         required
-        hint="Deux cents caractères au minimum. Séparez les paragraphes par une ligne vide."
+        hint={localize(locale, {
+          fr: "Deux cents caractères au minimum. Séparez les paragraphes par une ligne vide.",
+          en: "At least two hundred characters. Separate paragraphs with a blank line.",
+        })}
         className="[&_textarea]:min-h-72"
         value={body}
         onChange={(event) => setBody(event.target.value)}
@@ -181,35 +210,74 @@ export function SubmissionForm({
 
       <div className="grid gap-6 sm:grid-cols-2">
         <SelectField
-          label="Type de contenu"
+          label={localize(locale, {
+            fr: "Type de contenu",
+            en: "Content type",
+          })}
           required
           value={kind}
           onChange={(event) => setKind(event.target.value as Kind)}
           options={SUBMISSION_KINDS.map((entry) => ({
             value: entry.value,
-            label: entry.label,
+            label:
+              locale === "en"
+                ? (
+                    {
+                      communique: "Press release",
+                      nomination: "Appointment",
+                      resultats: "Results",
+                      evenement: "Event",
+                      publi_redactionnel: "Advertorial",
+                    } as const
+                  )[entry.value]
+                : entry.label,
           }))}
-          hint="Déclarez un publi-rédactionnel comme tel : l'agent de modération le détecte, et un type inexact allonge la revue."
+          hint={localize(locale, {
+            fr: "Déclarez un publi-rédactionnel comme tel : l'agent de modération le détecte, et un type inexact allonge la revue.",
+            en: "Identify advertorials correctly: the moderation agent detects them, and an inaccurate type slows down review.",
+          })}
         />
 
         <SelectField
-          label="Rubrique souhaitée"
+          label={localize(locale, {
+            fr: "Rubrique souhaitée",
+            en: "Preferred section",
+          })}
           required
           value={categorySlug || options[0]?.value || ""}
           onChange={(event) => setCategorySlug(event.target.value)}
           options={
-            options.length > 0 ? options : [{ value: "", label: "Chargement…" }]
+            options.length > 0
+              ? options
+              : [
+                  {
+                    value: "",
+                    label: localize(locale, {
+                      fr: "Chargement…",
+                      en: "Loading…",
+                    }),
+                  },
+                ]
           }
-          hint="La rédaction reste libre du placement final."
+          hint={localize(locale, {
+            fr: "La rédaction reste libre du placement final.",
+            en: "The newsroom chooses the final placement.",
+          })}
         />
       </div>
 
       <TextField
-        label="Date de diffusion souhaitée"
+        label={localize(locale, {
+          fr: "Date de diffusion souhaitée",
+          en: "Preferred publication date",
+        })}
         type="date"
         value={publishAt}
         onChange={(event) => setPublishAt(event.target.value)}
-        hint="Facultative. La rédaction publie à la date convenue."
+        hint={localize(locale, {
+          fr: "Facultative. La rédaction publie à la date convenue.",
+          en: "Optional. The newsroom publishes on the agreed date.",
+        })}
       />
 
       <div className="flex flex-wrap gap-3">
@@ -220,11 +288,17 @@ export function SubmissionForm({
           onClick={() => void onSaveDraft()}
         >
           <Save aria-hidden="true" className="size-4" />
-          Enregistrer le brouillon
+          {localize(locale, {
+            fr: "Enregistrer le brouillon",
+            en: "Save draft",
+          })}
         </ActionButton>
         <ActionButton type="submit" disabled={busy}>
           <Send aria-hidden="true" className="size-4" />
-          Transmettre à la rédaction
+          {localize(locale, {
+            fr: "Transmettre à la rédaction",
+            en: "Send to newsroom",
+          })}
         </ActionButton>
       </div>
     </form>

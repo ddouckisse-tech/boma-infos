@@ -8,13 +8,12 @@ import { ConvexClientProvider } from "@/components/providers/convex-provider";
 import { SignInForm } from "@/components/custom/sign-in-form";
 import { CompanyRegistrationForm } from "@/components/custom/company-registration-form";
 import { AdminTrigger } from "@/components/custom/admin-trigger";
+import { usePreferences } from "@/components/providers/preferences-provider";
+import { localize } from "@/lib/i18n";
 
 export type AuthTab = "connexion" | "entreprise" | "admin";
 
-const SWITCH = [
-  ["connexion", "Connexion"],
-  ["entreprise", "Inscription entreprise"],
-] as const;
+const SWITCH = ["connexion", "entreprise"] as const;
 
 /**
  * Access card — the floating form opened from the masthead (§4.3, §4.4).
@@ -52,6 +51,7 @@ export function AuthCard({
   onClose: () => void;
 }) {
   const titleId = useId();
+  const { locale } = usePreferences();
   // Quel onglet a abouti, plutôt qu'un booléen remis à zéro par un effet :
   // changer d'onglet redonne un formulaire neuf sans rien synchroniser.
   const [doneFor, setDoneFor] = useState<AuthTab | null>(null);
@@ -60,13 +60,23 @@ export function AuthCard({
   const admin = tab === "admin";
   const signingIn = tab === "connexion";
   const title = admin
-    ? "Administration"
+    ? localize(locale, { fr: "Administration", en: "Administration" })
     : signingIn
-      ? "Connexion"
+      ? localize(locale, { fr: "Connexion", en: "Sign in" })
       : done
-        ? "Demande enregistrée"
-        : "Inscription entreprise";
-  const heading = admin ? "Administration" : done ? title : "Espace privé";
+        ? localize(locale, {
+            fr: "Demande enregistrée",
+            en: "Request received",
+          })
+        : localize(locale, {
+            fr: "Inscription entreprise",
+            en: "Company registration",
+          });
+  const heading = admin
+    ? localize(locale, { fr: "Administration", en: "Administration" })
+    : done
+      ? title
+      : localize(locale, { fr: "Espace privé", en: "Private area" });
   const fullPage =
     signingIn || admin ? "/connexion" : "/inscription-entreprise";
 
@@ -91,7 +101,7 @@ export function AuthCard({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Fermer"
+            aria-label={localize(locale, { fr: "Fermer", en: "Close" })}
             className="inline-flex size-11 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground"
           >
             <X aria-hidden="true" className="size-5" />
@@ -102,8 +112,10 @@ export function AuthCard({
           {admin ? (
             <>
               <p className="mb-5 type-small text-muted-foreground">
-                Accès réservé à l&apos;administration du journal. La double
-                authentification est obligatoire.
+                {localize(locale, {
+                  fr: "Accès réservé à l’administration du journal. La vérification par application est recommandée.",
+                  en: "Reserved for the newspaper administration. App-based verification is recommended.",
+                })}
               </p>
               <SignInForm variant="admin" />
               <p className="mt-5 type-small">
@@ -113,7 +125,10 @@ export function AuthCard({
                   className="inline-flex items-center gap-1 text-muted-foreground underline underline-offset-2 hover:text-foreground"
                 >
                   <ArrowLeft aria-hidden="true" className="size-3.5" />
-                  Retour à la connexion
+                  {localize(locale, {
+                    fr: "Retour à la connexion",
+                    en: "Back to sign in",
+                  })}
                 </button>
               </p>
             </>
@@ -127,10 +142,13 @@ export function AuthCard({
                       #1F1F1F (sombre) ; l'état actif prend l'action primaire. */}
                   <div
                     role="tablist"
-                    aria-label="Connexion ou inscription"
+                    aria-label={localize(locale, {
+                      fr: "Connexion ou inscription",
+                      en: "Sign in or register",
+                    })}
                     className="mx-auto flex w-fit rounded-full border border-border-strong bg-background p-1"
                   >
-                    {SWITCH.map(([value, label]) => (
+                    {SWITCH.map((value) => (
                       <button
                         key={value}
                         type="button"
@@ -144,15 +162,26 @@ export function AuthCard({
                             : "text-muted-foreground hover:text-foreground")
                         }
                       >
-                        {label}
+                        {value === "connexion"
+                          ? localize(locale, { fr: "Connexion", en: "Sign in" })
+                          : localize(locale, {
+                              fr: "Inscription entreprise",
+                              en: "Company registration",
+                            })}
                       </button>
                     ))}
                   </div>
 
                   <p className="mx-auto mt-4 mb-4 text-center type-small text-muted-foreground">
                     {signingIn
-                      ? "Espace réservé à la rédaction et aux entreprises partenaires."
-                      : "Relu par la rédaction, tout contenu partenaire porte la mention « Contenu partenaire »."}
+                      ? localize(locale, {
+                          fr: "Espace réservé à la rédaction et aux entreprises partenaires.",
+                          en: "Reserved for newsroom staff and partner companies.",
+                        })
+                      : localize(locale, {
+                          fr: "Relu par la rédaction, tout contenu partenaire porte la mention « Contenu partenaire ».",
+                          en: "Reviewed by the newsroom, all partner content carries the ‘Partner content’ label.",
+                        })}
                   </p>
                 </>
               )}
@@ -179,7 +208,10 @@ export function AuthCard({
             href={fullPage}
             className="type-small text-muted-foreground underline underline-offset-2 hover:text-foreground"
           >
-            Ouvrir dans une page entière
+            {localize(locale, {
+              fr: "Ouvrir dans une page entière",
+              en: "Open full page",
+            })}
           </Link>
           {!admin && <AdminTrigger onOpen={() => onTabChange("admin")} />}
         </div>

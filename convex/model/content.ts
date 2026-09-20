@@ -168,10 +168,10 @@ export type ArticleSummary = {
   readingMinutes: number;
   origin: "redaction" | "partenaire";
   feature: "lead" | "top" | "dossier" | "none";
-  views: number;
 };
 
 export type ArticleDetail = ArticleSummary & {
+  views: number;
   body: Block[];
   keyPoints: string[];
   galleryMediaKeys: string[];

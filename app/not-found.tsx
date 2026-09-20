@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { JournalChrome } from "@/components/custom/journal-chrome";
+import { LocalizedText } from "@/components/custom/localized-text";
 import { PageHeader } from "@/components/custom/page-header";
 import { Section } from "@/components/custom/section";
 import { SearchForm } from "@/components/custom/search-form";
 import { getNavigation } from "@/lib/content/server";
+import { categoryLabel } from "@/lib/i18n";
 import { buildSections, sectionHref } from "@/lib/navigation";
 
 /**
@@ -25,9 +27,19 @@ export default async function NotFound() {
   return (
     <JournalChrome>
       <PageHeader
-        eyebrow="Erreur 404"
-        title="Cette page n'existe pas"
-        description="L'adresse demandée ne correspond à aucun article ni à aucune rubrique. Elle a peut-être changé, ou le contenu a été retiré."
+        eyebrow={<LocalizedText fr="Erreur 404" en="Error 404" />}
+        title={
+          <LocalizedText
+            fr="Cette page n'existe pas"
+            en="This page does not exist"
+          />
+        }
+        description={
+          <LocalizedText
+            fr="L'adresse demandée ne correspond à aucun article ni à aucune rubrique. Elle a peut-être changé, ou le contenu a été retiré."
+            en="The requested address does not match an article or section. It may have changed, or the content may have been removed."
+          />
+        }
         width="reading"
       />
 
@@ -35,7 +47,11 @@ export default async function NotFound() {
         <SearchForm />
       </Section>
 
-      <Section title="Parcourir les rubriques">
+      <Section
+        title={
+          <LocalizedText fr="Parcourir les rubriques" en="Browse sections" />
+        }
+      >
         <ul className="flex flex-wrap gap-2">
           <li>
             <Link
@@ -43,7 +59,7 @@ export default async function NotFound() {
               prefetch={false}
               className="inline-flex items-center rounded-md bg-primary px-4 type-small font-semibold text-primary-foreground transition-colors touch-target hover:bg-primary/90"
             >
-              Accueil
+              <LocalizedText fr="Accueil" en="Home" />
             </Link>
           </li>
           {sections.map((section) => (
@@ -53,7 +69,10 @@ export default async function NotFound() {
                 prefetch={false}
                 className="inline-flex items-center rounded-md border border-border px-4 type-small transition-colors touch-target hover:bg-surface-muted"
               >
-                {section.label}
+                <LocalizedText
+                  fr={section.label}
+                  en={categoryLabel("en", section.slug, section.label)}
+                />
               </Link>
             </li>
           ))}
@@ -63,7 +82,7 @@ export default async function NotFound() {
               prefetch={false}
               className="inline-flex items-center rounded-md border border-border px-4 type-small transition-colors touch-target hover:bg-surface-muted"
             >
-              Docuthèque
+              <LocalizedText fr="Docuthèque" en="Document library" />
             </Link>
           </li>
         </ul>

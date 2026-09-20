@@ -1,6 +1,8 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 import { agentKey } from "./model/agents";
+import { campaignFields } from "./model/advertising";
+import { articleCountGroup } from "./model/articleCounts";
 import {
   articleFeature,
   articleOrigin,
@@ -80,7 +82,56 @@ export default defineSchema({
      */
     storage: v.optional(v.array(storedRenditionValidator)),
     uploadedAt: v.optional(v.number()),
-  }).index("by_key", ["key"]),
+    /** WordPress provenance and the unmodified uploaded source file. */
+    wordpressId: v.optional(v.number()),
+    originalStorageId: v.optional(v.id("_storage")),
+    originalMimeType: v.optional(v.string()),
+    originalBytes: v.optional(v.number()),
+    /**
+     * Derived by every writer (`mediaDerivedFields`) so the médiathèque is
+     * searched, filtered and counted by index rather than in the browser.
+     * Optional because rows written before 19/09/2026 get them from
+     * `library.reindex`.
+     */
+    searchText: v.optional(v.string()),
+    altMissing: v.optional(v.boolean()),
+  })
+    .index("by_key", ["key"])
+    .index("by_wordpress_id", ["wordpressId"])
+    .index("by_uploaded", ["uploadedAt"])
+    .index("by_alt_missing", ["altMissing", "uploadedAt"])
+    .searchIndex("search_media", {
+      searchField: "searchText",
+      filterFields: ["altMissing"],
+    }),
+
+  /**
+   * Which article displays which picture — one row per pair, rewritten by
+   * `syncArticleMedia` after every article write. It answers « used by N
+   * articles » for the pictures on screen, and guards their deletion,
+   * without reading the `articles` table.
+   */
+  mediaUsages: defineTable({
+    mediaKey: v.string(),
+    articleId: v.id("articles"),
+  })
+    .index("by_media", ["mediaKey"])
+    .index("by_article", ["articleId"]),
+
+  /** Derived indexes rebuilt in full at least once (`library.reindex`). */
+  indexBuilds: defineTable({
+    name: v.string(),
+    completedAt: v.number(),
+  }).index("by_name", ["name"]),
+
+  /** Image campaigns managed with site settings; no external creative HTML. */
+  adCampaigns: defineTable({
+    ...campaignFields,
+    updatedAt: v.number(),
+    updatedBy: v.string(),
+  })
+    .index("by_enabled_priority", ["enabled", "priority"])
+    .index("by_media", ["mediaKey"]),
 
   articles: defineTable({
     title: v.string(),
@@ -104,20 +155,55 @@ export default defineSchema({
     createdAt: v.number(),
     publishedAt: v.number(),
     updatedAt: v.number(),
+    /**
+     * Views counted before 19/09/2026 (demonstration seed, WordPress import,
+     * then `recordView` until that date). A view no longer writes here — it
+     * would invalidate every query reading the article: the live count is in
+     * `articleStats` and `displayedViews` adds the two.
+     */
     views: v.number(),
     /** Title + dek + body, flattened once so the search index stays cheap. */
     searchText: v.string(),
+    /** Stable source identity, used to safely resume the WordPress migration. */
+    wordpressId: v.optional(v.number()),
+    sourceUrl: v.optional(v.string()),
+    sourceModifiedAt: v.optional(v.number()),
+    sourceCategorySlugs: v.optional(v.array(v.string())),
   })
     .index("by_slug", ["slug"])
+    .index("by_wordpress_id", ["wordpressId"])
     .index("by_status_date", ["status", "publishedAt"])
     .index("by_category", ["status", "categorySlug", "publishedAt"])
     .index("by_subcategory", ["status", "subCategorySlug", "publishedAt"])
     .index("by_author", ["status", "authorSlug", "publishedAt"])
     .index("by_feature", ["status", "feature", "publishedAt"])
+    /**
+     * The newsroom's lists, "last modified" first: one per filter, so the
+     * list reads the narrowest (`newsroom.list`) instead of the table.
+     */
+    .index("by_updated", ["updatedAt"])
+    .index("by_status_updated", ["status", "updatedAt"])
+    .index("by_category_updated", ["categorySlug", "updatedAt"])
+    .index("by_author_updated", ["authorSlug", "updatedAt"])
+    .index("by_origin_updated", ["origin", "updatedAt"])
     .searchIndex("search_articles", {
       searchField: "searchText",
       filterFields: ["status", "categorySlug"],
     }),
+
+  /**
+   * Article counts, so that no screen counts by reading `articles` (6 Ko a
+   * row; the 16 Mio read limit fell at ~2 500 articles). Every write to
+   * `articles` goes through `convex/model/articleWrites.ts`, which moves
+   * these in the same transaction; `articleCounts.rebuild` recounts from
+   * scratch (first deployment, or to repair).
+   */
+  articleCounts: defineTable({
+    group: articleCountGroup,
+    /** A status, a section slug or an author slug, depending on `group`. */
+    key: v.string(),
+    count: v.number(),
+  }).index("by_group_key", ["group", "key"]),
 
   /** Docuthèque (CDC §4.2) — downloadable reference documents. */
   documents: defineTable({
@@ -132,8 +218,14 @@ export default defineSchema({
     pages: v.optional(v.number()),
     publisher: v.string(),
     publishedAt: v.number(),
+    /** Migration provenance; inactive documents stay archived in the database. */
+    wordpressId: v.optional(v.number()),
+    sourceUrl: v.optional(v.string()),
+    originalStorageId: v.optional(v.id("_storage")),
+    isActive: v.optional(v.boolean()),
   })
     .index("by_slug", ["slug"])
+    .index("by_wordpress_id", ["wordpressId"])
     .index("by_date", ["publishedAt"]),
 
   /* ------------------------------------------------------------- newsletter */
@@ -389,7 +481,9 @@ export default defineSchema({
   })
     .index("by_run", ["runId"])
     .index("by_target", ["targetType", "targetId", "status"])
-    .index("by_fingerprint", ["targetType", "targetId", "fingerprint"]),
+    .index("by_fingerprint", ["targetType", "targetId", "fingerprint"])
+    /** What is still waiting for a human, without reading decided ones. */
+    .index("by_status", ["status"]),
 
   /** Per-agent switch (CDC §4.6 — "désactivation individuelle"). */
   agentConfigs: defineTable({
@@ -476,6 +570,14 @@ export default defineSchema({
   articleStats: defineTable({
     slug: v.string(),
     views: v.number(),
+    /**
+     * How many of `views` `articles.views` already includes: until
+     * 19/09/2026 a view was counted in both. Set on the first write since,
+     * absent meaning "all of them" (see `displayedViews`).
+     */
+    viewsInArticle: v.optional(v.number()),
+    /** Section of the article, kept in step by `patchArticle`: the audience by section reads no article. */
+    categorySlug: v.optional(v.string()),
     readingSeconds: v.number(),
     readingSamples: v.number(),
     shares: v.number(),
@@ -483,7 +585,9 @@ export default defineSchema({
       v.object({ channel: v.string(), count: v.number() })
     ),
     updatedAt: v.number(),
-  }).index("by_slug", ["slug"]),
+  })
+    .index("by_slug", ["slug"])
+    .index("by_views", ["views"]),
 
   /** Daily buckets, so the back office can draw a curve. */
   articleStatDays: defineTable({
@@ -494,6 +598,21 @@ export default defineSchema({
   })
     .index("by_slug_day", ["slug", "day"])
     .index("by_day", ["day"]),
+
+  /**
+   * Site-wide audience, aggregated from `articleStatDays` every quarter of an
+   * hour (`stats.refreshAudience`). The dashboard reads this single row: a
+   * public view no longer re-runs it for every open back-office tab.
+   */
+  audienceSnapshots: defineTable({
+    key: v.literal("site"),
+    /** Daily totals of the last 30 UTC days, oldest first; days without a view are left out. */
+    days: v.array(v.object({ day: v.string(), views: v.number() })),
+    topArticles: v.array(
+      v.object({ slug: v.string(), title: v.string(), views: v.number() })
+    ),
+    updatedAt: v.number(),
+  }).index("by_key", ["key"]),
 
   /**
    * Outbox of the transition notifications (CDC §4.4: courriel + WhatsApp).

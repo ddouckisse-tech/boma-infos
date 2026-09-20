@@ -7,6 +7,7 @@
     "build": "next build && bun run budget",
     "start": "next start",
     "lint": "eslint",
+    "test:i18n": "bun test scripts/i18n.test.mjs",
     "typecheck": "next typegen && tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -18,6 +19,7 @@
     "media": "bun run scripts/fetch-media.ts",
     "documents": "bun run scripts/make-documents.ts",
     "icons": "bun run scripts/make-icons.ts",
+    "brand": "bun run scripts/make-brand.ts && bun run icons",
     "seed": "convex run seeding:run '{\"reset\": true}'",
     "compte": "bun run scripts/create-account.ts",
     "agents:cle": "bun run scripts/push-agent-key.ts"

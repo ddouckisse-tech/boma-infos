@@ -7,7 +7,9 @@ import {
   LinkedInIcon,
   WhatsAppIcon,
 } from "@/components/custom/brand-icons";
-import { cn } from "@/lib/utils";
+import { usePreferences } from "@/components/providers/preferences-provider";
+import { localize } from "@/lib/i18n";
+import { cx } from "@/lib/cx";
 
 /** La capacité de partage natif ne change jamais : rien à écouter. */
 const subscribeNothing = () => () => {};
@@ -36,6 +38,7 @@ export function ShareBar({
   title: string;
   className?: string;
 }) {
+  const { locale } = usePreferences();
   const [copied, setCopied] = useState(false);
   // Lu par `useSyncExternalStore` : le serveur rend `false`, le client la
   // vraie valeur, sans effet ni rendu en cascade — et sans divergence
@@ -77,9 +80,9 @@ export function ShareBar({
     "inline-flex items-center gap-2 rounded-md border border-border bg-background px-3 type-small font-medium text-foreground transition-colors touch-target hover:border-border-strong";
 
   return (
-    <div className={cn("flex flex-wrap items-center gap-2", className)}>
+    <div className={cx("flex flex-wrap items-center gap-2", className)}>
       <span className="me-1 type-small font-semibold text-muted-foreground">
-        Partager
+        {localize(locale, { fr: "Partager", en: "Share" })}
       </span>
 
       <a
@@ -91,7 +94,12 @@ export function ShareBar({
       >
         <WhatsAppIcon className="size-4 shrink-0" />
         WhatsApp
-        <span className="sr-only">(nouvelle fenêtre)</span>
+        <span className="sr-only">
+          {localize(locale, {
+            fr: "(nouvelle fenêtre)",
+            en: "(opens in a new window)",
+          })}
+        </span>
       </a>
 
       <a
@@ -103,7 +111,12 @@ export function ShareBar({
       >
         <LinkedInIcon className="size-4 shrink-0" />
         LinkedIn
-        <span className="sr-only">(nouvelle fenêtre)</span>
+        <span className="sr-only">
+          {localize(locale, {
+            fr: "(nouvelle fenêtre)",
+            en: "(opens in a new window)",
+          })}
+        </span>
       </a>
 
       <a
@@ -115,7 +128,12 @@ export function ShareBar({
       >
         <FacebookIcon className="size-4 shrink-0" />
         Facebook
-        <span className="sr-only">(nouvelle fenêtre)</span>
+        <span className="sr-only">
+          {localize(locale, {
+            fr: "(nouvelle fenêtre)",
+            en: "(opens in a new window)",
+          })}
+        </span>
       </a>
 
       <button
@@ -129,13 +147,17 @@ export function ShareBar({
         ) : (
           <Copy aria-hidden="true" className="size-4 shrink-0" />
         )}
-        {copied ? "Lien copié" : "Copier le lien"}
+        {copied
+          ? localize(locale, { fr: "Lien copié", en: "Link copied" })
+          : localize(locale, { fr: "Copier le lien", en: "Copy link" })}
       </button>
 
       {copyFailed && (
         <p role="alert" className="basis-full type-small text-destructive">
-          La copie automatique a été refusée par le navigateur. Sélectionnez
-          l&apos;adresse dans la barre du navigateur.
+          {localize(locale, {
+            fr: "La copie automatique a été refusée par le navigateur. Sélectionnez l'adresse dans la barre du navigateur.",
+            en: "The browser blocked automatic copying. Select the address in the browser's address bar.",
+          })}
         </p>
       )}
 
@@ -143,10 +165,10 @@ export function ShareBar({
         <button
           type="button"
           onClick={nativeShare}
-          className={cn(secondary, "sm:hidden")}
+          className={cx(secondary, "sm:hidden")}
         >
           <Share2 aria-hidden="true" className="size-4 shrink-0" />
-          Autre
+          {localize(locale, { fr: "Autre", en: "More" })}
         </button>
       )}
     </div>

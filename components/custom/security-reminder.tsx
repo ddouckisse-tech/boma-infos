@@ -7,7 +7,9 @@ import { api } from "@/convex/_generated/api";
 import { ActionButton } from "@/components/custom/action-button";
 import { Modal } from "@/components/custom/modal";
 import { PasswordChangeForm } from "@/components/custom/password-change-form";
+import { usePreferences } from "@/components/providers/preferences-provider";
 import { humanError } from "@/lib/private";
+import { localize } from "@/lib/i18n";
 import type { Viewer } from "@/lib/viewer";
 import { toast } from "sonner";
 
@@ -27,6 +29,7 @@ const SNOOZE_MS = 7 * 86_400_000;
  */
 export function SecurityReminder({ viewer }: { viewer: Viewer }) {
   const dismiss = useMutation(api.accounts.dismissReminder);
+  const { locale } = usePreferences();
   const titleId = useId();
   const [open, setOpen] = useState(false);
   const [hidden, setHidden] = useState(false);
@@ -44,7 +47,7 @@ export function SecurityReminder({ viewer }: { viewer: Viewer }) {
     try {
       await dismiss({});
     } catch (error) {
-      toast.error(humanError(error));
+      toast.error(humanError(error, locale));
     }
   };
 
@@ -64,17 +67,25 @@ export function SecurityReminder({ viewer }: { viewer: Viewer }) {
             </span>
             <div className="min-w-0 flex-1">
               <p id={titleId} className="font-display type-h3">
-                Changez votre code d&apos;accès
+                {localize(locale, {
+                  fr: "Changez votre code d'accès",
+                  en: "Change your access code",
+                })}
               </p>
               <p className="mt-1 type-small text-muted-foreground">
-                Le code à six chiffres qui vous a été remis est provisoire.
-                Choisissez le vôtre — trois fois six chiffres, trente secondes.
+                {localize(locale, {
+                  fr: "Le code à six chiffres qui vous a été remis est provisoire. Choisissez le vôtre — trois fois six chiffres, trente secondes.",
+                  en: "The six-digit code you received is temporary. Choose your own — enter six digits three times, in about thirty seconds.",
+                })}
               </p>
             </div>
             <button
               type="button"
               onClick={() => void close()}
-              aria-label="Fermer le rappel"
+              aria-label={localize(locale, {
+                fr: "Fermer le rappel",
+                en: "Close reminder",
+              })}
               className="-me-1 -mt-1 inline-flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-surface-muted hover:text-foreground"
             >
               <X aria-hidden="true" className="size-4" />
@@ -82,14 +93,14 @@ export function SecurityReminder({ viewer }: { viewer: Viewer }) {
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
             <ActionButton type="button" onClick={() => setOpen(true)}>
-              Changer maintenant
+              {localize(locale, { fr: "Changer maintenant", en: "Change now" })}
             </ActionButton>
             <ActionButton
               type="button"
               variant="ghost"
               onClick={() => void close()}
             >
-              Plus tard
+              {localize(locale, { fr: "Plus tard", en: "Later" })}
             </ActionButton>
           </div>
         </aside>
@@ -98,15 +109,23 @@ export function SecurityReminder({ viewer }: { viewer: Viewer }) {
       <Modal
         open={open}
         onClose={() => setOpen(false)}
-        label="Changer le code d'accès"
+        label={localize(locale, {
+          fr: "Changer le code d'accès",
+          en: "Change access code",
+        })}
         variant="panel"
       >
         <div className="flex items-center justify-between gap-3 border-b border-border py-2 ps-5 pe-3">
-          <h2 className="font-display type-h3">Changer le code d&apos;accès</h2>
+          <h2 className="font-display type-h3">
+            {localize(locale, {
+              fr: "Changer le code d'accès",
+              en: "Change access code",
+            })}
+          </h2>
           <button
             type="button"
             onClick={() => setOpen(false)}
-            aria-label="Fermer"
+            aria-label={localize(locale, { fr: "Fermer", en: "Close" })}
             className="inline-flex size-11 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-surface-muted hover:text-foreground"
           >
             <X aria-hidden="true" className="size-5" />

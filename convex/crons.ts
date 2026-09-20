@@ -5,10 +5,10 @@ import { internal } from "./_generated/api";
  * Scheduled jobs — CDC §4.6: "Utilise l'ordonnanceur Convex pour les
  * traitements différés (transcription, newsletter)."
  *
- * Both jobs *propose*. The newsletter lands as a draft that an
+ * Both editorial jobs *propose*. The newsletter lands as a draft that an
  * administrator has to approve, and articles due for publication are moved
  * by the same rule the newsroom applied when it scheduled them — nothing
- * here decides anything new.
+ * here decides anything new. The others only maintain derived data.
  */
 
 // Les identifiants de tâche planifiée doivent rester en ASCII : Convex les
@@ -34,6 +34,38 @@ crons.interval(
   "release scheduled articles",
   { minutes: 5 },
   internal.schedule.releaseDue,
+  {}
+);
+
+/**
+ * 02:30 UTC — rebuilds what the médiathèque derives from the other tables
+ * (search text, alternative-text flag, which article shows which picture),
+ * in bounded batches. Every writer keeps them up to date; this repairs what
+ * a forgotten path or a manual edit in the dashboard would have left behind.
+ */
+crons.daily(
+  "rebuild media index",
+  { hourUTC: 2, minuteUTC: 30 },
+  internal.library.reindex,
+  {}
+);
+
+/**
+ * Site-wide audience of the dashboard, summed from the daily buckets: the
+ * back office reads one row, and a public view re-runs nothing there.
+ */
+crons.interval(
+  "refresh audience snapshot",
+  { minutes: 15 },
+  internal.stats.refreshAudience,
+  {}
+);
+
+/** Counts of `articleCounts`: built once by itself if nobody ran the recount. */
+crons.interval(
+  "ensure article counts",
+  { hours: 1 },
+  internal.articleCounts.ensureBuilt,
   {}
 );
 

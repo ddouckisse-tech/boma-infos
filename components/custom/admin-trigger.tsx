@@ -1,7 +1,7 @@
 "use client";
 
 import { KeyRound } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cx } from "@/lib/cx";
 
 /**
  * Discreet entry to the administrator sign-in — page footer and card footer.
@@ -33,7 +33,7 @@ export function AdminTrigger({
       }}
       aria-label="Accès administrateur"
       title="Administration — double-clic"
-      className={cn(
+      className={cx(
         "inline-flex size-11 items-center justify-center rounded-md text-muted-foreground/45 transition-colors select-none hover:text-muted-foreground focus-visible:text-foreground",
         className
       )}

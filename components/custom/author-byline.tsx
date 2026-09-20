@@ -1,6 +1,18 @@
 import Link from "next/link";
+import { LocalizedText } from "@/components/custom/localized-text";
 import { formatDate, formatReadingTime, isoDate } from "@/lib/format";
+import { localeDate } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+
+const englishDate = (value: number) =>
+  localeDate(value, "en", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "Africa/Libreville",
+  });
+
+const englishReadingTime = (minutes: number) => `${minutes}\u00a0min read`;
 
 type AuthorBylineProps = {
   authorSlug: string;
@@ -70,7 +82,9 @@ export function AuthorByline({
       />
       <div className="min-w-0">
         <p className="type-small">
-          <span className="text-muted-foreground">Par </span>
+          <span className="text-muted-foreground">
+            <LocalizedText fr="Par " en="By " />
+          </span>
           <Link
             href={`/auteur/${authorSlug}`}
             prefetch={false}
@@ -80,24 +94,38 @@ export function AuthorByline({
             {authorName}
           </Link>
           {authorRole && size === "default" && (
-            <span className="text-muted-foreground"> — {authorRole}</span>
+            <span lang="fr" className="text-muted-foreground">
+              {" "}
+              — {authorRole}
+            </span>
           )}
         </p>
         <p className="type-small text-muted-foreground">
-          <time dateTime={isoDate(publishedAt)}>{formatDate(publishedAt)}</time>
+          <time dateTime={isoDate(publishedAt)}>
+            <LocalizedText
+              fr={formatDate(publishedAt)}
+              en={englishDate(publishedAt)}
+            />
+          </time>
           {readingMinutes !== undefined && (
             <>
               <span aria-hidden="true"> · </span>
-              {formatReadingTime(readingMinutes)}
+              <LocalizedText
+                fr={formatReadingTime(readingMinutes)}
+                en={englishReadingTime(readingMinutes)}
+              />
             </>
           )}
           {edited && (
             <>
               <span aria-hidden="true"> · </span>
               <span>
-                mis à jour le{" "}
+                <LocalizedText fr="mis à jour le " en="updated " />
                 <time dateTime={isoDate(updatedAt)}>
-                  {formatDate(updatedAt)}
+                  <LocalizedText
+                    fr={formatDate(updatedAt)}
+                    en={englishDate(updatedAt)}
+                  />
                 </time>
               </span>
             </>

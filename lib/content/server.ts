@@ -70,14 +70,15 @@ async function run<Query extends FunctionReference<"query", "public">>(
  * manifest: their renditions live in Convex file storage. Before a page that
  * shows pictures renders, the ones published articles display are fetched
  * and registered with `lib/media.ts`, so `getMediaAsset` resolves them like
- * the demo library. Deduplicated per render pass by `cache()`; a failure
- * only costs those pictures, never the page.
+ * the demo library. Deduplicated per render pass by `cache()` and limited
+ * to the articles displayed on the current page.
  */
-export const hydrateUploadedMedia = cache(async (): Promise<void> => {
-  try {
+export const hydrateUploadedMedia = cache(
+  async (slugsJson: string): Promise<void> => {
+    const articleSlugs = JSON.parse(slugsJson) as string[];
     const assets = await run(
       api.library.publicAssets,
-      {},
+      { articleSlugs },
       "library.publicAssets"
     );
     registerMedia(
@@ -98,17 +99,35 @@ export const hydrateUploadedMedia = cache(async (): Promise<void> => {
         ),
       }))
     );
-  } catch (error) {
-    console.warn(
-      "Médias envoyés non chargés :",
-      error instanceof Error ? error.message : error
+  }
+);
+
+/** Resolve only images referenced by the articles this page actually renders. */
+async function withMedia<T>(read: Promise<T>): Promise<T> {
+  const result = await read;
+  const slugs = new Set<string>();
+  const visit = (value: unknown): void => {
+    if (!value || typeof value !== "object") return;
+    if (Array.isArray(value)) {
+      value.forEach(visit);
+      return;
+    }
+    const record = value as Record<string, unknown>;
+    if (
+      typeof record.slug === "string" &&
+      typeof record.categorySlug === "string"
+    ) {
+      slugs.add(record.slug);
+    }
+    Object.values(record).forEach(visit);
+  };
+  visit(result);
+  const ordered = [...slugs].sort();
+  for (let offset = 0; offset < ordered.length; offset += 100) {
+    await hydrateUploadedMedia(
+      JSON.stringify(ordered.slice(offset, offset + 100))
     );
   }
-});
-
-/** Runs a read and the media hydration side by side; returns the read. */
-async function withMedia<T>(read: Promise<T>): Promise<T> {
-  const [, result] = await Promise.all([hydrateUploadedMedia(), read]);
   return result;
 }
 
@@ -122,9 +141,36 @@ export const getHomepage = cache(() =>
   withMedia(run(api.journal.homepage, {}, "journal.homepage"))
 );
 
-export const getPublishedSlugs = cache(() =>
-  run(api.journal.publishedSlugs, {}, "journal.publishedSlugs")
-);
+type SlugPage = FunctionReturnType<typeof api.journal.publishedSlugPage>;
+
+/**
+ * Every published slug, newest first — the sitemap. Read 200 at a time: one
+ * call over the whole archive would reach the 16 Mio a Convex query may read.
+ */
+export const getPublishedSlugs = cache(async () => {
+  const slugs: SlugPage["page"] = [];
+  let cursor: string | null = null;
+  for (;;) {
+    const result: SlugPage = await run(
+      api.journal.publishedSlugPage,
+      { cursor, numItems: 200 },
+      "journal.publishedSlugPage"
+    );
+    slugs.push(...result.page);
+    if (result.isDone) return slugs;
+    cursor = result.continueCursor;
+  }
+});
+
+/** The newest published slugs — what the build prerenders. */
+export const getRecentSlugs = cache(async (count: number) => {
+  const result = await run(
+    api.journal.publishedSlugPage,
+    { cursor: null, numItems: count },
+    "journal.publishedSlugPage"
+  );
+  return result.page;
+});
 
 export const getLatest = cache((limit: number) =>
   withMedia(run(api.journal.latest, { limit }, "journal.latest"))

@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowDownWideNarrow, ArrowUpNarrowWide } from "lucide-react";
+import { Advertising } from "@/components/custom/advertising";
 import { ArticleCard } from "@/components/custom/article-card";
 import { Container } from "@/components/custom/container";
 import { EmptyState } from "@/components/custom/empty-state";
+import { LocalizedText } from "@/components/custom/localized-text";
 import { PageHeader } from "@/components/custom/page-header";
 import { Pagination } from "@/components/custom/pagination";
 import { Section } from "@/components/custom/section";
@@ -14,6 +16,7 @@ import {
   getSectionCounts,
   getSectionPage,
 } from "@/lib/content/server";
+import { categoryDescription, categoryLabel } from "@/lib/i18n";
 import {
   buildSections,
   findSection,
@@ -187,11 +190,38 @@ export default async function SectionPage({
       <BreadcrumbStructuredData trail={trail} />
 
       <PageHeader
-        eyebrow={child ? section.label : "Rubrique"}
-        title={child ? child.label : section.label}
-        description={child?.description || section.description}
+        eyebrow={
+          child ? (
+            <LocalizedText
+              fr={section.label}
+              en={categoryLabel("en", section.slug, section.label)}
+            />
+          ) : (
+            <LocalizedText fr="Rubrique" en="Section" />
+          )
+        }
+        title={
+          <LocalizedText
+            fr={child ? child.label : section.label}
+            en={categoryLabel(
+              "en",
+              child ? child.slug : section.slug,
+              child ? child.label : section.label
+            )}
+          />
+        }
+        description={
+          <LocalizedText
+            fr={child?.description || section.description}
+            en={categoryDescription(
+              "en",
+              child ? child.slug : section.slug,
+              child?.description || section.description
+            )}
+          />
+        }
         breadcrumb={
-          <nav aria-label="Fil d'Ariane">
+          <nav aria-label="Navigation">
             <ol className="flex flex-wrap items-center gap-x-1">
               {trail.slice(0, -1).map((item) => (
                 <li key={item.href} className="flex items-center gap-1">
@@ -200,7 +230,18 @@ export default async function SectionPage({
                     prefetch={false}
                     className="inline-flex min-h-11 items-center text-accent underline-offset-4 hover:underline"
                   >
-                    {item.name}
+                    {item.href === "/" ? (
+                      <LocalizedText fr="Accueil" en="Home" />
+                    ) : (
+                      <LocalizedText
+                        fr={item.name}
+                        en={categoryLabel(
+                          "en",
+                          item.href.split("/").filter(Boolean).at(-1) ?? "",
+                          item.name
+                        )}
+                      />
+                    )}
                   </Link>
                   <span aria-hidden="true" className="text-muted-foreground">
                     ›
@@ -208,7 +249,17 @@ export default async function SectionPage({
                 </li>
               ))}
               <li className="text-muted-foreground">
-                {trail[trail.length - 1].name}
+                <LocalizedText
+                  fr={trail[trail.length - 1].name}
+                  en={categoryLabel(
+                    "en",
+                    trail[trail.length - 1].href
+                      .split("/")
+                      .filter(Boolean)
+                      .at(-1) ?? "",
+                    trail[trail.length - 1].name
+                  )}
+                />
               </li>
             </ol>
           </nav>
@@ -218,7 +269,7 @@ export default async function SectionPage({
       <Container className="pt-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           {section.children.length > 0 && (
-            <nav aria-label="Filtrer par sous-rubrique" className="min-w-0">
+            <nav aria-label="Sections" className="min-w-0">
               <ul className="flex flex-wrap gap-2">
                 <li>
                   <Link
@@ -232,7 +283,7 @@ export default async function SectionPage({
                         : "border-border hover:bg-surface-muted"
                     )}
                   >
-                    Tout
+                    <LocalizedText fr="Tout" en="All" />
                     <span data-numeric className="opacity-70">
                       {countFor(section.slug)}
                     </span>
@@ -253,7 +304,10 @@ export default async function SectionPage({
                           : "border-border hover:bg-surface-muted"
                       )}
                     >
-                      {item.label}
+                      <LocalizedText
+                        fr={item.label}
+                        en={categoryLabel("en", item.slug, item.label)}
+                      />
                       <span data-numeric className="opacity-70">
                         {countFor(item.slug)}
                       </span>
@@ -265,7 +319,9 @@ export default async function SectionPage({
           )}
 
           <div className="flex items-center gap-2">
-            <span className="type-small text-muted-foreground">Trier</span>
+            <span className="type-small text-muted-foreground">
+              <LocalizedText fr="Trier" en="Sort" />
+            </span>
             <Link
               href={buildHref(section.slug, child?.slug, "recent", 1)}
               prefetch={false}
@@ -278,7 +334,7 @@ export default async function SectionPage({
               )}
             >
               <ArrowDownWideNarrow aria-hidden="true" className="size-4" />
-              Plus récents
+              <LocalizedText fr="Plus récents" en="Newest" />
             </Link>
             <Link
               href={buildHref(section.slug, child?.slug, "ancien", 1)}
@@ -292,7 +348,7 @@ export default async function SectionPage({
               )}
             >
               <ArrowUpNarrowWide aria-hidden="true" className="size-4" />
-              Plus anciens
+              <LocalizedText fr="Plus anciens" en="Oldest" />
             </Link>
           </div>
         </div>
@@ -300,39 +356,65 @@ export default async function SectionPage({
 
       <Section spacing="compact">
         {list.items.length === 0 ? (
-          <EmptyState
-            title="Aucun article publié dans cette rubrique"
-            description={
-              <>
-                Cette rubrique existe dans l&apos;arborescence mais n&apos;a pas
-                encore d&apos;article. Elle ne vous présente volontairement
-                aucun contenu d&apos;une autre rubrique à la place.
-              </>
-            }
-            action={
-              <Link
-                href="/"
-                prefetch={false}
-                className="inline-flex items-center rounded-md bg-primary px-4 type-small font-semibold text-primary-foreground transition-colors touch-target hover:bg-primary/90"
-              >
-                Revenir à l&apos;accueil
-              </Link>
-            }
-          />
+          <>
+            <div className="lc-fr" lang="fr">
+              <EmptyState
+                title="Aucun article publié dans cette rubrique"
+                description="Cette rubrique existe dans l'arborescence mais n'a pas encore d'article. Elle ne présente volontairement aucun contenu d'une autre rubrique à la place."
+                action={
+                  <Link
+                    href="/"
+                    prefetch={false}
+                    className="inline-flex items-center rounded-md bg-primary px-4 type-small font-semibold text-primary-foreground transition-colors touch-target hover:bg-primary/90"
+                  >
+                    Revenir à l&apos;accueil
+                  </Link>
+                }
+              />
+            </div>
+            <div className="lc-en" lang="en">
+              <EmptyState
+                title="No published articles in this section"
+                description="This section exists but does not have an article yet. It deliberately does not substitute content from another section."
+                action={
+                  <Link
+                    href="/"
+                    prefetch={false}
+                    className="inline-flex items-center rounded-md bg-primary px-4 type-small font-semibold text-primary-foreground transition-colors touch-target hover:bg-primary/90"
+                  >
+                    Back to home
+                  </Link>
+                }
+              />
+            </div>
+          </>
         ) : (
           <>
             <p className="mb-6 type-small text-muted-foreground">
-              <span data-numeric>{list.total}</span> article
-              {list.total > 1 ? "s" : ""} publié{list.total > 1 ? "s" : ""}
-              {list.pageCount > 1 && (
-                <>
-                  {" "}
-                  — page <span data-numeric>{list.page}</span> sur{" "}
-                  <span data-numeric>{list.pageCount}</span>
-                </>
-              )}
+              <span className="lc-fr" lang="fr">
+                <span data-numeric>{list.total}</span> article
+                {list.total > 1 ? "s" : ""} publié{list.total > 1 ? "s" : ""}
+                {list.pageCount > 1 && (
+                  <>
+                    {" "}
+                    — page <span data-numeric>{list.page}</span> sur{" "}
+                    <span data-numeric>{list.pageCount}</span>
+                  </>
+                )}
+              </span>
+              <span className="lc-en" lang="en">
+                <span data-numeric>{list.total}</span> published article
+                {list.total === 1 ? "" : "s"}
+                {list.pageCount > 1 && (
+                  <>
+                    {" "}
+                    — page <span data-numeric>{list.page}</span> of{" "}
+                    <span data-numeric>{list.pageCount}</span>
+                  </>
+                )}
+              </span>
             </p>
-            <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <ul lang="fr" className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {list.items.map((article) => (
                 <li key={article.slug} className="min-w-0">
                   <ArticleCard
@@ -353,6 +435,13 @@ export default async function SectionPage({
           </>
         )}
       </Section>
+      {list.items.length >= 4 && (
+        <Advertising
+          placement="listing"
+          pageKey={`/rubrique/${segments.join("/")}`}
+          className="mx-auto my-10 w-[calc(100%-2rem)] max-w-[728px] md:my-14"
+        />
+      )}
     </>
   );
 }

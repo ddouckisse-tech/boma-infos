@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Advertising } from "@/components/custom/advertising";
+import { ReadingRail } from "@/components/custom/reading-rail";
 import { ArticleBody } from "@/components/custom/article-body";
 import { ArticleCard } from "@/components/custom/article-card";
 import {
@@ -10,9 +12,9 @@ import {
 import { CategoryBadge } from "@/components/custom/category-badge";
 import { Container } from "@/components/custom/container";
 import { KeyPoints } from "@/components/custom/key-points";
+import { LocalizedText } from "@/components/custom/localized-text";
 import { PartnerTag } from "@/components/custom/partner-tag";
 import { ResponsiveImage } from "@/components/custom/responsive-image";
-import { Section } from "@/components/custom/section";
 import { AudienceBeacon } from "@/components/custom/audience-beacon";
 import { ShareBar } from "@/components/custom/share-bar";
 import {
@@ -20,11 +22,7 @@ import {
   NewsArticleStructuredData,
 } from "@/components/custom/structured-data";
 import { TableOfContents } from "@/components/custom/table-of-contents";
-import {
-  getArticle,
-  getPublishedSlugs,
-  getRelated,
-} from "@/lib/content/server";
+import { getArticle, getRecentSlugs, getRelated } from "@/lib/content/server";
 import { formatViews } from "@/lib/format";
 import { fallbackVariant, getMediaAsset, SIZES, variantUrl } from "@/lib/media";
 import { sectionHref, subSectionHref } from "@/lib/navigation";
@@ -35,6 +33,9 @@ import { absoluteUrl, SITE } from "@/lib/site";
 // importés. La valeur de référence est dans `lib/content/server.ts`.
 export const revalidate = 300;
 export const dynamicParams = true;
+
+const formatViewsEn = (views: number) =>
+  `${new Intl.NumberFormat("en-GB").format(views)} ${views === 1 ? "view" : "views"}`;
 
 /**
  * Article page — the most important page of the site (CDC §4.2).
@@ -50,7 +51,8 @@ export const dynamicParams = true;
  */
 
 export async function generateStaticParams() {
-  const slugs = await getPublishedSlugs();
+  // The archive renders on first visit with ISR; prebuild the latest edition.
+  const slugs = await getRecentSlugs(30);
   return slugs.map((item) => ({ slug: item.slug }));
 }
 
@@ -102,7 +104,7 @@ export default async function ArticlePage({
   const article = await getArticle(slug);
   if (!article) notFound();
 
-  const related = await getRelated(slug, 3);
+  const related = await getRelated(slug, 2);
   const hero = getMediaAsset(article.heroMediaKey);
   const url = absoluteUrl(`/article/${article.slug}`);
   // Image des données structurées : la plus large rendition disponible. Une
@@ -171,7 +173,7 @@ export default async function ArticlePage({
       />
       <BreadcrumbStructuredData trail={trail} />
 
-      <article>
+      <article lang="fr">
         {/* En-tête fondu dans la photo (`.lc-hero`) : fil d'Ariane en haut,
             titre, chapeau et signature en bas, sur un voile aux couleurs du
             thème — blanc en clair, nuit en sombre. */}
@@ -190,7 +192,7 @@ export default async function ArticlePage({
                 de 1280 — le voile est opaque là où elle s'arrête. Le fil
                 d'Ariane y est enfermé aussi, pour ne pas courir sur la photo. */}
             <div className="flex flex-1 flex-col md:max-w-[58%] xl:max-w-[54%]">
-              <nav aria-label="Fil d'Ariane" className="type-small">
+              <nav aria-label="Navigation" className="type-small">
                 <ol className="flex flex-wrap items-center gap-x-1">
                   {trail.slice(0, -1).map((item) => (
                     <li key={item.href} className="flex items-center gap-1">
@@ -199,7 +201,11 @@ export default async function ArticlePage({
                         prefetch={false}
                         className="inline-flex min-h-11 items-center text-foreground/80 underline-offset-4 hover:underline"
                       >
-                        {item.name}
+                        {item.href === "/" ? (
+                          <LocalizedText fr="Accueil" en="Home" />
+                        ) : (
+                          <span lang="fr">{item.name}</span>
+                        )}
                       </Link>
                       <span
                         aria-hidden="true"
@@ -253,7 +259,10 @@ export default async function ArticlePage({
                     readingMinutes={article.readingMinutes}
                   />
                   <p className="type-small text-muted-foreground" data-numeric>
-                    {formatViews(article.views)}
+                    <LocalizedText
+                      fr={formatViews(article.views)}
+                      en={formatViewsEn(article.views)}
+                    />
                   </p>
                 </div>
               </div>
@@ -279,7 +288,7 @@ export default async function ArticlePage({
         )}
 
         <Container className="py-8 md:py-10">
-          <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-12">
+          <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-12">
             <div className="max-w-reading min-w-0">
               {article.keyPoints.length > 0 && (
                 <KeyPoints points={article.keyPoints} className="mb-8" />
@@ -296,7 +305,7 @@ export default async function ArticlePage({
               {article.tags.length > 0 && (
                 <div className="mt-10 border-t border-border pt-6">
                   <h2 className="type-small font-semibold tracking-wide text-muted-foreground uppercase">
-                    Mots-clés
+                    <LocalizedText fr="Mots-clés" en="Keywords" />
                   </h2>
                   <ul className="mt-3 flex flex-wrap gap-2">
                     {article.tags.map((tag) => (
@@ -343,43 +352,56 @@ export default async function ArticlePage({
               </aside>
             </div>
 
-            {/* Sommaire seulement : les articles liés sont en fin de page,
-                les répéter ici les faisait apparaître deux fois. */}
-            <aside className="min-w-0 lg:sticky lg:top-32 lg:self-start">
-              <TableOfContents blocks={article.body} />
-            </aside>
+            <div className="min-w-0">
+              <TableOfContents blocks={article.body} className="mb-6" />
+              <ReadingRail>
+                {related.length > 0 && (
+                  <section
+                    aria-labelledby="a-lire-aussi"
+                    className="rounded-md border border-border bg-surface-subtle p-5"
+                  >
+                    <p className="type-small font-semibold tracking-wide text-accent uppercase">
+                      <LocalizedText
+                        fr="La sélection de la rédaction"
+                        en="Editor’s picks"
+                      />
+                    </p>
+                    <h2 id="a-lire-aussi" className="mt-2 font-display type-h3">
+                      <LocalizedText fr="À lire aussi" en="Read next" />
+                    </h2>
+                    <ul
+                      lang="fr"
+                      className="lc-reading-related mt-2 divide-y divide-border"
+                    >
+                      {related.map((item) => (
+                        <li key={item.slug}>
+                          <ArticleCard
+                            article={item}
+                            variant="compact"
+                            showCategory={false}
+                          />
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                )}
+                <Advertising
+                  placement="article"
+                  pageKey={`/article/${article.slug}`}
+                  className={related.length > 0 ? "mt-8" : undefined}
+                />
+              </ReadingRail>
+            </div>
           </div>
         </Container>
       </article>
 
-      {related.length > 0 && (
-        <Section
-          tone="muted"
-          title="Dans la même rubrique"
-          description="Trois articles choisis pour leur proximité de sujet."
-        >
-          {/* Variante en ligne : la vignette de 160 px coûte 6 Ko contre 25
-              pour une carte pleine largeur, et trois cartes en fin
-              d'article ne méritent pas un dixième du budget de la page. */}
-          <ul className="grid gap-x-8 sm:grid-cols-2 lg:grid-cols-3">
-            {related.map((item) => (
-              <li key={item.slug} className="min-w-0">
-                <ArticleCard
-                  article={item}
-                  variant="list"
-                  headingLevel={3}
-                  className="h-full"
-                />
-              </li>
-            ))}
-          </ul>
-        </Section>
-      )}
-
       {/* Mesure d'audience sans traqueur tiers (CDC §4.4, §5.4) : les vues
           sont comptées par `proxy.ts`, ce script n'ajoute que la durée de
           lecture et le canal de partage. */}
-      <AudienceBeacon slug={article.slug} />
+      {process.env.AUDIENCE_DISABLED !== "1" && (
+        <AudienceBeacon slug={article.slug} />
+      )}
     </>
   );
 }

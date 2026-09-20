@@ -1,4 +1,5 @@
 import { Megaphone } from "lucide-react";
+import { LocalizedText } from "@/components/custom/localized-text";
 import { cn } from "@/lib/utils";
 
 /**
@@ -31,7 +32,7 @@ export function PartnerTag({
         aria-hidden="true"
         className={size === "small" ? "size-3" : "size-3.5"}
       />
-      Contenu partenaire
+      <LocalizedText fr="Contenu partenaire" en="Partner content" />
     </span>
   );
 }

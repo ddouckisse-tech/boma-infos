@@ -11,6 +11,8 @@ import {
 } from "convex/react";
 import { Lock } from "lucide-react";
 import { api } from "@/convex/_generated/api";
+import { usePreferences } from "@/components/providers/preferences-provider";
+import { localize } from "@/lib/i18n";
 import { ACCESS_MESSAGE } from "@/lib/private";
 
 /**
@@ -37,11 +39,12 @@ export function AccessGuard({
   permission: string;
   children: React.ReactNode;
 }) {
+  const { locale } = usePreferences();
   return (
     <>
       <AuthLoading>
         <p className="type-body text-muted-foreground" role="status">
-          Chargement…
+          {localize(locale, { fr: "Chargement…", en: "Loading…" })}
         </p>
       </AuthLoading>
       <Unauthenticated>
@@ -56,12 +59,16 @@ export function AccessGuard({
 
 function SignInRedirect() {
   const router = useRouter();
+  const { locale } = usePreferences();
   useEffect(() => {
     router.replace("/connexion");
   }, [router]);
   return (
     <p className="type-body text-muted-foreground" role="status">
-      Redirection vers la connexion…
+      {localize(locale, {
+        fr: "Redirection vers la connexion…",
+        en: "Redirecting to sign in…",
+      })}
     </p>
   );
 }
@@ -74,11 +81,12 @@ function PermissionGate({
   children: React.ReactNode;
 }) {
   const viewer = useQuery(api.accounts.me, {});
+  const { locale } = usePreferences();
 
   if (viewer === undefined) {
     return (
       <p className="type-body text-muted-foreground" role="status">
-        Chargement…
+        {localize(locale, { fr: "Chargement…", en: "Loading…" })}
       </p>
     );
   }
@@ -86,10 +94,19 @@ function PermissionGate({
   if (viewer === null) {
     return (
       <Refusal
-        title="Compte incomplet"
-        message={ACCESS_MESSAGE.NO_PROFILE}
+        title={localize(locale, {
+          fr: "Compte incomplet",
+          en: "Incomplete account",
+        })}
+        message={localize(locale, {
+          fr: ACCESS_MESSAGE.NO_PROFILE,
+          en: "This account is not linked to a profile. Contact the newsroom.",
+        })}
         href="/"
-        cta="Retour au journal"
+        cta={localize(locale, {
+          fr: "Retour au journal",
+          en: "Back to the newspaper",
+        })}
       />
     );
   }
@@ -100,10 +117,16 @@ function PermissionGate({
   if (!(viewer.permissions as readonly string[]).includes(permission)) {
     return (
       <Refusal
-        title="Accès refusé"
-        message={`${ACCESS_MESSAGE.FORBIDDEN} Votre rôle est « ${viewer.roleName} ».`}
+        title={localize(locale, { fr: "Accès refusé", en: "Access denied" })}
+        message={localize(locale, {
+          fr: `${ACCESS_MESSAGE.FORBIDDEN} Votre rôle est « ${viewer.roleName} ».`,
+          en: `You do not have access to this item. Your role is “${({ administrateur: "Administrator", editeur: "Editor", entreprise: "Company", lecteur: "Reader" } as Record<string, string>)[viewer.roleSlug] ?? viewer.roleName}”.`,
+        })}
         href={viewer.home}
-        cta="Aller à mon espace"
+        cta={localize(locale, {
+          fr: "Aller à mon espace",
+          en: "Go to my space",
+        })}
       />
     );
   }

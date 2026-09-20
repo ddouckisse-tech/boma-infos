@@ -8,6 +8,8 @@ import {
   DATA_SAVER_MAX_WIDTH,
   downgradeMediaPath,
 } from "@/lib/data-saver";
+import { getAdSenseRuntimeConfig } from "@/lib/ads/adsense-config";
+import { contentSecurityPolicy } from "@/lib/security-headers";
 
 /**
  * Two jobs at the edge, both invisible to the reader.
@@ -44,10 +46,10 @@ import {
 const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
 
 /** `/article/<slug>` and nothing else — no query, no trailing segment. */
-const ARTICLE = /^\/article\/([a-z0-9-]{3,120})$/;
+const ARTICLE = /^\/article\/([a-z0-9-]{1,501})$/;
 
 function countView(pathname: string): Promise<unknown> | null {
-  if (!convexUrl) return null;
+  if (!convexUrl || process.env.AUDIENCE_DISABLED === "1") return null;
   const slug = ARTICLE.exec(pathname)?.[1];
   if (!slug) return null;
   return fetch(`${convexUrl}/api/mutation`, {
@@ -67,21 +69,39 @@ export function proxy(request: NextRequest, event: NextFetchEvent) {
   const counted = countView(pathname);
   if (counted) event.waitUntil(counted);
 
-  if (request.cookies.get(DATA_SAVER_COOKIE)?.value !== "1") {
-    return NextResponse.next();
+  const advertising = getAdSenseRuntimeConfig();
+  const requestHeaders = new Headers(request.headers);
+  // Never trust a nonce or CSP supplied by the visitor.
+  requestHeaders.delete("x-nonce");
+  requestHeaders.delete("content-security-policy");
+  const nonce = advertising
+    ? Buffer.from(crypto.randomUUID()).toString("base64")
+    : undefined;
+  const policy = nonce ? contentSecurityPolicy(nonce) : undefined;
+  if (nonce && policy) {
+    requestHeaders.set("x-nonce", nonce);
+    requestHeaders.set("content-security-policy", policy);
   }
-
-  const downgraded = downgradeMediaPath(pathname, DATA_SAVER_MAX_WIDTH);
-  if (!downgraded) return NextResponse.next();
-
-  const url = request.nextUrl.clone();
-  url.pathname = downgraded;
-  return NextResponse.rewrite(url);
+  const options = { request: { headers: requestHeaders } };
+  const downgraded =
+    request.cookies.get(DATA_SAVER_COOKIE)?.value === "1"
+      ? downgradeMediaPath(pathname, DATA_SAVER_MAX_WIDTH)
+      : null;
+  let response: NextResponse;
+  if (downgraded) {
+    const url = request.nextUrl.clone();
+    url.pathname = downgraded;
+    response = NextResponse.rewrite(url, options);
+  } else {
+    response = NextResponse.next(options);
+  }
+  if (policy) response.headers.set("Content-Security-Policy", policy);
+  return response;
 }
 
 export const config = {
-  // Les photographies (mode économie) et les pages d'article (comptage).
-  // Rien d'autre : le proxy ne s'interpose ni sur le reste du rendu, ni sur
-  // les fichiers versionnés de `_next/static`.
-  matcher: ["/medias/:path*", "/article/:slug"],
+  // Nonces cover rendered pages; media keeps its existing data-saver rewrite.
+  matcher: [
+    "/((?!api|_next/static|_next/image|icons/|documents/|favicon.ico).*)",
+  ],
 };

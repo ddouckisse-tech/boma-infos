@@ -8,8 +8,10 @@ import {
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
 import { accessError, PERMISSIONS, requirePermission } from "./model/access";
+import { patchArticle } from "./model/articleWrites";
 import { recordAudit } from "./model/audit";
 import { agentKey, AGENTS, AGENT_MODELS } from "./model/agents";
+import { mediaDerivedFields, syncArticleMedia } from "./model/media";
 import { readingMinutes, searchText, slugify, periodOf } from "./model/text";
 
 /**
@@ -340,15 +342,15 @@ async function apply(
   if (suggestion.targetType === "media") {
     const media = await ctx.db.get(suggestion.targetId as Id<"media">);
     if (!media) return false;
-    if (field === "alt") {
-      await ctx.db.patch(media._id, { alt: proposed.trim() });
-      return true;
-    }
-    if (field === "caption") {
-      await ctx.db.patch(media._id, { caption: proposed.trim() });
-      return true;
-    }
-    return false;
+    if (field !== "alt" && field !== "caption") return false;
+    const alt = field === "alt" ? proposed.trim() : media.alt;
+    const caption = field === "caption" ? proposed.trim() : media.caption;
+    await ctx.db.patch(media._id, {
+      alt,
+      caption,
+      ...mediaDerivedFields({ ...media, alt, caption }),
+    });
+    return true;
   }
 
   if (suggestion.targetType !== "article") return false;
@@ -411,7 +413,7 @@ async function apply(
     return false;
   }
 
-  await ctx.db.patch(article._id, {
+  await patchArticle(ctx, article, {
     title,
     slug,
     dek,
@@ -422,6 +424,8 @@ async function apply(
     searchText: searchText(title, dek, tags, body),
     updatedAt: Date.now(),
   });
+  // La trame d'interview remplace tout le corps, images comprises.
+  await syncArticleMedia(ctx, article._id);
   return true;
 }
 

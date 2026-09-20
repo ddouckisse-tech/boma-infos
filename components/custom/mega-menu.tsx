@@ -3,13 +3,15 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
+import { usePreferences } from "@/components/providers/preferences-provider";
 import {
   accentBorderClass,
   sectionHref,
   subSectionHref,
   type Section,
 } from "@/lib/navigation";
-import { cn } from "@/lib/utils";
+import { categoryLabel, localize } from "@/lib/i18n";
+import { cx } from "@/lib/cx";
 
 /**
  * Desktop section bar with its mega-menus.
@@ -37,6 +39,7 @@ export function MegaMenu({
   sections: readonly Section[];
   className?: string;
 }) {
+  const { locale } = usePreferences();
   const baseId = useId();
   const [openSlug, setOpenSlug] = useState<string | null>(null);
   const navRef = useRef<HTMLElement | null>(null);
@@ -77,8 +80,11 @@ export function MegaMenu({
   return (
     <nav
       ref={navRef}
-      aria-label="Navigation principale"
-      className={cn("relative", className)}
+      aria-label={localize(locale, {
+        fr: "Navigation principale",
+        en: "Main navigation",
+      })}
+      className={cx("relative", className)}
       onKeyDown={(event) => {
         if (event.key !== "Escape" || !openSlug) return;
         event.stopPropagation();
@@ -107,7 +113,7 @@ export function MegaMenu({
                     setOpenSlug(null);
                   }}
                 >
-                  {section.label}
+                  {categoryLabel(locale, section.slug, section.label)}
                 </Link>
               </li>
             );
@@ -137,15 +143,15 @@ export function MegaMenu({
                   clearTimer();
                   setOpenSlug(isOpen ? null : section.slug);
                 }}
-                className={cn(
+                className={cx(
                   "flex items-center gap-1 rounded-xs px-2 type-small font-medium transition-colors touch-target hover:bg-surface-muted",
                   isOpen && "bg-surface-muted"
                 )}
               >
-                {section.label}
+                {categoryLabel(locale, section.slug, section.label)}
                 <ChevronDown
                   aria-hidden="true"
-                  className={cn(
+                  className={cx(
                     "size-3.5 shrink-0 transition-transform",
                     isOpen && "rotate-180"
                   )}
@@ -155,7 +161,7 @@ export function MegaMenu({
               <div
                 id={panelId}
                 hidden={!isOpen}
-                className={cn(
+                className={cx(
                   "absolute top-full left-0 z-50 w-[min(20rem,80vw)] rounded-md border-t-2 bg-popover p-2 shadow-floating",
                   accentBorderClass[section.accent]
                 )}
@@ -168,7 +174,10 @@ export function MegaMenu({
                       className="flex min-h-[44px] items-center rounded-xs px-2 type-small font-semibold text-accent hover:bg-surface-muted"
                       onClick={() => setOpenSlug(null)}
                     >
-                      Toute la rubrique
+                      {localize(locale, {
+                        fr: "Toute la rubrique",
+                        en: "View the full section",
+                      })}
                     </Link>
                   </li>
                   {section.children.map((child) => (
@@ -179,7 +188,7 @@ export function MegaMenu({
                         className="flex min-h-[44px] items-center rounded-xs px-2 type-small text-foreground hover:bg-surface-muted"
                         onClick={() => setOpenSlug(null)}
                       >
-                        {child.label}
+                        {categoryLabel(locale, child.slug, child.label)}
                       </Link>
                     </li>
                   ))}

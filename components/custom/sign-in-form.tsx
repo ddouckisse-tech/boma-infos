@@ -7,7 +7,9 @@ import { LogIn } from "lucide-react";
 import { ActionButton } from "@/components/custom/action-button";
 import { FormError } from "@/components/custom/auth-shell";
 import { TextField } from "@/components/custom/form-field";
+import { usePreferences } from "@/components/providers/preferences-provider";
 import { authClient } from "@/lib/auth-client";
+import { localize } from "@/lib/i18n";
 
 /**
  * Sign-in form — CDC §4.3, §5.3.
@@ -38,6 +40,7 @@ export function SignInForm({
   variant?: "default" | "admin";
 }) {
   const router = useRouter();
+  const { locale } = usePreferences();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -54,7 +57,12 @@ export function SignInForm({
       });
       if (result.error) {
         // Message indifférencié, quel que soit le code renvoyé.
-        setError("Identifiants incorrects.");
+        setError(
+          localize(locale, {
+            fr: "Identifiants incorrects.",
+            en: "Incorrect sign-in details.",
+          })
+        );
         setPending(false);
         return;
       }
@@ -66,7 +74,12 @@ export function SignInForm({
       router.push(variant === "admin" ? "/redaction" : "/compte");
       router.refresh();
     } catch {
-      setError("Identifiants incorrects.");
+      setError(
+        localize(locale, {
+          fr: "Identifiants incorrects.",
+          en: "Incorrect sign-in details.",
+        })
+      );
       setPending(false);
     }
   };
@@ -76,7 +89,10 @@ export function SignInForm({
       <FormError>{error}</FormError>
 
       <TextField
-        label="Adresse électronique"
+        label={localize(locale, {
+          fr: "Adresse électronique",
+          en: "Email address",
+        })}
         type="email"
         name="email"
         inputMode="email"
@@ -87,7 +103,7 @@ export function SignInForm({
       />
 
       <TextField
-        label="Mot de passe"
+        label={localize(locale, { fr: "Mot de passe", en: "Password" })}
         type="password"
         name="password"
         autoComplete="current-password"
@@ -98,7 +114,9 @@ export function SignInForm({
 
       <ActionButton type="submit" disabled={pending} className="w-full">
         <LogIn aria-hidden="true" className="size-4" />
-        {pending ? "Vérification…" : "Se connecter"}
+        {pending
+          ? localize(locale, { fr: "Vérification…", en: "Signing in…" })
+          : localize(locale, { fr: "Se connecter", en: "Sign in" })}
       </ActionButton>
 
       <p className="type-small">
@@ -106,27 +124,39 @@ export function SignInForm({
           href="/mot-de-passe-oublie"
           className="text-muted-foreground underline underline-offset-2 hover:text-foreground"
         >
-          Mot de passe oublié
+          {localize(locale, {
+            fr: "Mot de passe oublié",
+            en: "Forgotten password",
+          })}
         </Link>
       </p>
 
       {variant !== "admin" && (
         <p className="type-small text-muted-foreground">
-          Votre entreprise n&apos;a pas encore d&apos;espace&nbsp;?{" "}
+          {localize(locale, {
+            fr: "Votre entreprise n’a pas encore d’espace ? ",
+            en: "Does your company need an account? ",
+          })}
           {onSwitchToRegister ? (
             <button
               type="button"
               onClick={onSwitchToRegister}
               className="font-semibold text-accent underline underline-offset-2"
             >
-              Demander l&apos;ouverture d&apos;un compte
+              {localize(locale, {
+                fr: "Demander l’ouverture d’un compte",
+                en: "Request an account",
+              })}
             </button>
           ) : (
             <Link
               href="/inscription-entreprise"
               className="font-semibold text-accent underline underline-offset-2"
             >
-              Demander l&apos;ouverture d&apos;un compte
+              {localize(locale, {
+                fr: "Demander l’ouverture d’un compte",
+                en: "Request an account",
+              })}
             </Link>
           )}
           .

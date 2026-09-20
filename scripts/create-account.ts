@@ -20,6 +20,13 @@
  * exactly as it answers a new one (no account enumeration), so a response
  * cannot tell the two apart — the action looks the account up itself.
  *
+ * Revocation, the counterpart of creation:
+ *
+ *   bun run compte -- --email=… --revoquer
+ *
+ * deactivates the profile, closes every open session and writes the gesture
+ * to the audit log as the command line (`accounts:revokeByEmail`).
+ *
  * Roles: administrateur · editeur · entreprise · lecteur.
  * The verification by authenticator app is optional for every role.
  */
@@ -51,6 +58,16 @@ function run(fn: string, args: Record<string, unknown>) {
 }
 
 const email = arg("email");
+
+if (process.argv.includes("--revoquer")) {
+  if (!email) {
+    console.error("Usage : bun run compte -- --email=… --revoquer");
+    process.exit(1);
+  }
+  run("accounts:revokeByEmail", { email });
+  process.exit(0);
+}
+
 const name = arg("nom");
 const password = arg("motdepasse");
 const role = arg("role") ?? "editeur";

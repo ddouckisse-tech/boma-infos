@@ -6,7 +6,9 @@ import { ShieldCheck } from "lucide-react";
 import { ActionButton } from "@/components/custom/action-button";
 import { AuthShell, FormError } from "@/components/custom/auth-shell";
 import { TextField } from "@/components/custom/form-field";
+import { usePreferences } from "@/components/providers/preferences-provider";
 import { authClient } from "@/lib/auth-client";
+import { localize } from "@/lib/i18n";
 
 /**
  * Second factor — CDC §4.3.
@@ -19,6 +21,7 @@ import { authClient } from "@/lib/auth-client";
  */
 export default function TwoFactorPage() {
   const router = useRouter();
+  const { locale } = usePreferences();
   const [code, setCode] = useState("");
   const [backup, setBackup] = useState(false);
   const [error, setError] = useState("");
@@ -33,32 +36,58 @@ export default function TwoFactorPage() {
         ? await authClient.twoFactor.verifyBackupCode({ code: code.trim() })
         : await authClient.twoFactor.verifyTotp({ code: code.trim() });
       if (result.error) {
-        setError("Code incorrect ou expiré.");
+        setError(
+          localize(locale, {
+            fr: "Code incorrect ou expiré.",
+            en: "Incorrect or expired code.",
+          })
+        );
         setPending(false);
         return;
       }
       router.push("/compte");
       router.refresh();
     } catch {
-      setError("Code incorrect ou expiré.");
+      setError(
+        localize(locale, {
+          fr: "Code incorrect ou expiré.",
+          en: "Incorrect or expired code.",
+        })
+      );
       setPending(false);
     }
   };
 
   return (
     <AuthShell
-      title="Vérification en deux étapes"
+      title={localize(locale, {
+        fr: "Vérification en deux étapes",
+        en: "Two-step verification",
+      })}
       intro={
         backup
-          ? "Saisissez l'un des codes de secours remis lors de l'activation. Chaque code ne sert qu'une fois."
-          : "Ouvrez votre application d'authentification et saisissez le code à six chiffres."
+          ? localize(locale, {
+              fr: "Saisissez l'un des codes de secours remis lors de l'activation. Chaque code ne sert qu'une fois.",
+              en: "Enter one of the backup codes provided during setup. Each code can only be used once.",
+            })
+          : localize(locale, {
+              fr: "Ouvrez votre application d'authentification et saisissez le code à six chiffres.",
+              en: "Open your authenticator app and enter the six-digit code.",
+            })
       }
     >
       <form onSubmit={submit} className="grid gap-5">
         <FormError>{error}</FormError>
 
         <TextField
-          label={backup ? "Code de secours" : "Code à six chiffres"}
+          label={
+            backup
+              ? localize(locale, { fr: "Code de secours", en: "Backup code" })
+              : localize(locale, {
+                  fr: "Code à six chiffres",
+                  en: "Six-digit code",
+                })
+          }
           name="code"
           inputMode={backup ? "text" : "numeric"}
           autoComplete="one-time-code"
@@ -72,7 +101,9 @@ export default function TwoFactorPage() {
 
         <ActionButton type="submit" disabled={pending} className="w-full">
           <ShieldCheck aria-hidden="true" className="size-4" />
-          {pending ? "Vérification…" : "Valider"}
+          {pending
+            ? localize(locale, { fr: "Vérification…", en: "Verifying…" })
+            : localize(locale, { fr: "Valider", en: "Continue" })}
         </ActionButton>
 
         <button
@@ -85,8 +116,14 @@ export default function TwoFactorPage() {
           className="justify-self-start type-small text-muted-foreground underline underline-offset-2 hover:text-foreground"
         >
           {backup
-            ? "Utiliser l'application d'authentification"
-            : "Utiliser un code de secours"}
+            ? localize(locale, {
+                fr: "Utiliser l'application d'authentification",
+                en: "Use the authenticator app",
+              })
+            : localize(locale, {
+                fr: "Utiliser un code de secours",
+                en: "Use a backup code",
+              })}
         </button>
       </form>
     </AuthShell>

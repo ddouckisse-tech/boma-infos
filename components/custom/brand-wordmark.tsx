@@ -1,17 +1,14 @@
+"use client";
+
 import Link from "next/link";
-import { cn } from "@/lib/utils";
+import { usePreferences } from "@/components/providers/preferences-provider";
+import { BRAND_LOGO } from "@/lib/brand";
+import { cx } from "@/lib/cx";
 
 /**
- * "Le Corporate." lock-up. Text only: no image request, no extra font — it is
- * set in the display face already loaded for the headings.
- *
- * Three colours, on purpose: « Le » and the final point in the brand magenta,
- * « Corporate » in the ink of the current theme (near-black on light,
- * near-white on dark). The point is decorative and carries no information.
- *
- * The link is padded to a full 44 px touch target (CDC §3.5): the wordmark is
- * the most-tapped control of a news site on a phone, and the glyphs alone are
- * only about 20 px tall.
+ * Approved editorial artwork. Both paths share one cached SVG request and
+ * inherit the active page theme, without adding a font or logo data to JS.
+ * The link remains at least 44 px tall, even when the logo shrinks on mobile.
  */
 export function BrandWordmark({
   className,
@@ -22,27 +19,38 @@ export function BrandWordmark({
   href?: string;
   size?: "default" | "large";
 }) {
+  const { locale } = usePreferences();
   return (
     <Link
       href={href}
-      className={cn(
-        "inline-flex min-h-11 items-center font-display leading-none font-extrabold tracking-[-0.04em] text-foreground",
-        size === "large" ? "type-h1" : "type-h3",
-        className
+      aria-label={
+        locale === "en" ? "Le Corporate — home" : "Le Corporate — accueil"
+      }
+      // Un `className` fourni remplace la largeur par défaut (les écrans
+      // privés passent la leur) : sans fusion de classes, deux largeurs
+      // côte à côte laisseraient l'ordre de la feuille de style trancher.
+      className={cx(
+        "inline-flex min-h-11 max-w-full min-w-0 items-center",
+        className ?? (size === "large" ? "w-72 sm:w-80" : "w-44 sm:w-56")
       )}
     >
-      <span translate="no">
-        <span className="text-brand-magenta dark:text-brand-magenta-dark">
-          Le
-        </span>{" "}
-        Corporate
-        <span
-          aria-hidden="true"
-          className="text-brand-magenta dark:text-brand-magenta-dark"
-        >
-          .
-        </span>
-      </span>
+      <svg
+        aria-hidden="true"
+        focusable="false"
+        width={BRAND_LOGO.width}
+        height={BRAND_LOGO.height}
+        viewBox={`0 0 ${BRAND_LOGO.width} ${BRAND_LOGO.height}`}
+        className="block h-auto w-full"
+      >
+        <use
+          href={`${BRAND_LOGO.sprite}#corporate`}
+          className="fill-brand-navy dark:fill-white"
+        />
+        <use
+          href={`${BRAND_LOGO.sprite}#accent`}
+          className="fill-brand-magenta dark:fill-brand-magenta-dark"
+        />
+      </svg>
     </Link>
   );
 }

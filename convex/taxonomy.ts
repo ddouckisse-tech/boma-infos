@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { accessError, PERMISSIONS, requirePermission } from "./model/access";
+import { readCounts } from "./model/articleCounts";
 import { recordAudit } from "./model/audit";
 import { slugify } from "./model/text";
 
@@ -41,20 +42,16 @@ export const list = query({
   returns: v.array(categoryShape),
   handler: async (ctx) => {
     await requirePermission(ctx, PERMISSIONS.newsroom);
-    const rows = await ctx.db.query("categories").collect();
-    const articles = await ctx.db.query("articles").collect();
-    const counts = new Map<string, number>();
-    for (const article of articles) {
-      counts.set(
-        article.categorySlug,
-        (counts.get(article.categorySlug) ?? 0) + 1
-      );
-      if (article.subCategorySlug) {
-        counts.set(
-          article.subCategorySlug,
-          (counts.get(article.subCategorySlug) ?? 0) + 1
-        );
-      }
+    // Articles of every status, per section — from `articleCounts`, not from
+    // the articles themselves (the whole table, 6 Ko a row).
+    const [rows, sections, subSections] = await Promise.all([
+      ctx.db.query("categories").collect(),
+      readCounts(ctx, "category"),
+      readCounts(ctx, "subcategory"),
+    ]);
+    const counts = new Map(sections);
+    for (const [slug, count] of subSections) {
+      counts.set(slug, (counts.get(slug) ?? 0) + count);
     }
     return rows
       .sort((a, b) => a.order - b.order)

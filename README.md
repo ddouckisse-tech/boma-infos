@@ -83,24 +83,24 @@ demande explicite.
 
 ### Scripts
 
-| Script               | Effet                                        |
-| -------------------- | -------------------------------------------- |
-| `bun run dev`        | Serveur de développement Next.js (port 3000) |
-| `bun run build`      | Compilation de production                    |
-| `bun run start`      | Serveur de production                        |
-| `bun run typecheck`  | `next typegen` puis `tsc --noEmit`           |
-| `bun run lint`       | ESLint                                       |
-| `bun run format`     | Prettier (écriture)                          |
-| `bun run verify`     | typecheck + lint + build                     |
-| `bun run budget`     | Contrôle du budget de performance (§5.4)     |
-| `bun run seed`       | Charge le jeu de démonstration dans Convex   |
-| `bun run media`      | Retélécharge et ré-encode les photographies  |
-| `bun run documents`  | Régénère les PDF de la docuthèque            |
-| `bun run icons`      | Régénère les icônes de la PWA                |
-| `bun run convex:dev` | Backend Convex, en veille                    |
-| `bun run dev:full`   | Convex + Next dans un seul processus         |
-| `bun run compte`     | Crée un compte nominatif (lot 3)             |
-| `bun run agents:cle` | Copie `ANTHROPIC_API_KEY` sur le déploiement |
+| Script               | Effet                                                    |
+| -------------------- | -------------------------------------------------------- |
+| `bun run dev`        | Serveur de développement Next.js (port 3000)             |
+| `bun run build`      | Compilation de production                                |
+| `bun run start`      | Serveur de production                                    |
+| `bun run typecheck`  | `next typegen` puis `tsc --noEmit`                       |
+| `bun run lint`       | ESLint                                                   |
+| `bun run format`     | Prettier (écriture)                                      |
+| `bun run verify`     | typecheck + lint + build                                 |
+| `bun run budget`     | Contrôle du budget de performance (§5.4)                 |
+| `bun run seed`       | Charge le jeu de démonstration dans Convex               |
+| `bun run media`      | Retélécharge et ré-encode les photographies              |
+| `bun run documents`  | Régénère les PDF de la docuthèque                        |
+| `bun run icons`      | Régénère les icônes de la PWA                            |
+| `bun run convex:dev` | Backend Convex, en veille                                |
+| `bun run dev:full`   | Convex + Next dans un seul processus                     |
+| `bun run compte`     | Crée un compte nominatif (lot 3) ; `--revoquer` le ferme |
+| `bun run agents:cle` | Copie `ANTHROPIC_API_KEY` sur le déploiement             |
 
 `bun run build` enchaîne `next build` **puis** `bun run budget` : une
 compilation qui dépasse un plafond du §5.4 échoue, elle n'avertit pas.
@@ -202,6 +202,8 @@ scripts/
   make-documents.ts            produit les PDF de la docuthèque
   make-icons.ts                produit les icônes de la PWA
   check-budget.ts              contrôle du §5.4 — fait échouer la compilation
+  check-live-budget.ts         même contrôle sur le site servi (workflow quotidien)
+  media-thumbnails.ts          rattrapage des vignettes de 240 px (stockage Convex)
 next.config.ts                 en-têtes, cache des médias, redirections 301
 ```
 
@@ -231,11 +233,11 @@ plafond dépassé :
 
 | Indicateur       | Plafond §5.4 | Constaté                            |
 | ---------------- | ------------ | ----------------------------------- |
-| Poids accueil    | 600 Ko       | 491 Ko                              |
-| Poids article    | 400 Ko       | 385 Ko                              |
-| Requêtes accueil | 50           | 33                                  |
+| Poids accueil    | 600 Ko       | 542 Ko                              |
+| Poids article    | 400 Ko       | 366 Ko                              |
+| Requêtes accueil | 50           | 40                                  |
 | Requêtes article | 50           | 25                                  |
-| JavaScript       | 180 Ko       | 169 Ko (accueil) · 174 Ko (article) |
+| JavaScript       | 180 Ko       | 164 Ko (accueil) · 168 Ko (article) |
 
 > Chiffres **re-mesurés à la fin du lot 3**. L'accueil a maigri (489 → 478 Ko,
 > 31 → 28 requêtes) : la mise en page racine ne contient plus l'en-tête ni le
@@ -256,6 +258,27 @@ plafond dépassé :
 > de JavaScript (187 Ko). Trois requêtes de plus par page, mais plus aucune
 > duplication ; l'envoi d'images depuis la médiathèque n'ajoute rien au
 > journal, dont la vignette vidéo n'embarque plus le manifeste des photos.
+>
+> Chiffres **re-mesurés le 13/09/2026 en production, archive WordPress en
+> ligne** (compilation Vercel). L'arrivée des 1 019 articles avait porté
+> l'accueil à 595 Ko et le JavaScript des articles à 179,9 Ko ; un article à
+> photo lourde dépassait même 400 Ko **sans aucune compilation**, par simple
+> régénération ISR. Trois corrections : vignettes de liste en 240 px au lieu
+> de 320 (`scripts/media-thumbnails.ts`, −50 Ko à l'accueil) ; plus de moteur
+> de fusion de classes ni de primitive shadcn dans le JavaScript public
+> (`lib/cx.ts`, −12 Ko sur chaque page — la page introuvable de la racine,
+> présente partout, les tirait via le formulaire de recherche) ; et un
+> contrôle quotidien du site servi, décrit ci-dessous.
+
+**Surveillance en production.** La compilation ne voit pas ce que l'ISR
+change ensuite. `scripts/check-live-budget.ts` mesure l'accueil et les trois
+derniers articles réellement servis, avec les mêmes règles, et sort en erreur
+dès **95 %** d'un plafond. `.github/workflows/budget-production.yml` le lance
+chaque matin et sur demande ; GitHub prévient par courriel en cas d'échec.
+
+```bash
+bun run scripts/check-live-budget.ts https://lecorporate.com
+```
 
 Deux partis pris de mesure, tous deux du côté sévère :
 
@@ -340,6 +363,30 @@ servis à la racine par WordPress, sont traités par la route attrape-tout
 `app/[slug]/page.tsx`, qui interroge la base plutôt que d'embarquer une
 liste de 1 019 entrées.
 
+### Volume de l'archive — aucune lecture de toute la table
+
+Un article pèse environ 6 Ko et une fonction Convex ne lit pas plus de
+16 Mio : jusqu'au 19/09/2026, l'accueil, les articles liés, les rubriques et
+tout le back-office relisaient la table `articles` entière, et seraient tombés
+vers 2 500 articles (panne reproduite sur un backend local à 3 057). Depuis :
+
+- les listes lisent ce qu'elles montrent par leur index (`take`,
+  `paginate`) ; le plan du site parcourt les slugs par pages de 200
+  (`journal.publishedSlugPage`) ;
+- les comptes (badges, tableau de bord, filtres de rubrique, pagination,
+  auteurs) viennent de la table `articleCounts`, tenue dans la transaction
+  de chaque écriture. **Toute écriture sur `articles` passe par
+  `convex/model/articleWrites.ts`** (`insertArticle`, `patchArticle`,
+  `deleteArticle`) ; sinon les comptes dérivent ;
+- après le déploiement qui introduit `articleCounts`, ou pour réparer une
+  dérive : `bunx convex run --prod articleCounts:rebuild` (par pages, rapide ;
+  la vérification horaire `ensureBuilt` le lance si personne ne l'a fait).
+
+Mesuré sur le fonds réel (1 019 articles, octets lus par exécution) :
+accueil 6,4 Mio → 377 Kio, articles liés 6,4 Mio → 34 Kio, `navCounts`
+6,3 Mio → 0,6 Kio. Tests d'équivalence avec les anciens parcours complets :
+`tests/journal-reads.test.ts`, `tests/newsroom-reads.test.ts`.
+
 ### Contenu de démonstration
 
 Le corpus de `convex/seed/` est **fictif** : entreprises, personnes,
@@ -373,7 +420,9 @@ Trois points tiennent aux défauts que l'audit avait relevés :
 
 - **Aucun identifiant par défaut.** Le dépôt ne contient aucun compte.
   `bun run compte` en crée un, nominatif, avec un mot de passe choisi à cet
-  instant. `POST /api/auth/sign-up/*` est **fermé au navigateur** : cet appel
+  instant ; `bun run compte -- --email=… --revoquer` le ferme (profil
+  désactivé, sessions supprimées, geste inscrit au journal d'audit au nom de
+  la ligne de commande). `POST /api/auth/sign-up/*` est **fermé au navigateur** : cet appel
   répond différemment selon que l'adresse existe déjà, c'est un oracle. Les deux
   créations légitimes — un administrateur qui ouvre un compte, une entreprise
   qui demande un espace — passent par des fonctions serveur.
@@ -427,11 +476,29 @@ n'envoyer rien.
 ### Médiathèque — envoi d'images
 
 Les images s'ajoutent depuis l'écran (`/redaction/medias`, `convex/library.ts`),
-sans script à lancer. Chaque photo est décodée et encodée en **WebP à 320,
-640, 960 et 1280 px** par le navigateur lui-même — aucun traitement serveur —
-puis chaque taille est envoyée au stockage de fichiers Convex. Le texte
+sans script à lancer. Chaque photo est décodée et encodée en **WebP à 240,
+320, 640, 960 et 1280 px** par le navigateur lui-même — aucun traitement
+serveur — puis chaque taille est envoyée au stockage de fichiers Convex. La
+largeur de 240 px sert les vignettes de liste (96 px sur un téléphone) ; pour
+les images importées sans elle, `bun run scripts/media-thumbnails.ts --prod`
+la rajoute, de façon idempotente (`--simulation` pour compter d'abord). Le texte
 alternatif reste **obligatoire avant de placer l'image** dans un article : le
 champ est requis à l'écran, et le validateur Convex ne l'accepte pas vide.
+
+**Aucun écran ne charge toute la photothèque** (depuis le 19/09/2026, après la
+panne « Too many reads » due aux 1 297 images de l'archive WordPress). La
+médiathèque et le sélecteur d'images lisent des pages de 48 et 24 images
+(`library.list`, `library.pick`), cherchées et filtrées sur le serveur (index
+`search_media`, `by_uploaded`, `by_alt_missing`) ; une image déjà choisie est
+retrouvée par sa clé (`library.byKeys`). Le nombre d'articles qui affichent une
+image vient de la table `mediaUsages`, tenue par `syncArticleMedia` à chaque
+écriture d'article : toute nouvelle mutation qui modifie la une, la galerie ou
+le corps d'un article doit l'appeler. Les compteurs sont bornés (« 999+ »).
+Après un déploiement qui ajoute ces index, ou pour réparer une dérive, lancer
+`bunx convex run --prod library:reindex` (par lots cadencés, idempotent ; il
+tourne aussi chaque nuit) : tant qu'il n'a pas terminé une première fois,
+l'écran le signale, l'usage n'est pas affiché et la suppression d'une image
+relit les articles.
 
 ### Les agents
 
@@ -503,6 +570,16 @@ un seau par jour. La rédaction voit l'audience par article, par rubrique et par
 jour ; l'entreprise voit **ses** publications, le périmètre étant résolu dans
 Convex à partir de la session.
 
+**Une vue n'écrit jamais l'article** (depuis le 19/09/2026) : elle ne touche
+que `articleStats` et `articleStatDays`, et l'article n'est lu qu'à la
+première vue, pour créer sa ligne. Réécrire l'article à chaque visite
+invalidait toutes les requêtes qui l'avaient lu, pour chaque onglet ouvert.
+Le compte affiché au lecteur est `articles.views` (gelé : import WordPress et
+vues antérieures) plus les vues comptées depuis (`displayedViews`,
+`convex/model/audience.ts`). Le tableau de bord lit un instantané,
+`audienceSnapshots`, recalculé toutes les 15 minutes à partir des seaux du
+jour (`stats.refreshAudience`).
+
 ---
 
 ## Design system
@@ -514,6 +591,17 @@ Elle n'est pas indexée (`robots: noindex`).
 
 Source de vérité des jetons : `app/globals.css`. `lib/design-tokens.ts` en est
 un miroir destiné à l'affichage ; garder les deux synchronisés.
+
+### Logo éditorial
+
+Le logo choisi est partagé par les en-têtes, le pied de page, la connexion,
+le compte et les espaces privés via `BrandWordmark` : « Le » italique rose,
+« Corporate » en serif gras et point rose. Le nom passe du marine au blanc
+selon le thème. Le dessin est vectoriel, sans police supplémentaire.
+
+Le [maître et ses exports](assets/brand/README.md) alimentent aussi les icônes
+et les aperçus de partage. `bun run brand` les régénère ; le budget comptabilise
+une seule ressource SVG partagée par les emplacements de l’interface.
 
 ### Palette (cahier des charges v1.1)
 
@@ -551,61 +639,55 @@ includeSubDomains; preload`), `X-Content-Type-Options: nosniff`,
 `Permissions-Policy` restrictive, `Cross-Origin-Opener-Policy`,
 `Cross-Origin-Resource-Policy`, `X-DNS-Prefetch-Control: off`.
 
-La `Content-Security-Policy` vit dans `lib/security-headers.ts` :
+La `Content-Security-Policy` vit dans `lib/security-headers.ts`. La politique
+suivante s'applique aux modes `campaigns`, `off` et `preview`, ainsi qu'à une
+configuration AdSense incomplète :
 
 ```
 default-src 'self'; base-uri 'none'; object-src 'none';
 frame-ancestors 'none'; frame-src 'none'; form-action 'self';
 script-src 'self' 'unsafe-inline'; script-src-attr 'none';
-style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:;
+style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: <origines HTTP Convex>;
 font-src 'self'; media-src 'self'; worker-src 'self' blob:;
 manifest-src 'self'; connect-src 'self' <URL Convex>;
 upgrade-insecure-requests
 ```
 
-`'unsafe-eval'` est ajouté **en développement seulement** (rechargement à
-chaud de Turbopack) ; `upgrade-insecure-requests` n'apparaît qu'en
+Dans ces modes, `'unsafe-eval'` est ajouté **en développement seulement**
+pour Turbopack. `'unsafe-inline'` autorise les scripts React Server Components
+produits par Next dans le HTML prérendu. Aucun script publicitaire tiers
+n'est chargé ; les images envoyées à la médiathèque utilisent les origines
+HTTP du déploiement Convex. `upgrade-insecure-requests` n'apparaît qu'en
 production.
 
-**Pourquoi `'unsafe-inline'` sur `script-src`.** Next.js sérialise la charge
-utile React Server Components dans des `<script>` en ligne dont le contenu
-change à chaque rendu. Les autoriser autrement impose un nonce par requête,
-ce qui **désactive le rendu statique de toutes les pages** — inacceptable au
-regard du budget de performance du §5.4. La variante à nonce +
-`strict-dynamic` a été implémentée puis retirée : elle bloquait
-effectivement l'hydratation sur les pages prérendues. Tout le reste reste
-verrouillé : aucune origine tierce, aucun gestionnaire d'événement en ligne
-(`script-src-attr 'none'`), pas d'`eval` en production, `base-uri` et
-`form-action` fermés.
+**Avec une configuration AdSense complète**, `proxy.ts` produit un nonce
+aléatoire par requête et remplace la CSP de la réponse. Le root layout rend
+alors le HTML dynamiquement ; Next, les préférences, JSON-LD, la CMP et
+AdSense reçoivent ce nonce. Cette politique utilise `strict-dynamic` et
+`unsafe-eval`, y compris en production, et autorise les ressources
+publicitaires HTTPS. Les origines des styles et polices de la CMP restent
+limitées à la configuration. `script-src-attr 'none'`, `base-uri 'none'`,
+`frame-ancestors 'none'` et `form-action 'self'` restent appliqués.
 
-**Revu au lot 3, et laissé en l'état — à raison.** L'idée était de donner un
-nonce aux seules routes privées, rendues dynamiquement de toute façon. Deux
-obstacles, tous deux dans la façon dont Next.js construit la politique :
-l'en-tête est posé par `next.config.ts`, qui est statique et ne voit pas la
-requête ; et un nonce par requête suppose de générer la politique dans le
-proxy, donc pour **toutes** les routes — y compris les pages prérendues, dont
-le HTML est déjà écrit et porterait un nonce périmé. Une politique par groupe
-de routes demanderait de dupliquer la logique d'en-têtes entre
-`next.config.ts` et `proxy.ts`, pour un gain réel faible : les espaces privés
-ne rendent aucun contenu tiers et `script-src-attr 'none'` ferme déjà les
-gestionnaires en ligne. Le durcissement utile ici est plutôt `require-trusted-types-for`,
-à instruire avant la mise en ligne.
+Le mode, les identifiants d'éditeur et d'unités et la configuration CMP
+doivent être présents **au build et au runtime**. Leur modification nécessite
+une reconstruction et une nouvelle livraison : changer seulement les
+variables de `next start` peut associer un nouveau nonce à un ancien HTML
+prérendu et bloquer l'hydratation. Le cache hors ligne exclut les documents
+à nonce ou `no-store`. Voir [le raccordement AdSense](docs/adsense.md).
 
-Le lot 2 n'a **rien relâché** dans la politique : aucun domaine média n'a
-été ajouté, `img-src` reste `'self' data: blob:` et `font-src 'self'` —
-les 27 photographies et les deux polices sont servies depuis ce domaine.
-S'y ajoutent des en-têtes de cache : un an d'`immutable` sur `/medias`,
+Dans ce mode dynamique, le contrôle de budget mesure le HTML local et les
+ressources propriétaires référencées, avant consentement. Il exclut les
+téléchargements Google et CMP, y compris le script CMP chargé avant le
+choix du lecteur ; leur poids doit être mesuré séparément avec la
+configuration réelle.
+
+Les en-têtes de cache restent : un an d'`immutable` sur `/medias`,
 `/icons` et les fichiers versionnés (l'audit relevait l'absence totale de
 `Cache-Control` sur les images du site actuel, soit une cinquantaine
 d'allers-retours vers l'Europe à chaque visite), `Vary: Cookie` sur
 `/medias` puisque `proxy.ts` y sert une variante selon le mode économie, et
 `must-revalidate` sur `/sw.js`.
-
-Le lot 3 n'a rien relâché non plus. Les seules origines ajoutées à
-`connect-src` sont les deux URL du déploiement Convex, déjà présentes depuis
-le lot 1 ; le code QR du second facteur est une `data:` URI, couverte par
-`img-src 'self' data: blob:`. Aucune balise `<script>` d'origine tierce n'est
-servie nulle part.
 
 S'y ajoutent, côté application :
 

@@ -8,7 +8,9 @@ import { toast } from "sonner";
 import { ActionButton } from "@/components/custom/action-button";
 import { FormError } from "@/components/custom/auth-shell";
 import { TextField } from "@/components/custom/form-field";
+import { usePreferences } from "@/components/providers/preferences-provider";
 import { authClient } from "@/lib/auth-client";
+import { localize } from "@/lib/i18n";
 
 /**
  * Verification by an authenticator app — optional since 12/09/2026.
@@ -21,6 +23,7 @@ import { authClient } from "@/lib/auth-client";
  */
 export function TwoFactorPanel({ enabled }: { enabled: boolean }) {
   const router = useRouter();
+  const { locale } = usePreferences();
   const [password, setPassword] = useState("");
   const [enrolment, setEnrolment] = useState<{
     uri: string;
@@ -37,7 +40,12 @@ export function TwoFactorPanel({ enabled }: { enabled: boolean }) {
     try {
       const result = await authClient.twoFactor.enable({ password });
       if (result.error || !result.data) {
-        setError("Code d'accès incorrect.");
+        setError(
+          localize(locale, {
+            fr: "Code d'accès incorrect.",
+            en: "Incorrect access code.",
+          })
+        );
         setBusy(false);
         return;
       }
@@ -49,7 +57,12 @@ export function TwoFactorPanel({ enabled }: { enabled: boolean }) {
       });
       setPassword("");
     } catch {
-      setError("L'activation n'a pas abouti.");
+      setError(
+        localize(locale, {
+          fr: "L'activation n'a pas abouti.",
+          en: "Activation failed.",
+        })
+      );
     }
     setBusy(false);
   };
@@ -62,16 +75,28 @@ export function TwoFactorPanel({ enabled }: { enabled: boolean }) {
         code: code.trim(),
       });
       if (result.error) {
-        setError("Code incorrect. Vérifiez l'heure de votre téléphone.");
+        setError(
+          localize(locale, {
+            fr: "Code incorrect. Vérifiez l'heure de votre téléphone.",
+            en: "Incorrect code. Check the time on your phone.",
+          })
+        );
         setBusy(false);
         return;
       }
       setEnrolment(null);
       setCode("");
-      toast.success("Vérification par application activée.");
+      toast.success(
+        localize(locale, {
+          fr: "Vérification par application activée.",
+          en: "App-based verification enabled.",
+        })
+      );
       router.refresh();
     } catch {
-      setError("Code incorrect.");
+      setError(
+        localize(locale, { fr: "Code incorrect.", en: "Incorrect code." })
+      );
     }
     setBusy(false);
   };
@@ -82,15 +107,30 @@ export function TwoFactorPanel({ enabled }: { enabled: boolean }) {
     try {
       const result = await authClient.twoFactor.disable({ password });
       if (result.error) {
-        setError("Code d'accès incorrect.");
+        setError(
+          localize(locale, {
+            fr: "Code d'accès incorrect.",
+            en: "Incorrect access code.",
+          })
+        );
         setBusy(false);
         return;
       }
       setPassword("");
-      toast.success("Vérification par application désactivée.");
+      toast.success(
+        localize(locale, {
+          fr: "Vérification par application désactivée.",
+          en: "App-based verification disabled.",
+        })
+      );
       router.refresh();
     } catch {
-      setError("La désactivation n'a pas abouti.");
+      setError(
+        localize(locale, {
+          fr: "La désactivation n'a pas abouti.",
+          en: "Deactivation failed.",
+        })
+      );
     }
     setBusy(false);
   };
@@ -106,11 +146,16 @@ export function TwoFactorPanel({ enabled }: { enabled: boolean }) {
               aria-hidden="true"
               className="size-4 text-success-token"
             />
-            Active : un code de l&apos;application est demandé à chaque
-            connexion.
+            {localize(locale, {
+              fr: "Active : un code de l’application est demandé à chaque connexion.",
+              en: "Active: a code from your app is required whenever you sign in.",
+            })}
           </p>
           <TextField
-            label="Code d'accès actuel"
+            label={localize(locale, {
+              fr: "Code d'accès actuel",
+              en: "Current access code",
+            })}
             type="password"
             autoComplete="current-password"
             value={password}
@@ -124,7 +169,7 @@ export function TwoFactorPanel({ enabled }: { enabled: boolean }) {
             className="justify-self-start"
           >
             <ShieldOff aria-hidden="true" className="size-4" />
-            Désactiver
+            {localize(locale, { fr: "Désactiver", en: "Disable" })}
           </ActionButton>
         </div>
       ) : enrolment ? (
@@ -133,15 +178,20 @@ export function TwoFactorPanel({ enabled }: { enabled: boolean }) {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={enrolment.qr}
-              alt="Code QR à scanner dans votre application d'authentification"
+              alt={localize(locale, {
+                fr: "Code QR à scanner dans votre application d'authentification",
+                en: "QR code to scan in your authenticator app",
+              })}
               width={220}
               height={220}
               className="rounded-md border border-border bg-white p-2"
             />
             <div className="grid min-w-0 gap-3">
               <p className="type-small">
-                Scannez ce code, ou saisissez l&apos;adresse ci-dessous à la
-                main dans votre application d&apos;authentification.
+                {localize(locale, {
+                  fr: "Scannez ce code, ou saisissez l’adresse ci-dessous à la main dans votre application d’authentification.",
+                  en: "Scan this code, or enter the address below manually in your authenticator app.",
+                })}
               </p>
               <div className="flex items-start gap-2">
                 <code className="min-w-0 flex-1 overflow-x-auto rounded-md border border-border bg-surface-muted p-2 font-mono type-small break-all">
@@ -155,7 +205,12 @@ export function TwoFactorPanel({ enabled }: { enabled: boolean }) {
                   className="inline-flex shrink-0 items-center rounded-md border border-border px-3 type-small touch-target"
                 >
                   <Copy aria-hidden="true" className="size-4" />
-                  <span className="sr-only">Copier l&apos;adresse</span>
+                  <span className="sr-only">
+                    {localize(locale, {
+                      fr: "Copier l'adresse",
+                      en: "Copy address",
+                    })}
+                  </span>
                 </button>
               </div>
             </div>
@@ -163,8 +218,10 @@ export function TwoFactorPanel({ enabled }: { enabled: boolean }) {
 
           <div className="rounded-md border border-warning-token/40 bg-warning-token/10 p-4">
             <p className="type-small font-semibold text-foreground">
-              Codes de secours — notez-les maintenant, ils ne seront plus
-              affichés.
+              {localize(locale, {
+                fr: "Codes de secours — notez-les maintenant, ils ne seront plus affichés.",
+                en: "Backup codes — save them now, as they will not be shown again.",
+              })}
             </p>
             <ul className="mt-2 grid grid-cols-2 gap-1 font-mono type-small sm:grid-cols-5">
               {enrolment.backupCodes.map((backup) => (
@@ -175,7 +232,10 @@ export function TwoFactorPanel({ enabled }: { enabled: boolean }) {
 
           <div className="grid max-w-xs gap-3">
             <TextField
-              label="Code de l'application"
+              label={localize(locale, {
+                fr: "Code de l'application",
+                en: "App code",
+              })}
               inputMode="numeric"
               autoComplete="one-time-code"
               spellCheck={false}
@@ -188,19 +248,26 @@ export function TwoFactorPanel({ enabled }: { enabled: boolean }) {
               disabled={busy || code.trim().length < 6}
             >
               <ShieldCheck aria-hidden="true" className="size-4" />
-              Confirmer l&apos;activation
+              {localize(locale, {
+                fr: "Confirmer l'activation",
+                en: "Confirm activation",
+              })}
             </ActionButton>
           </div>
         </div>
       ) : (
         <div className="grid max-w-md gap-4">
           <p className="type-small text-muted-foreground">
-            Facultatif. Une application comme Google Authenticator ou Aegis
-            produit un code supplémentaire demandé à chaque connexion. Confirmez
-            votre code d&apos;accès pour commencer.
+            {localize(locale, {
+              fr: "Facultatif. Une application comme Google Authenticator ou Aegis produit un code supplémentaire demandé à chaque connexion. Confirmez votre code d’accès pour commencer.",
+              en: "Optional. An app such as Google Authenticator or Aegis generates an additional code required whenever you sign in. Confirm your access code to begin.",
+            })}
           </p>
           <TextField
-            label="Code d'accès actuel"
+            label={localize(locale, {
+              fr: "Code d'accès actuel",
+              en: "Current access code",
+            })}
             type="password"
             autoComplete="current-password"
             value={password}
@@ -214,7 +281,10 @@ export function TwoFactorPanel({ enabled }: { enabled: boolean }) {
             className="justify-self-start"
           >
             <ShieldCheck aria-hidden="true" className="size-4" />
-            Activer la vérification par application
+            {localize(locale, {
+              fr: "Activer la vérification par application",
+              en: "Enable app-based verification",
+            })}
           </ActionButton>
         </div>
       )}

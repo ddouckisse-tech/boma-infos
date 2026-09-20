@@ -9,8 +9,10 @@
  */
 
 import type * as accounts from "../accounts.js";
+import type * as advertising from "../advertising.js";
 import type * as agentRuntime from "../agentRuntime.js";
 import type * as agents from "../agents.js";
+import type * as articleCounts from "../articleCounts.js";
 import type * as audit from "../audit.js";
 import type * as auth from "../auth.js";
 import type * as contact from "../contact.js";
@@ -21,9 +23,14 @@ import type * as http from "../http.js";
 import type * as journal from "../journal.js";
 import type * as library from "../library.js";
 import type * as mediaManifest from "../mediaManifest.js";
+import type * as mediaRenditions from "../mediaRenditions.js";
 import type * as model_access from "../model/access.js";
+import type * as model_advertising from "../model/advertising.js";
 import type * as model_agentEngine from "../model/agentEngine.js";
 import type * as model_agents from "../model/agents.js";
+import type * as model_articleCounts from "../model/articleCounts.js";
+import type * as model_articleWrites from "../model/articleWrites.js";
+import type * as model_audience from "../model/audience.js";
 import type * as model_audit from "../model/audit.js";
 import type * as model_content from "../model/content.js";
 import type * as model_media from "../model/media.js";
@@ -46,6 +53,7 @@ import type * as seeding from "../seeding.js";
 import type * as settings from "../settings.js";
 import type * as stats from "../stats.js";
 import type * as taxonomy from "../taxonomy.js";
+import type * as wordpressImport from "../wordpressImport.js";
 
 import type {
   ApiFromModules,
@@ -55,8 +63,10 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   accounts: typeof accounts;
+  advertising: typeof advertising;
   agentRuntime: typeof agentRuntime;
   agents: typeof agents;
+  articleCounts: typeof articleCounts;
   audit: typeof audit;
   auth: typeof auth;
   contact: typeof contact;
@@ -67,9 +77,14 @@ declare const fullApi: ApiFromModules<{
   journal: typeof journal;
   library: typeof library;
   mediaManifest: typeof mediaManifest;
+  mediaRenditions: typeof mediaRenditions;
   "model/access": typeof model_access;
+  "model/advertising": typeof model_advertising;
   "model/agentEngine": typeof model_agentEngine;
   "model/agents": typeof model_agents;
+  "model/articleCounts": typeof model_articleCounts;
+  "model/articleWrites": typeof model_articleWrites;
+  "model/audience": typeof model_audience;
   "model/audit": typeof model_audit;
   "model/content": typeof model_content;
   "model/media": typeof model_media;
@@ -92,6 +107,7 @@ declare const fullApi: ApiFromModules<{
   settings: typeof settings;
   stats: typeof stats;
   taxonomy: typeof taxonomy;
+  wordpressImport: typeof wordpressImport;
 }>;
 
 /**

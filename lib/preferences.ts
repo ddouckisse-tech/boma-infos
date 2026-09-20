@@ -1,20 +1,26 @@
+import { AD_PREFERENCES_SCRIPT } from "@/lib/ads/browser";
+
 /**
  * Reader preferences persisted in `localStorage`.
  *
- * Two of them exist in milestone 1:
+ * Three preferences are shared by the public journal and the private areas:
  *  - the colour theme (light / dark / follow the system), see CDC §3.1;
  *  - the data saver mode, which milestone 2 consumes to downgrade images and
  *    stop preloading video (CDC §2.2 — data is expensive in Gabon).
  *
- * Both are applied by a blocking inline script in <head> so the first paint is
+ *  - the interface language (French / English).
+ *
+ * They are applied by a blocking inline script in <head> so the first paint is
  * already correct: no flash of the wrong theme.
  */
 
 export type ThemeChoice = "light" | "dark" | "system";
 export type ResolvedTheme = "light" | "dark";
+export type LocaleChoice = "fr" | "en";
 
 export const THEME_STORAGE_KEY = "lecorporate.theme";
 export const DATA_SAVER_STORAGE_KEY = "lecorporate.data-saver";
+export const LOCALE_STORAGE_KEY = "lecorporate.locale";
 
 /**
  * Le mode économie est aussi écrit dans un cookie : c'est `proxy.ts` qui le
@@ -44,6 +50,9 @@ export const THEME_LABELS: Record<ThemeChoice, string> = {
 export const isThemeChoice = (value: unknown): value is ThemeChoice =>
   value === "light" || value === "dark" || value === "system";
 
+export const isLocaleChoice = (value: unknown): value is LocaleChoice =>
+  value === "fr" || value === "en";
+
 /**
  * Source of the blocking inline script.
  *
@@ -51,7 +60,8 @@ export const isThemeChoice = (value: unknown): value is ThemeChoice =>
  * project owns, which keeps the Content-Security-Policy surface auditable
  * (see `lib/security-headers.ts`).
  */
-export const PREFERENCES_SCRIPT = `(function(){try{
+export const PREFERENCES_SCRIPT =
+  `(function(){try{
 var d=document.documentElement;
 var t=localStorage.getItem(${JSON.stringify(THEME_STORAGE_KEY)})||"system";
 if(t!=="light"&&t!=="dark"&&t!=="system"){t="system";}
@@ -63,4 +73,8 @@ d.style.colorScheme=r;
 var s=localStorage.getItem(${JSON.stringify(DATA_SAVER_STORAGE_KEY)})==="1";
 d.dataset.dataSaver=s?"on":"off";
 document.cookie=${JSON.stringify(DATA_SAVER_COOKIE)}+"="+(s?"1":"0")+"; Path=/; Max-Age="+(s?31536000:0)+"; SameSite=Lax";
-}catch(e){}})();`;
+var l=localStorage.getItem(${JSON.stringify(LOCALE_STORAGE_KEY)});
+if(l!=="fr"&&l!=="en"){l=navigator.language&&navigator.language.toLowerCase().startsWith("en")?"en":"fr";}
+d.dataset.locale=l;
+d.lang=l==="en"?"en":"fr-FR";
+}catch(e){}})();` + AD_PREFERENCES_SCRIPT;

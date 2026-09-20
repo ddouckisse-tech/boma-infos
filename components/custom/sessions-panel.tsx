@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ActionButton } from "@/components/custom/action-button";
+import { usePreferences } from "@/components/providers/preferences-provider";
 import { authClient } from "@/lib/auth-client";
-import { formatDateTime } from "@/lib/private";
+import { localeDate, localize } from "@/lib/i18n";
+import type { LocaleChoice } from "@/lib/preferences";
 
 type Session = {
   id: string;
@@ -17,6 +19,7 @@ type Session = {
 
 /** Where the account is signed in, and the one button that closes the others (§4.3). */
 export function SessionsPanel({ active }: { active: boolean }) {
+  const { locale } = usePreferences();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [tick, setTick] = useState(0);
   const [busy, setBusy] = useState(false);
@@ -44,10 +47,20 @@ export function SessionsPanel({ active }: { active: boolean }) {
     setBusy(true);
     try {
       await authClient.revokeOtherSessions();
-      toast.success("Les autres appareils ont été déconnectés.");
+      toast.success(
+        localize(locale, {
+          fr: "Les autres appareils ont été déconnectés.",
+          en: "Your other devices have been signed out.",
+        })
+      );
       setTick((n) => n + 1);
     } catch {
-      toast.error("La révocation n'a pas abouti.");
+      toast.error(
+        localize(locale, {
+          fr: "La révocation n'a pas abouti.",
+          en: "The sessions could not be revoked.",
+        })
+      );
     }
     setBusy(false);
   };
@@ -57,7 +70,10 @@ export function SessionsPanel({ active }: { active: boolean }) {
       <ul className="grid gap-2">
         {sessions.length === 0 && (
           <li className="type-small text-muted-foreground">
-            Aucun appareil listé.
+            {localize(locale, {
+              fr: "Aucun appareil listé.",
+              en: "No devices listed.",
+            })}
           </li>
         )}
         {sessions.map((session) => (
@@ -65,10 +81,16 @@ export function SessionsPanel({ active }: { active: boolean }) {
             key={session.id}
             className="rounded-md border border-border p-3 type-small"
           >
-            <p className="font-medium">{describe(session.userAgent)}</p>
+            <p className="font-medium">{describe(session.userAgent, locale)}</p>
             <p className="text-muted-foreground">
-              Connecté le{" "}
-              {formatDateTime(new Date(session.createdAt).getTime())}
+              {localize(locale, { fr: "Connecté le ", en: "Signed in on " })}
+              {localeDate(session.createdAt, locale, {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
             </p>
           </li>
         ))}
@@ -80,15 +102,22 @@ export function SessionsPanel({ active }: { active: boolean }) {
         disabled={busy}
         className="justify-self-start"
       >
-        Déconnecter tous les autres appareils
+        {localize(locale, {
+          fr: "Déconnecter tous les autres appareils",
+          en: "Sign out all other devices",
+        })}
       </ActionButton>
     </div>
   );
 }
 
 /** `Mozilla/5.0 (iPhone; …) … Safari/604.1` → « iPhone · Safari ». */
-function describe(userAgent: string | null | undefined): string {
-  if (!userAgent) return "Appareil inconnu";
+function describe(
+  userAgent: string | null | undefined,
+  locale: LocaleChoice
+): string {
+  if (!userAgent)
+    return localize(locale, { fr: "Appareil inconnu", en: "Unknown device" });
   const device = /iPhone/.test(userAgent)
     ? "iPhone"
     : /iPad/.test(userAgent)
@@ -101,7 +130,7 @@ function describe(userAgent: string | null | undefined): string {
             ? "Windows"
             : /Linux/.test(userAgent)
               ? "Linux"
-              : "Appareil";
+              : localize(locale, { fr: "Appareil", en: "Device" });
   const browser = /Edg\//.test(userAgent)
     ? "Edge"
     : /OPR\//.test(userAgent)
@@ -112,6 +141,6 @@ function describe(userAgent: string | null | undefined): string {
           ? "Chrome"
           : /Safari\//.test(userAgent)
             ? "Safari"
-            : "navigateur";
+            : localize(locale, { fr: "navigateur", en: "browser" });
   return `${device} · ${browser}`;
 }

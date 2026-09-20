@@ -5,6 +5,8 @@
  * `next.config.ts`, so no request can slip through without them.
  */
 
+import { getAdSenseRuntimeConfig, isAdSenseNonce } from "./ads/adsense-config";
+
 const isProduction = process.env.NODE_ENV === "production";
 
 /** Convex endpoints the browser must be allowed to reach (WebSocket + HTTP). */
@@ -45,7 +47,31 @@ const convexHttpOrigins = (): string[] =>
  * À revoir au lot 2 : une fois le périmètre des pages connu, les routes
  * réellement dynamiques (espaces privés) pourront passer à un nonce.
  */
-export const contentSecurityPolicy = (): string => {
+export const contentSecurityPolicy = (nonce?: string): string => {
+  const advertising = isAdSenseNonce(nonce) ? getAdSenseRuntimeConfig() : null;
+  if (advertising) {
+    // Google supports nonce/strict-dynamic, not a fixed list of ad domains.
+    // HTTPS resource schemes accommodate its changing hosts only in this mode.
+    const sources = advertising.cmp.allowedOrigins.join(" ");
+    return [
+      "default-src 'self'",
+      "base-uri 'none'",
+      "object-src 'none'",
+      "frame-ancestors 'none'",
+      "frame-src https:",
+      "form-action 'self'",
+      `script-src 'nonce-${nonce}' 'strict-dynamic' 'unsafe-inline' 'unsafe-eval' https:`,
+      "script-src-attr 'none'",
+      `style-src 'self' 'unsafe-inline' ${sources}`,
+      "img-src 'self' data: blob: https:",
+      `font-src 'self' ${sources}`,
+      "media-src 'self' https:",
+      "worker-src 'self' blob:",
+      "manifest-src 'self'",
+      `connect-src 'self' https: ${convexOrigins().join(" ")}`,
+      ...(isProduction ? ["upgrade-insecure-requests"] : []),
+    ].join("; ");
+  }
   const scriptSrc = isProduction
     ? "'self' 'unsafe-inline'"
     : // Le rechargement à chaud de Turbopack évalue du code à la volée.

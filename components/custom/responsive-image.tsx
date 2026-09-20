@@ -6,7 +6,7 @@ import {
   variantUrl,
   type MediaAsset,
 } from "@/lib/media-core";
-import { cn } from "@/lib/utils";
+import { cx } from "@/lib/cx";
 
 type ResponsiveImageProps = {
   media: MediaAsset;
@@ -79,7 +79,7 @@ export function ResponsiveImage({
 
   return (
     <span
-      className={cn("lc-media", wrapperClassName)}
+      className={cx("lc-media", wrapperClassName)}
       style={{ backgroundColor: media.color }}
     >
       <picture>
@@ -100,7 +100,16 @@ export function ResponsiveImage({
           // processeur bridé cela coûtait deux secondes de retard au rendu
           // — 60 % du LCP mesuré par Lighthouse.
           decoding="async"
-          className={cn("block h-full w-full object-cover", className)}
+          // `object-cover` par défaut ; un appelant qui précise son propre
+          // ajustement (l'emplacement publicitaire : `object-contain`) le
+          // remplace, sans moteur de fusion de classes côté lecteur.
+          className={cx(
+            "block h-full w-full",
+            /\bobject-(contain|fill|none|scale-down)\b/.test(className ?? "")
+              ? undefined
+              : "object-cover",
+            className
+          )}
         />
       </picture>
     </span>

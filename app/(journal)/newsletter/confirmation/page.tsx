@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import { Container } from "@/components/custom/container";
+import { LocalizedText } from "@/components/custom/localized-text";
 import { PageHeader } from "@/components/custom/page-header";
 import { Section } from "@/components/custom/section";
 import { api } from "@/convex/_generated/api";
@@ -46,11 +47,31 @@ export default async function ConfirmationPage({
     <>
       <PageHeader
         eyebrow="Newsletter"
-        title={ok ? "Inscription confirmée" : "Ce lien n'est plus valable"}
+        title={
+          ok ? (
+            <LocalizedText
+              fr="Inscription confirmée"
+              en="Subscription confirmed"
+            />
+          ) : (
+            <LocalizedText
+              fr="Ce lien n'est plus valable"
+              en="This link is no longer valid"
+            />
+          )
+        }
         description={
-          ok
-            ? "Vous recevrez la lettre hebdomadaire du Corporate chaque vendredi matin."
-            : "Le lien de confirmation est incorrect, ou il a déjà été utilisé et remplacé par une demande plus récente."
+          ok ? (
+            <LocalizedText
+              fr="Vous recevrez la lettre hebdomadaire du Corporate chaque vendredi matin."
+              en="You will receive Le Corporate's weekly newsletter every Friday morning."
+            />
+          ) : (
+            <LocalizedText
+              fr="Le lien de confirmation est incorrect, ou il a déjà été utilisé et remplacé par une demande plus récente."
+              en="The confirmation link is incorrect, or it has already been used and replaced by a newer request."
+            />
+          )
         }
         width="reading"
       />
@@ -71,25 +92,46 @@ export default async function ConfirmationPage({
             )}
             <div className="min-w-0">
               <p className="type-body">
-                {result.status === "confirmed" &&
-                  "Votre adresse est désormais inscrite. Chaque envoi comportera un lien de désinscription en un clic."}
-                {result.status === "already_confirmed" &&
-                  "Cette adresse était déjà inscrite : rien n'a changé."}
-                {result.status === "unknown" &&
-                  "Reprenez l'inscription depuis la page de la newsletter ; un nouveau lien de confirmation vous sera proposé."}
+                {result.status === "confirmed" && (
+                  <LocalizedText
+                    fr="Votre adresse est désormais inscrite. Chaque envoi comportera un lien de désinscription en un clic."
+                    en="Your address is now subscribed. Every issue will include a one-click unsubscribe link."
+                  />
+                )}
+                {result.status === "already_confirmed" && (
+                  <LocalizedText
+                    fr="Cette adresse était déjà inscrite : rien n'a changé."
+                    en="This address was already subscribed; nothing has changed."
+                  />
+                )}
+                {result.status === "unknown" && (
+                  <LocalizedText
+                    fr="Reprenez l'inscription depuis la page de la newsletter ; un nouveau lien de confirmation vous sera proposé."
+                    en="Start again from the newsletter page to receive a new confirmation link."
+                  />
+                )}
               </p>
 
               {ok && result.unsubscribeToken && (
                 <p className="mt-4 type-small text-muted-foreground">
-                  Conservez ce lien de désinscription&nbsp;:{" "}
+                  <LocalizedText
+                    fr="Conservez ce lien de désinscription : "
+                    en="Keep this unsubscribe link: "
+                  />
                   <Link
                     href={`/newsletter/desinscription?jeton=${result.unsubscribeToken}`}
                     prefetch={false}
                     className="text-accent underline underline-offset-4"
                   >
-                    se désinscrire en un clic
+                    <LocalizedText
+                      fr="se désinscrire en un clic"
+                      en="unsubscribe in one click"
+                    />
                   </Link>
-                  . Il sera présent dans chaque envoi.
+                  <LocalizedText
+                    fr=". Il sera présent dans chaque envoi."
+                    en=". It will appear in every issue."
+                  />
                 </p>
               )}
 
@@ -99,7 +141,7 @@ export default async function ConfirmationPage({
                   prefetch={false}
                   className="inline-flex items-center rounded-md bg-primary px-4 type-small font-semibold text-primary-foreground transition-colors touch-target hover:bg-primary/90"
                 >
-                  Retour à l&apos;accueil
+                  <LocalizedText fr="Retour à l'accueil" en="Back to home" />
                 </Link>
                 {!ok && (
                   <Link
@@ -107,7 +149,10 @@ export default async function ConfirmationPage({
                     prefetch={false}
                     className="inline-flex items-center rounded-md border border-border px-4 type-small font-semibold transition-colors touch-target hover:bg-surface-muted"
                   >
-                    Reprendre l&apos;inscription
+                    <LocalizedText
+                      fr="Reprendre l'inscription"
+                      en="Start subscription again"
+                    />
                   </Link>
                 )}
               </div>

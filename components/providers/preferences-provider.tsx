@@ -5,6 +5,7 @@ import {
   getServerSnapshot,
   getSnapshot,
   setDataSaver,
+  setLocale,
   setTheme,
   subscribe,
   type PreferencesSnapshot,
@@ -13,6 +14,7 @@ import {
 type PreferencesValue = PreferencesSnapshot & {
   setTheme: typeof setTheme;
   setDataSaver: typeof setDataSaver;
+  setLocale: typeof setLocale;
 };
 
 const PreferencesContext = createContext<PreferencesValue | null>(null);
@@ -34,7 +36,7 @@ export function PreferencesProvider({
 
   return (
     <PreferencesContext.Provider
-      value={{ ...snapshot, setTheme, setDataSaver }}
+      value={{ ...snapshot, setTheme, setDataSaver, setLocale }}
     >
       {children}
     </PreferencesContext.Provider>

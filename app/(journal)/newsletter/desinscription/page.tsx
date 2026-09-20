@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import { Container } from "@/components/custom/container";
+import { LocalizedText } from "@/components/custom/localized-text";
 import { PageHeader } from "@/components/custom/page-header";
 import { Section } from "@/components/custom/section";
 import { api } from "@/convex/_generated/api";
@@ -44,11 +45,31 @@ export default async function UnsubscribePage({
     <>
       <PageHeader
         eyebrow="Newsletter"
-        title={ok ? "Vous êtes désinscrit" : "Ce lien n'est plus valable"}
+        title={
+          ok ? (
+            <LocalizedText
+              fr="Vous êtes désinscrit"
+              en="You are unsubscribed"
+            />
+          ) : (
+            <LocalizedText
+              fr="Ce lien n'est plus valable"
+              en="This link is no longer valid"
+            />
+          )
+        }
         description={
-          ok
-            ? "Votre adresse ne recevra plus la lettre hebdomadaire. Aucune autre action n'est nécessaire."
-            : "Le lien de désinscription est incorrect. Écrivez à la rédaction et nous retirerons votre adresse."
+          ok ? (
+            <LocalizedText
+              fr="Votre adresse ne recevra plus la lettre hebdomadaire. Aucune autre action n'est nécessaire."
+              en="Your address will no longer receive the weekly newsletter. No further action is needed."
+            />
+          ) : (
+            <LocalizedText
+              fr="Le lien de désinscription est incorrect. Écrivez à la rédaction et nous retirerons votre adresse."
+              en="The unsubscribe link is incorrect. Contact the editorial team and we will remove your address."
+            />
+          )
         }
         width="reading"
       />
@@ -69,12 +90,24 @@ export default async function UnsubscribePage({
             )}
             <div className="min-w-0">
               <p className="type-body">
-                {result.status === "unsubscribed" &&
-                  "C'est fait. Vous pouvez vous réinscrire à tout moment, sans justification."}
-                {result.status === "already_unsubscribed" &&
-                  "Cette adresse était déjà désinscrite."}
-                {result.status === "unknown" &&
-                  "Nous n'avons trouvé aucun abonnement correspondant à ce lien."}
+                {result.status === "unsubscribed" && (
+                  <LocalizedText
+                    fr="C'est fait. Vous pouvez vous réinscrire à tout moment, sans justification."
+                    en="Done. You can subscribe again at any time, without giving a reason."
+                  />
+                )}
+                {result.status === "already_unsubscribed" && (
+                  <LocalizedText
+                    fr="Cette adresse était déjà désinscrite."
+                    en="This address was already unsubscribed."
+                  />
+                )}
+                {result.status === "unknown" && (
+                  <LocalizedText
+                    fr="Nous n'avons trouvé aucun abonnement correspondant à ce lien."
+                    en="We could not find a subscription matching this link."
+                  />
+                )}
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link
@@ -82,14 +115,17 @@ export default async function UnsubscribePage({
                   prefetch={false}
                   className="inline-flex items-center rounded-md bg-primary px-4 type-small font-semibold text-primary-foreground transition-colors touch-target hover:bg-primary/90"
                 >
-                  Retour à l&apos;accueil
+                  <LocalizedText fr="Retour à l'accueil" en="Back to home" />
                 </Link>
                 <Link
                   href="/contacts"
                   prefetch={false}
                   className="inline-flex items-center rounded-md border border-border px-4 type-small font-semibold transition-colors touch-target hover:bg-surface-muted"
                 >
-                  Écrire à la rédaction
+                  <LocalizedText
+                    fr="Écrire à la rédaction"
+                    en="Contact the editorial team"
+                  />
                 </Link>
               </div>
             </div>

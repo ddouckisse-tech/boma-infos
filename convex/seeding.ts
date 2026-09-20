@@ -1,6 +1,12 @@
 import { internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 import { MEDIA } from "./mediaManifest";
+import { insertArticle } from "./model/articleWrites";
+import {
+  MEDIA_INDEX_BUILD,
+  mediaDerivedFields,
+  syncArticleMedia,
+} from "./model/media";
 import {
   ARTICLES_1,
   ARTICLES_2,
@@ -186,6 +192,13 @@ export const run = internalMutation({
       for (const row of await ctx.db.query("articles").collect()) {
         await ctx.db.delete(row._id);
       }
+      for (const row of await ctx.db.query("mediaUsages").collect()) {
+        await ctx.db.delete(row._id);
+      }
+      // Les comptes partent avec les articles ; les insertions les refont.
+      for (const row of await ctx.db.query("articleCounts").collect()) {
+        await ctx.db.delete(row._id);
+      }
       for (const row of await ctx.db.query("documents").collect()) {
         await ctx.db.delete(row._id);
       }
@@ -200,11 +213,15 @@ export const run = internalMutation({
     }
 
     for (const asset of Object.values(MEDIA)) {
-      await ctx.db.insert("media", {
+      const text = {
         key: asset.id,
         alt: asset.alt,
         caption: asset.caption,
         credit: asset.credit,
+      };
+      await ctx.db.insert("media", {
+        ...text,
+        ...mediaDerivedFields(text),
         license: asset.license,
         source: asset.source,
         width: asset.width,
@@ -226,7 +243,7 @@ export const run = internalMutation({
     const now = Date.now();
     for (const article of ALL_ARTICLES) {
       const publishedAt = now - article.daysAgo * DAY;
-      await ctx.db.insert("articles", {
+      const articleId = await insertArticle(ctx, {
         title: article.title,
         slug: article.slug,
         dek: article.dek,
@@ -249,6 +266,22 @@ export const run = internalMutation({
         views: article.views,
         searchText: searchText(article),
       });
+      await syncArticleMedia(ctx, articleId);
+    }
+
+    // Après une remise à zéro, tout ce qui vient d'être écrit est indexé :
+    // inutile d'attendre `library:reindex` pour compter les usages.
+    if (reset !== false) {
+      const build = await ctx.db
+        .query("indexBuilds")
+        .withIndex("by_name", (q) => q.eq("name", MEDIA_INDEX_BUILD))
+        .unique();
+      if (!build) {
+        await ctx.db.insert("indexBuilds", {
+          name: MEDIA_INDEX_BUILD,
+          completedAt: Date.now(),
+        });
+      }
     }
 
     for (const document of DOCUMENTS) {

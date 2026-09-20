@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     ".next/**",
     "out/**",
     "build/**",
+    // Captures et scripts de recette locaux, comme dans .gitignore.
+    "output/**",
     "next-env.d.ts",
     // Code généré par Convex : jamais édité à la main.
     "convex/_generated/**",

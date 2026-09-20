@@ -1,11 +1,23 @@
 import Link from "next/link";
 import { CategoryBadge } from "@/components/custom/category-badge";
+import { LocalizedText } from "@/components/custom/localized-text";
 import { PartnerTag } from "@/components/custom/partner-tag";
 import { ResponsiveImage } from "@/components/custom/responsive-image";
 import { formatDate, formatReadingTime, isoDate } from "@/lib/format";
+import { localeDate } from "@/lib/i18n";
 import { getMediaAsset, SIZES } from "@/lib/media";
 import { cn } from "@/lib/utils";
 import type { ArticleSummary } from "@/convex/model/content";
+
+const englishDate = (value: number) =>
+  localeDate(value, "en", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "Africa/Libreville",
+  });
+
+const englishReadingTime = (minutes: number) => `${minutes}\u00a0min read`;
 
 type ArticleCardProps = {
   article: ArticleSummary;
@@ -20,6 +32,8 @@ type ArticleCardProps = {
   className?: string;
   /** Raises the headline to <h2>; default is <h3>. */
   headingLevel?: 2 | 3;
+  /** Keeps deep home-page sections textual to stay within the mobile budget. */
+  showImage?: boolean;
 };
 
 /**
@@ -46,6 +60,7 @@ export function ArticleCard({
   showCategory = true,
   className,
   headingLevel = 3,
+  showImage = true,
 }: ArticleCardProps) {
   const media = getMediaAsset(article.heroMediaKey);
   const Heading = headingLevel === 2 ? "h2" : "h3";
@@ -53,16 +68,22 @@ export function ArticleCard({
   const meta = (
     <p className="type-small text-muted-foreground">
       <time dateTime={isoDate(article.publishedAt)}>
-        {formatDate(article.publishedAt)}
+        <LocalizedText
+          fr={formatDate(article.publishedAt)}
+          en={englishDate(article.publishedAt)}
+        />
       </time>
       <span aria-hidden="true"> · </span>
-      {formatReadingTime(article.readingMinutes)}
+      <LocalizedText
+        fr={formatReadingTime(article.readingMinutes)}
+        en={englishReadingTime(article.readingMinutes)}
+      />
     </p>
   );
 
   if (variant === "compact") {
     return (
-      <article className={cn("group/card relative py-3", className)}>
+      <article lang="fr" className={cn("group/card relative py-3", className)}>
         <div className="flex items-baseline gap-3">
           <span
             aria-hidden="true"
@@ -91,24 +112,33 @@ export function ArticleCard({
   if (variant === "list") {
     return (
       <article
+        lang="fr"
         className={cn(
-          "group/card relative grid grid-cols-[96px_1fr] gap-4 py-4 sm:grid-cols-[160px_1fr] sm:gap-6",
+          "group/card relative py-4",
+          showImage &&
+            "grid grid-cols-[96px_1fr] gap-4 sm:grid-cols-[160px_1fr] sm:gap-6",
           className
         )}
       >
-        <div>
-          {media ? (
-            <ResponsiveImage
-              media={media}
-              alt=""
-              sizes={SIZES.thumb}
-              maxWidth={320}
-              wrapperClassName="aspect-[16/9] rounded-md"
-            />
-          ) : (
-            <span className="block aspect-[16/9] rounded-md bg-surface-muted" />
-          )}
-        </div>
+        {showImage && (
+          <div>
+            {media ? (
+              <ResponsiveImage
+                media={media}
+                alt=""
+                sizes={SIZES.thumb}
+                // 240 et non 320 : la vignette fait 96 px de large sur un
+                // téléphone (192 px physiques) et 160 px au-delà. La
+                // rendition de 240 px pèse un tiers de moins, et le budget
+                // facture la plus grande que le <picture> peut demander.
+                maxWidth={240}
+                wrapperClassName="aspect-[16/9] rounded-md"
+              />
+            ) : (
+              <span className="block aspect-[16/9] rounded-md bg-surface-muted" />
+            )}
+          </div>
+        )}
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             {showCategory && (
@@ -144,6 +174,7 @@ export function ArticleCard({
 
   return (
     <article
+      lang="fr"
       className={cn(
         "group/card relative flex h-full flex-col overflow-hidden rounded-md border border-border bg-card",
         className
@@ -155,7 +186,7 @@ export function ArticleCard({
             media={media}
             alt=""
             sizes={SIZES.card}
-            maxWidth={768}
+            maxWidth={640}
             wrapperClassName="aspect-[16/9]"
           />
         ) : (

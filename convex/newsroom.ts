@@ -12,8 +12,15 @@ import {
   requirePermission,
   type Viewer,
 } from "./model/access";
-import { thumbUrlOf } from "./model/media";
+import { readCount, readCounts } from "./model/articleCounts";
+import {
+  deleteArticle,
+  insertArticle,
+  patchArticle,
+} from "./model/articleWrites";
+import { countMissingAlt, syncArticleMedia } from "./model/media";
 import { recordAudit } from "./model/audit";
+import { AUDIENCE_DAYS, computeAudience, viewsOver } from "./model/audience";
 import {
   articleFeature,
   articleOrigin,
@@ -53,7 +60,6 @@ const rowShape = v.object({
   publishedAt: v.number(),
   updatedAt: v.number(),
   readingMinutes: v.number(),
-  views: v.number(),
   pendingSuggestions: v.number(),
 });
 
@@ -77,7 +83,6 @@ const detailShape = v.object({
   readingMinutes: v.number(),
   publishedAt: v.number(),
   updatedAt: v.number(),
-  views: v.number(),
   editable: v.boolean(),
 });
 
@@ -118,6 +123,83 @@ async function loadLookup(ctx: QueryCtx) {
   };
 }
 
+type Lookup = Awaited<ReturnType<typeof loadLookup>>;
+
+/**
+ * Agent proposals still waiting for a human, per target, through the status
+ * index: the decided ones — most of the table, which only grows — are not
+ * read. `limit` caps what a badge needs.
+ */
+async function pendingSuggestions(ctx: QueryCtx, limit?: number) {
+  const pending = ctx.db
+    .query("agentSuggestions")
+    .withIndex("by_status", (q) => q.eq("status", "pending"));
+  const rows =
+    limit === undefined ? await pending.collect() : await pending.take(limit);
+  const byTarget = new Map<string, number>();
+  for (const row of rows) {
+    byTarget.set(row.targetId, (byTarget.get(row.targetId) ?? 0) + 1);
+  }
+  return { total: rows.length, byTarget };
+}
+
+/** Company deposits handed over and not yet decided. */
+async function waitingSubmissions(
+  ctx: QueryCtx,
+  limit?: number
+): Promise<number> {
+  const counts = await Promise.all(
+    (["submitted", "in_review"] as const).map(async (status) => {
+      const rows = ctx.db
+        .query("submissions")
+        .withIndex("by_status", (q) => q.eq("status", status));
+      return (
+        limit === undefined ? await rows.collect() : await rows.take(limit)
+      ).length;
+    })
+  );
+  return counts[0] + counts[1];
+}
+
+/** Companies an administrator has not approved (pending, rejected or suspended). */
+async function waitingOrganizations(
+  ctx: QueryCtx,
+  limit?: number
+): Promise<number> {
+  const rows = ctx.db
+    .query("organizations")
+    .withIndex("by_approved", (q) => q.eq("approved", false));
+  return (limit === undefined ? await rows.collect() : await rows.take(limit))
+    .length;
+}
+
+function toRow(
+  row: Doc<"articles">,
+  lookup: Lookup,
+  pending: Map<string, number>
+) {
+  return {
+    _id: row._id,
+    title: row.title,
+    slug: row.slug,
+    dek: row.dek,
+    status: row.status,
+    categorySlug: row.categorySlug,
+    categoryName:
+      lookup.categories.get(row.categorySlug)?.name ?? row.categorySlug,
+    subCategorySlug: row.subCategorySlug,
+    authorSlug: row.authorSlug,
+    authorName: lookup.authors.get(row.authorSlug)?.name ?? row.authorSlug,
+    origin: row.origin,
+    feature: row.feature,
+    heroMediaKey: row.heroMediaKey,
+    publishedAt: row.publishedAt,
+    updatedAt: row.updatedAt,
+    readingMinutes: row.readingMinutes,
+    pendingSuggestions: pending.get(row._id) ?? 0,
+  };
+}
+
 /* -------------------------------------------------------------------------
    Reads
    ------------------------------------------------------------------------- */
@@ -152,106 +234,156 @@ export const dashboard = query({
   handler: async (ctx) => {
     await requirePermission(ctx, PERMISSIONS.newsroom);
 
-    const articles = await ctx.db.query("articles").collect();
-    const submissions = await ctx.db.query("submissions").collect();
-    const organizations = await ctx.db.query("organizations").collect();
-    const lookup = await loadLookup(ctx);
-    const suggestions = await ctx.db
-      .query("agentSuggestions")
-      .withIndex("by_target")
-      .collect();
-    const pending = new Map<string, number>();
-    for (const suggestion of suggestions) {
-      if (suggestion.status !== "pending") continue;
-      pending.set(
-        suggestion.targetId,
-        (pending.get(suggestion.targetId) ?? 0) + 1
-      );
-    }
+    // Nothing here reads a whole table, and nothing changes on a public
+    // view: counts come from `articleCounts`, lists from their index, the
+    // audience from the quarter-hourly snapshot.
+    const newest = (status: "in_review" | "submitted") =>
+      ctx.db
+        .query("articles")
+        .withIndex("by_status_updated", (q) => q.eq("status", status))
+        .order("desc")
+        .take(5);
+    const [
+      statuses,
+      lookup,
+      pending,
+      submissionsWaiting,
+      organizationsWaiting,
+      recentRows,
+      reviewRows,
+      lead,
+      snapshot,
+      mediaMissingAlt,
+    ] = await Promise.all([
+      readCounts(ctx, "status"),
+      loadLookup(ctx),
+      pendingSuggestions(ctx),
+      waitingSubmissions(ctx),
+      waitingOrganizations(ctx),
+      ctx.db.query("articles").withIndex("by_updated").order("desc").take(8),
+      Promise.all([newest("in_review"), newest("submitted")]),
+      ctx.db
+        .query("articles")
+        .withIndex("by_feature", (q) =>
+          q.eq("status", "published").eq("feature", "lead")
+        )
+        .first(),
+      ctx.db
+        .query("audienceSnapshots")
+        .withIndex("by_key", (q) => q.eq("key", "site"))
+        .unique(),
+      countMissingAlt(ctx),
+    ]);
 
-    const counts = {
-      draft: articles.filter((a) => a.status === "draft").length,
-      inReview: articles.filter(
-        (a) => a.status === "in_review" || a.status === "submitted"
-      ).length,
-      scheduled: articles.filter((a) => a.status === "scheduled").length,
-      published: articles.filter((a) => a.status === "published").length,
-    };
-
-    const toRow = (row: Doc<"articles">) => ({
-      _id: row._id,
-      title: row.title,
-      slug: row.slug,
-      dek: row.dek,
-      status: row.status,
-      categorySlug: row.categorySlug,
-      categoryName:
-        lookup.categories.get(row.categorySlug)?.name ?? row.categorySlug,
-      subCategorySlug: row.subCategorySlug,
-      authorSlug: row.authorSlug,
-      authorName: lookup.authors.get(row.authorSlug)?.name ?? row.authorSlug,
-      origin: row.origin,
-      feature: row.feature,
-      heroMediaKey: row.heroMediaKey,
-      publishedAt: row.publishedAt,
-      updatedAt: row.updatedAt,
-      readingMinutes: row.readingMinutes,
-      views: row.views,
-      pendingSuggestions: pending.get(row._id) ?? 0,
-    });
-    const byRecency = [...articles].sort((a, b) => b.updatedAt - a.updatedAt);
-    const recent = byRecency.slice(0, 8).map(toRow);
-    const awaitingReview = byRecency
-      .filter((a) => a.status === "in_review" || a.status === "submitted")
-      .slice(0, 5)
-      .map(toRow);
-    const media = await ctx.db.query("media").collect();
-    let pendingSuggestions = 0;
-    for (const count of pending.values()) pendingSuggestions += count;
-
-    const stats = await ctx.db.query("articleStats").collect();
-    const days = await ctx.db.query("articleStatDays").collect();
+    const count = (status: Doc<"articles">["status"]) =>
+      statuses.get(status) ?? 0;
     const now = Date.now();
-    const dayLabel = (offset: number) =>
-      new Date(now - offset * 86_400_000).toISOString().slice(0, 10);
-    const last7 = new Set(Array.from({ length: 7 }, (_, i) => dayLabel(i)));
-    const last30 = new Set(Array.from({ length: 30 }, (_, i) => dayLabel(i)));
-    const titles = new Map(articles.map((a) => [a.slug, a.title]));
+    // Before the first snapshot (the first quarter of an hour after a
+    // deployment), the same figures are computed here.
+    const audience = snapshot ?? (await computeAudience(ctx, now, null));
 
     return {
-      counts,
-      submissionsWaiting: submissions.filter(
-        (s) => s.status === "submitted" || s.status === "in_review"
-      ).length,
-      organizationsWaiting: organizations.filter((o) => !o.approved).length,
-      tasks: {
-        pendingSuggestions,
-        mediaMissingAlt: media.filter((m) => m.alt.trim() === "").length,
-        hasLead: articles.some(
-          (a) => a.status === "published" && a.feature === "lead"
-        ),
-        awaitingReview,
+      counts: {
+        draft: count("draft"),
+        inReview: count("in_review") + count("submitted"),
+        scheduled: count("scheduled"),
+        published: count("published"),
       },
-      recent,
-      audience: {
-        views7d: days
-          .filter((d) => last7.has(d.day))
-          .reduce((sum, d) => sum + d.views, 0),
-        views30d: days
-          .filter((d) => last30.has(d.day))
-          .reduce((sum, d) => sum + d.views, 0),
-        topArticles: [...stats]
-          .sort((a, b) => b.views - a.views)
+      submissionsWaiting,
+      organizationsWaiting,
+      tasks: {
+        pendingSuggestions: pending.total,
+        mediaMissingAlt,
+        hasLead: lead !== null,
+        awaitingReview: reviewRows
+          .flat()
+          .sort(
+            (a, b) =>
+              b.updatedAt - a.updatedAt || a._creationTime - b._creationTime
+          )
           .slice(0, 5)
-          .map((row) => ({
-            slug: row.slug,
-            title: titles.get(row.slug) ?? row.slug,
-            views: row.views,
-          })),
+          .map((row) => toRow(row, lookup, pending.byTarget)),
+      },
+      recent: recentRows.map((row) => toRow(row, lookup, pending.byTarget)),
+      audience: {
+        views7d: viewsOver(audience.days, now, 7),
+        views30d: viewsOver(audience.days, now, AUDIENCE_DAYS),
+        topArticles: audience.topArticles,
       },
     };
   },
 });
+
+/** Rows of the article list; a search returns its most relevant matches. */
+const LIST_SIZE = 200;
+const SEARCH_SIZE = 50;
+const STATUSES = articleStatus.members.map((member) => member.value);
+const ORIGINS = articleOrigin.members.map((member) => member.value);
+
+/**
+ * The articles of the narrowest filter, last modified first: the list stops
+ * at 200 matches, and reads no more than that filter holds — `articleCounts`
+ * says which one it is. Without a filter, the last modified of all.
+ */
+async function narrowestList(
+  ctx: QueryCtx,
+  filters: {
+    status?: Doc<"articles">["status"];
+    categorySlug?: string;
+    authorSlug?: string;
+    origin?: Doc<"articles">["origin"];
+  }
+) {
+  const { status, categorySlug, authorSlug, origin } = filters;
+  const everything = () => ctx.db.query("articles").withIndex("by_updated");
+  const candidates: {
+    size: Promise<number>;
+    query: () => ReturnType<typeof everything>;
+  }[] = [];
+  if (status) {
+    candidates.push({
+      size: readCount(ctx, "status", status),
+      query: () =>
+        ctx.db
+          .query("articles")
+          .withIndex("by_status_updated", (q) => q.eq("status", status)),
+    });
+  }
+  if (categorySlug) {
+    candidates.push({
+      size: readCount(ctx, "category", categorySlug),
+      query: () =>
+        ctx.db
+          .query("articles")
+          .withIndex("by_category_updated", (q) =>
+            q.eq("categorySlug", categorySlug)
+          ),
+    });
+  }
+  if (authorSlug) {
+    candidates.push({
+      size: readCount(ctx, "author", authorSlug),
+      query: () =>
+        ctx.db
+          .query("articles")
+          .withIndex("by_author_updated", (q) =>
+            q.eq("authorSlug", authorSlug)
+          ),
+    });
+  }
+  if (origin) {
+    candidates.push({
+      size: readCount(ctx, "origin", origin),
+      query: () =>
+        ctx.db
+          .query("articles")
+          .withIndex("by_origin_updated", (q) => q.eq("origin", origin)),
+    });
+  }
+  if (candidates.length === 0) return everything().order("desc");
+  const sizes = await Promise.all(candidates.map((entry) => entry.size));
+  return candidates[sizes.indexOf(Math.min(...sizes))].query().order("desc");
+}
 
 export const list = query({
   args: {
@@ -264,59 +396,53 @@ export const list = query({
   returns: v.array(rowShape),
   handler: async (ctx, filters) => {
     await requirePermission(ctx, PERMISSIONS.articlesRead);
-    const lookup = await loadLookup(ctx);
-    const suggestions = await ctx.db.query("agentSuggestions").collect();
-    const pending = new Map<string, number>();
-    for (const suggestion of suggestions) {
-      if (suggestion.status !== "pending") continue;
-      pending.set(
-        suggestion.targetId,
-        (pending.get(suggestion.targetId) ?? 0) + 1
-      );
-    }
+    const status = STATUSES.find((value) => value === filters.status);
+    const origin = ORIGINS.find((value) => value === filters.origin);
+    // Un filtre inconnu ne désigne aucun article, comme avant.
+    if ((filters.status && !status) || (filters.origin && !origin)) return [];
+
+    const [lookup, pending] = await Promise.all([
+      loadLookup(ctx),
+      pendingSuggestions(ctx),
+    ]);
+    const matches = (row: Doc<"articles">) =>
+      (!status || row.status === status) &&
+      (!filters.categorySlug || row.categorySlug === filters.categorySlug) &&
+      (!filters.authorSlug || row.authorSlug === filters.authorSlug) &&
+      (!origin || row.origin === origin);
 
     const term = (filters.term ?? "").trim().toLowerCase();
-    const rows = await ctx.db.query("articles").collect();
+    const rows: Doc<"articles">[] = [];
+    if (term) {
+      // Title, chapô, tags and body, over the whole archive — the substring
+      // test on titles read every article at each keystroke.
+      const found = await ctx.db
+        .query("articles")
+        .withSearchIndex("search_articles", (q) => {
+          const search = q.search("searchText", term);
+          const inStatus = status ? search.eq("status", status) : search;
+          return filters.categorySlug
+            ? inStatus.eq("categorySlug", filters.categorySlug)
+            : inStatus;
+        })
+        .take(SEARCH_SIZE);
+      rows.push(...found.filter(matches));
+    } else {
+      for await (const row of await narrowestList(ctx, {
+        status,
+        categorySlug: filters.categorySlug,
+        authorSlug: filters.authorSlug,
+        origin,
+      })) {
+        if (!matches(row)) continue;
+        rows.push(row);
+        if (rows.length === LIST_SIZE) break;
+      }
+    }
 
     return rows
-      .filter((row) => !filters.status || row.status === filters.status)
-      .filter(
-        (row) =>
-          !filters.categorySlug || row.categorySlug === filters.categorySlug
-      )
-      .filter(
-        (row) => !filters.authorSlug || row.authorSlug === filters.authorSlug
-      )
-      .filter((row) => !filters.origin || row.origin === filters.origin)
-      .filter(
-        (row) =>
-          term === "" ||
-          row.title.toLowerCase().includes(term) ||
-          row.slug.includes(term)
-      )
       .sort((a, b) => b.updatedAt - a.updatedAt)
-      .slice(0, 200)
-      .map((row) => ({
-        _id: row._id,
-        title: row.title,
-        slug: row.slug,
-        dek: row.dek,
-        status: row.status,
-        categorySlug: row.categorySlug,
-        categoryName:
-          lookup.categories.get(row.categorySlug)?.name ?? row.categorySlug,
-        subCategorySlug: row.subCategorySlug,
-        authorSlug: row.authorSlug,
-        authorName: lookup.authors.get(row.authorSlug)?.name ?? row.authorSlug,
-        origin: row.origin,
-        feature: row.feature,
-        heroMediaKey: row.heroMediaKey,
-        publishedAt: row.publishedAt,
-        updatedAt: row.updatedAt,
-        readingMinutes: row.readingMinutes,
-        views: row.views,
-        pendingSuggestions: pending.get(row._id) ?? 0,
-      }));
+      .map((row) => toRow(row, lookup, pending.byTarget));
   },
 });
 
@@ -352,7 +478,6 @@ export const get = query({
       readingMinutes: row.readingMinutes,
       publishedAt: row.publishedAt,
       updatedAt: row.updatedAt,
-      views: row.views,
       editable,
     };
   },
@@ -467,7 +592,7 @@ export const create = mutation({
 
     const now = Date.now();
     const title = args.title.trim() || "Nouvel article";
-    const id = await ctx.db.insert("articles", {
+    const id = await insertArticle(ctx, {
       title,
       slug: await uniqueSlug(ctx, title),
       dek: "",
@@ -533,7 +658,7 @@ export const save = mutation({
         : row.slug;
     const now = Date.now();
 
-    await ctx.db.patch(args.id, {
+    await patchArticle(ctx, row, {
       title,
       slug,
       dek: args.dek,
@@ -551,6 +676,7 @@ export const save = mutation({
       searchText: searchText(title, args.dek, args.tags, args.body),
       updatedAt: now,
     });
+    await syncArticleMedia(ctx, args.id);
 
     if (!args.auto) {
       await recordAudit(
@@ -591,7 +717,7 @@ export const setStatus = mutation({
     await snapshot(ctx, row, viewer, `Passage en « ${status} »`);
 
     const now = Date.now();
-    await ctx.db.patch(id, {
+    await patchArticle(ctx, row, {
       status,
       updatedAt: now,
       publishedAt:
@@ -636,7 +762,7 @@ export const setStatusMany = mutation({
       ) {
         continue;
       }
-      await ctx.db.patch(id, { status, updatedAt: Date.now() });
+      await patchArticle(ctx, row, { status, updatedAt: Date.now() });
       await recordAudit(
         ctx,
         viewer,
@@ -662,7 +788,8 @@ export const remove = mutation({
     if (row.status === "published") {
       throw new Error("Dépubliez l'article avant de le supprimer.");
     }
-    await ctx.db.delete(id);
+    await deleteArticle(ctx, row);
+    await syncArticleMedia(ctx, id, null);
     await recordAudit(ctx, viewer, "article.delete", "article", id, row.title);
     return null;
   },
@@ -680,7 +807,7 @@ export const restoreVersion = mutation({
     assertSection(viewer, article.categorySlug);
 
     await snapshot(ctx, article, viewer, "Avant restauration");
-    await ctx.db.patch(article._id, {
+    await patchArticle(ctx, article, {
       title: version.title,
       dek: version.dek,
       body: version.body,
@@ -693,6 +820,7 @@ export const restoreVersion = mutation({
       ),
       updatedAt: Date.now(),
     });
+    await syncArticleMedia(ctx, article._id);
     await recordAudit(
       ctx,
       viewer,
@@ -723,16 +851,6 @@ export const editorOptions = query({
       })
     ),
     authors: v.array(v.object({ slug: v.string(), name: v.string() })),
-    media: v.array(
-      v.object({
-        key: v.string(),
-        alt: v.string(),
-        caption: v.string(),
-        credit: v.string(),
-        /** Small rendition of an uploaded picture; the demo library has none. */
-        thumbUrl: v.optional(v.string()),
-      })
-    ),
   }),
   handler: async (ctx) => {
     const viewer = await requirePermission(ctx, PERMISSIONS.articlesRead);
@@ -740,10 +858,13 @@ export const editorOptions = query({
     const unrestricted =
       viewer.role.slug === "administrateur" || allowed.length === 0;
 
-    const [categories, authors, media] = await Promise.all([
+    // Les images ne sont plus livrées ici : le sélecteur les cherche page
+    // par page (`library.pick`) et retrouve les siennes par clé
+    // (`library.byKeys`). Toute la photothèque à chaque ouverture de
+    // l'éditeur, c'est ce qui a fait tomber le back-office le 19/09/2026.
+    const [categories, authors] = await Promise.all([
       ctx.db.query("categories").collect(),
       ctx.db.query("authors").collect(),
-      ctx.db.query("media").collect(),
     ]);
 
     return {
@@ -758,28 +879,21 @@ export const editorOptions = query({
           allowed: unrestricted || allowed.includes(row.slug),
         })),
       authors: authors.map((row) => ({ slug: row.slug, name: row.name })),
-      media: await Promise.all(
-        [...media]
-          .sort(
-            (a, b) =>
-              (b.uploadedAt ?? 0) - (a.uploadedAt ?? 0) ||
-              a.key.localeCompare(b.key, "fr")
-          )
-          .map(async (row) => ({
-            key: row.key,
-            alt: row.alt,
-            caption: row.caption,
-            credit: row.credit,
-            thumbUrl: await thumbUrlOf(ctx, row),
-          }))
-      ),
     };
   },
 });
 
+/** A badge shows « 99+ » beyond 99: counting further reads for nothing. */
+const BADGE_CAP = 100;
+
 /**
  * The little numbers on the navigation — what is waiting, where. Cheap on
  * purpose: the shell asks for them on every screen of the back office.
+ *
+ * Until 19/09/2026 it read four whole tables, `articles` included (6,9 Mo
+ * per call, re-run at every public view). The articles waiting come from
+ * `articleCounts`; the other queues are read through their index, up to
+ * what a badge can show.
  */
 export const navCounts = query({
   args: {},
@@ -791,23 +905,19 @@ export const navCounts = query({
   }),
   handler: async (ctx) => {
     await requirePermission(ctx, PERMISSIONS.newsroom);
-    const [articles, submissions, organizations, suggestions] =
+    const [inReview, submitted, submissionsWaiting, pending, organizations] =
       await Promise.all([
-        ctx.db.query("articles").collect(),
-        ctx.db.query("submissions").collect(),
-        ctx.db.query("organizations").collect(),
-        ctx.db.query("agentSuggestions").collect(),
+        readCount(ctx, "status", "in_review"),
+        readCount(ctx, "status", "submitted"),
+        waitingSubmissions(ctx, BADGE_CAP),
+        pendingSuggestions(ctx, BADGE_CAP),
+        waitingOrganizations(ctx, BADGE_CAP),
       ]);
     return {
-      inReview: articles.filter(
-        (a) => a.status === "in_review" || a.status === "submitted"
-      ).length,
-      submissionsWaiting: submissions.filter(
-        (s) => s.status === "submitted" || s.status === "in_review"
-      ).length,
-      pendingSuggestions: suggestions.filter((s) => s.status === "pending")
-        .length,
-      organizationsWaiting: organizations.filter((o) => !o.approved).length,
+      inReview: inReview + submitted,
+      submissionsWaiting: Math.min(submissionsWaiting, BADGE_CAP),
+      pendingSuggestions: pending.total,
+      organizationsWaiting: organizations,
     };
   },
 });

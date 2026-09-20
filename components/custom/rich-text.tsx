@@ -14,7 +14,8 @@ import { Fragment } from "react";
  * that they open a new window (CDC §3.5).
  */
 
-const TOKEN = /(\*\*[^*]+\*\*|\*[^*]+\*|\[[^\]]+\]\([^)\s]+\))/g;
+const TOKEN =
+  /(\*\*\*[^*]+\*\*\*|\*\*(?:(?!\*\*)[\s\S])+\*\*|\*(?:\*\*[^*]+\*\*|[^*])+\*|\[[^\]]+\]\([^)\s]+\))/g;
 
 export function RichText({ text }: { text: string }) {
   const parts = text.split(TOKEN).filter((part) => part !== "");
@@ -24,8 +25,19 @@ export function RichText({ text }: { text: string }) {
       {parts.map((part, index) => {
         const key = `${index}-${part.slice(0, 12)}`;
 
+        if (part.startsWith("***") && part.endsWith("***")) {
+          return (
+            <strong key={key}>
+              <em>{part.slice(3, -3)}</em>
+            </strong>
+          );
+        }
         if (part.startsWith("**") && part.endsWith("**")) {
-          return <strong key={key}>{part.slice(2, -2)}</strong>;
+          return (
+            <strong key={key}>
+              <RichText text={part.slice(2, -2)} />
+            </strong>
+          );
         }
 
         if (
@@ -34,7 +46,11 @@ export function RichText({ text }: { text: string }) {
           part.endsWith("*") &&
           !part.startsWith("**")
         ) {
-          return <em key={key}>{part.slice(1, -1)}</em>;
+          return (
+            <em key={key}>
+              <RichText text={part.slice(1, -1)} />
+            </em>
+          );
         }
 
         const link = /^\[([^\]]+)\]\(([^)\s]+)\)$/.exec(part);

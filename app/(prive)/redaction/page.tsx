@@ -19,6 +19,7 @@ import {
   Star,
 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
+import { MISSING_ALT_CAP } from "@/convex/model/media";
 import {
   NewContentDialog,
   type NewContentKind,
@@ -26,7 +27,7 @@ import {
 import { OfficeHeader } from "@/components/custom/office-header";
 import { StatsTile } from "@/components/custom/stats-tile";
 import { StatusPill } from "@/components/custom/status-pill";
-import { formatDateTime, formatNumber } from "@/lib/private";
+import { formatCapped, formatDateTime, formatNumber } from "@/lib/private";
 import { cn } from "@/lib/utils";
 import { firstNameOf } from "@/lib/viewer";
 
@@ -145,7 +146,7 @@ export default function NewsroomDashboard() {
   if (can("media:write") && data.tasks.mediaMissingAlt > 0) {
     tasks.push({
       icon: Images,
-      label: `${plural(data.tasks.mediaMissingAlt, "image", "images")} sans texte alternatif`,
+      label: `${formatCapped(data.tasks.mediaMissingAlt, MISSING_ALT_CAP)} ${data.tasks.mediaMissingAlt > 1 ? "images" : "image"} sans texte alternatif`,
       detail: "Obligatoire avant de placer l'image dans un article.",
       href: "/redaction/medias?filtre=sans-alt",
       tone: "info",

@@ -48,13 +48,6 @@ export const SOCIAL = [
   { label: "Facebook", href: "https://www.facebook.com/", key: "facebook" },
 ] as const;
 
-/**
- * Shown in the footer for as long as the site serves the fictional corpus of
- * `convex/seed/`. Delete this constant — and the seed — at go-live.
- */
-export const DEMO_CONTENT_NOTICE =
-  "Préproduction : les articles publiés ici sont un jeu de démonstration fictif, destiné à la recette du site.";
-
 export const NAV_STATIC_PAGES = [
   { label: "À propos", href: "/a-propos" },
   { label: "Docuthèque", href: "/docutheque" },

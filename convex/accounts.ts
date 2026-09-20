@@ -870,6 +870,78 @@ export const setProvisionalPassword = internalAction({
   },
 });
 
+/**
+ * Revokes an account from the command line —
+ * `bun run compte -- --email=… --revoquer`.
+ *
+ * The screen path is `setActive`, from « Comptes » : it needs an
+ * administrator session and refuses to revoke one's own account, which is
+ * right in the browser and useless when the account to close is the only
+ * one signed in, or a test account nobody administers. The CLI authenticates
+ * as the developer, like account creation does.
+ *
+ * Three effects, all required: the profile goes inactive (every Convex
+ * function then refuses it with `SUSPENDED`), every open Better Auth session
+ * is deleted (an open tab stops at its next request), and the gesture is
+ * written to the audit log **as the command line** — never in the name of an
+ * administrator who did not make it.
+ */
+export const revokeByEmail = internalAction({
+  args: { email: v.string() },
+  returns: v.string(),
+  handler: async (ctx, args): Promise<string> => {
+    const email = args.email.trim().toLowerCase();
+    const outcome: string = await ctx.runMutation(
+      internal.accounts.deactivateProfile,
+      { email }
+    );
+    const context = await createAuth(ctx).$context;
+    const found = await context.internalAdapter.findUserByEmail(email);
+    let closed = 0;
+    if (found) {
+      const sessions = await context.internalAdapter.listSessions(
+        found.user.id
+      );
+      if (sessions.length > 0) {
+        await context.internalAdapter.deleteSessions(
+          sessions.map((session) => session.token)
+        );
+      }
+      closed = sessions.length;
+    }
+    return `${outcome} ${closed} session${closed > 1 ? "s" : ""} fermée${closed > 1 ? "s" : ""}.`;
+  },
+});
+
+export const deactivateProfile = internalMutation({
+  args: { email: v.string() },
+  returns: v.string(),
+  handler: async (ctx, { email }) => {
+    const profile = await ctx.db
+      .query("users")
+      .withIndex("by_email", (q) => q.eq("email", email))
+      .unique();
+    if (!profile) {
+      throw new Error(`Aucun profil pour ${email}.`);
+    }
+    if (!profile.active) {
+      return `${email} était déjà révoqué.`;
+    }
+    await ctx.db.patch(profile._id, { active: false });
+    await ctx.db.insert("auditLog", {
+      at: Date.now(),
+      actorSubject: "cli",
+      actorName: "Ligne de commande",
+      actorRole: "developpeur",
+      action: "user.deactivate",
+      targetType: "user",
+      targetId: profile._id,
+      summary: `${profile.displayName} (${email})`,
+    });
+    return `Compte révoqué : ${profile.displayName} <${email}>.`;
+  },
+});
+
 /** Sets or clears the provisional flag on a profile, if the profile exists. */
 export const flagProvisionalPassword = internalMutation({
   args: { subject: v.string(), provisional: v.boolean() },

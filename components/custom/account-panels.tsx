@@ -15,7 +15,9 @@ import { OfficeSection } from "@/components/custom/office-header";
 import { PasswordChangeForm } from "@/components/custom/password-change-form";
 import { SessionsPanel } from "@/components/custom/sessions-panel";
 import { TwoFactorPanel } from "@/components/custom/two-factor-panel";
+import { usePreferences } from "@/components/providers/preferences-provider";
 import { authClient } from "@/lib/auth-client";
+import { localize } from "@/lib/i18n";
 import type { Viewer } from "@/lib/viewer";
 
 /** Newsroom roles use a six-digit code; company and reader accounts a long password. */
@@ -41,7 +43,19 @@ export function AccountPanels({
   showHome?: boolean;
 }) {
   const router = useRouter();
+  const { locale } = usePreferences();
   const mode = passwordModeFor(viewer);
+  const roleName =
+    locale === "en"
+      ? ((
+          {
+            administrateur: "Administrator",
+            editeur: "Editor",
+            entreprise: "Company",
+            lecteur: "Reader",
+          } as Record<string, string>
+        )[viewer.roleSlug] ?? viewer.roleName)
+      : viewer.roleName;
 
   const signOut = async () => {
     await authClient.signOut();
@@ -50,17 +64,29 @@ export function AccountPanels({
 
   return (
     <div className="grid gap-6">
-      <OfficeSection title="Profil" icon={UserRound}>
+      <OfficeSection
+        title={localize(locale, { fr: "Profil", en: "Profile" })}
+        icon={UserRound}
+      >
         <dl className="grid gap-3 sm:grid-cols-2">
-          <Row label="Nom" value={viewer.name} />
-          <Row label="Adresse" value={viewer.email} />
-          <Row label="Rôle" value={viewer.roleName} />
           <Row
-            label="Espace"
+            label={localize(locale, { fr: "Nom", en: "Name" })}
+            value={viewer.name}
+          />
+          <Row
+            label={localize(locale, { fr: "Adresse", en: "Email address" })}
+            value={viewer.email}
+          />
+          <Row
+            label={localize(locale, { fr: "Rôle", en: "Role" })}
+            value={roleName}
+          />
+          <Row
+            label={localize(locale, { fr: "Espace", en: "Space" })}
             value={
               viewer.organizationName ??
               (viewer.permissions.includes("newsroom:access")
-                ? "Rédaction"
+                ? localize(locale, { fr: "Rédaction", en: "Newsroom" })
                 : "—")
             }
           />
@@ -71,7 +97,10 @@ export function AccountPanels({
               href={viewer.home}
               className="inline-flex items-center rounded-md bg-primary px-4 type-small font-semibold text-primary-foreground touch-target"
             >
-              Aller à mon espace
+              {localize(locale, {
+                fr: "Aller à mon espace",
+                en: "Go to my space",
+              })}
             </Link>
             <ActionButton
               type="button"
@@ -79,7 +108,7 @@ export function AccountPanels({
               onClick={() => void signOut()}
             >
               <LogOut aria-hidden="true" className="size-4" />
-              Se déconnecter
+              {localize(locale, { fr: "Se déconnecter", en: "Sign out" })}
             </ActionButton>
           </div>
         )}
@@ -91,17 +120,35 @@ export function AccountPanels({
         tone={viewer.passwordChangeRequired ? "warning" : "default"}
         title={
           mode === "pin"
-            ? "Changement du code d'accès"
-            : "Changement du mot de passe"
+            ? localize(locale, {
+                fr: "Changement du code d'accès",
+                en: "Change access code",
+              })
+            : localize(locale, {
+                fr: "Changement du mot de passe",
+                en: "Change password",
+              })
         }
         description={
           viewer.passwordChangeRequired
             ? mode === "pin"
-              ? "Le code qui vous a été remis est provisoire : choisissez le vôtre. Trois fois six chiffres."
-              : "Votre mot de passe est provisoire : choisissez-en un définitif."
+              ? localize(locale, {
+                  fr: "Le code qui vous a été remis est provisoire : choisissez le vôtre. Trois fois six chiffres.",
+                  en: "The code you received is temporary: choose your own. Enter six digits three times.",
+                })
+              : localize(locale, {
+                  fr: "Votre mot de passe est provisoire : choisissez-en un définitif.",
+                  en: "Your password is temporary: choose a permanent one.",
+                })
             : mode === "pin"
-              ? "Six chiffres, connus de vous seul. Le changement déconnecte vos autres appareils."
-              : "Douze caractères au minimum. Le changement ferme vos autres sessions."
+              ? localize(locale, {
+                  fr: "Six chiffres, connus de vous seul. Le changement déconnecte vos autres appareils.",
+                  en: "Six digits known only to you. Changing it signs out your other devices.",
+                })
+              : localize(locale, {
+                  fr: "Douze caractères au minimum. Le changement ferme vos autres sessions.",
+                  en: "At least twelve characters. Changing it closes your other sessions.",
+                })
         }
       >
         <div className="max-w-md">
@@ -121,10 +168,15 @@ export function AccountPanels({
             }
           />
           <span className="font-display type-h3">
-            Vérification par application
+            {localize(locale, {
+              fr: "Vérification par application",
+              en: "App-based verification",
+            })}
           </span>
           <span className="type-small text-muted-foreground">
-            {viewer.twoFactorEnabled ? "· active" : "· facultatif"}
+            {viewer.twoFactorEnabled
+              ? localize(locale, { fr: "· active", en: "· active" })
+              : localize(locale, { fr: "· facultatif", en: "· optional" })}
           </span>
           <ChevronDown
             aria-hidden="true"
@@ -137,9 +189,15 @@ export function AccountPanels({
       </details>
 
       <OfficeSection
-        title="Appareils connectés"
+        title={localize(locale, {
+          fr: "Appareils connectés",
+          en: "Signed-in devices",
+        })}
         icon={MonitorSmartphone}
-        description="Chaque connexion ouvre une session que vous pouvez fermer d'ici."
+        description={localize(locale, {
+          fr: "Chaque connexion ouvre une session que vous pouvez fermer d'ici.",
+          en: "Each sign-in opens a session that you can close here.",
+        })}
       >
         <SessionsPanel active />
       </OfficeSection>

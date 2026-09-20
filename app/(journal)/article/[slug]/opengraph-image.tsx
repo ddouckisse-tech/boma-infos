@@ -60,12 +60,15 @@ export default async function OpengraphImage({
   // Source Serif 4 est chargée depuis `assets/` — hors de `public/`, donc
   // jamais servie au navigateur : ces deux fichiers ne coûtent rien au
   // budget du §5.4, ils ne servent qu'au rendu de la carte à la compilation.
-  const [semibold, bold] = await Promise.all([
+  const [semibold, bold, logo] = await Promise.all([
     readFile(
       path.join(process.cwd(), "assets", "fonts", "SourceSerif4-600.ttf")
     ),
     readFile(
       path.join(process.cwd(), "assets", "fonts", "SourceSerif4-700.ttf")
+    ),
+    readFile(
+      path.join(process.cwd(), "assets", "brand", "le-corporate-dark.png")
     ),
   ]);
 
@@ -120,16 +123,13 @@ export default async function OpengraphImage({
       >
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <div style={{ width: 72, height: 6, backgroundColor: MAGENTA }} />
-          <div
-            style={{
-              color: "#FFFFFF",
-              fontSize: 28,
-              fontWeight: 700,
-              letterSpacing: -0.5,
-            }}
-          >
-            {SITE.name}
-          </div>
+          <img
+            src={`data:image/png;base64,${logo.toString("base64")}`}
+            alt={SITE.name}
+            width={280}
+            height={49}
+            style={{ objectFit: "contain" }}
+          />
           <div style={{ color: "#A2BFF1", fontSize: 24 }}>{kicker}</div>
         </div>
 

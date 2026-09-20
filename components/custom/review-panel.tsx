@@ -13,6 +13,7 @@ import {
   TextAreaField,
   TextField,
 } from "@/components/custom/form-field";
+import { MediaPicker } from "@/components/custom/media-picker";
 import { humanError } from "@/lib/private";
 
 /**
@@ -30,7 +31,6 @@ export function ReviewPanel({
   suggestedCategorySlug,
   categories,
   authors,
-  media,
   requestedPublishAt,
 }: {
   submissionId: Id<"submissions">;
@@ -38,7 +38,6 @@ export function ReviewPanel({
   suggestedCategorySlug: string;
   categories: readonly { value: string; label: string }[];
   authors: readonly { value: string; label: string }[];
-  media: readonly { value: string; label: string }[];
   requestedPublishAt?: number;
 }) {
   const router = useRouter();
@@ -150,11 +149,11 @@ export function ReviewPanel({
                 onChange={(event) => setAuthorSlug(event.target.value)}
                 options={authors}
               />
-              <SelectField
+              <MediaPicker
                 label="Média principal"
                 value={heroMediaKey}
-                onChange={(event) => setHeroMediaKey(event.target.value)}
-                options={[{ value: "", label: "— aucun" }, ...media]}
+                onChange={setHeroMediaKey}
+                className="sm:col-span-2"
               />
               <div className="grid gap-2">
                 <label className="flex items-center gap-2 type-small font-medium touch-target">

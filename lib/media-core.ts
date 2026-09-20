@@ -1,7 +1,7 @@
 import type {
   MediaAsset as ManifestAsset,
   MediaVariant,
-} from "@/convex/mediaManifest";
+} from "../convex/mediaManifest";
 
 /**
  * Pure image helpers — the half of `lib/media.ts` that a **client** component
@@ -104,7 +104,10 @@ export const SIZES = {
   articleHero: "(min-width: 768px) 74vw, 100vw",
   /** Three-per-row card grid. */
   card: "(min-width: 1024px) 380px, (min-width: 640px) 46vw, 92vw",
-  /** Small list thumbnail. */
+  /**
+   * Small list thumbnail, capped at the 240 px rendition by its call site
+   * (`scripts/media-thumbnails.ts` adds it to pictures held in storage).
+   */
   thumb: "(min-width: 640px) 160px, 96px",
   /** Picture inside the reading column, itself capped at 39 rem. */
   inline: "(min-width: 1024px) 624px, 92vw",

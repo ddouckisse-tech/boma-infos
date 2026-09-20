@@ -5,6 +5,8 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { Building2, LogIn, UserRound } from "lucide-react";
 import type { AuthTab } from "@/components/custom/auth-card";
+import { usePreferences } from "@/components/providers/preferences-provider";
+import { localize } from "@/lib/i18n";
 
 /**
  * Access to the private areas, from the masthead — CDC §4.3, §4.4.
@@ -37,6 +39,7 @@ function opensElsewhere(event: React.MouseEvent) {
 }
 
 export function AccessMenu() {
+  const { locale } = usePreferences();
   const [tab, setTab] = useState<AuthTab | null>(null);
   const invoker = useRef<HTMLElement | null>(null);
 
@@ -74,7 +77,10 @@ export function AccessMenu() {
         href="/connexion"
         onClick={open}
         data-tab="connexion"
-        aria-label="Espace privé — connexion et espace entreprise"
+        aria-label={localize(locale, {
+          fr: "Espace privé — connexion et espace entreprise",
+          en: "Private area — sign in and company workspace",
+        })}
         className="inline-flex items-center justify-center rounded-md text-muted-foreground transition-colors touch-target hover:text-foreground md:hidden"
       >
         <UserRound aria-hidden="true" className="size-5" />
@@ -87,7 +93,10 @@ export function AccessMenu() {
         className="hidden items-center gap-1.5 rounded-md px-2.5 type-small font-semibold text-muted-foreground transition-colors touch-target hover:text-foreground md:inline-flex"
       >
         <Building2 aria-hidden="true" className="size-4" />
-        Inscription entreprise
+        {localize(locale, {
+          fr: "Inscription entreprise",
+          en: "Register a company",
+        })}
       </Link>
 
       <Link
@@ -97,7 +106,7 @@ export function AccessMenu() {
         className="hidden items-center gap-1.5 rounded-md border border-border px-3 type-small font-semibold text-foreground transition-colors touch-target hover:bg-surface-muted md:inline-flex"
       >
         <LogIn aria-hidden="true" className="size-4" />
-        Connexion
+        {localize(locale, { fr: "Connexion", en: "Sign in" })}
       </Link>
 
       {tab && (

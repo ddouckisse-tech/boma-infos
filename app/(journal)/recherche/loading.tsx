@@ -1,4 +1,5 @@
 import { Container } from "@/components/custom/container";
+import { LocalizedText } from "@/components/custom/localized-text";
 import { Skeleton } from "@/components/ui/skeleton";
 
 /**
@@ -22,7 +23,7 @@ export default function SearchLoading() {
 
       <Container className="py-8">
         <p role="status" className="sr-only">
-          Recherche en cours…
+          <LocalizedText fr="Recherche en cours…" en="Searching…" />
         </p>
         <ul className="divide-y divide-border border-y border-border">
           {[0, 1, 2, 3, 4].map((index) => (

@@ -1,3 +1,4 @@
+import { LocalizedText } from "@/components/custom/localized-text";
 import { cn } from "@/lib/utils";
 
 /**
@@ -29,7 +30,10 @@ export function KeyPoints({
         id="essentiel"
         className="font-display type-small font-semibold tracking-wide text-foreground uppercase"
       >
-        L&apos;essentiel en {points.length} points
+        <LocalizedText
+          fr={`L'essentiel en ${points.length} points`}
+          en={`${points.length} key points`}
+        />
       </h2>
       <ul className="mt-3 space-y-2">
         {points.map((point, index) => (
@@ -41,7 +45,9 @@ export function KeyPoints({
             >
               {index + 1}
             </span>
-            <span className="min-w-0">{point}</span>
+            <span lang="fr" className="min-w-0">
+              {point}
+            </span>
           </li>
         ))}
       </ul>

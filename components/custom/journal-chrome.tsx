@@ -3,6 +3,9 @@ import { Header } from "@/components/custom/header";
 import { SkipLink } from "@/components/custom/skip-link";
 import { getNavigation } from "@/lib/content/server";
 import { buildSections } from "@/lib/navigation";
+import { headers } from "next/headers";
+import { AdsConsent } from "@/components/custom/adsense-slot";
+import { getAdSenseCmpConfig } from "@/lib/ads/adsense-config";
 
 /**
  * Masthead, reading area and footer of the **public journal**.
@@ -19,9 +22,16 @@ export async function JournalChrome({
   children: React.ReactNode;
 }) {
   const sections = buildSections(await getNavigation());
+  // Keep the public layout and global not-found on the same client graph;
+  // different graphs make Turbopack duplicate the whole header/footer bundle.
+  const cmp = getAdSenseCmpConfig();
+  const nonce = cmp
+    ? ((await headers()).get("x-nonce") ?? undefined)
+    : undefined;
 
   return (
     <>
+      {cmp && <AdsConsent config={cmp} nonce={nonce} />}
       <SkipLink />
       <Header sections={sections} />
       {/* tabIndex={-1} : cible du lien d'évitement, focalisable par

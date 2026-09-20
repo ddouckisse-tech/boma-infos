@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
-import { cn } from "@/lib/utils";
+import { cx } from "@/lib/cx";
 
 /**
  * Modal built on the native `<dialog>` element.
@@ -91,7 +91,7 @@ export function Modal({
         // un clic dans le contenu atteint un descendant.
         if (event.target === ref.current) onClose();
       }}
-      className={cn(
+      className={cx(
         "lc-dialog",
         variant === "drawer" ? "lc-drawer" : "lc-panel",
         className

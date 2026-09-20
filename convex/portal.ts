@@ -9,8 +9,10 @@ import {
   requirePermission,
   requireViewer,
 } from "./model/access";
+import { insertArticle, patchArticle } from "./model/articleWrites";
 import { queueNotification, recordAudit } from "./model/audit";
 import { articleStatus, blockValidator } from "./model/content";
+import { syncArticleMedia } from "./model/media";
 import { plainText, readingMinutes, searchText, slugify } from "./model/text";
 
 /**
@@ -619,15 +621,16 @@ export const publishSubmission = mutation({
     let articleId: Id<"articles">;
     if (existing) {
       articleId = existing._id;
-      await ctx.db.patch(existing._id, common);
+      await patchArticle(ctx, existing, common);
     } else {
-      articleId = await ctx.db.insert("articles", {
+      articleId = await insertArticle(ctx, {
         ...common,
         slug,
         createdAt: now,
         views: 0,
       });
     }
+    await syncArticleMedia(ctx, articleId);
 
     await ctx.db.patch(args.id, {
       status,

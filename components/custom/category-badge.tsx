@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { LocalizedText } from "@/components/custom/localized-text";
+import { categoryLabel } from "@/lib/i18n";
 import {
   accentFillClass,
   accentTextClass,
@@ -59,7 +61,7 @@ export function CategoryBadge({
             : cn("tracking-wide uppercase", accentTextClass[token])
         )}
       >
-        {name}
+        <LocalizedText fr={name} en={categoryLabel("en", slug, name)} />
       </span>
     </Link>
   );
