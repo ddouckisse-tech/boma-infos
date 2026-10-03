@@ -7,12 +7,25 @@ import {
 } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
-import { accessError, PERMISSIONS, requirePermission } from "./model/access";
-import { patchArticle } from "./model/articleWrites";
+import {
+  accessError,
+  PERMISSIONS,
+  requirePermission,
+  type Viewer,
+} from "./model/access";
+import { insertArticle, patchArticle } from "./model/articleWrites";
 import { recordAudit } from "./model/audit";
 import { agentKey, AGENTS, AGENT_MODELS } from "./model/agents";
+import type { Block } from "./model/content";
 import { mediaDerivedFields, syncArticleMedia } from "./model/media";
 import { readingMinutes, searchText, slugify, periodOf } from "./model/text";
+import {
+  parseLead,
+  sourceAsLink,
+  WATCH_DOMAINS,
+  WATCH_ROUND_UP,
+  WATCH_TARGET_ID,
+} from "./model/watch";
 
 /**
  * Agent journal, suggestions and their fate — CDC §4.6.
@@ -29,13 +42,18 @@ import { readingMinutes, searchText, slugify, periodOf } from "./model/text";
  *  - **Monthly cap with warning and stop.** `budgetState` is consulted
  *    before every run and returns `stopped` once the cap is reached.
  *  - **Individual switch.** `agentEnabled` is read on the way in.
+ *  - **A watch lead is not an article.** Retaining one opens a *draft* that
+ *    begins with the note and its sources; a journalist verifies and writes.
+ *    A lead the newsroom has already seen — kept, retained or rejected — is
+ *    never proposed again, whatever the wording of the next run.
  */
 
 const targetType = v.union(
   v.literal("article"),
   v.literal("submission"),
   v.literal("media"),
-  v.literal("newsletter")
+  v.literal("newsletter"),
+  v.literal("veille")
 );
 
 const runShape = v.object({
@@ -75,6 +93,8 @@ const suggestionShape = v.object({
   createdAt: v.number(),
   /** False for advisory output (moderation card, social copy, transcript). */
   applies: v.boolean(),
+  /** The draft a retained watch lead opened. */
+  draftId: v.optional(v.id("articles")),
 });
 
 /** Fields that actually write something when accepted. */
@@ -87,6 +107,8 @@ const APPLIES = new Set([
   "alt",
   "caption",
   "interview",
+  // Retenir une piste de veille ouvre un brouillon.
+  "veille.piste",
 ]);
 
 const isApplicable = (field: string): boolean =>
@@ -169,6 +191,7 @@ export const forTarget = query({
         decidedAt: row.decidedAt,
         createdAt: row.createdAt,
         applies: isApplicable(row.field),
+        draftId: row.draftId,
       })),
     };
   },
@@ -266,7 +289,149 @@ export const run = query({
         decidedAt: item.decidedAt,
         createdAt: item.createdAt,
         applies: isApplicable(item.field),
+        draftId: item.draftId,
       })),
+    };
+  },
+});
+
+/* -------------------------------------------------------------------------
+   The watch board — agent 8
+   ------------------------------------------------------------------------- */
+
+const leadShape = v.object({
+  _id: v.id("agentSuggestions"),
+  runId: v.id("agentRuns"),
+  agentKey: agentKey,
+  agentName: v.string(),
+  mode: v.string(),
+  /** « Veille — Politique », as the run was labelled. */
+  domain: v.string(),
+  field: v.string(),
+  label: v.string(),
+  rationale: v.string(),
+  proposed: v.string(),
+  status: v.string(),
+  decidedBy: v.optional(v.string()),
+  decidedAt: v.optional(v.number()),
+  createdAt: v.number(),
+  applies: v.boolean(),
+  draftId: v.optional(v.id("articles")),
+});
+
+/**
+ * What the watch has brought back: the leads waiting for a decision, the
+ * ones the newsroom retained and is still writing, and the last run — so an
+ * empty board can say whether nothing was found or nothing was looked for.
+ *
+ * A retained lead stays on the board as long as its draft is being written.
+ * Once the draft is published — or deleted — the lead has done its job and
+ * leaves the board; it remains in the journal of runs.
+ *
+ * Read through the status index, bounded: the rejected leads, which only
+ * accumulate, are never loaded.
+ */
+export const watchBoard = query({
+  args: {},
+  returns: v.object({
+    domains: v.array(
+      v.object({ key: v.string(), label: v.string(), focus: v.string() })
+    ),
+    pending: v.array(leadShape),
+    retained: v.array(leadShape),
+    lastRun: v.union(runShape, v.null()),
+  }),
+  handler: async (ctx) => {
+    await requirePermission(ctx, PERMISSIONS.newsroom);
+
+    const withStatus = (status: "pending" | "accepted", count: number) =>
+      ctx.db
+        .query("agentSuggestions")
+        .withIndex("by_target", (q) =>
+          q
+            .eq("targetType", "veille")
+            .eq("targetId", WATCH_TARGET_ID)
+            .eq("status", status)
+        )
+        .order("desc")
+        .take(count);
+
+    const [pending, accepted, lastRun] = await Promise.all([
+      withStatus("pending", 40),
+      withStatus("accepted", 30),
+      ctx.db
+        .query("agentRuns")
+        .withIndex("by_agent", (q) => q.eq("agentKey", "veille"))
+        .order("desc")
+        .first(),
+    ]);
+
+    const retained: Doc<"agentSuggestions">[] = [];
+    for (const row of accepted) {
+      if (retained.length === 12) break;
+      // Les notes hors ligne n'ouvrent pas de brouillon : une fois « notées »,
+      // elles n'ont plus rien à faire sur le tableau.
+      if (!row.draftId) continue;
+      const draft = await ctx.db.get(row.draftId);
+      if (draft && draft.status !== "published") retained.push(row);
+    }
+
+    const runs = new Map<Id<"agentRuns">, Doc<"agentRuns"> | null>();
+    for (const row of [...pending, ...retained]) {
+      if (!runs.has(row.runId))
+        runs.set(row.runId, await ctx.db.get(row.runId));
+    }
+    const lead = (row: Doc<"agentSuggestions">) => {
+      const run = runs.get(row.runId);
+      return {
+        _id: row._id,
+        runId: row.runId,
+        agentKey: row.agentKey,
+        agentName: AGENTS[row.agentKey].name,
+        mode: run?.mode ?? "simulated",
+        domain: run?.targetLabel ?? "Veille",
+        field: row.field,
+        label: row.label,
+        rationale: row.rationale,
+        proposed: row.proposed,
+        status: row.status,
+        decidedBy: row.decidedBy,
+        decidedAt: row.decidedAt,
+        createdAt: row.createdAt,
+        applies: isApplicable(row.field),
+        draftId: row.draftId,
+      };
+    };
+
+    return {
+      domains: [WATCH_ROUND_UP, ...WATCH_DOMAINS].map((domain) => ({
+        key: domain.key,
+        label: domain.label,
+        focus: domain.focus,
+      })),
+      pending: pending.map(lead),
+      retained: retained.map(lead),
+      lastRun: lastRun
+        ? {
+            _id: lastRun._id,
+            agentKey: lastRun.agentKey,
+            agentName: AGENTS[lastRun.agentKey].name,
+            status: lastRun.status,
+            mode: lastRun.mode,
+            model: lastRun.model,
+            targetType: lastRun.targetType,
+            targetId: lastRun.targetId,
+            targetLabel: lastRun.targetLabel,
+            summary: lastRun.summary,
+            error: lastRun.error,
+            inputTokens: lastRun.inputTokens,
+            outputTokens: lastRun.outputTokens,
+            costMicros: lastRun.costMicros,
+            triggeredBy: lastRun.triggeredBy,
+            createdAt: lastRun.createdAt,
+            finishedAt: lastRun.finishedAt,
+          }
+        : null,
     };
   },
 });
@@ -280,7 +445,12 @@ export const decide = mutation({
     id: v.id("agentSuggestions"),
     accept: v.boolean(),
   },
-  returns: v.object({ applied: v.boolean(), message: v.string() }),
+  returns: v.object({
+    applied: v.boolean(),
+    message: v.string(),
+    /** The draft opened by a retained watch lead. */
+    draftId: v.optional(v.id("articles")),
+  }),
   handler: async (ctx, { id, accept }) => {
     const viewer = await requirePermission(ctx, PERMISSIONS.agentsRun);
     const suggestion = await ctx.db.get(id);
@@ -289,6 +459,34 @@ export const decide = mutation({
       return {
         applied: false,
         message: "Cette proposition a déjà été tranchée.",
+      };
+    }
+
+    // Une piste de veille retenue ouvre un brouillon. Il est créé AVANT que
+    // la piste soit marquée : si le compte n'a pas le droit d'écrire dans la
+    // rubrique, l'appel échoue et la piste reste à trancher par quelqu'un
+    // d'autre, au lieu d'être « retenue » sans qu'aucun brouillon n'existe.
+    if (accept && suggestion.field === "veille.piste") {
+      const draft = await openDraftFromLead(ctx, viewer, suggestion);
+      if ("blocked" in draft) return { applied: false, message: draft.blocked };
+      await ctx.db.patch(id, {
+        status: "accepted",
+        decidedBy: viewer.name,
+        decidedAt: Date.now(),
+        draftId: draft.articleId,
+      });
+      await recordAudit(
+        ctx,
+        viewer,
+        "agent.suggestion_accepted",
+        suggestion.targetType,
+        suggestion.targetId,
+        `${AGENTS[suggestion.agentKey].name} · ${suggestion.label}`
+      );
+      return {
+        applied: true,
+        message: `Piste retenue : brouillon ouvert dans « ${draft.sectionName} ». À vérifier et à écrire.`,
+        draftId: draft.articleId,
       };
     }
 
@@ -307,13 +505,23 @@ export const decide = mutation({
       `${AGENTS[suggestion.agentKey].name} · ${suggestion.label}`
     );
 
+    // La veille parle de pistes et de notes, pas de champs à modifier : ses
+    // messages le disent, au lieu d'emprunter ceux de la relecture.
+    const isWatch = suggestion.agentKey === "veille";
+    const isLead = suggestion.field === "veille.piste";
+
     if (!accept) {
       return {
         applied: false,
-        message:
-          "Proposition rejetée. Elle ne sera pas re-proposée pour ce contenu.",
+        message: !isWatch
+          ? "Proposition rejetée. Elle ne sera pas re-proposée pour ce contenu."
+          : isLead
+            ? "Piste écartée. La veille ne la proposera plus."
+            : "Note écartée.",
       };
     }
+
+    if (isWatch) return { applied: false, message: "Note classée." };
 
     const applied = await apply(ctx, suggestion);
     return {
@@ -322,6 +530,49 @@ export const decide = mutation({
         ? "Proposition appliquée."
         : "Proposition retenue. Elle est consignée : ce champ n'est pas modifiable automatiquement.",
     };
+  },
+});
+
+/**
+ * Puts a discarded watch entry back on the board.
+ *
+ * « Écarter » is one tap, and a discarded lead never comes back: the next
+ * watch recognises its fingerprint and skips it. A slip of the finger would
+ * therefore lose a story for good. This is the undo the board offers right
+ * after the decision, and it is limited to what it is for: an entry of the
+ * watch, discarded. A retained lead is not reopened — its draft exists and
+ * belongs to the newsroom — and the suggestions of the other agents keep
+ * their rule: rejected once, never proposed again.
+ */
+export const reopen = mutation({
+  args: { id: v.id("agentSuggestions") },
+  returns: v.object({ reopened: v.boolean(), message: v.string() }),
+  handler: async (ctx, { id }) => {
+    const viewer = await requirePermission(ctx, PERMISSIONS.agentsRun);
+    const suggestion = await ctx.db.get(id);
+    if (!suggestion) throw accessError("FORBIDDEN");
+    if (suggestion.agentKey !== "veille" || suggestion.status !== "rejected") {
+      return {
+        reopened: false,
+        message:
+          "Seule une piste de veille écartée peut être remise à trancher.",
+      };
+    }
+
+    await ctx.db.patch(id, {
+      status: "pending",
+      decidedBy: undefined,
+      decidedAt: undefined,
+    });
+    await recordAudit(
+      ctx,
+      viewer,
+      "agent.suggestion_reopened",
+      suggestion.targetType,
+      suggestion.targetId,
+      `${AGENTS.veille.name} · ${suggestion.label}`
+    );
+    return { reopened: true, message: "Piste remise à trancher." };
   },
 });
 
@@ -427,6 +678,122 @@ async function apply(
   // La trame d'interview remplace tout le corps, images comprises.
   await syncArticleMedia(ctx, article._id);
   return true;
+}
+
+/**
+ * Opens the draft of a retained watch lead.
+ *
+ * The draft is a starting point, and says so in its first line: the note of
+ * the agent, why it matters now, and the pages to read — as links, so the
+ * journalist goes to the source before writing a word. It is created in the
+ * `draft` status like any other, under the signature of the account that
+ * retained the lead when it has one.
+ */
+async function openDraftFromLead(
+  ctx: MutationCtx,
+  viewer: Viewer,
+  suggestion: Doc<"agentSuggestions">
+): Promise<
+  { articleId: Id<"articles">; sectionName: string } | { blocked: string }
+> {
+  if (!viewer.role.permissions.includes(PERMISSIONS.articlesWrite)) {
+    throw accessError("FORBIDDEN");
+  }
+
+  const lead = parseLead(suggestion.label, suggestion.proposed);
+  const section = await ctx.db
+    .query("categories")
+    .withIndex("by_slug", (q) => q.eq("slug", lead.rubrique))
+    .unique();
+  if (!section) {
+    return {
+      blocked:
+        "La rubrique suggérée n'existe pas ou plus : créez l'article depuis « Nouveau contenu », la piste reste affichée.",
+    };
+  }
+  const categorySlug = section.parentSlug ?? section.slug;
+  const subCategorySlug = section.parentSlug ? section.slug : undefined;
+
+  // Même règle que la création d'un article (`newsroom.create`) : un
+  // Éditeur n'écrit que dans ses rubriques.
+  const allowed = viewer.profile.sectionSlugs ?? [];
+  if (
+    viewer.role.slug !== "administrateur" &&
+    allowed.length > 0 &&
+    !allowed.includes(categorySlug)
+  ) {
+    throw accessError("FORBIDDEN");
+  }
+
+  const authors = await ctx.db.query("authors").collect();
+  const author =
+    authors.find((row) => row.slug === viewer.profile.authorSlug) ?? authors[0];
+  if (!author) {
+    return {
+      blocked:
+        "Aucune signature n'existe encore : créez-en une avant de retenir une piste.",
+    };
+  }
+
+  const title = lead.title.trim() || "Piste de veille";
+  let slug = slugify(title);
+  for (let suffix = 2; ; suffix += 1) {
+    const clash = await ctx.db
+      .query("articles")
+      .withIndex("by_slug", (q) => q.eq("slug", slug))
+      .unique();
+    if (!clash) break;
+    slug = `${slugify(title)}-${suffix}`;
+  }
+
+  const body: Block[] = [
+    {
+      type: "paragraph",
+      text: `**Note de veille — à vérifier avant toute publication.** ${lead.summary}`,
+    },
+  ];
+  if (lead.why) {
+    body.push({ type: "paragraph", text: `Pourquoi maintenant : ${lead.why}` });
+  }
+  if (lead.sources.length > 0) {
+    body.push(
+      { type: "heading", level: 2, text: "Sources à consulter" },
+      { type: "list", ordered: false, items: lead.sources.map(sourceAsLink) }
+    );
+  }
+
+  const now = Date.now();
+  const articleId = await insertArticle(ctx, {
+    title,
+    slug,
+    dek: "",
+    body,
+    status: "draft",
+    categorySlug,
+    subCategorySlug,
+    authorSlug: author.slug,
+    galleryMediaKeys: [],
+    keyPoints: [],
+    seo: { description: "", keywords: [] },
+    origin: "redaction",
+    feature: "none",
+    readingMinutes: readingMinutes(title, "", body),
+    tags: [],
+    createdAt: now,
+    publishedAt: now,
+    updatedAt: now,
+    views: 0,
+    searchText: searchText(title, "", [], body),
+  });
+  await recordAudit(
+    ctx,
+    viewer,
+    "article.create",
+    "article",
+    articleId,
+    `${title} (piste de veille)`
+  );
+  return { articleId, sectionName: section.name };
 }
 
 /* -------------------------------------------------------------------------
@@ -588,6 +955,8 @@ export const completeRun = internalMutation({
         rationale: v.string(),
         current: v.optional(v.string()),
         proposed: v.string(),
+        /** Identity of the proposal when its wording varies between runs. */
+        key: v.optional(v.string()),
       })
     ),
   },
@@ -609,27 +978,50 @@ export const completeRun = internalMutation({
       finishedAt: Date.now(),
     });
 
+    // Le tableau de veille est un seul et même sujet, dont les rejets
+    // s'accumulent sans fin : ils sont cherchés un par un plus bas, par
+    // l'index des empreintes, au lieu d'être tous lus ici.
     const refused = new Set(
-      (
-        await ctx.db
-          .query("agentSuggestions")
-          .withIndex("by_target", (q) =>
-            q
-              .eq("targetType", run.targetType)
-              .eq("targetId", run.targetId)
-              .eq("status", "rejected")
-          )
-          .collect()
-      ).map((row) => row.fingerprint)
+      run.targetType === "veille"
+        ? []
+        : (
+            await ctx.db
+              .query("agentSuggestions")
+              .withIndex("by_target", (q) =>
+                q
+                  .eq("targetType", run.targetType)
+                  .eq("targetId", run.targetId)
+                  .eq("status", "rejected")
+              )
+              .collect()
+          ).map((row) => row.fingerprint)
     );
 
     const now = Date.now();
     let kept = 0;
     for (const proposal of args.proposals) {
-      const print = fingerprint(proposal.field, proposal.proposed);
+      const print = fingerprint(
+        proposal.field,
+        proposal.key ?? proposal.proposed
+      );
       // CDC §4.6 : « une suggestion rejetée n'est jamais réappliquée
       // silencieusement ». Elle n'est même pas re-proposée.
       if (refused.has(print)) continue;
+      // La veille tourne chaque matin sur le même tableau : une piste déjà
+      // proposée — en attente, retenue ou rejetée — n'y revient pas. Lu par
+      // l'index des empreintes : une ligne, pas tout l'historique.
+      if (run.targetType === "veille") {
+        const seen = await ctx.db
+          .query("agentSuggestions")
+          .withIndex("by_fingerprint", (q) =>
+            q
+              .eq("targetType", "veille")
+              .eq("targetId", run.targetId)
+              .eq("fingerprint", print)
+          )
+          .first();
+        if (seen) continue;
+      }
       await ctx.db.insert("agentSuggestions", {
         runId: args.id,
         agentKey: run.agentKey,
@@ -777,6 +1169,76 @@ export const mediaContext = internalQuery({
       alt: row.alt,
       caption: row.caption,
       credit: row.credit,
+    };
+  },
+});
+
+/**
+ * What a watch run needs to know about the newsroom: the sections a lead
+ * may be filed under, what was published lately (not to propose it again),
+ * and when each section last published — the only thing the offline
+ * stand-in has to say.
+ */
+export const watchContext = internalQuery({
+  args: {},
+  returns: v.object({
+    now: v.number(),
+    today: v.string(),
+    sections: v.array(v.object({ slug: v.string(), name: v.string() })),
+    coverage: v.array(
+      v.object({
+        slug: v.string(),
+        name: v.string(),
+        lastPublishedAt: v.union(v.number(), v.null()),
+      })
+    ),
+    corpus: v.array(v.object({ slug: v.string(), title: v.string() })),
+  }),
+  handler: async (ctx) => {
+    const now = Date.now();
+    const categories = (await ctx.db.query("categories").collect())
+      .filter((row) => row.isActive)
+      .sort((a, b) => a.order - b.order);
+    // Les domaines de la veille sont les rubriques thématiques : l'éditorial,
+    // les tribunes et l'espace pro ne se « couvrent » pas par une veille.
+    const watched = new Set(WATCH_DOMAINS.map((domain) => domain.key));
+    const parents = categories.filter(
+      (row) => !row.parentSlug && watched.has(row.slug)
+    );
+
+    const [coverage, corpus] = await Promise.all([
+      Promise.all(
+        parents.map(async (row) => {
+          const latest = await ctx.db
+            .query("articles")
+            .withIndex("by_category", (q) =>
+              q.eq("status", "published").eq("categorySlug", row.slug)
+            )
+            .order("desc")
+            .first();
+          return {
+            slug: row.slug,
+            name: row.name,
+            lastPublishedAt: latest?.publishedAt ?? null,
+          };
+        })
+      ),
+      ctx.db
+        .query("articles")
+        .withIndex("by_status_date", (q) => q.eq("status", "published"))
+        .order("desc")
+        .take(60),
+    ]);
+
+    return {
+      now,
+      // Libreville est à UTC+1 toute l'année : pas d'heure d'été à gérer.
+      today: new Date(now + 60 * 60 * 1000).toISOString().slice(0, 10),
+      sections: categories
+        .filter((row) => watched.has(row.parentSlug ?? row.slug))
+        .map((row) => ({ slug: row.slug, name: row.name })),
+      coverage,
+      corpus: corpus.map((item) => ({ slug: item.slug, title: item.title })),
     };
   },
 });

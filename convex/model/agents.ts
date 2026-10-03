@@ -1,9 +1,15 @@
 /**
- * The seven agents — CAHIER-DES-CHARGES.md §4.6.
+ * The eight agents — CAHIER-DES-CHARGES.md §4.6.
+ *
+ * Seven assist the newsroom on a text it already holds — proof-reading,
+ * headlines, SEO, pictures, moderation, distribution, transcription. The
+ * eighth, **Veille**, goes and looks: it searches the web for the news of
+ * Gabon — politics, the economy, society, tourism, the environment, culture,
+ * sport — and brings back sourced story leads (`model/watch.ts`).
  *
  * One declaration, shared by the Convex functions, the back office and the
  * runtime that calls the Claude API. Adding an agent means adding a row here
- * and a prompt in `lib/agents/prompts.ts`; nothing else in the chain has to
+ * and a prompt in `model/agentEngine.ts`; nothing else in the chain has to
  * know how many there are.
  *
  * The governing rule of the whole file: **an agent proposes, a human
@@ -21,7 +27,8 @@ export const agentKey = v.union(
   v.literal("media"),
   v.literal("moderation"),
   v.literal("diffusion"),
-  v.literal("transcription")
+  v.literal("transcription"),
+  v.literal("veille")
 );
 
 export type AgentKey =
@@ -31,7 +38,8 @@ export type AgentKey =
   | "media"
   | "moderation"
   | "diffusion"
-  | "transcription";
+  | "transcription"
+  | "veille";
 
 export const AGENT_KEYS: readonly AgentKey[] = [
   "relecture",
@@ -41,6 +49,7 @@ export const AGENT_KEYS: readonly AgentKey[] = [
   "moderation",
   "diffusion",
   "transcription",
+  "veille",
 ];
 
 /**
@@ -51,6 +60,11 @@ export const AGENT_KEYS: readonly AgentKey[] = [
  * the two jobs where a wrong answer costs the newsroom something: deciding
  * whether a company deposit is disguised advertising, and writing the
  * headline that will carry the piece.
+ *
+ * The watch runs on `claude-opus-5-5`: it reads pages it has never seen and
+ * reports facts the newsroom may act on, so a mistaken lead costs more than
+ * a clumsy sentence. It is also the only agent that pays for web searches —
+ * see `WEB_SEARCH_MICROS` in `agentEngine.ts`.
  */
 export const AGENT_MODELS: Record<AgentKey, string> = {
   relecture: "claude-sonnet-5",
@@ -60,6 +74,7 @@ export const AGENT_MODELS: Record<AgentKey, string> = {
   moderation: "claude-opus-5",
   diffusion: "claude-sonnet-5",
   transcription: "claude-sonnet-5",
+  veille: "claude-opus-5-5",
 };
 
 export type AgentDescriptor = {
@@ -143,6 +158,16 @@ export const AGENTS: Record<AgentKey, AgentDescriptor> = {
     trigger: "À l'import d'un média audio ou vidéo",
     fallback:
       "La transcription se fait à la main ; l'article s'écrit dans l'éditeur comme n'importe quel autre.",
+    deferred: true,
+  },
+  veille: {
+    key: "veille",
+    number: 8,
+    name: "Veille de l'actualité",
+    what: "Recherche sur le web l'actualité du Gabon — politique, économie, société, tourisme, environnement, culture, sport — et propose des pistes de sujets, chacune avec ses sources. Une source que la recherche n'a pas réellement rapportée est écartée.",
+    trigger: "Chaque matin (tour d'horizon), et à la demande par domaine",
+    fallback:
+      "La veille se fait à la main : la rédaction consulte ses sources habituelles et crée ses sujets depuis « Nouveau contenu ».",
     deferred: true,
   },
 };

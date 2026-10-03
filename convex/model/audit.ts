@@ -36,6 +36,7 @@ export type AuditAction =
   | "agent.toggle"
   | "agent.suggestion_accepted"
   | "agent.suggestion_rejected"
+  | "agent.suggestion_reopened"
   | "media.update"
   | "media.upload"
   | "media.delete"

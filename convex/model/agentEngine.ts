@@ -1,5 +1,5 @@
 /**
- * What the seven agents actually compute — CDC §4.6.
+ * What the eight agents actually compute — CDC §4.6.
  *
  * Runtime-agnostic on purpose: no Convex import, no Next import, no network
  * call. The Convex action in `convex/agentRuntime.ts` feeds it a context,
@@ -19,9 +19,23 @@
  * as a model answer.
  *
  * Switching to the real thing is setting the key. No code changes.
+ *
+ * The watch agent is the one exception to "produces real proposals offline":
+ * searching the web without a model is not something a rule can imitate, and
+ * a made-up news item is the last thing a newsroom needs. Offline, it reports
+ * what it *can* compute — which sections have published nothing lately — and
+ * hands over the searches to run by hand. It never invents a lead.
  */
 
 import type { AgentKey } from "./agents";
+import {
+  formatLead,
+  leadKey,
+  readLeads,
+  RELIABILITY_LABEL,
+  verifyLeads,
+  WATCH_DOMAINS,
+} from "./watch";
 
 /* -------------------------------------------------------------------------
    Contracts
@@ -56,6 +70,28 @@ export type AgentContext = {
     title: string;
     dek: string;
   }[];
+  /** Watch: the domain to search and what the newsroom already covers. */
+  readonly watch?: WatchContext;
+};
+
+export type WatchContext = {
+  readonly domainKey: string;
+  readonly domainLabel: string;
+  readonly focus: string;
+  readonly queries: readonly string[];
+  /** `AAAA-MM-JJ`, as the newsroom reads the calendar. */
+  readonly today: string;
+  /** How many days back a lead may go. */
+  readonly days: number;
+  /** Sections a lead may be filed under. */
+  readonly sections: readonly { slug: string; name: string }[];
+  /** When each top-level section last published — the offline stand-in. */
+  readonly coverage: readonly {
+    slug: string;
+    name: string;
+    lastPublishedAt: number | null;
+  }[];
+  readonly now: number;
 };
 
 export type AgentProposal = {
@@ -65,6 +101,12 @@ export type AgentProposal = {
   readonly rationale: string;
   readonly current?: string;
   readonly proposed: string;
+  /**
+   * What identifies "the same proposal again" when its wording changes from
+   * one run to the next — a watch lead is recognised by its first source,
+   * not by the sentence that summarises it. Defaults to `proposed`.
+   */
+  readonly key?: string;
 };
 
 export type AgentOutcome = {
@@ -80,17 +122,33 @@ export type AgentOutcome = {
 
 /** US dollars per million tokens. One micro-dollar per token per $1/MTok. */
 const PRICING: Record<string, { input: number; output: number }> = {
+  "claude-fable-5-1": { input: 10, output: 50 },
+  "claude-opus-5-5": { input: 4, output: 20 },
   "claude-opus-5": { input: 5, output: 25 },
+  "claude-sonnet-5-5": { input: 2, output: 10 },
   "claude-sonnet-5": { input: 2, output: 10 },
+  "claude-haiku-4-5": { input: 1, output: 5 },
 };
+
+/**
+ * A web search is billed on top of the tokens it brings back: 10 US dollars
+ * per thousand searches, that is 10 000 micro-dollars each. Only the watch
+ * agent searches; its runs are charged to the same monthly cap as the rest.
+ */
+export const WEB_SEARCH_MICROS = 10_000;
 
 export function costMicros(
   model: string,
   inputTokens: number,
-  outputTokens: number
+  outputTokens: number,
+  webSearches = 0
 ): number {
   const price = PRICING[model] ?? PRICING["claude-sonnet-5"];
-  return Math.round(inputTokens * price.input + outputTokens * price.output);
+  return Math.round(
+    inputTokens * price.input +
+      outputTokens * price.output +
+      webSearches * WEB_SEARCH_MICROS
+  );
 }
 
 /* -------------------------------------------------------------------------
@@ -159,12 +217,22 @@ export function frenchTypography(input: string): string {
    Prompts
    ------------------------------------------------------------------------- */
 
-const HOUSE_STYLE = `Tu assistes la rédaction du Corporate, magazine économique gabonais édité par Up Concept à Libreville.
-Style maison : français soutenu mais direct, phrases courtes, pas de superlatif publicitaire, chiffres sourcés, typographie française stricte (espace fine insécable avant ; : ! ?, guillemets « », capitales accentuées).
+const HOUSE_STYLE = `Tu assistes la rédaction de BOMA Infos, média gabonais d'information générale : il couvre toute l'actualité du Gabon — politique, économie, société, tourisme, environnement, culture, sport.
+Style maison : français soutenu mais direct, phrases courtes, pas de superlatif publicitaire, faits datés et chiffres sourcés, typographie française stricte (espace fine insécable avant ; : ! ?, guillemets « », capitales accentuées).
+Ligne éditoriale : l'exactitude d'abord, et la neutralité — en politique plus qu'ailleurs : ni jugement, ni rumeur, ni propos prêté à quelqu'un sans source nommée.
 Tu PROPOSES. Tu ne publies jamais, tu ne modifies jamais un contenu, tu ne refuses jamais un dépôt. Un humain valide chacune de tes propositions.
 Réponds UNIQUEMENT par un objet JSON, sans texte autour et sans bloc de code.`;
 
 const JSON_SHAPE = `{"summary":"une phrase en français","proposals":[{"field":"…","label":"…","rationale":"…","proposed":"…"}]}`;
+
+/** The watch answers with leads, not with edits to a text. */
+const WATCH_SHAPE = `{"summary":"une phrase en français","leads":[{"title":"titre de travail, 90 caractères au plus","summary":"les faits, en deux ou trois phrases","why":"pourquoi maintenant, pour un lecteur du Gabon","rubrique":"un slug de la liste fournie","sources":[{"title":"titre de la page","url":"https://…","date":"AAAA-MM-JJ"}]}]}`;
+
+/** A lead older than this is history, not news. */
+export const WATCH_DAYS = 7;
+
+/** A section silent for longer than this is reported by the offline watch. */
+const WATCH_STALE_DAYS = 7;
 
 export function buildPrompt(
   agent: AgentKey,
@@ -252,6 +320,39 @@ export function buildPrompt(
         system: `${HOUSE_STYLE}\nSchéma : ${JSON_SHAPE}\nChamps autorisés : "transcript" (texte horodaté) et "interview" (trame questions/réponses prête à éditer).`,
         user: `Structure cette prise de son d'interview en texte horodaté puis en trame questions/réponses pour la rubrique Interview.\n\nSujet : ${context.title}\n\nMatière :\n${(context.transcriptSource ?? context.bodyText).slice(0, 12_000)}`,
       };
+
+    case "veille": {
+      const watch = context.watch;
+      const sections = (watch?.sections ?? [])
+        .map((section) => `- ${section.slug} : ${section.name}`)
+        .join("\n");
+      const published = (context.corpus ?? [])
+        .slice(0, 60)
+        .map((item) => `- ${item.title}`)
+        .join("\n");
+      return {
+        system: `${HOUSE_STYLE}
+Tu fais la veille de l'actualité du Gabon pour la rédaction. Tu disposes d'un outil de recherche web : sers-t'en, ne réponds jamais de mémoire.
+Règles de la veille :
+- Ne retiens que des faits datés des ${watch?.days ?? WATCH_DAYS} derniers jours, qui concernent le Gabon et le domaine demandé.
+- Chaque piste s'appuie sur au moins une page que tu as réellement trouvée pendant cette recherche : donne son adresse exacte, telle que la recherche te l'a rendue. N'invente ni source, ni citation, ni chiffre. Quand deux sites indépendants confirment le fait, cite les deux.
+- Sépare les faits de leurs commentaires. Écarte les rumeurs, les contenus promotionnels et ce que la rédaction a déjà publié (liste fournie).
+- Une piste est une proposition d'angle pour un journaliste, pas un article : tu ne rédiges pas l'article.
+- Si la recherche ne donne rien de solide, renvoie une liste vide. Aucune piste vaut mieux qu'une piste fragile.
+Schéma : ${WATCH_SHAPE}
+Cinq pistes au plus, de la plus importante à la moins importante.`,
+        user: `Date du jour : ${watch?.today ?? ""}.
+Domaine : ${watch?.domainLabel ?? "Tour d'horizon"} — ${watch?.focus ?? ""}.
+
+Rubriques disponibles (slug : nom) :
+${sections || "(aucune)"}
+
+Déjà publié par la rédaction, à ne pas reproposer :
+${published || "(rien)"}
+
+Cherche l'actualité des ${watch?.days ?? WATCH_DAYS} derniers jours et propose des pistes de sujets.`,
+      };
+    }
   }
 }
 
@@ -277,7 +378,7 @@ const asString = (value: unknown): string =>
  * backtick would be silly; failing silently would be worse, so anything
  * genuinely unparseable throws and the run is recorded as `failed`.
  */
-export function parseOutcome(agent: AgentKey, text: string): AgentOutcome {
+function extractJson(text: string): Record<string, unknown> {
   const trimmed = text.trim();
   const fenced = /```(?:json)?\s*([\s\S]*?)```/.exec(trimmed);
   const candidate = fenced ? fenced[1] : trimmed;
@@ -286,8 +387,11 @@ export function parseOutcome(agent: AgentKey, text: string): AgentOutcome {
   if (start === -1 || end === -1) {
     throw new Error("Réponse de l'agent illisible : aucun objet JSON.");
   }
+  return JSON.parse(candidate.slice(start, end + 1)) as Record<string, unknown>;
+}
 
-  const parsed = JSON.parse(candidate.slice(start, end + 1)) as {
+export function parseOutcome(agent: AgentKey, text: string): AgentOutcome {
+  const parsed = extractJson(text) as {
     summary?: unknown;
     proposals?: unknown;
   };
@@ -305,6 +409,59 @@ export function parseOutcome(agent: AgentKey, text: string): AgentOutcome {
 
   return {
     summary: asString(parsed.summary) || `Proposition de l'agent ${agent}.`,
+    proposals,
+  };
+}
+
+/**
+ * Reads the answer of a watch run.
+ *
+ * `retrieved` is every address the search tool handed back during the run.
+ * A source the answer cites but the search never returned is removed, and a
+ * lead left without any source is dropped (`verifyLeads`): what reaches the
+ * newsroom is what was found, not what was written.
+ */
+export function parseWatch(
+  text: string,
+  retrieved: readonly string[],
+  context: AgentContext
+): AgentOutcome {
+  const parsed = extractJson(text) as { summary?: unknown; leads?: unknown };
+  const { leads, dropped } = verifyLeads(readLeads(parsed.leads), retrieved);
+
+  const sections = new Set(
+    (context.watch?.sections ?? []).map((section) => section.slug)
+  );
+  const fallbackSection =
+    context.watch && sections.has(context.watch.domainKey)
+      ? context.watch.domainKey
+      : "";
+
+  const proposals: AgentProposal[] = leads.slice(0, 5).map((found) => {
+    const lead = {
+      ...found,
+      rubrique: sections.has(found.rubrique) ? found.rubrique : fallbackSection,
+    };
+    const count = lead.sources.length;
+    return {
+      field: "veille.piste",
+      label: lead.title,
+      rationale: `${RELIABILITY_LABEL[lead.reliability]} · ${count} source${count > 1 ? "s" : ""} retrouvée${count > 1 ? "s" : ""} par la recherche.`,
+      proposed: formatLead(lead),
+      key: leadKey(lead),
+    };
+  });
+
+  const found =
+    proposals.length === 0
+      ? "Aucune piste solide sur la période."
+      : `${proposals.length} piste${proposals.length > 1 ? "s" : ""} sourcée${proposals.length > 1 ? "s" : ""}.`;
+  const summary = asString(parsed.summary) || found;
+  return {
+    summary:
+      dropped > 0
+        ? `${summary} — ${dropped} piste${dropped > 1 ? "s" : ""} écartée${dropped > 1 ? "s" : ""} : source introuvable dans les résultats de la recherche.`
+        : summary,
     proposals,
   };
 }
@@ -427,7 +584,11 @@ const slugifyLocal = (value: string): string =>
     .replace(/^-+|-+$/g, "")
     .slice(0, 80) || "article";
 
-/** The label every simulated proposal carries, so nothing is ambiguous. */
+/**
+ * The label every simulated run carries, so nothing is ambiguous. The watch
+ * does not take it: its own summary already says that nothing was searched,
+ * and it applies no typographic rule.
+ */
 export const SIMULATION_NOTE =
   "Proposition produite hors ligne (aucune clé d'API Claude configurée) : règles typographiques et heuristiques maison, pas un modèle.";
 
@@ -515,7 +676,7 @@ export function simulate(agent: AgentKey, context: AgentContext): AgentOutcome {
             field: "social.accroche",
             label: "Accroche réseaux",
             rationale: "Une idée, une question, le lien.",
-            proposed: `${context.title} — ${key.join(", ")}. À lire sur Le Corporate.`,
+            proposed: `${context.title} — ${key.join(", ")}. À lire sur BOMA Infos.`,
           },
           {
             field: "seo.description",
@@ -732,7 +893,7 @@ export function simulate(agent: AgentKey, context: AgentContext): AgentOutcome {
             field: "social.facebook",
             label: "Facebook",
             rationale: "Deux à trois lignes, question d'accroche.",
-            proposed: `${context.title}\n\n${lead}\n\nÀ lire sur Le Corporate : ${url}`,
+            proposed: `${context.title}\n\n${lead}\n\nÀ lire sur BOMA Infos : ${url}`,
           },
         ],
       };
@@ -756,7 +917,7 @@ export function simulate(agent: AgentKey, context: AgentContext): AgentOutcome {
       const qa = chunks
         .map((part, index) =>
           index % 2 === 0
-            ? `**Le Corporate —** ${part.replace(/\.$/, "")} ?`
+            ? `**BOMA Infos —** ${part.replace(/\.$/, "")} ?`
             : `**Réponse —** ${part}`
         )
         .join("\n\n");
@@ -778,7 +939,84 @@ export function simulate(agent: AgentKey, context: AgentContext): AgentOutcome {
         ],
       };
     }
+
+    case "veille":
+      return watchOffline(context);
   }
+}
+
+/**
+ * The watch without a model.
+ *
+ * No web search, therefore **no lead**: nothing below describes an event.
+ * What a rule can honestly compute is the newsroom's own blind spots — the
+ * sections that have published nothing for a week — and the searches the
+ * agent would have run, handed over for a journalist to run by hand.
+ */
+function watchOffline(context: AgentContext): AgentOutcome {
+  const watch = context.watch;
+  if (!watch) {
+    return { summary: "Veille indisponible : domaine inconnu.", proposals: [] };
+  }
+
+  const DAY = 24 * 60 * 60 * 1000;
+  const inScope = watch.coverage.filter(
+    (section) =>
+      !WATCH_DOMAINS.some((domain) => domain.key === watch.domainKey) ||
+      section.slug === watch.domainKey
+  );
+  const silent = inScope.filter(
+    (section) =>
+      section.lastPublishedAt === null ||
+      watch.now - section.lastPublishedAt > WATCH_STALE_DAYS * DAY
+  );
+
+  const proposals: AgentProposal[] = silent.slice(0, 8).map((section) => {
+    const days =
+      section.lastPublishedAt === null
+        ? null
+        : Math.floor((watch.now - section.lastPublishedAt) / DAY);
+    const focus = WATCH_DOMAINS.find(
+      (domain) => domain.key === section.slug
+    )?.focus;
+    return {
+      field: `veille.couverture.${section.slug}`,
+      label:
+        days === null
+          ? `Rubrique « ${section.name} » : aucun article publié`
+          : `Rubrique « ${section.name} » : rien depuis ${days} jours`,
+      rationale:
+        "Calculé sur les articles publiés par la rédaction, sans recherche web.",
+      proposed: frenchTypography(
+        `${days === null ? "Cette rubrique n'a encore rien publié." : `Dernière parution il y a ${days} jours.`}${focus ? ` À surveiller : ${focus}.` : ""}`
+      ),
+      // Une note par période de silence : la clé est le jour de la dernière
+      // parution, pas son heure. Elle ne revient donc ni chaque matin, ni
+      // quand la date d'un article est retouchée dans la journée.
+      key: `couverture:${section.slug}:${
+        section.lastPublishedAt === null
+          ? "jamais"
+          : new Date(section.lastPublishedAt).toISOString().slice(0, 10)
+      }`,
+    };
+  });
+
+  proposals.push({
+    field: "veille.requetes",
+    label: `Recherches à lancer à la main — ${watch.domainLabel}`,
+    rationale:
+      "Ce sont les recherches que l'agent lance lui-même quand la clé d'API est posée.",
+    proposed: watch.queries.map((query) => `- ${query}`).join("\n"),
+    key: `requetes:${watch.domainKey}`,
+  });
+
+  return {
+    summary:
+      silent.length === 0
+        ? "Veille hors ligne : aucune recherche web sans clé d'API. Toutes les rubriques suivies ont publié dans la semaine."
+        : `Veille hors ligne : aucune recherche web sans clé d'API. ${silent.length} rubrique${silent.length > 1 ? "s" : ""} sans parution depuis plus de ${WATCH_STALE_DAYS} jours.`,
+    proposals,
+  };
 }
 
 /**
@@ -803,7 +1041,7 @@ export function composeNewsletter(
         proposed:
           items.length > 0
             ? `${items[0].title} — et ${Math.max(items.length - 1, 0)} autres sujets`
-            : `Le Corporate — semaine ${week}`,
+            : `BOMA Infos — semaine ${week}`,
       },
       {
         field: "newsletter.intro",
@@ -811,7 +1049,7 @@ export function composeNewsletter(
         rationale: "Trois lignes, le fil conducteur de la semaine.",
         proposed:
           items.length > 0
-            ? `Cette semaine dans Le Corporate : ${items
+            ? `Cette semaine sur BOMA Infos : ${items
                 .slice(0, 3)
                 .map((item) => item.title.toLowerCase())
                 .join(", ")}.`

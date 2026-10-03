@@ -5,10 +5,11 @@ import { internal } from "./_generated/api";
  * Scheduled jobs — CDC §4.6: "Utilise l'ordonnanceur Convex pour les
  * traitements différés (transcription, newsletter)."
  *
- * Both editorial jobs *propose*. The newsletter lands as a draft that an
- * administrator has to approve, and articles due for publication are moved
- * by the same rule the newsroom applied when it scheduled them — nothing
- * here decides anything new. The others only maintain derived data.
+ * The editorial jobs *propose*. The newsletter lands as a draft that an
+ * administrator has to approve, the watch leaves leads a journalist has to
+ * retain, and articles due for publication are moved by the same rule the
+ * newsroom applied when it scheduled them — nothing here decides anything
+ * new. The others only maintain derived data.
  */
 
 // Les identifiants de tâche planifiée doivent rester en ASCII : Convex les
@@ -20,6 +21,21 @@ crons.weekly(
   "weekly newsletter",
   { dayOfWeek: "thursday", hourUTC: 6, minuteUTC: 0 },
   internal.agentRuntime.composeWeeklyNewsletter,
+  {}
+);
+
+/**
+ * Every day at 05:30 UTC — 06:30 in Libreville, before the morning meeting:
+ * the watch agent searches the news of Gabon across its seven domains and
+ * leaves sourced leads on the board of the back office. It proposes; a lead
+ * becomes a draft only when a journalist retains it. One run, six searches
+ * at most, charged to the monthly cap like every other agent — and switched
+ * off with the agent, in the settings.
+ */
+crons.daily(
+  "daily news watch",
+  { hourUTC: 5, minuteUTC: 30 },
+  internal.agentRuntime.watchDaily,
   {}
 );
 
