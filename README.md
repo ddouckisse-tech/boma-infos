@@ -15,8 +15,10 @@ qui vient du socle et ne sert pas ici est listé dans « Ce qui vient du socle
 d'origine ».
 
 **BOMA Infos n'a aucun site antérieur** : il n'y a ni archive à reprendre ni
-adresse à préserver. Rien n'est en ligne à ce jour. Aucun déploiement Convex
-cloud ni projet Vercel n'est configuré pour ce projet.
+adresse à préserver. Rien n'est en ligne à ce jour. Le backend est le projet
+Convex `boma-info` de l'équipe `okatech`, créé le 03/10/2026 : il n'a qu'un
+déploiement de développement. Il n'existe ni déploiement de production, ni
+hébergement du site.
 
 **Coordonnées non communiquées.** La société éditrice, le téléphone et
 l'adresse postale ne sont pas connus : `lib/site.ts` les déclare `null`, rien
@@ -42,30 +44,23 @@ l'actualité — et un jeu de démonstration fictif.
 
 ## Démarrage
 
-Prérequis : [bun](https://bun.sh) (gestionnaire de paquets imposé) et Node 20,
-22 ou 24. Le backend Convex local exige l'une de ces trois versions pour ses
-actions `"use node"`. Sur une machine dont le Node par défaut est plus récent,
-préfixer la commande Convex, par exemple :
-
-```bash
-PATH="/opt/homebrew/opt/node@22/bin:$PATH" bunx convex dev
-```
+Prérequis : [bun](https://bun.sh) (gestionnaire de paquets imposé) et un compte
+Convex membre de l'équipe `okatech`.
 
 ```bash
 bun install
 
-# 1. Pousser le schéma et les fonctions sur le déploiement Convex.
-bunx convex dev --once
+# 1. Rattacher ce dossier au projet Convex « boma-info » (équipe okatech).
+#    La commande écrit .env.local, puis pousse le schéma et les fonctions sur
+#    votre déploiement de développement.
+bunx convex dev --configure existing --team okatech --project boma-info --once
 
-# 2. Variable attendue par Better Auth, posée SUR le déploiement Convex
-#    (pas dans .env.local) :
-bunx convex env set SITE_URL http://localhost:3040
-
-# 3. Charger le jeu de démonstration (28 articles, 6 signatures,
-#    40 photographies, 6 documents). Sans lui, le site est vide.
+# 2. Charger le jeu de démonstration (28 articles, 6 signatures,
+#    40 photographies, 6 documents). Sans lui, le site est vide. Inutile si
+#    votre déploiement de développement le contient déjà.
 bun run seed
 
-# 4. Créer le premier compte. Le dépôt n'en contient AUCUN : ni `admin`,
+# 3. Créer le premier compte. Le dépôt n'en contient AUCUN : ni `admin`,
 #    ni mot de passe par défaut — l'audit du site de l'autre titre avait
 #    relevé le contraire (CDC §5.3). Le mot de passe est un code à six
 #    chiffres, ou douze caractères et plus (comptes entreprise) ; sous douze
@@ -73,9 +68,14 @@ bun run seed
 bun run compte -- --email=vous@bomainfos.com --nom="Votre nom" \
   --motdepasse=123456 --role=administrateur
 
-# 5. Serveur de développement Next.js
+# 4. Serveur de développement Next.js
 bun run dev            # http://localhost:3040
 ```
+
+> **`SITE_URL` n'est pas à poser pour le développement.** Better Auth lit cette
+> variable sur le déploiement Convex ; absente, `convex/auth.ts` prend
+> `http://localhost:3040`. Elle devient nécessaire, avec `BETTER_AUTH_SECRET`,
+> sur le déploiement qui servira un site public.
 
 > **`bun run seed` remplace le jeu, il ne le complète pas.** Il efface les
 > rubriques, signatures, médias, articles et documents du déploiement visé
@@ -96,27 +96,33 @@ bun run dev            # http://localhost:3040
 > compilation ne retélécharge aucune photographie. Ils se régénèrent avec
 > `bun run media`, `bun run documents`, `bun run brand` et `bun run icons`.
 
-> **Le backend Convex local ne survit pas à `--once`.** Les pages du journal
+> **Le déploiement de développement est dans le cloud.** Les pages du journal
 > lisent leurs données dans Convex à chaque rendu, et les routes `/api/auth/*`
-> s'y adossent : il faut un `convex dev` qui tourne en parallèle du serveur
-> Next.
+> s'y adossent : le déploiement répond même quand aucun `convex dev` ne tourne.
+> `bun run convex:dev` sert à pousser le schéma et les fonctions à chaque
+> modification du dossier `convex/`.
 >
 > ```bash
 > # soit deux terminaux :
-> CONVEX_AGENT_MODE=anonymous bun run convex:dev   # terminal 1
-> bun run dev                                      # terminal 2
+> bun run convex:dev   # terminal 1
+> bun run dev          # terminal 2
 >
 > # soit un seul, Convex démarrant Next lui-même :
-> CONVEX_AGENT_MODE=anonymous bun run dev:full
+> bun run dev:full
 > ```
 >
-> Sans lui, une page du journal ne peut pas être rendue : le serveur Next
-> signale « Le journal n'a pas pu être lu depuis Convex ».
+> Si le serveur Next signale « Le journal n'a pas pu être lu depuis Convex »,
+> les fonctions ne sont pas poussées sur le déploiement que vise `.env.local` :
+> lancer `bunx convex dev --once`.
 
-Pour rattacher le projet à un compte Convex cloud plutôt qu'au déploiement
-local anonyme, le moment venu — aucun projet n'existe à ce jour :
-`bunx convex dev --configure=new --project boma-infos` (interactif, demande
-l'équipe). **Ne jamais lancer `convex deploy`** sans demande explicite.
+**Production.** Le projet `boma-info` n'a pas encore de déploiement de
+production : le premier `convex deploy` le créerait. **Ne jamais lancer
+`convex deploy`** sans demande explicite.
+
+**Sans compte Convex.** Un backend local anonyme reste possible :
+`CONVEX_AGENT_MODE=anonymous bunx convex dev`. Il exige Node 20, 22 ou 24 pour
+les actions `"use node"`, doit tourner en parallèle du serveur Next, et repart
+d'une base vide.
 
 ### Scripts
 
@@ -954,8 +960,10 @@ suit en vient et ne sert pas ici, ou en porte encore la trace.
       redessiné, puis `bun run brand`.
 - [ ] **Nom de domaine et DNS** de `www.bomainfos.com` ; régler
       `NEXT_PUBLIC_SITE_URL` et `SITE_URL` dessus.
-- [ ] **Projet Convex cloud et hébergement.** Aucun n'est configuré ; poser
-      `SITE_URL` et `BETTER_AUTH_SECRET` sur le déploiement Convex.
+- [ ] **Déploiement de production et hébergement.** Le projet Convex
+      `boma-info` (équipe `okatech`) n'a que son déploiement de développement.
+      Restent le déploiement de production, `SITE_URL` et `BETTER_AUTH_SECRET`
+      posés dessus, et l'hébergement du site.
 - [ ] **`ANTHROPIC_API_KEY`** (`bun run agents:cle`) et premier appel réel de la
       veille, surveillé.
 - [ ] **Prestataire de courriel.** Aucun n'est branché : les notifications du
