@@ -77,10 +77,7 @@ export default async function HomePage() {
       <div className="border-b border-border bg-surface-subtle py-4">
         <Container className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
           <h1 className="font-display type-h3 text-foreground">
-            <LocalizedText
-              fr={SITE.tagline}
-              en="Gabon and CEMAC economic news"
-            />
+            <LocalizedText fr={SITE.tagline} en={SITE.taglineEn} />
           </h1>
           {editionDate !== undefined && (
             <p className="type-small text-muted-foreground">
@@ -110,12 +107,14 @@ export default async function HomePage() {
             />
           }
           action={
+            // Il n'existe pas de rubrique « tout » : le lien descend aux
+            // derniers articles, toutes rubriques confondues, sur cette page.
             <Link
-              href="/rubrique/business-lifestyle"
+              href="#derniers-articles"
               prefetch={false}
               className="inline-flex min-h-11 items-center gap-1 type-small font-semibold text-accent underline-offset-4 hover:underline"
             >
-              <LocalizedText fr="Toute l'actualité" en="View all news" />
+              <LocalizedText fr="Les derniers articles" en="Latest articles" />
               <ArrowRight aria-hidden="true" className="size-4" />
             </Link>
           }
@@ -138,7 +137,7 @@ export default async function HomePage() {
 
       {dossier && (
         <Section spacing="loose">
-          <div className="grid gap-6 rounded-md border border-l-2 border-border border-l-brand-magenta bg-card p-6 lg:grid-cols-[2fr_1fr] lg:items-center lg:gap-10 lg:p-8">
+          <div className="grid gap-6 rounded-md border border-l-2 border-border border-l-brand-gold bg-card p-6 lg:grid-cols-[2fr_1fr] lg:items-center lg:gap-10 lg:p-8">
             <div className="min-w-0" lang="fr">
               <p className="type-small font-semibold tracking-wide text-accent uppercase">
                 <LocalizedText fr="Dossier spécial" en="Special report" />
@@ -193,6 +192,7 @@ export default async function HomePage() {
 
       {latest.length > 0 && (
         <Section
+          id="derniers-articles"
           title={<LocalizedText fr="Derniers articles" en="Latest articles" />}
           description={
             <LocalizedText
@@ -279,7 +279,7 @@ export default async function HomePage() {
 
       {espacePro.length > 0 && (
         <Section
-          title={<LocalizedText fr="Espace pro" en="Business resources" />}
+          title={<LocalizedText fr="Espace pro" en="Professional resources" />}
           description={
             <LocalizedText
               fr="Réglementation, appels d'offres, formation et documentation — l'information directement utilisable."
@@ -294,7 +294,7 @@ export default async function HomePage() {
             >
               <LocalizedText
                 fr="Tout l'espace pro"
-                en="View all business resources"
+                en="View all professional resources"
               />
               <ArrowRight aria-hidden="true" className="size-4" />
             </Link>
@@ -345,8 +345,8 @@ export default async function HomePage() {
             </h2>
             <p className="mt-2 max-w-reading type-body text-muted-foreground">
               <LocalizedText
-                fr="Un courriel par semaine : les articles à retenir, les échéances réglementaires, les appels d'offres ouverts. Inscription confirmée par courriel, désinscription en un clic."
-                en="One email a week with essential articles, regulatory deadlines and open tenders. Confirm by email and unsubscribe in one click."
+                fr="Un courriel par semaine : l'essentiel de l'actualité du Gabon — politique, économie, société, tourisme, culture, sport. Inscription confirmée par courriel, désinscription en un clic."
+                en="One email a week with the essential news from Gabon: politics, the economy, society, tourism, culture and sport. Confirm by email and unsubscribe in one click."
               />
             </p>
           </div>

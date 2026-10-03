@@ -362,12 +362,12 @@ export const submitForReview = mutation({
     await queueNotification(ctx, {
       email: organization?.contactEmail ?? viewer.email,
       whatsapp: organization?.whatsapp,
-      subject: `Le Corporate — dépôt reçu : ${row.title}`,
+      subject: `BOMA Infos — dépôt reçu : ${row.title}`,
       body:
         `Bonjour,\n\nVotre dépôt « ${row.title} » est bien arrivé à la ` +
         `rédaction${resubmission ? " après vos modifications" : ""}. ` +
         `Vous serez prévenu à chaque étape de son examen.\n\n` +
-        `La rédaction du Corporate`,
+        `La rédaction de BOMA Infos`,
       submissionId: id,
       organizationId,
     });
@@ -474,12 +474,12 @@ export const requestChanges = mutation({
     await queueNotification(ctx, {
       email: organization?.contactEmail ?? "",
       whatsapp: organization?.whatsapp,
-      subject: `Le Corporate — modifications demandées : ${row.title}`,
+      subject: `BOMA Infos — modifications demandées : ${row.title}`,
       body:
         `Bonjour,\n\nLa rédaction a examiné « ${row.title} » et demande des ` +
         `modifications avant publication :\n\n${text}\n\n` +
         `Votre dépôt est à nouveau modifiable dans votre espace.\n\n` +
-        `La rédaction du Corporate`,
+        `La rédaction de BOMA Infos`,
       submissionId: id,
       organizationId: row.organizationId,
     });
@@ -532,10 +532,10 @@ export const reject = mutation({
     await queueNotification(ctx, {
       email: organization?.contactEmail ?? "",
       whatsapp: organization?.whatsapp,
-      subject: `Le Corporate — dépôt non retenu : ${row.title}`,
+      subject: `BOMA Infos — dépôt non retenu : ${row.title}`,
       body:
         `Bonjour,\n\nLa rédaction n'a pas retenu « ${row.title} ».\n\n` +
-        `Motif : ${text}\n\nLa rédaction du Corporate`,
+        `Motif : ${text}\n\nLa rédaction de BOMA Infos`,
       submissionId: id,
       organizationId: row.organizationId,
     });
@@ -654,17 +654,17 @@ export const publishSubmission = mutation({
       email: organization?.contactEmail ?? "",
       whatsapp: organization?.whatsapp,
       subject: args.schedule
-        ? `Le Corporate — votre dépôt est programmé : ${row.title}`
-        : `Le Corporate — votre dépôt est publié : ${row.title}`,
+        ? `BOMA Infos — votre dépôt est programmé : ${row.title}`
+        : `BOMA Infos — votre dépôt est publié : ${row.title}`,
       body: args.schedule
         ? `Bonjour,\n\n« ${row.title} » paraîtra le ` +
           `${new Date(publishedAt).toLocaleString("fr-FR")}.\n\n` +
-          `La rédaction du Corporate`
+          `La rédaction de BOMA Infos`
         : `Bonjour,\n\n« ${row.title} » est en ligne :\n` +
           `/article/${slug}\n\nIl porte la mention « Contenu partenaire », ` +
           `comme tout contenu d'origine entreprise. Les statistiques de ` +
           `diffusion apparaissent dans votre espace.\n\n` +
-          `La rédaction du Corporate`,
+          `La rédaction de BOMA Infos`,
       submissionId: args.id,
       organizationId: row.organizationId,
     });

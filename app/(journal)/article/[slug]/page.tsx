@@ -26,7 +26,7 @@ import { getArticle, getRecentSlugs, getRelated } from "@/lib/content/server";
 import { formatViews } from "@/lib/format";
 import { fallbackVariant, getMediaAsset, SIZES, variantUrl } from "@/lib/media";
 import { sectionHref, subSectionHref } from "@/lib/navigation";
-import { absoluteUrl, SITE } from "@/lib/site";
+import { absoluteUrl, DEMO_CONTENT_NOTICE, SITE } from "@/lib/site";
 
 // Littéral et non `REVALIDATE_SECONDS` : Next analyse statiquement les
 // exports de configuration de segment et n'en résout pas les identifiants
@@ -175,9 +175,9 @@ export default async function ArticlePage({
 
       <article lang="fr">
         {/* En-tête fondu dans la photo (`.lc-hero`) : fil d'Ariane en haut,
-            titre, chapeau et signature en bas, sur un voile aux couleurs du
-            thème — blanc en clair, nuit en sombre. */}
-        <header className="lc-hero">
+            titre, chapeau et signature en bas, sur le marine de la charte.
+            `dark` en fait une île marine dans les deux thèmes. */}
+        <header className="lc-hero dark">
           {hero && (
             <ResponsiveImage
               media={hero}
@@ -245,7 +245,12 @@ export default async function ArticlePage({
                   {article.title}
                 </h1>
 
-                <p className="mt-4 max-w-[40rem] type-body font-medium text-foreground/90">
+                <span
+                  aria-hidden="true"
+                  className="mt-5 boma-rule w-40 md:w-56"
+                />
+
+                <p className="mt-5 max-w-[40rem] type-body font-medium text-foreground/90">
                   {article.dek}
                 </p>
 
@@ -290,6 +295,19 @@ export default async function ArticlePage({
         <Container className="py-8 md:py-10">
           <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-12">
             <div className="max-w-reading min-w-0">
+              {/* Tant que le corpus de démonstration est en ligne, chaque
+                  article le dit avant sa première ligne. */}
+              {DEMO_CONTENT_NOTICE && (
+                <p
+                  role="note"
+                  className="mb-8 rounded-md border border-warning-token/40 bg-warning-token/10 px-4 py-3 type-small text-foreground"
+                >
+                  <LocalizedText
+                    fr={DEMO_CONTENT_NOTICE.articleFr}
+                    en={DEMO_CONTENT_NOTICE.articleEn}
+                  />
+                </p>
+              )}
               {article.keyPoints.length > 0 && (
                 <KeyPoints points={article.keyPoints} className="mb-8" />
               )}

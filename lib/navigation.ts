@@ -10,14 +10,13 @@
  * The seed values are in `convex/seed/catalog.ts`.
  */
 
-/** Accent token, restricted to the brand ramps of CDC §3.1. */
+/**
+ * Accent token of a section, restricted to the hues of the charter: the navy
+ * (two steps), and the three colours of the tricolour rule — gold, green,
+ * blue — each at the step that carries text on a white page.
+ */
 export type SectionAccent =
-  | "navy-900"
-  | "navy-700"
-  | "navy-600"
-  | "magenta-600"
-  | "magenta-700"
-  | "magenta-800";
+  "navy-900" | "navy-700" | "gold-800" | "green-700" | "blue-600";
 
 export type CategoryRow = {
   readonly name: string;
@@ -42,17 +41,16 @@ export type Section = {
   readonly children: readonly SubSection[];
 };
 
-const ACCENTS: readonly SectionAccent[] = [
+export const SECTION_ACCENTS: readonly SectionAccent[] = [
   "navy-900",
   "navy-700",
-  "navy-600",
-  "magenta-600",
-  "magenta-700",
-  "magenta-800",
+  "gold-800",
+  "green-700",
+  "blue-600",
 ];
 
 const isAccent = (value: string): value is SectionAccent =>
-  (ACCENTS as readonly string[]).includes(value);
+  (SECTION_ACCENTS as readonly string[]).includes(value);
 
 /** Falls back to the primary ramp rather than dropping an unknown accent. */
 export const toAccent = (value: string): SectionAccent =>
@@ -90,38 +88,40 @@ export const findSection = (
   slug: string
 ): Section | undefined => sections.find((section) => section.slug === slug);
 
-/** Text colour for an accent — navy is unusable on the dark theme (CDC §3.1). */
+/**
+ * Text colour for an accent. Each pair clears 4,5:1 on its ground: the dark
+ * step on white (navy 16,96 and 11,33 · gold 6,86 · green 6,81 · blue 6,77),
+ * the light step on the navy of the dark theme (navy-300 10,51 · gold-400
+ * 12,06 · green-400 9,36 · blue-400 6,58). The navy of the brand is unusable
+ * as text on the dark theme (1,13:1), hence navy-300.
+ */
 export const accentTextClass: Record<SectionAccent, string> = {
   "navy-900": "text-navy-900 dark:text-navy-300",
   "navy-700": "text-navy-700 dark:text-navy-300",
-  "navy-600": "text-navy-600 dark:text-navy-400",
-  "magenta-600": "text-magenta-600 dark:text-magenta-300",
-  "magenta-700": "text-magenta-700 dark:text-magenta-300",
-  "magenta-800": "text-magenta-800 dark:text-magenta-400",
+  "gold-800": "text-gold-800 dark:text-gold-400",
+  "green-700": "text-green-700 dark:text-green-400",
+  "blue-600": "text-blue-600 dark:text-blue-400",
 };
 
 export const accentBorderClass: Record<SectionAccent, string> = {
   "navy-900": "border-navy-900 dark:border-navy-300",
   "navy-700": "border-navy-700 dark:border-navy-300",
-  "navy-600": "border-navy-600 dark:border-navy-400",
-  "magenta-600": "border-magenta-600 dark:border-magenta-300",
-  "magenta-700": "border-magenta-700 dark:border-magenta-300",
-  "magenta-800": "border-magenta-800 dark:border-magenta-400",
+  "gold-800": "border-gold-500 dark:border-gold-400",
+  "green-700": "border-green-600 dark:border-green-400",
+  "blue-600": "border-blue-600 dark:border-blue-400",
 };
 
 /**
  * Solid fill for a badge. The pair is chosen so the label always clears
- * 4,5:1 — white on these three navy steps, white on magenta-700/800, and
- * white on magenta-600 (5,19:1). `#C74794` itself never carries text.
+ * 4,5:1 — white on the two navy steps (16,96 and 11,33), on green-700 (6,81)
+ * and on blue-600 (6,77). Gold is the exception that follows the charter: a
+ * gold fill carries navy text (12,45:1), never white, in both themes. On the
+ * dark theme every fill is a light step carrying navy-950 (6,79:1 at least).
  */
 export const accentFillClass: Record<SectionAccent, string> = {
   "navy-900": "bg-navy-900 text-white dark:bg-navy-300 dark:text-navy-950",
-  "navy-700": "bg-navy-700 text-white dark:bg-navy-300 dark:text-navy-950",
-  "navy-600": "bg-navy-600 text-white dark:bg-navy-400 dark:text-navy-950",
-  "magenta-600":
-    "bg-magenta-600 text-white dark:bg-magenta-300 dark:text-magenta-950",
-  "magenta-700":
-    "bg-magenta-700 text-white dark:bg-magenta-300 dark:text-magenta-950",
-  "magenta-800":
-    "bg-magenta-800 text-white dark:bg-magenta-400 dark:text-magenta-950",
+  "navy-700": "bg-navy-700 text-white dark:bg-navy-400 dark:text-navy-950",
+  "gold-800": "bg-gold-400 text-navy-950",
+  "green-700": "bg-green-700 text-white dark:bg-green-400 dark:text-navy-950",
+  "blue-600": "bg-blue-600 text-white dark:bg-blue-400 dark:text-navy-950",
 };

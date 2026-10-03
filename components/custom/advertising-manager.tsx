@@ -445,7 +445,7 @@ function CampaignForm({
           maxLength={100}
           value={advertiser}
           onChange={(event) => setAdvertiser(event.target.value)}
-          hint="Pour une autopromotion, indiquez Le Corporate."
+          hint="Pour une autopromotion, indiquez BOMA Infos."
         />
         <SelectField
           label="Type de campagne"

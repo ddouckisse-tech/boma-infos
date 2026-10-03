@@ -157,7 +157,7 @@ function DailyViewsChart({ byDay }: { byDay: DayPoint[] }) {
         />
         <polyline
           fill="none"
-          stroke="var(--color-brand-magenta)"
+          stroke="var(--accent)"
           strokeWidth={2}
           points={points}
         />
@@ -206,7 +206,7 @@ function SectionBreakdown({ bySection }: { bySection: SectionRow[] }) {
           </div>
           <div className="mt-1 h-2 rounded-xs bg-surface-muted">
             <div
-              className="h-2 rounded-xs bg-brand-magenta"
+              className="h-2 rounded-xs bg-brand-gold"
               style={{ width: `${Math.round((section.views / max) * 100)}%` }}
             />
           </div>

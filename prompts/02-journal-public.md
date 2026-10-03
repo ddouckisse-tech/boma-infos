@@ -1,3 +1,9 @@
+> **Héritage du socle.** Ce document décrit la construction du journal public pour le
+> titre d'origine, « Le Corporate ». Il est conservé comme historique technique et n'a
+> pas été réécrit : les rubriques, contenus et chiffres qu'il cite sont ceux de ce titre.
+> L'identité, la charte, les rubriques et les agents en vigueur sont ceux de BOMA Infos :
+> voir [`README.md`](../README.md) et [`CAHIER-DES-CHARGES.md`](../CAHIER-DES-CHARGES.md).
+
 # Prompt 2/3 — Le journal public
 
 > À exécuter après le lot 1. Référence : `../CAHIER-DES-CHARGES.md` (§4.1, §4.2, §5.2, §5.4).

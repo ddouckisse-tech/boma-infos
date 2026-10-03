@@ -19,7 +19,11 @@
  *    is how they cross the network — except the `nomodule` core-js bundle,
  *    which no browser of §5.5 downloads; it is reported separately so it is
  *    never a surprise in a network capture;
- *  - the woff2 files the document preloads (already compressed);
+ *  - the woff2 files the document preloads (already compressed) — and the
+ *    one it does not preload: the bold italic of the charter's emphasis is
+ *    declared without preloading, so only a page that sets text in it makes
+ *    the browser fetch it. Such a page says so (`data-face="emphase"`, on
+ *    the quotation card) and is charged for the file;
  *  - the pictures the browser will actually pick, resolved from each
  *    `srcset`/`sizes` pair for a 412 px viewport **at DPR 2** — the real
  *    Chrome Android parc of §5.5 — using the byte counts recorded by
@@ -192,6 +196,20 @@ function pickFromSrcSet(srcset: string, sizes: string): string | null {
   return candidates[candidates.length - 1].url;
 }
 
+/** The text of a stylesheet of the build, or nothing if it is not on disk. */
+async function readStylesheet(href: string): Promise<string> {
+  const clean = href.split(/[?#]/)[0];
+  if (!clean.startsWith("/_next/")) return "";
+  try {
+    return await readFile(
+      path.join(NEXT_DIR, clean.replace("/_next/", "")),
+      "utf8"
+    );
+  } catch {
+    return "";
+  }
+}
+
 function attr(tag: string, name: string): string | null {
   const match = new RegExp(`${name}="([^"]*)"`).exec(tag);
   return match ? match[1] : null;
@@ -234,18 +252,49 @@ async function analyse(
     kind: "document",
   });
 
+  const stylesheets: string[] = [];
   for (const tag of raw.match(/<link\b[^>]*>/g) ?? []) {
     const rel = attr(tag, "rel") ?? "";
     const href = attr(tag, "href");
     if (!href) continue;
-    if (rel.includes("stylesheet")) await push(href, "css");
-    else if (rel.includes("preload")) {
+    if (rel.includes("stylesheet")) {
+      stylesheets.push(href);
+      await push(href, "css");
+    } else if (rel.includes("preload")) {
       const as = attr(tag, "as") ?? "";
       if (as === "font") await push(href, "font");
       else if (as === "image") await push(href, "image");
       else if (as === "script") await push(href, "js");
       else if (as === "style") await push(href, "css");
     }
+  }
+
+  // L'emphase de la charte : sa fonte italique n'est pas préchargée, mais la
+  // page qui s'en sert la télécharge bel et bien. On la retrouve dans les
+  // feuilles de style de la page — la face italique du sous-ensemble latin —
+  // et on la compte. Introuvable alors que la page l'utilise : la mesure est
+  // refusée plutôt que flattée.
+  if (/data-face="emphase"/.test(raw)) {
+    let found = false;
+    for (const href of stylesheets) {
+      const css = await readStylesheet(href);
+      for (const face of css.match(/@font-face\s*\{[^}]*\}/g) ?? []) {
+        if (!/font-style:\s*italic/.test(face)) continue;
+        // Le sous-ensemble latin de base, U+0000-00FF — que le CSS minifié
+        // d'une compilation de production écrit `U+??`.
+        if (
+          !/unicode-range:\s*U\+(?:0{1,4}-0{0,2}FF\b|\?\?(?![0-9A-F?]))/i.test(
+            face
+          )
+        )
+          continue;
+        const url = /url\(["']?([^"')]+\.woff2)["']?\)/.exec(face)?.[1];
+        if (!url) continue;
+        await push(new URL(url, `http://budget${href}`).pathname, "font");
+        found = true;
+      }
+    }
+    if (!found) unresolved.push("fonte de l'emphase (italique) introuvable");
   }
 
   for (const tag of raw.match(/<script\b[^>]*src="[^"]+"[^>]*>/g) ?? []) {

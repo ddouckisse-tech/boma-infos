@@ -13,7 +13,7 @@ import type { MediaAsset } from "../lib/media-core";
 
 const campaign: CampaignInput = {
   title: "Édition hebdomadaire",
-  advertiser: "Le Corporate",
+  advertiser: "BOMA Infos",
   kind: "house",
   format: "banner",
   href: "/newsletter",
@@ -27,7 +27,7 @@ const asset: MediaAsset = {
   id: "edition-test",
   alt: "La couverture de notre édition hebdomadaire",
   caption: "",
-  credit: "Le Corporate",
+  credit: "BOMA Infos",
   license: "Droits réservés",
   source: "upload",
   color: "#123456",

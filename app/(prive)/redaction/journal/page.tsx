@@ -65,7 +65,7 @@ export default function JournalAuditPage() {
           {isHighlighted(row.action) && (
             <span
               aria-hidden="true"
-              className="size-1.5 shrink-0 rounded-full bg-brand-magenta"
+              className="size-1.5 shrink-0 rounded-full bg-brand-gold"
             />
           )}
           <span className="font-medium">

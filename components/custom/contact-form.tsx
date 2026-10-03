@@ -62,8 +62,7 @@ export function ContactForm() {
           Message transmis à la rédaction
         </p>
         <p className="mt-2 type-body text-muted-foreground">
-          Nous accusons réception sous deux jours ouvrés. Pour une information
-          urgente, le téléphone de la rédaction reste le moyen le plus rapide.
+          Nous accusons réception sous deux jours ouvrés.
         </p>
       </div>
     );
@@ -204,8 +203,8 @@ export function ContactForm() {
             id={`${id}-finalite`}
             className="mt-1 type-small text-muted-foreground"
           >
-            Finalité : répondre à votre message. Destinataire : la rédaction du
-            Corporate, elle seule. Conservation : douze mois. Vous pouvez
+            Finalité : répondre à votre message. Destinataire : la rédaction de
+            BOMA Infos, elle seule. Conservation : douze mois. Vous pouvez
             demander l&apos;accès, la rectification ou la suppression de vos
             données en écrivant à la rédaction.
           </p>

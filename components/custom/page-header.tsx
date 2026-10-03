@@ -15,8 +15,8 @@ type PageHeaderProps = {
 };
 
 /**
- * Page opening block. Emits the single <h1> and the accent rule that carries
- * the brand magenta without relying on it for text contrast.
+ * Page opening block. Emits the single <h1> and, under it, the tricolour
+ * rule of the charter — decorative, never relied upon for meaning.
  */
 export function PageHeader({
   title,
@@ -41,7 +41,7 @@ export function PageHeader({
             <h1 className="font-display type-h1 text-foreground">{title}</h1>
             <span
               aria-hidden="true"
-              className="mt-4 block h-[3px] w-16 rounded-xs bg-brand-magenta"
+              className="mt-4 boma-rule w-20"
             />
             {description && (
               <p className="mt-4 max-w-reading type-body text-muted-foreground">

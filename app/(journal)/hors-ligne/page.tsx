@@ -5,6 +5,7 @@ import { Container } from "@/components/custom/container";
 import { LocalizedText } from "@/components/custom/localized-text";
 import { PageHeader } from "@/components/custom/page-header";
 import { Section } from "@/components/custom/section";
+import { SITE } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Hors ligne",
@@ -97,8 +98,8 @@ export default function OfflinePage() {
 
           <p className="mt-6 type-small text-muted-foreground">
             <LocalizedText
-              fr="Le Corporate garde en mémoire les quarante dernières pages que vous avez ouvertes, pour que les coupures de réseau ne vous privent pas de ce que vous avez déjà téléchargé."
-              en="Le Corporate keeps the last forty pages you opened on your device, so network outages do not remove content you have already downloaded."
+              fr={`${SITE.name} garde en mémoire les quarante dernières pages que vous avez ouvertes, pour que les coupures de réseau ne vous privent pas de ce que vous avez déjà téléchargé.`}
+              en={`${SITE.name} keeps the last forty pages you opened on your device, so network outages do not remove content you have already downloaded.`}
             />
           </p>
         </Container>

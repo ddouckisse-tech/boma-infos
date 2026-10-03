@@ -153,7 +153,7 @@ export const MEDIA_SOURCES: readonly MediaSource[] = [
     query:
       "File:2014 10 23 Somali National University Re-opens (15428349899).jpg",
     alt: "Un étudiant attentif au premier rang d'une salle de cours.",
-    caption: "Salle de cours. La formation continue reste le premier frein cité par les employeurs.",
+    caption: "Une salle de cours.",
   },
   {
     id: "administration-gabon",
@@ -193,7 +193,7 @@ export const MEDIA_SOURCES: readonly MediaSource[] = [
     query: "conference audience seminar Africa",
     fallbacks: ["audience conference hall", "seminar participants room"],
     alt: "Public assis en rangs dans une salle de conférence, écran de projection au fond.",
-    caption: "Séminaire professionnel.",
+    caption: "Une salle de conférence.",
   },
   {
     id: "documents-bureau",
@@ -214,5 +214,97 @@ export const MEDIA_SOURCES: readonly MediaSource[] = [
     query: "File:Mille francs CFA.jpg",
     alt: "Un billet de mille francs CFA posé à plat.",
     caption: "Le franc CFA, arrimé à l'euro par une parité fixe.",
+  },
+
+  /* ---------------------------------------------------------------------
+     BOMA Infos — rubriques Politique, Tourisme, Société, Culture, Sport.
+     Fichiers Commons désignés un par un (`File:`) : une recherche libre
+     ramène trop souvent une photographie d'un autre pays. Licences relevées
+     à la main : CC BY, CC BY-SA ou CC0, toutes réutilisables avec crédit.
+     --------------------------------------------------------------------- */
+  {
+    id: "littoral-pongara",
+    query: "File:PongaraLodge.jpg",
+    alt: "Vue aérienne du littoral gabonais : plage de sable, océan turquoise et forêt dense jusqu'au rivage.",
+    caption:
+      "Le littoral du parc national de Pongara, face à Libreville : la forêt rejoint l'océan.",
+  },
+  {
+    id: "parc-loango",
+    query: "File:Gabon Loango National Park Elephant with offspring.jpeg",
+    alt: "Deux éléphants de forêt, un adulte et un jeune, traversent une savane herbeuse en lisière de forêt.",
+    caption:
+      "Éléphants de forêt dans le parc national de Loango, sur la côte de l'Ogooué-Maritime.",
+  },
+  {
+    id: "elephants-foret",
+    query: "File:Loxodonta cyclotis 153942221.jpg",
+    alt: "Troupeau d'éléphants de forêt, adultes et petits, dans une clairière marécageuse bordée d'arbres.",
+    caption:
+      "Un troupeau d'éléphants de forêt dans une clairière marécageuse, un « baï ».",
+  },
+  {
+    id: "parc-lope",
+    query: "File:Elephants in Lopé National Park.JPG",
+    alt: "Paysage de savane et de forêt-galerie au pied de collines, quelques éléphants au loin.",
+    caption:
+      "La mosaïque de savanes et de forêts du parc national de la Lopé, inscrit au patrimoine mondial.",
+  },
+  {
+    id: "pointe-denis",
+    query: "File:Pointe Denis.JPG",
+    alt: "Plage de sable clair, bateaux à moteur au mouillage et rideau d'arbres sur la presqu'île.",
+    caption:
+      "La plage de la Pointe-Denis, sur la rive gauche de l'estuaire, face à Libreville.",
+  },
+  {
+    id: "lodge-loango",
+    query: "File:Gabon Loango National Park View of Lodge from water.jpeg",
+    alt: "Lodge en bois sur pilotis au bord d'une lagune, ponton et palmiers.",
+    caption: "Un lodge en bordure de lagune, dans le parc national de Loango.",
+  },
+  {
+    id: "assemblee-nationale",
+    query:
+      "File:The Léon Mba Palace (National Assembly Palace) - 2023.jpg",
+    alt: "Façade courbe du palais Léon-Mba, siège de l'Assemblée nationale, derrière une pelouse et des palmiers.",
+    caption: "Le palais Léon-Mba, siège de l'Assemblée nationale, à Libreville.",
+  },
+  {
+    id: "senat-gabon",
+    query:
+      "File:The Omar Bongo Ondimba Palace (Gabonese Senate Palace) - Libreville, 2023.jpg",
+    alt: "Le palais Omar-Bongo-Ondimba, siège du Sénat : bâtiment bas à colonnade derrière des jardins.",
+    caption: "Le palais Omar-Bongo-Ondimba, siège du Sénat, à Libreville.",
+  },
+  {
+    id: "lambarene-ville",
+    query: "File:Voie primaire de l'Ogooué à Lambaréné JPEG.jpg",
+    alt: "Rue principale de Lambaréné longeant l'Ogooué : voitures, bâtiments bas et végétation.",
+    caption: "Lambaréné, chef-lieu du Moyen-Ogooué, au bord de l'Ogooué.",
+  },
+  {
+    id: "hopital-lambarene",
+    query: "File:Hospital Albert Schweitzer1.jpg",
+    alt: "Pavillons aux toits rouges de l'hôpital Albert-Schweitzer, entourés de grands arbres.",
+    caption: "L'hôpital Albert-Schweitzer de Lambaréné, dans le Moyen-Ogooué.",
+  },
+  {
+    id: "football-plage",
+    query: "File:Beach Football in Gabon.JPG",
+    alt: "Des jeunes disputent un match de football sur une plage de sable, filet de volley à l'arrière-plan.",
+    caption: "Match de football sur une plage gabonaise.",
+  },
+  {
+    id: "musee-national",
+    query: "File:Musée national d’art de Libreville 05.jpg",
+    alt: "Bracelets et collier anciens en métal présentés dans une vitrine de musée.",
+    caption: "Parures anciennes en métal exposées au musée national, à Libreville.",
+  },
+  {
+    id: "mvet-instrument",
+    query: "File:Mvet (MDMB 679).jpg",
+    alt: "Un mvet, cithare traditionnelle : tige de bois, cordes et trois calebasses de résonance.",
+    caption: "Le mvet, instrument à cordes des épopées fang.",
   },
 ];

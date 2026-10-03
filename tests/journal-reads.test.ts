@@ -267,7 +267,7 @@ test("articles liés : l'étiquette l'emporte sur la date, même dans une archiv
       body: [],
       status: "published",
       categorySlug: "editorial",
-      authorSlug: "le-corporate",
+      authorSlug: "boma-infos",
       galleryMediaKeys: [],
       keyPoints: [],
       seo: { description: "", keywords: [] },
@@ -417,9 +417,9 @@ test("compteurs publics : rubriques et auteurs comme le parcours complet", async
 test("page auteur : les 24 derniers et le total", async () => {
   const fake = await archive(700, 9);
   const signed = publishedNewestFirst(fake).filter(
-    (row) => row.authorSlug === "le-corporate"
+    (row) => row.authorSlug === "boma-infos"
   );
-  const result = (await run(authorBySlug, fake, { slug: "le-corporate" })) as {
+  const result = (await run(authorBySlug, fake, { slug: "boma-infos" })) as {
     articles: { slug: string }[];
     total: number;
   };

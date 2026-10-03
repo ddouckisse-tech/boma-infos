@@ -1,3 +1,9 @@
+> **Héritage du socle.** Ce document décrit la construction du socle (fondations et design
+> system) pour le titre d'origine, « Le Corporate ». Il est conservé comme historique
+> technique et n'a pas été réécrit : les couleurs, polices, logo et chiffres qu'il cite sont
+> ceux de ce titre. L'identité, la charte, les rubriques et les agents en vigueur sont ceux de
+> BOMA Infos : voir [`README.md`](../README.md) et [`CAHIER-DES-CHARGES.md`](../CAHIER-DES-CHARGES.md).
+
 # Prompt 1/3 — Fondations et design system
 
 > À exécuter en premier. Référence : `../CAHIER-DES-CHARGES.md` (§3, §5.1, §5.3).

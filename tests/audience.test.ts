@@ -42,7 +42,7 @@ async function withArticle(
     body: [{ type: "paragraph", text: "x".repeat(6000) }],
     status: "published",
     categorySlug: "editorial",
-    authorSlug: "le-corporate",
+    authorSlug: "boma-infos",
     galleryMediaKeys: [],
     keyPoints: [],
     seo: { description: "", keywords: [] },

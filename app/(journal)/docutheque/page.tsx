@@ -8,6 +8,7 @@ import { Section } from "@/components/custom/section";
 import { BreadcrumbStructuredData } from "@/components/custom/structured-data";
 import { getDocuments } from "@/lib/content/server";
 import { formatBytes, formatDate, isoDate } from "@/lib/format";
+import { SITE } from "@/lib/site";
 
 // Littéral et non `REVALIDATE_SECONDS` : Next analyse statiquement les
 // exports de configuration de segment et n'en résout pas les identifiants
@@ -24,15 +25,14 @@ const formatDateEn = (value: number) =>
 
 export const metadata: Metadata = {
   title: "Docuthèque",
-  description:
-    "Rapports, textes réglementaires, guides et études à télécharger : la documentation économique gabonaise rassemblée par la rédaction.",
+  description: `Rapports, textes réglementaires, guides et études à télécharger : la documentation sur le Gabon rassemblée par la rédaction de ${SITE.name}.`,
   alternates: { canonical: "/docutheque" },
   openGraph: {
     type: "website",
     url: "/docutheque",
-    title: "Docuthèque — Le Corporate",
+    title: `Docuthèque — ${SITE.name}`,
     description:
-      "Rapports, textes réglementaires, guides et études économiques à télécharger.",
+      "Rapports, textes réglementaires, guides et études sur le Gabon à télécharger.",
   },
 };
 
@@ -57,7 +57,7 @@ export default async function DocuthequePage() {
       />
 
       <PageHeader
-        eyebrow={<LocalizedText fr="Espace pro" en="Business resources" />}
+        eyebrow={<LocalizedText fr="Espace pro" en="Professional resources" />}
         title={<LocalizedText fr="Docuthèque" en="Document library" />}
         description={
           <LocalizedText

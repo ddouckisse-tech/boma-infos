@@ -41,7 +41,8 @@ type AgentKey =
   | "media"
   | "moderation"
   | "diffusion"
-  | "transcription";
+  | "transcription"
+  | "veille";
 
 type SocialLink = { label: string; url: string };
 
@@ -502,7 +503,7 @@ export default function ReglagesPage() {
                       La clé{" "}
                       <code className="font-mono">ANTHROPIC_API_KEY</code>{" "}
                       n&apos;est pas renseignée sur le déploiement Convex : les
-                      sept agents tournent donc en <strong>mode simulé</strong>{" "}
+                      agents tournent donc en <strong>mode simulé</strong>{" "}
                       (propositions produites par des règles maison, clairement
                       étiquetées comme telles). Il suffit de poser la clé (
                       <code className="font-mono">bun run agents:cle</code>)
@@ -552,7 +553,7 @@ export default function ReglagesPage() {
                   columns={agentColumns}
                   rows={agentsData.agents}
                   rowKey={(row) => row.key}
-                  caption="Liste des sept agents éditoriaux et leur état"
+                  caption="Liste des agents éditoriaux et leur état"
                   minWidth="54rem"
                   actions={(row) => (
                     <button
@@ -626,7 +627,8 @@ export default function ReglagesPage() {
                 <code className="font-mono">lib/legacy-redirects.ts</code>, mais
                 ne sont pas encore appliquées par{" "}
                 <code className="font-mono">next.config.ts</code> : elles sont
-                enregistrées ici en vue de la reprise du fonds WordPress.
+                enregistrées ici en vue d&apos;une éventuelle reprise
+                d&apos;archives.
               </>
             }
           >

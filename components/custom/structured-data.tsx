@@ -33,11 +33,17 @@ async function Script({ data }: { data: JsonLd }) {
   );
 }
 
+/**
+ * What `lib/site.ts` declares `null` (phone, locality, publishing company)
+ * is left out of the graph: a structured-data field is never filled with a
+ * guess.
+ */
 export const organizationNode = (): JsonLd => ({
   "@type": "NewsMediaOrganization",
   "@id": absoluteUrl("/#organisation"),
   name: SITE.name,
   url: absoluteUrl("/"),
+  description: SITE.description,
   logo: {
     "@type": "ImageObject",
     url: absoluteUrl(BRAND_LOGO.social),
@@ -45,13 +51,17 @@ export const organizationNode = (): JsonLd => ({
     height: BRAND_LOGO.socialHeight,
   },
   email: SITE.email,
-  telephone: SITE.phone,
+  ...(SITE.phone ? { telephone: SITE.phone } : {}),
   address: {
     "@type": "PostalAddress",
-    addressLocality: "Libreville",
-    addressCountry: "GA",
+    ...(SITE.address ? { addressLocality: SITE.address } : {}),
+    addressCountry: SITE.country,
   },
-  parentOrganization: { "@type": "Organization", name: SITE.publisher },
+  ...(SITE.publisher
+    ? {
+        parentOrganization: { "@type": "Organization", name: SITE.publisher },
+      }
+    : {}),
   inLanguage: "fr-FR",
 });
 

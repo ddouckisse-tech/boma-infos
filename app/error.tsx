@@ -22,7 +22,7 @@ export default function ErrorBoundary({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("[le-corporate] rendu interrompu", error);
+    console.error("[boma-infos] rendu interrompu", error);
   }, [error]);
 
   return (
@@ -36,8 +36,8 @@ export default function ErrorBoundary({
           className="inline-flex min-h-11 w-44 max-w-full min-w-0 items-center sm:w-56"
         >
           <LocalizedText
-            fr="Le Corporate — accueil"
-            en="Le Corporate — home"
+            fr="BOMA Infos — accueil"
+            en="BOMA Infos — home"
             className="sr-only"
           />
           <svg
@@ -49,13 +49,10 @@ export default function ErrorBoundary({
             className="block h-auto w-full"
           >
             <use
-              href={`${BRAND_LOGO.sprite}#corporate`}
+              href={`${BRAND_LOGO.sprite}#wordmark`}
               className="fill-brand-navy dark:fill-white"
             />
-            <use
-              href={`${BRAND_LOGO.sprite}#accent`}
-              className="fill-brand-magenta dark:fill-brand-magenta-dark"
-            />
+            <use href={`${BRAND_LOGO.sprite}#dots`} />
           </svg>
         </a>
       </div>

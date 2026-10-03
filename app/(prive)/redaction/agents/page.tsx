@@ -10,6 +10,7 @@ import {
   FlaskConical,
   Mail,
   Play,
+  Radar,
   Sparkles,
 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
@@ -21,6 +22,7 @@ import { DataTable, type DataColumn } from "@/components/custom/data-table";
 import { SelectField } from "@/components/custom/form-field";
 import { OfficeHeader } from "@/components/custom/office-header";
 import { StatsTile } from "@/components/custom/stats-tile";
+import { WatchLeadCard } from "@/components/custom/watch-lead-card";
 import {
   formatCost,
   formatDateTime,
@@ -35,8 +37,12 @@ import { cn } from "@/lib/utils";
  * « Un agent propose, un humain dispose » : rien sur cet écran n'écrit un
  * champ tout seul. L'interrupteur individuel de chaque agent vit dans les
  * réglages (réservés à l'administrateur) ; ici on ne fait que lire l'état,
- * décider des suggestions au cas par cas et déclencher la composition de la
- * newsletter hebdomadaire.
+ * décider des suggestions au cas par cas, lancer la veille de l'actualité et
+ * déclencher la composition de la newsletter hebdomadaire.
+ *
+ * La veille (agent 8) a son tableau : les pistes que l'agent a trouvées sur
+ * le web, chacune avec ses sources. En retenir une ouvre un brouillon ; en
+ * écarter une l'empêche de revenir.
  */
 
 type AgentKey =
@@ -46,7 +52,8 @@ type AgentKey =
   | "media"
   | "moderation"
   | "diffusion"
-  | "transcription";
+  | "transcription"
+  | "veille";
 
 type Run = NonNullable<
   ReturnType<typeof useQuery<typeof api.agents.journal>>
@@ -124,6 +131,24 @@ export default function AgentsPage() {
   const [composing, setComposing] = useState(false);
   const [approvingId, setApprovingId] =
     useState<Id<"newsletterEditions"> | null>(null);
+
+  const board = useQuery(api.agents.watchBoard, {});
+  const runWatch = useAction(api.agentRuntime.runWatch);
+  const [watchDomain, setWatchDomain] = useState("");
+  const [watching, setWatching] = useState(false);
+
+  const handleWatch = async () => {
+    setWatching(true);
+    try {
+      await runWatch({ domain: watchDomain || undefined });
+      toast.success(
+        "Veille lancée. Les pistes apparaissent ici dès qu'elles sont prêtes."
+      );
+    } catch (error) {
+      toast.error(humanError(error));
+    }
+    setWatching(false);
+  };
 
   const handleCompose = async () => {
     setComposing(true);
@@ -277,11 +302,13 @@ export default function AgentsPage() {
               />
               <p className="type-small text-foreground">
                 La clé <code className="font-mono">ANTHROPIC_API_KEY</code>{" "}
-                n&apos;est pas posée sur le déploiement Convex&nbsp;: les sept
-                agents tournent donc en mode simulé (règles typographiques et
-                heuristiques maison, jamais présentées comme un modèle). Poser
-                la clé (<code className="font-mono">bun run agents:cle</code>)
-                suffit à passer sur l&apos;API Claude, sans changement de code.
+                n&apos;est pas posée sur le déploiement Convex&nbsp;: les agents
+                tournent donc en mode simulé (règles typographiques et
+                heuristiques maison, jamais présentées comme un modèle), et la
+                veille ne cherche rien sur le web — elle signale seulement les
+                rubriques restées sans parution. Poser la clé (
+                <code className="font-mono">bun run agents:cle</code>) suffit à
+                passer sur l&apos;API Claude, sans changement de code.
               </p>
             </div>
           )}
@@ -318,7 +345,9 @@ export default function AgentsPage() {
             </div>
           )}
 
-          <h2 className="mt-8 font-display type-h2">Les sept agents</h2>
+          <h2 className="mt-8 font-display type-h2">
+            Les {overview.agents.length} agents
+          </h2>
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             {overview.agents.map((agent) => (
               <article
@@ -388,6 +417,83 @@ export default function AgentsPage() {
             L&apos;interrupteur de chaque agent vit dans les réglages, réservés
             à l&apos;administrateur.
           </p>
+        </>
+      )}
+
+      <h2 className="mt-8 flex items-center gap-2 font-display type-h2">
+        <Radar aria-hidden="true" className="size-4" />
+        Veille de l&apos;actualité
+      </h2>
+      <p className="mt-2 max-w-reading type-body text-muted-foreground">
+        L&apos;agent cherche sur le web l&apos;actualité du Gabon — politique,
+        économie, société, tourisme, environnement, culture, sport — et dépose
+        ici des pistes de sujets, chacune avec ses sources. Une source que la
+        recherche n&apos;a pas réellement rapportée est écartée. Retenir une
+        piste ouvre un brouillon à vérifier et à écrire&nbsp;; l&apos;écarter
+        l&apos;empêche de revenir.
+      </p>
+      <div className="mt-4 flex flex-wrap items-end gap-3">
+        <SelectField
+          label="Domaine"
+          value={watchDomain}
+          onChange={(event) => setWatchDomain(event.target.value)}
+          options={(
+            board?.domains ?? [{ key: "gabon", label: "Tour d'horizon" }]
+          ).map((domain) => ({
+            value: domain.key === "gabon" ? "" : domain.key,
+            label:
+              domain.key === "gabon"
+                ? "Tour d'horizon — tous les domaines"
+                : domain.label,
+          }))}
+          className="w-full max-w-xs"
+        />
+        <ActionButton type="button" onClick={handleWatch} disabled={watching}>
+          <Radar aria-hidden="true" className="size-4" />
+          Lancer la veille
+        </ActionButton>
+      </div>
+      {board?.lastRun && (
+        <p className="mt-3 max-w-reading type-small text-muted-foreground">
+          Dernière veille&nbsp;: {formatDateTime(board.lastRun.createdAt)} ·{" "}
+          {board.lastRun.targetLabel} ·{" "}
+          {board.lastRun.mode === "simulated" ? "hors ligne" : "API Claude"}
+          {board.lastRun.status === "blocked" && " · bloquée"}
+          {board.lastRun.summary ? ` — ${board.lastRun.summary}` : ""}
+        </p>
+      )}
+
+      <h3 className="mt-6 font-display type-h3">
+        Pistes à trancher
+        {board ? ` (${formatNumber(board.pending.length)})` : ""}
+      </h3>
+      {board === undefined ? (
+        <p className="mt-3 type-body text-muted-foreground">
+          Chargement des pistes…
+        </p>
+      ) : board.pending.length === 0 ? (
+        <p className="mt-3 rounded-md border border-border bg-card p-4 type-body text-muted-foreground">
+          Aucune piste en attente. La veille tourne chaque matin&nbsp;; vous
+          pouvez aussi la lancer sur un domaine.
+        </p>
+      ) : (
+        <div className="mt-3 grid gap-4 md:grid-cols-2">
+          {board.pending.map((lead) => (
+            <WatchLeadCard lead={lead} key={lead._id} />
+          ))}
+        </div>
+      )}
+
+      {board && board.retained.length > 0 && (
+        <>
+          <h3 className="mt-6 font-display type-h3">
+            Pistes retenues, en cours d&apos;écriture
+          </h3>
+          <div className="mt-3 grid gap-4 md:grid-cols-2">
+            {board.retained.map((lead) => (
+              <WatchLeadCard lead={lead} key={lead._id} />
+            ))}
+          </div>
         </>
       )}
 

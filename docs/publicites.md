@@ -1,7 +1,10 @@
-# Encarts publics — Le Corporate
+# Encarts publics — BOMA Infos
 
-Implémentation locale du 13 septembre 2026, branche `codex/public-advertising`,
-base `52f081b`. Aucun déploiement, aucune campagne payante créée.
+Fonctionnalité héritée du socle de BOMA Infos : implémentée localement le
+13 septembre 2026 (branche `codex/public-advertising`, base `52f081b`), avant la
+reprise du code le 03/10/2026. Le dépôt ne fournit aucune campagne payante et
+rien n’est supposé déployé : la mise en service est une procédure à suivre pour
+BOMA Infos, décrite dans [le compte rendu de recette](recette-publicites.md).
 
 ## Emplacements
 
@@ -89,26 +92,34 @@ visuel des pages d’article de ces éditeurs.
 - [AdSense — règles sticky](https://support.google.com/adsense/answer/10734935?hl=en) : séparation, pas de chevauchement, largeur ≤300 px, desktop uniquement.
 - [AdSense — emplacement et rafraîchissement](https://support.google.com/adsense/answer/1346295?hl=en) : les liens éditoriaux restent distincts ; aucun auto-refresh de tags AdSense.
 
-L’adaptation LeCorporate retient un nombre réduit d’encarts, une gouttière
+L’adaptation de BOMA Infos retient un nombre réduit d’encarts, une gouttière
 large et une colonne qui respecte la hauteur disponible. Les affiches internes
 acceptent le carré et le rectangle ; leurs proportions peuvent différer de
 celles d’un inventaire de régie normalisé.
 
-## Intégration avec l’import en cours
+## Intégration avec l’import WordPress
 
-Ne pas écraser la branche d’import. Les seuls points communs attendus sont
-`app/(journal)/article/[slug]/page.tsx`, `convex/schema.ts`, `convex/library.ts`,
-`convex/_generated/api.d.ts`, `proxy.ts`, le root layout et `scripts/check-budget.ts`.
+Section héritée du socle : BOMA Infos n’importe aucune archive, et l’outillage
+d’import WordPress est conservé, non utilisé (voir
+[la migration du titre d’origine](MIGRATION-WORDPRESS.md)). Si une archive est un
+jour importée, ne pas écraser la branche d’import. Les seuls points communs
+attendus sont `app/(journal)/article/[slug]/page.tsx`, `convex/schema.ts`,
+`convex/library.ts`, `convex/_generated/api.d.ts`, `proxy.ts`, le root layout et
+`scripts/check-budget.ts`.
 Conserver les ajouts de l’import (contenu, médias, liens, marque et redirections)
 puis y reporter les composants de publicité et la table additionnelle.
 Le contrôle des images Convex ajouté par l’import doit être conservé en combinant
 le contrôle des pages dynamiques de cette branche. La marque du fallback
-`app/error.tsx` doit reprendre le nouveau logo sans réintroduire `next/link`.
-Le footer et `lib/content/server.ts` ne sont pas modifiés ici.
+`app/error.tsx` doit reprendre le logo en vigueur (`BRAND_LOGO`) sans
+réintroduire `next/link`. Les encarts ne modifient ni le footer ni
+`lib/content/server.ts`.
 
 ## Recette locale
 
-Les preuves sont dans `output/ads/` (captures et rapports JSON, ignorés par git).
+Les preuves d’une recette locale s’écrivent dans `output/ads/` (captures et
+rapports JSON, ignorés par git : le dossier n’est pas versionné).
 `AUDIENCE_DISABLED=1` empêche les mesures d’audience pendant la recette locale.
 Les tests de politiques et de flux sont dans `tests/advertising-*.test.ts`.
-Les résultats définitifs figurent dans [le compte rendu de recette](recette-publicites.md).
+Les résultats de la recette du socle figurent dans
+[le compte rendu de recette](recette-publicites.md) ; celle de BOMA Infos est à
+rejouer selon la même procédure.

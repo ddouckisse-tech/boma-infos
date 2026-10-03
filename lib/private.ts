@@ -71,6 +71,7 @@ export const AUDIT_LABEL: Record<string, string> = {
   "agent.toggle": "Agent activé ou désactivé",
   "agent.suggestion_accepted": "Suggestion d'agent acceptée",
   "agent.suggestion_rejected": "Suggestion d'agent rejetée",
+  "agent.suggestion_reopened": "Piste de veille remise à trancher",
   "media.update": "Média modifié",
   "media.upload": "Média ajouté",
   "media.delete": "Média supprimé",

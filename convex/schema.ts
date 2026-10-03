@@ -417,9 +417,14 @@ export default defineSchema({
       v.literal("article"),
       v.literal("submission"),
       v.literal("media"),
-      v.literal("newsletter")
+      v.literal("newsletter"),
+      v.literal("veille")
     ),
-    /** Stringified document id; kept loose so one table covers four targets. */
+    /**
+     * Stringified document id; kept loose so one table covers every target.
+     * A watch run has no document: its target is the newsroom's single
+     * board, `WATCH_TARGET_ID`.
+     */
     targetId: v.string(),
     targetLabel: v.string(),
     /** What the agent was shown, trimmed — enough to audit a suggestion. */
@@ -460,7 +465,8 @@ export default defineSchema({
       v.literal("article"),
       v.literal("submission"),
       v.literal("media"),
-      v.literal("newsletter")
+      v.literal("newsletter"),
+      v.literal("veille")
     ),
     targetId: v.string(),
     /** `title` | `dek` | `body` | `slug` | `alt` | `social.linkedin`… */
@@ -478,6 +484,8 @@ export default defineSchema({
     decidedBy: v.optional(v.string()),
     decidedAt: v.optional(v.number()),
     createdAt: v.number(),
+    /** The draft a retained watch lead opened, so the board can link to it. */
+    draftId: v.optional(v.id("articles")),
   })
     .index("by_run", ["runId"])
     .index("by_target", ["targetType", "targetId", "status"])

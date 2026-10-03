@@ -1,10 +1,31 @@
 {
-  "width": 1867,
-  "height": 329,
-  "capitalC": {
-    "x": 290,
-    "y": 3,
-    "width": 230,
-    "height": 263
+  "width": 5194,
+  "height": 1194,
+  "dots": [
+    {
+      "id": "green",
+      "cx": 3707.7,
+      "cy": 179.5,
+      "r": 165.5,
+      "color": "#38AA75"
+    },
+    {
+      "id": "yellow",
+      "cx": 4337.5,
+      "cy": 179.5,
+      "r": 165.5,
+      "color": "#FCC546"
+    },
+    {
+      "id": "blue",
+      "cx": 4967.3,
+      "cy": 179.5,
+      "r": 165.5,
+      "color": "#1765E6"
+    }
+  ],
+  "capitalB": {
+    "width": 596.0,
+    "height": 664.0
   }
 }

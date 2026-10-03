@@ -29,12 +29,11 @@ type Category = {
 };
 
 const ACCENT_OPTIONS = [
-  { value: "navy-900", label: "Navy foncé" },
-  { value: "navy-700", label: "Navy" },
-  { value: "navy-600", label: "Navy clair" },
-  { value: "magenta-600", label: "Magenta" },
-  { value: "magenta-700", label: "Magenta foncé" },
-  { value: "magenta-800", label: "Magenta profond" },
+  { value: "navy-900", label: "Marine" },
+  { value: "navy-700", label: "Marine clair" },
+  { value: "gold-800", label: "Or" },
+  { value: "green-700", label: "Vert" },
+  { value: "blue-600", label: "Bleu" },
 ] as const;
 
 const VISIBILITY_OPTIONS = [

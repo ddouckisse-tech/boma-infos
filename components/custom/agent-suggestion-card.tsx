@@ -76,7 +76,7 @@ export function AgentSuggestionCard({
       <header className="flex flex-wrap items-start gap-2">
         <Sparkles
           aria-hidden="true"
-          className="mt-0.5 size-4 shrink-0 text-brand-magenta"
+          className="mt-0.5 size-4 shrink-0 text-gold-600 dark:text-gold-400"
         />
         <div className="min-w-0 flex-1">
           <h3 className="type-small font-semibold">{suggestion.label}</h3>
@@ -133,7 +133,7 @@ export function AgentSuggestionCard({
             type="button"
             disabled={busy}
             onClick={() => settle(true)}
-            className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 type-small font-semibold text-primary-foreground touch-target disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 type-small font-semibold text-primary-foreground transition-colors touch-target hover:bg-primary/90 disabled:opacity-50"
           >
             <Check aria-hidden="true" className="size-4" />
             Accepter

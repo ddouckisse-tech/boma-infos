@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/custom/page-header";
 import { Section } from "@/components/custom/section";
 import { api } from "@/convex/_generated/api";
 import { runMutation } from "@/lib/content/server";
+import { SITE } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Confirmation d'inscription",
@@ -63,8 +64,8 @@ export default async function ConfirmationPage({
         description={
           ok ? (
             <LocalizedText
-              fr="Vous recevrez la lettre hebdomadaire du Corporate chaque vendredi matin."
-              en="You will receive Le Corporate's weekly newsletter every Friday morning."
+              fr={`Vous recevrez la lettre hebdomadaire de ${SITE.name} chaque vendredi matin.`}
+              en={`You will receive the ${SITE.name} weekly newsletter every Friday morning.`}
             />
           ) : (
             <LocalizedText

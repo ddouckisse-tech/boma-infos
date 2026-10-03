@@ -6,9 +6,15 @@ import { BRAND_LOGO } from "@/lib/brand";
 import { cx } from "@/lib/cx";
 
 /**
- * Approved editorial artwork. Both paths share one cached SVG request and
- * inherit the active page theme, without adding a font or logo data to JS.
- * The link remains at least 44 px tall, even when the logo shrinks on mobile.
+ * The wordmark of the charter: « BOMA » in the serif, « infos » in the sans,
+ * and the three dots — green, yellow, blue — above it.
+ *
+ * The letters and the dots are two fragments of one cached SVG request, so
+ * no font and no logo data travel in the JavaScript. The letters take the
+ * colour of the theme they sit in — navy on a white page, white on navy,
+ * including inside a navy island such as the masthead; the dots keep the
+ * three colours of the charter everywhere. The link remains at least 44 px
+ * tall, even when the logo shrinks on mobile.
  */
 export function BrandWordmark({
   className,
@@ -24,7 +30,7 @@ export function BrandWordmark({
     <Link
       href={href}
       aria-label={
-        locale === "en" ? "Le Corporate — home" : "Le Corporate — accueil"
+        locale === "en" ? "BOMA Infos — home" : "BOMA Infos — accueil"
       }
       // Un `className` fourni remplace la largeur par défaut (les écrans
       // privés passent la leur) : sans fusion de classes, deux largeurs
@@ -43,13 +49,10 @@ export function BrandWordmark({
         className="block h-auto w-full"
       >
         <use
-          href={`${BRAND_LOGO.sprite}#corporate`}
+          href={`${BRAND_LOGO.sprite}#wordmark`}
           className="fill-brand-navy dark:fill-white"
         />
-        <use
-          href={`${BRAND_LOGO.sprite}#accent`}
-          className="fill-brand-magenta dark:fill-brand-magenta-dark"
-        />
+        <use href={`${BRAND_LOGO.sprite}#dots`} />
       </svg>
     </Link>
   );

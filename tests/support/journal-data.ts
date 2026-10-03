@@ -33,7 +33,7 @@ export const SECTIONS = [
   { slug: "vide", weight: 0, subs: [] },
 ];
 
-const AUTHORS = ["le-corporate", "redaction-eco", "invite"];
+const AUTHORS = ["boma-infos", "redaction-eco", "invite"];
 /**
  * Sixty tags, a few pieces each — production has 123, mostly unique, and
  * named like these: proper nouns no body text repeats.
@@ -71,7 +71,7 @@ export async function seedReferenceTables(fake: FakeDb) {
         name: `Sous-rubrique ${sub}`,
         slug: sub,
         parentSlug: section.slug,
-        accent: "magenta-600",
+        accent: "gold-800",
         order: (order += 1),
         description: "",
         isActive: true,

@@ -194,8 +194,8 @@ export function SearchDialog({ className }: { className?: string }) {
                 }
               }}
               placeholder={localize(locale, {
-                fr: "Ex. : manganèse, CEMAC, contenu local…",
-                en: "E.g. manganese, CEMAC, local content…",
+                fr: "Ex. : Libreville, parcs nationaux, football…",
+                en: "E.g. Libreville, national parks, football…",
               })}
               aria-describedby={statusId}
               className={FIELD_INPUT}

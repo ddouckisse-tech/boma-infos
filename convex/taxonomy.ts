@@ -9,18 +9,18 @@ import { slugify } from "./model/text";
  * Sections — CDC §4.1: "administrables (ajout, renommage, réordonnancement,
  * couleur d'accent) sans intervention technique".
  *
- * The accent is not free text: it is one of the six ramps of §3.1, because a
- * section painted in an arbitrary hex would break the contrast guarantees of
- * §3.5 the first time someone picked a light one.
+ * The accent is not free text: it is one of the five tokens of the charter
+ * (`lib/navigation.ts`), because a section painted in an arbitrary hex would
+ * break the contrast guarantees of §3.5 the first time someone picked a light
+ * one.
  */
 
 const ACCENTS = [
   "navy-900",
   "navy-700",
-  "navy-600",
-  "magenta-600",
-  "magenta-700",
-  "magenta-800",
+  "gold-800",
+  "green-700",
+  "blue-600",
 ] as const;
 
 const categoryShape = v.object({

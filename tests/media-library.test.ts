@@ -57,13 +57,13 @@ function storedPicture(index: number, alt = `Photographie ${index}`) {
     key: `wp-media-${index}`,
     alt,
     caption: index % 3 === 0 ? `Conseil des ministres ${index}` : "",
-    credit: "Le Corporate",
+    credit: "BOMA Infos",
   };
   return {
     ...text,
     ...mediaDerivedFields(text),
     license: "Droits réservés",
-    source: `https://lecorporate.com/wp-content/uploads/${index}.jpg`,
+    source: `https://www.bomainfos.com/wp-content/uploads/${index}.jpg`,
     width: 1280,
     height: 720,
     color: "#6b7280",

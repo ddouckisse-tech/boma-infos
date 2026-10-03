@@ -6,7 +6,7 @@ import type { Block } from "../model/content";
  * The demo corpus lives in the repository (not in a database dump) so that
  * anybody cloning the project can reseed a fresh Convex deployment with one
  * command and get a journal that is actually judgeable: real French copy, real
- * photographs, realistic figures for Gabon and the CEMAC zone.
+ * photographs, realistic figures for Gabon.
  *
  * `daysAgo` is turned into a timestamp at seeding time, so the archive always
  * looks freshly published however long the dataset has been in the repo.

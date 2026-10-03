@@ -3,9 +3,8 @@
  *
  *   bun run scripts/make-documents.ts
  *
- * The audit of the legacy site found a footer publishing nine links of which
- * exactly one resolved. A download button that downloads nothing is worse than
- * no button, so every entry of `convex/seed/index.ts` gets a real, valid file:
+ * A download button that downloads nothing is worse than no button, so every
+ * entry of `convex/seed/catalog.ts` gets a real, valid file:
  * a cover page carrying the title, the description and an explicit notice that
  * this is demonstration material.
  *
@@ -62,11 +61,11 @@ function buildContentStream(doc: (typeof DOCUMENTS)[number]): string {
     }
   };
 
-  // Filet magenta de marque, en aplat : pas de texte dessus (CDC §3.5).
-  ops.push(`0.784 0.278 0.580 rg ${left} 790 96 6 re f`);
+  // Filet or de marque, en aplat : pas de texte dessus (CDC §3.5).
+  ops.push(`0.969 0.780 0.333 rg ${left} 790 96 6 re f`);
   ops.push("0 0 0 rg");
 
-  text("LE CORPORATE", "F1", 11, 26);
+  text("BOMA INFOS", "F1", 11, 26);
   y -= 6;
   text(doc.title, "F1", 20, 26);
   y -= 10;
@@ -98,7 +97,7 @@ function buildPdf(doc: (typeof DOCUMENTS)[number]): Buffer {
     "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>",
     "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
     `<< /Length ${contentBytes.byteLength} >>\nstream\n${content}\nendstream`,
-    `<< /Title (${pdfString(doc.title)}) /Author (Le Corporate) /Creator (Le Corporate) >>`,
+    `<< /Title (${pdfString(doc.title)}) /Author (BOMA Infos) /Creator (BOMA Infos) >>`,
   ];
 
   let out = "%PDF-1.4\n";

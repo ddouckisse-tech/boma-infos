@@ -36,6 +36,7 @@ import type * as model_content from "../model/content.js";
 import type * as model_media from "../model/media.js";
 import type * as model_password from "../model/password.js";
 import type * as model_text from "../model/text.js";
+import type * as model_watch from "../model/watch.js";
 import type * as newsletter from "../newsletter.js";
 import type * as newsletterDraft from "../newsletterDraft.js";
 import type * as newsroom from "../newsroom.js";
@@ -90,6 +91,7 @@ declare const fullApi: ApiFromModules<{
   "model/media": typeof model_media;
   "model/password": typeof model_password;
   "model/text": typeof model_text;
+  "model/watch": typeof model_watch;
   newsletter: typeof newsletter;
   newsletterDraft: typeof newsletterDraft;
   newsroom: typeof newsroom;

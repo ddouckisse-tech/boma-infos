@@ -28,14 +28,14 @@ export function SearchForm({ defaultValue }: { defaultValue?: string }) {
         <SearchFormFields
           id="recherche-fr"
           defaultValue={defaultValue}
-          placeholder="Ex. : manganèse, CEMAC, contenu local…"
+          placeholder="Ex. : Libreville, parcs nationaux, football…"
         />
       </div>
       <div lang="en" className="lc-en">
         <SearchFormFields
           id="recherche-en"
           defaultValue={defaultValue}
-          placeholder="E.g. manganese, CEMAC, local content…"
+          placeholder="E.g. Libreville, national parks, football…"
         />
       </div>
     </>

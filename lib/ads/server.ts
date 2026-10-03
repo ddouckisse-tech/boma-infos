@@ -41,7 +41,7 @@ function previewCampaigns(): AdCreative[] {
     },
   ].map((item) => ({
     ...item,
-    advertiser: "Le Corporate",
+    advertiser: "BOMA Infos",
     kind: "house",
     presentation: "editorial",
     priority: 0,

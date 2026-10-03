@@ -1,7 +1,7 @@
 /**
  * Builds the photographic library of the demo dataset.
  *
- *   bun run scripts/fetch-media.ts [--force]
+ *   bun run scripts/fetch-media.ts [--only=id,id]
  *
  * For every entry of `scripts/media-sources.ts`:
  *   1. searches Wikimedia Commons for a real, freely-licensed photograph;
@@ -19,12 +19,18 @@
  *
  * This script is run by hand when the demo library changes. Its output is
  * committed, so neither `bun run build` nor CI touches the network.
+ *
+ * `--only=id,id` fetches and encodes just the listed sources and keeps every
+ * other entry of the manifest exactly as it is: adding a photograph must not
+ * re-download the whole library, nor change a byte of the files already
+ * committed (a Commons search does not return the same picture forever).
  */
 
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
+import { MEDIA as EXISTING_MEDIA } from "../convex/mediaManifest";
 import { MEDIA_SOURCES, type MediaSource } from "./media-sources";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
@@ -37,12 +43,23 @@ const OUT_DIR = path.join(ROOT, "public", "medias");
  * disque, à la composition de la carte 1200×630.
  */
 const OG_DIR = path.join(ROOT, "assets", "og");
-const CACHE_DIR = path.join(ROOT, "node_modules", ".cache", "lecorporate-media");
+const CACHE_DIR = path.join(ROOT, "node_modules", ".cache", "bomainfos-media");
 const MANIFEST = path.join(ROOT, "convex", "mediaManifest.ts");
 
 /** Wikimedia asks every automated client to identify itself. */
-const USER_AGENT =
-  "LeCorporateSeedBot/1.0 (https://le-corporate.com; contact iasted@me.com) node-fetch";
+const USER_AGENT = "BomaInfosSeedBot/1.0 (contact iasted@me.com) node-fetch";
+
+/** `--only=a,b` : ne traiter que ces sources, conserver le reste du manifeste. */
+const ONLY: ReadonlySet<string> | null = (() => {
+  const arg = process.argv.find((value) => value.startsWith("--only="));
+  if (!arg) return null;
+  const ids = arg
+    .slice("--only=".length)
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+  return new Set(ids);
+})();
 
 const WIDTHS_LANDSCAPE = [320, 480, 640, 768, 960, 1280] as const;
 const WIDTHS_SQUARE = [96, 192] as const;
@@ -135,13 +152,15 @@ async function searchCommons(
 
       const title = String(page.title ?? "").replace(/^File:/, "");
       // Commons indexe des millions de numérisations d'ouvrages anciens, qui
-      // remontent en tête sur des requêtes génériques. Un magazine
-      // économique illustre avec des photographies contemporaines : on exige
+      // remontent en tête sur des requêtes génériques. Un journal
+      // d'actualité illustre avec des photographies contemporaines : on exige
       // donc une date de prise de vue récente, et on écarte les gravures.
       const rawDate = String(
         meta.DateTimeOriginal?.value ?? meta.DateTime?.value ?? ""
       );
-      const year = Number(stripHtml(rawDate).match(/\b(1[5-9]\d\d|20\d\d)\b/)?.[1]);
+      const year = Number(
+        stripHtml(rawDate).match(/\b(1[5-9]\d\d|20\d\d)\b/)?.[1]
+      );
       if (!Number.isFinite(year) || year < 2004) return null;
       if (/\b(1[5-9]\d\d)\b/.test(title)) return null;
       if (
@@ -293,7 +312,37 @@ async function main() {
   const used = new Set<string>();
   let missing = 0;
 
+  if (ONLY) {
+    const known = new Set(MEDIA_SOURCES.map((source) => source.id));
+    const unknown = [...ONLY].filter((id) => !known.has(id));
+    if (unknown.length > 0) {
+      throw new Error(
+        `--only : source(s) inconnue(s) dans media-sources.ts : ${unknown.join(", ")}`
+      );
+    }
+  }
+
   for (const source of MEDIA_SOURCES) {
+    if (ONLY && !ONLY.has(source.id)) {
+      // Hors sélection : l'entrée déjà publiée est reprise telle quelle,
+      // fichiers compris. Son titre Commons reste réservé.
+      const kept = EXISTING_MEDIA[source.id];
+      if (!kept) {
+        throw new Error(
+          `--only : « ${source.id} » n'est pas dans le manifeste ; ajoutez-le à la sélection.`
+        );
+      }
+      const keptTitle = decodeURIComponent(
+        kept.source.split("/wiki/File:")[1] ?? ""
+      ).replace(/_/g, " ");
+      if (keptTitle) used.add(keptTitle);
+      entries.push({
+        ...kept,
+        avif: [...kept.avif],
+        webp: [...kept.webp],
+      });
+      continue;
+    }
     const hit = await resolve(source, used);
     if (!hit) {
       console.error(`✗ ${source.id} — aucune photographie trouvée`);

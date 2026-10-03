@@ -122,7 +122,7 @@ const NEWSROOM: Group[] = [
       {
         href: "/redaction/agents",
         label: "Agents",
-        hint: "Les sept assistants et leurs propositions",
+        hint: "La veille de l'actualité, les assistants et leurs propositions",
         icon: Sparkles,
         permission: "agents:run",
         badge: (counts) => counts.pendingSuggestions,

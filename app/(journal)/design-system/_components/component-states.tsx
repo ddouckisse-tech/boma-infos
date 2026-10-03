@@ -252,17 +252,15 @@ export function ComponentStates() {
             />
           </StateCell>
           <StateCell label="Sélecteur">
-            <Select defaultValue="business-lifestyle">
+            <Select defaultValue="politique">
               <SelectTrigger className="h-11 w-full text-[1.0625rem]">
                 <SelectValue placeholder="Choisir une rubrique" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="business-lifestyle">
-                  Business &amp; Lifestyle
-                </SelectItem>
-                <SelectItem value="editorial">Éditorial</SelectItem>
-                <SelectItem value="succes-story">Succès story</SelectItem>
-                <SelectItem value="espace-pro">Espace pro</SelectItem>
+                <SelectItem value="politique">Politique</SelectItem>
+                <SelectItem value="economie">Économie</SelectItem>
+                <SelectItem value="societe">Société</SelectItem>
+                <SelectItem value="tourisme">Tourisme</SelectItem>
               </SelectContent>
             </Select>
           </StateCell>
@@ -324,11 +322,9 @@ export function ComponentStates() {
           </StateCell>
           <StateCell label="Badges de rubrique">
             <Badge className="bg-navy-900 text-white dark:bg-navy-300 dark:text-navy-950">
-              Business &amp; Lifestyle
+              Politique
             </Badge>
-            <Badge className="bg-magenta-600 text-white dark:bg-magenta-300 dark:text-magenta-950">
-              Succès story
-            </Badge>
+            <Badge className="bg-gold-400 text-navy-950">Économie</Badge>
           </StateCell>
           <StateCell label="Avatar et séparateur">
             <Avatar className="size-10 rounded-md after:rounded-md">
@@ -525,11 +521,10 @@ export function ComponentStates() {
             <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="un">
                 <AccordionTrigger className="min-h-[44px]">
-                  Sous-rubriques d&apos;Espace pro
+                  Sous-rubriques de Politique
                 </AccordionTrigger>
                 <AccordionContent className="type-small">
-                  Docuthèques · Formation · Opportunités · Réglementations ·
-                  Séminaires
+                  Institutions · Gouvernement · Diplomatie · Territoires
                 </AccordionContent>
               </AccordionItem>
             </Accordion>

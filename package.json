@@ -1,9 +1,9 @@
 {
-  "name": "le-corporate",
+  "name": "boma-infos",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --port 3040",
     "build": "next build && bun run budget",
     "start": "next start",
     "lint": "eslint",
@@ -13,7 +13,7 @@
     "format:check": "prettier --check .",
     "convex:dev": "convex dev --tail-logs disable",
     "verify": "bun run typecheck && bun run lint && bun run build",
-    "dev:full": "convex dev --tail-logs disable --start 'next dev'",
+    "dev:full": "convex dev --tail-logs disable --start 'next dev --port 3040'",
     "budget": "bun run scripts/check-budget.ts",
     "build:only": "next build",
     "media": "bun run scripts/fetch-media.ts",
@@ -67,5 +67,5 @@
     "sharp",
     "unrs-resolver"
   ],
-  "description": "Le Corporate \u2014 magazine \u00e9conomique gabonais (refonte applicative)"
+  "description": "BOMA Infos \u2014 toute l'actualit\u00e9 du Gabon (Next.js 16 + Convex)"
 }

@@ -6,11 +6,11 @@ import { LocalizedText } from "@/components/custom/localized-text";
 import { NewsletterForm } from "@/components/custom/newsletter-form";
 import { PageHeader } from "@/components/custom/page-header";
 import { Section } from "@/components/custom/section";
+import { SITE } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Newsletter",
-  description:
-    "La lettre hebdomadaire du Corporate : les articles à retenir, les échéances réglementaires et les appels d'offres ouverts. Inscription à double confirmation.",
+  description: `La lettre hebdomadaire de ${SITE.name} : l'essentiel de l'actualité du Gabon, chaque vendredi matin. Inscription à double confirmation.`,
   alternates: { canonical: "/newsletter" },
   robots: { index: true, follow: true },
 };
@@ -21,8 +21,8 @@ const PROMISES = [
     en: "One issue a week, on Friday morning. Never more.",
   },
   {
-    fr: "Les articles à retenir, les échéances réglementaires de la semaine à venir et les appels d'offres encore ouverts.",
-    en: "Essential articles, upcoming regulatory deadlines and tenders that remain open.",
+    fr: "L'essentiel de l'actualité du Gabon : les articles à retenir de la semaine.",
+    en: "The essential news from Gabon: the week's articles worth keeping.",
   },
   {
     fr: "Votre adresse n'est ni vendue, ni cédée, ni utilisée pour autre chose que cette lettre.",
@@ -53,8 +53,8 @@ export default function NewsletterPage() {
         }
         description={
           <LocalizedText
-            fr="Un courriel par semaine, écrit par la rédaction, pour suivre l'économie gabonaise sans ouvrir le site tous les jours."
-            en="One email a week from the editorial team, so you can follow Gabon's economy without checking the site every day."
+            fr="Un courriel par semaine, écrit par la rédaction, pour suivre l'actualité du Gabon sans ouvrir le site tous les jours."
+            en="One email a week from the editorial team, so you can follow the news from Gabon without checking the site every day."
           />
         }
         width="reading"

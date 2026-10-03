@@ -20,10 +20,17 @@ import type { Section } from "@/lib/navigation";
  * The section tree is passed down as data — it comes from the `categories`
  * table, so renaming or reordering a section is an editorial act, not a
  * deployment (CDC §4.1).
+ *
+ * The masthead is a **navy island**: the `dark` class on the element applies
+ * the tokens of the dark theme to everything it contains, whatever the theme
+ * of the page — white wordmark, gold focus ring, navy menus and drawers. It
+ * is the first thing the charter shows, and it is closed by the tricolour
+ * rule. `text-foreground` is set here on purpose: `color` is inherited as a
+ * computed value from `<body>`, so the island has to re-read the token.
  */
 export function Header({ sections }: { sections: readonly Section[] }) {
   return (
-    <header className="sticky top-0 z-40 border-b border-border/70 bg-background/85 backdrop-blur-md supports-[backdrop-filter]:bg-background/75">
+    <header className="dark sticky top-0 z-40 bg-background text-foreground supports-[backdrop-filter]:bg-background/92 supports-[backdrop-filter]:backdrop-blur-md">
       <Container className="flex min-h-[64px] items-center justify-between gap-2 py-2 sm:gap-4">
         <div className="flex min-w-0 items-center gap-2">
           <BrandWordmark />
@@ -49,6 +56,8 @@ export function Header({ sections }: { sections: readonly Section[] }) {
           <MegaMenu sections={sections} />
         </Container>
       </div>
+      {/* Le filet de la charte ferme le bandeau, d'un bord à l'autre. */}
+      <span aria-hidden="true" className="boma-rule rounded-none" />
     </header>
   );
 }
