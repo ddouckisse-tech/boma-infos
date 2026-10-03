@@ -5,12 +5,11 @@ import type { SeedAuthor, SeedDocument } from "./types";
  *
  * ⚠ Every article, company, quote and figure of this corpus is **fictional**.
  * It exists so the journal can be judged on real French copy, real
- * photographs and realistic orders of magnitude for Gabon and the CEMAC zone,
- * before the WordPress archive is migrated (§5.6). Institutions that exist
- * are only ever named in neutral context; no statement is attributed to a
- * real person or company. The public footer states as much
- * (`DEMO_CONTENT_NOTICE` in `lib/site.ts`) — remove that notice, and this
- * dataset, at go-live.
+ * photographs and realistic orders of magnitude for Gabon before the newsroom
+ * publishes its own reporting. Institutions that exist are only ever named in
+ * neutral context; no statement is attributed to a real person, office holder
+ * or company. The public footer states as much (`DEMO_CONTENT_NOTICE` in
+ * `lib/site.ts`) — remove that notice, and this dataset, at go-live.
  */
 
 /* -------------------------------------------------------------------------
@@ -27,191 +26,318 @@ export type SeedCategory = {
 };
 
 /**
- * The eight sections and their sub-sections, as surveyed in production. The
- * legacy misspelling "Réglementions" is corrected. Stored in the database, not
- * hard-coded in components: the newsroom renames, reorders and re-colours them
- * from milestone 3 without a developer.
+ * The ten sections of BOMA Infos and their sub-sections: the news of Gabon,
+ * section by section — politics, the economy, society, tourism, the
+ * environment, culture, sport — then the opinion pages and the practical
+ * information for professionals. Stored in the database, not hard-coded in
+ * components: the newsroom renames, reorders and re-colours them from the
+ * back office without a developer.
+ *
+ * Three slugs are relied upon by the code and must survive a rename of the
+ * label: `espace-pro` (its own block on the home page, `convex/journal.ts`),
+ * `editorial` (the « Éditorial » shortcut of the back office) and `interview`
+ * (the output of the transcription agent).
  */
 export const CATEGORIES: readonly SeedCategory[] = [
   {
-    name: "Business & Lifestyle",
-    slug: "business-lifestyle",
+    name: "Politique",
+    slug: "politique",
     accent: "navy-900",
     order: 1,
     description:
-      "Les opérations, les marchés et les entreprises qui font l'économie gabonaise au quotidien.",
+      "La vie des institutions, les décisions du gouvernement et le débat public, expliqués sans parti pris.",
   },
   {
-    name: "Big deal",
-    slug: "big-deal",
-    parentSlug: "business-lifestyle",
+    name: "Institutions",
+    slug: "institutions",
+    parentSlug: "politique",
     accent: "navy-900",
     order: 1,
     description:
-      "Fusions, acquisitions, concessions : les opérations qui déplacent les lignes.",
+      "Parlement, juridictions, autorités indépendantes : qui décide quoi, et selon quelles règles.",
   },
   {
-    name: "Entreprendre",
-    slug: "entreprendre",
-    parentSlug: "business-lifestyle",
+    name: "Gouvernement",
+    slug: "gouvernement",
+    parentSlug: "politique",
     accent: "navy-900",
     order: 2,
     description:
-      "Créer, financer et faire grandir une entreprise au Gabon : démarches, coûts, obstacles.",
+      "Réformes et politiques publiques, suivies dans la durée plutôt qu'à l'annonce.",
   },
   {
-    name: "Innovation",
-    slug: "innovation",
-    parentSlug: "business-lifestyle",
+    name: "Diplomatie",
+    slug: "diplomatie",
+    parentSlug: "politique",
     accent: "navy-900",
     order: 3,
     description:
-      "Procédés, produits et modèles économiques nouveaux, testés sur le terrain gabonais.",
+      "Le Gabon dans sa région et dans le monde : accords, sommets, coopération.",
   },
   {
-    name: "Technologie",
-    slug: "technologie",
-    parentSlug: "business-lifestyle",
+    name: "Territoires",
+    slug: "territoires",
+    parentSlug: "politique",
     accent: "navy-900",
     order: 4,
     description:
-      "Réseaux, infrastructures numériques et souveraineté des données.",
+      "Provinces, départements et communes : la décision publique vue du terrain.",
+  },
+
+  {
+    name: "Économie",
+    slug: "economie",
+    accent: "gold-800",
+    order: 2,
+    description:
+      "Entreprises, filières et finances publiques : ce qui fait tourner l'économie gabonaise.",
+  },
+  {
+    name: "Entreprises",
+    slug: "entreprises",
+    parentSlug: "economie",
+    accent: "gold-800",
+    order: 1,
+    description:
+      "Créer, financer et faire grandir une entreprise au Gabon : opérations, marchés, démarches.",
+  },
+  {
+    name: "Mines & énergie",
+    slug: "mines-energie",
+    parentSlug: "economie",
+    accent: "gold-800",
+    order: 2,
+    description:
+      "Pétrole, manganèse, électricité : les filières qui pèsent dans les comptes du pays.",
+  },
+  {
+    name: "Finances publiques",
+    slug: "finances-publiques",
+    parentSlug: "economie",
+    accent: "gold-800",
+    order: 3,
+    description: "Budget, dette, fiscalité et monnaie, chiffres à l'appui.",
+  },
+  {
+    name: "Numérique",
+    slug: "numerique",
+    parentSlug: "economie",
+    accent: "gold-800",
+    order: 4,
+    description: "Réseaux, services en ligne et souveraineté des données.",
+  },
+
+  {
+    name: "Société",
+    slug: "societe",
+    accent: "blue-600",
+    order: 3,
+    description:
+      "École, santé, emploi, vie quotidienne : ce qui change concrètement pour les Gabonais.",
+  },
+  {
+    name: "Éducation",
+    slug: "education",
+    parentSlug: "societe",
+    accent: "blue-600",
+    order: 1,
+    description:
+      "De l'école primaire à l'université : moyens, résultats, réformes.",
+  },
+  {
+    name: "Santé",
+    slug: "sante",
+    parentSlug: "societe",
+    accent: "blue-600",
+    order: 2,
+    description: "Offre de soins, prévention et politiques de santé publique.",
+  },
+  {
+    name: "Emploi",
+    slug: "emploi",
+    parentSlug: "societe",
+    accent: "blue-600",
+    order: 3,
+    description: "Formation, insertion des jeunes et marché du travail.",
+  },
+
+  {
+    name: "Tourisme",
+    slug: "tourisme",
+    accent: "green-700",
+    order: 4,
+    description:
+      "Destinations, parcs nationaux, hébergements : découvrir le Gabon et comprendre sa filière touristique.",
+  },
+  {
+    name: "Destinations",
+    slug: "destinations",
+    parentSlug: "tourisme",
+    accent: "green-700",
+    order: 1,
+    description:
+      "Où aller, quand et comment : des itinéraires racontés sur le terrain.",
+  },
+  {
+    name: "Parcs nationaux",
+    slug: "parcs-nationaux",
+    parentSlug: "tourisme",
+    accent: "green-700",
+    order: 2,
+    description:
+      "Treize parcs, de la côte aux plateaux : accès, saisons, règles de visite.",
+  },
+  {
+    name: "Hôtellerie & transport",
+    slug: "hotellerie-transport",
+    parentSlug: "tourisme",
+    accent: "green-700",
+    order: 3,
+    description:
+      "Hébergements, liaisons aériennes et routières : l'envers du voyage.",
+  },
+
+  {
+    name: "Environnement",
+    slug: "environnement",
+    accent: "green-700",
+    order: 5,
+    description:
+      "Forêt, littoral, climat et faune : les ressources naturelles du pays et ceux qui les protègent.",
+  },
+
+  {
+    name: "Culture",
+    slug: "culture",
+    accent: "gold-800",
+    order: 6,
+    description:
+      "Musiques, patrimoine, livres et scènes : la création gabonaise et sa mémoire.",
+  },
+  {
+    name: "Musique",
+    slug: "musique",
+    parentSlug: "culture",
+    accent: "gold-800",
+    order: 1,
+    description:
+      "Scènes, artistes et instruments, des épopées du mvet aux studios de Libreville.",
+  },
+  {
+    name: "Patrimoine",
+    slug: "patrimoine",
+    parentSlug: "culture",
+    accent: "gold-800",
+    order: 2,
+    description:
+      "Musées, traditions et sites : ce que le pays conserve et transmet.",
+  },
+
+  {
+    name: "Sport",
+    slug: "sport",
+    accent: "blue-600",
+    order: 7,
+    description:
+      "Football, athlétisme, sports de combat : résultats, coulisses et pratique amateur.",
+  },
+  {
+    name: "Football",
+    slug: "football",
+    parentSlug: "sport",
+    accent: "blue-600",
+    order: 1,
+    description: "Des sélections nationales aux terrains de quartier.",
+  },
+  {
+    name: "Autres disciplines",
+    slug: "autres-disciplines",
+    parentSlug: "sport",
+    accent: "blue-600",
+    order: 2,
+    description: "Athlétisme, basket, arts martiaux, sports nautiques.",
   },
 
   {
     name: "Éditorial",
     slug: "editorial",
     accent: "navy-700",
-    order: 2,
-    description: "La position de la rédaction sur l'actualité économique.",
+    order: 8,
+    description: "La position de la rédaction sur l'actualité du pays.",
   },
 
   {
-    name: "Succès story",
-    slug: "succes-story",
-    accent: "magenta-600",
-    order: 3,
+    name: "Idées",
+    slug: "idees",
+    accent: "navy-700",
+    order: 9,
     description:
-      "Des trajectoires d'entrepreneurs et de dirigeants, racontées avec leurs zones d'ombre.",
+      "Tribunes et grands entretiens : des points de vue signés, qui n'engagent que leurs auteurs.",
   },
   {
-    name: "Femme dirigeante",
-    slug: "femme-dirigeante",
-    parentSlug: "succes-story",
-    accent: "magenta-600",
+    name: "Tribune",
+    slug: "tribune",
+    parentSlug: "idees",
+    accent: "navy-700",
     order: 1,
-    description: "Celles qui dirigent, et ce que cela leur a coûté.",
+    description:
+      "Des points de vue argumentés, signés, qui n'engagent que leurs auteurs.",
   },
   {
-    name: "Graine de manager",
-    slug: "graine-de-manager",
-    parentSlug: "succes-story",
-    accent: "magenta-600",
+    name: "Interview",
+    slug: "interview",
+    parentSlug: "idees",
+    accent: "navy-700",
     order: 2,
-    description: "La relève managériale gabonaise, avant quarante ans.",
-  },
-  {
-    name: "Leader",
-    slug: "leader",
-    parentSlug: "succes-story",
-    accent: "magenta-600",
-    order: 3,
-    description: "Les dirigeants installés, et la manière dont ils décident.",
-  },
-  {
-    name: "Startup",
-    slug: "startup",
-    parentSlug: "succes-story",
-    accent: "magenta-600",
-    order: 4,
-    description: "Jeunes pousses : modèle, financement, passage à l'échelle.",
+    description:
+      "Entretiens avec celles et ceux qui décident, créent ou contestent.",
   },
 
   {
     name: "Espace pro",
     slug: "espace-pro",
-    accent: "navy-600",
-    order: 4,
+    accent: "navy-900",
+    order: 10,
     description:
       "L'information utile aux professionnels : réglementation, appels d'offres, formation, documentation.",
-  },
-  {
-    name: "Docuthèques",
-    slug: "docutheques",
-    parentSlug: "espace-pro",
-    accent: "navy-600",
-    order: 1,
-    description: "Rapports, textes et études à télécharger.",
-  },
-  {
-    name: "Formation",
-    slug: "formation",
-    parentSlug: "espace-pro",
-    accent: "navy-600",
-    order: 2,
-    description: "Dispositifs, financements et offres de formation continue.",
   },
   {
     name: "Opportunités",
     slug: "opportunites",
     parentSlug: "espace-pro",
-    accent: "navy-600",
-    order: 3,
+    accent: "navy-900",
+    order: 1,
     description: "Appels d'offres, marchés publics et appels à projets.",
   },
   {
     name: "Réglementations",
     slug: "reglementations",
     parentSlug: "espace-pro",
-    accent: "navy-600",
-    order: 4,
-    description:
-      "Ce que les textes changent concrètement pour les entreprises.",
-  },
-  {
-    name: "Séminaires",
-    slug: "seminaires",
-    parentSlug: "espace-pro",
-    accent: "navy-600",
-    order: 5,
-    description: "Rencontres professionnelles, programmes et inscriptions.",
-  },
-
-  {
-    name: "Tribune",
-    slug: "tribune",
-    accent: "magenta-700",
-    order: 5,
-    description:
-      "Des points de vue argumentés, signés, qui n'engagent que leurs auteurs.",
-  },
-  {
-    name: "Dossier spécial",
-    slug: "dossier-special",
-    accent: "magenta-800",
-    order: 6,
-    description:
-      "Enquêtes longues sur un secteur, une filière ou une politique publique.",
-  },
-  {
-    name: "Intelligence économique & Fortune d'Afrique",
-    slug: "intelligence-economique",
     accent: "navy-900",
-    order: 7,
+    order: 2,
     description:
-      "Cartographies d'actionnariat, agrégats monétaires, rapports de force économiques régionaux.",
+      "Ce que les textes changent concrètement pour les entreprises et les usagers.",
   },
   {
-    name: "Interview",
-    slug: "interview",
-    accent: "navy-700",
-    order: 8,
-    description: "Entretiens avec ceux qui décident.",
+    name: "Formation",
+    slug: "formation",
+    parentSlug: "espace-pro",
+    accent: "navy-900",
+    order: 3,
+    description: "Dispositifs, financements et offres de formation continue.",
+  },
+  {
+    name: "Docuthèques",
+    slug: "docutheques",
+    parentSlug: "espace-pro",
+    accent: "navy-900",
+    order: 4,
+    description: "Rapports, textes et études à télécharger.",
   },
 ];
 
 /* -------------------------------------------------------------------------
-   Signatures (CDC §4.2 — the legacy site publishes everything under "admin")
+   Signatures (CDC §4.2)
    ------------------------------------------------------------------------- */
 
 export const AUTHORS: readonly SeedAuthor[] = [
@@ -219,35 +345,42 @@ export const AUTHORS: readonly SeedAuthor[] = [
     slug: "nadia-ondo",
     name: "Nadia Ondo Mba",
     role: "Rédactrice en chef",
-    bio: "Elle dirige la rédaction depuis la création du magazine. Ancienne correspondante économique en zone CEMAC, elle suit les finances publiques, la politique monétaire et la gouvernance des entreprises publiques.",
+    bio: "Elle dirige la rédaction de BOMA Infos. Ancienne correspondante en Afrique centrale, elle suit la vie des institutions, les finances publiques et les politiques publiques.",
     links: [{ label: "Écrire à la rédaction", url: "/contacts" }],
   },
   {
     slug: "patrick-mbadinga",
     name: "Patrick Mbadinga",
     role: "Chef du service Économie",
-    bio: "Il couvre les infrastructures, la logistique portuaire et les marchés publics. Il a travaillé six ans dans le conseil en transport avant de rejoindre la presse économique.",
+    bio: "Il couvre les infrastructures, la logistique, l'emploi et les marchés publics. Il a travaillé six ans dans le conseil en transport avant de rejoindre la presse.",
     links: [{ label: "Écrire à la rédaction", url: "/contacts" }],
   },
   {
     slug: "serge-boussougou",
     name: "Serge Boussougou",
-    role: "Grand reporter — énergie et mines",
-    bio: "Spécialiste des industries extractives, il suit les contrats pétroliers, la filière manganèse et la transition électrique du pays depuis Port-Gentil.",
+    role: "Grand reporter — énergie, mines et environnement",
+    bio: "Spécialiste des industries extractives, il suit depuis Port-Gentil les contrats pétroliers, la filière manganèse, le littoral et la transition électrique du pays.",
     links: [{ label: "Écrire à la rédaction", url: "/contacts" }],
   },
   {
     slug: "clarisse-ivanga",
     name: "Clarisse Ivanga",
-    role: "Journaliste — entreprises et innovation",
-    bio: "Elle enquête sur les jeunes pousses, l'agro-industrie et l'entrepreneuriat féminin. Elle anime la rubrique « Succès story ».",
+    role: "Journaliste — société et culture",
+    bio: "Elle enquête sur l'école, la santé et la vie quotidienne, et raconte la scène culturelle gabonaise, des musées aux studios de Libreville.",
+    links: [{ label: "Écrire à la rédaction", url: "/contacts" }],
+  },
+  {
+    slug: "yannick-moussavou",
+    name: "Yannick Moussavou",
+    role: "Journaliste — tourisme et sport",
+    bio: "Il parcourt les parcs nationaux et le littoral pour la rubrique Tourisme, et suit le sport gabonais, du football de quartier aux compétitions nationales.",
     links: [{ label: "Écrire à la rédaction", url: "/contacts" }],
   },
   {
     slug: "jean-rene-obame",
     name: "Jean-René Obame",
-    role: "Chroniqueur — intelligence économique",
-    bio: "Économiste de formation, il tient la rubrique d'intelligence économique et signe régulièrement des tribunes. Ses analyses n'engagent que lui.",
+    role: "Chroniqueur — idées et débats",
+    bio: "Économiste de formation, il anime les pages Idées et signe régulièrement des tribunes. Ses analyses n'engagent que lui.",
     links: [{ label: "Écrire à la rédaction", url: "/contacts" }],
   },
 ];
@@ -259,8 +392,8 @@ export const AUTHORS: readonly SeedAuthor[] = [
 /**
  * Downloadable reference documents. The PDF files are produced by
  * `bun run scripts/make-documents.ts` and served from `public/documents/`:
- * the legacy footer published nine links of which one worked, so every link
- * here resolves to a real file.
+ * every link here resolves to a real file, and `fileBytes` is rewritten by
+ * that script so the size announced to the reader is the size downloaded.
  */
 export const DOCUMENTS: readonly SeedDocument[] = [
   {
@@ -271,22 +404,22 @@ export const DOCUMENTS: readonly SeedDocument[] = [
     kind: "Réglementation",
     fileUrl: "/documents/code-investissements-synthese.pdf",
     fileFormat: "PDF",
-    fileBytes: 1663,
+    fileBytes: 1655,
     pages: 24,
-    publisher: "Le Corporate",
+    publisher: "BOMA Infos",
     daysAgo: 5,
   },
   {
-    slug: "barometre-cout-logistique",
-    title: "Baromètre du coût logistique — corridor Owendo-Franceville",
+    slug: "guide-visiteur-parcs-nationaux",
+    title: "Guide du visiteur des parcs nationaux",
     description:
-      "Coût moyen à la tonne-kilomètre par mode, délais de passage portuaire et temps d'immobilisation, relevés trimestre par trimestre.",
-    kind: "Étude",
-    fileUrl: "/documents/barometre-cout-logistique.pdf",
+      "Les treize parcs nationaux, fiche par fiche : accès depuis Libreville, meilleures saisons, hébergements, règles de visite et précautions à prendre.",
+    kind: "Guide",
+    fileUrl: "/documents/guide-visiteur-parcs-nationaux.pdf",
     fileFormat: "PDF",
-    fileBytes: 1639,
-    pages: 18,
-    publisher: "Le Corporate",
+    fileBytes: 1576,
+    pages: 36,
+    publisher: "BOMA Infos",
     daysAgo: 12,
   },
   {
@@ -297,9 +430,9 @@ export const DOCUMENTS: readonly SeedDocument[] = [
     kind: "Guide",
     fileUrl: "/documents/guide-creation-entreprise-gabon.pdf",
     fileFormat: "PDF",
-    fileBytes: 1585,
+    fileBytes: 1577,
     pages: 32,
-    publisher: "Le Corporate",
+    publisher: "BOMA Infos",
     daysAgo: 20,
   },
   {
@@ -310,22 +443,22 @@ export const DOCUMENTS: readonly SeedDocument[] = [
     kind: "Étude",
     fileUrl: "/documents/panorama-filiere-bois.pdf",
     fileFormat: "PDF",
-    fileBytes: 1637,
+    fileBytes: 1629,
     pages: 28,
-    publisher: "Le Corporate",
+    publisher: "BOMA Infos",
     daysAgo: 34,
   },
   {
-    slug: "memento-fiscal-entreprises",
-    title: "Mémento fiscal des entreprises",
+    slug: "reperes-institutions-gabonaises",
+    title: "Repères : les institutions gabonaises",
     description:
-      "Taux, assiettes et échéances déclaratives de l'impôt sur les sociétés, de la TVA et des contributions sociales, présentés sous forme de calendrier annuel.",
+      "Qui fait quoi : le rôle du Parlement, du gouvernement, des juridictions et des collectivités locales, avec le parcours d'un texte de loi étape par étape.",
     kind: "Mémento",
-    fileUrl: "/documents/memento-fiscal-entreprises.pdf",
+    fileUrl: "/documents/reperes-institutions-gabonaises.pdf",
     fileFormat: "PDF",
-    fileBytes: 1579,
+    fileBytes: 1615,
     pages: 16,
-    publisher: "Le Corporate",
+    publisher: "BOMA Infos",
     daysAgo: 48,
   },
   {
@@ -336,9 +469,9 @@ export const DOCUMENTS: readonly SeedDocument[] = [
     kind: "Document de référence",
     fileUrl: "/documents/charte-editoriale-contenus-partenaires.pdf",
     fileFormat: "PDF",
-    fileBytes: 1695,
+    fileBytes: 1687,
     pages: 8,
-    publisher: "Le Corporate",
+    publisher: "BOMA Infos",
     daysAgo: 60,
   },
 ];

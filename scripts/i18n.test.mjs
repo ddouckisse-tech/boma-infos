@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
+import { CATEGORIES } from "../convex/seed/catalog.ts";
 import {
   categoryDescription,
   categoryLabel,
@@ -23,8 +24,8 @@ function runBoot(locale, browserLanguage = "fr-FR") {
   const documentStub = { documentElement: root, cookie: "" };
   const localStorageStub = {
     getItem(key) {
-      if (key === "lecorporate.locale") return locale;
-      if (key === "lecorporate.theme") return "light";
+      if (key === "bomainfos.locale") return locale;
+      if (key === "bomainfos.theme") return "light";
       return null;
     },
   };
@@ -68,10 +69,38 @@ describe("interface locale", () => {
       "Professional resources"
     );
     expect(categoryLabel("fr", "espace-pro", "Espace pro")).toBe("Espace pro");
+    expect(categoryLabel("en", "mines-energie", "Mines & énergie")).toBe(
+      "Mining & energy"
+    );
+    expect(categoryLabel("en", "societe", "Société")).toBe("Society");
     expect(
       categoryDescription("en", "editorial", "Description française")
-    ).toBe("The editorial team's view of economic news.");
+    ).toBe("The newsroom's position on the country's news.");
+    expect(
+      categoryDescription("en", "parcs-nationaux", "Description française")
+    ).toBe(
+      "Thirteen parks, from the coast to the plateaux: access, seasons, visiting rules."
+    );
     expect(navigationLabel("en", "/a-propos", "À propos")).toBe("About");
+  });
+
+  test("keeps the stored label for a section it does not translate", () => {
+    expect(categoryLabel("en", "rubrique-inconnue", "Rubrique")).toBe(
+      "Rubrique"
+    );
+    expect(
+      categoryDescription("en", "rubrique-inconnue", "Description française")
+    ).toBe("Description française");
+  });
+
+  test("translates every section and sub-section of the catalogue", () => {
+    const missing = "\u0000";
+    const untranslated = CATEGORIES.map((category) => category.slug).filter(
+      (slug) =>
+        categoryLabel("en", slug, missing) === missing ||
+        categoryDescription("en", slug, missing) === missing
+    );
+    expect(untranslated).toEqual([]);
   });
 });
 

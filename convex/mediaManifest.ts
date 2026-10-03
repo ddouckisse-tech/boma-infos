@@ -1312,7 +1312,7 @@ export const MEDIA: Record<string, MediaAsset> = {
   "formation-universite": {
     "id": "formation-universite",
     "alt": "Un étudiant attentif au premier rang d'une salle de cours.",
-    "caption": "Salle de cours. La formation continue reste le premier frein cité par les employeurs.",
+    "caption": "Une salle de cours.",
     "credit": "AMISOM Public Information",
     "license": "CC0",
     "source": "https://commons.wikimedia.org/wiki/File:2014_10_23_Somali_National_University_Re-opens_(15428349899).jpg",
@@ -1762,7 +1762,7 @@ export const MEDIA: Record<string, MediaAsset> = {
   "seminaire-salle": {
     "id": "seminaire-salle",
     "alt": "Public assis en rangs dans une salle de conférence, écran de projection au fond.",
-    "caption": "Séminaire professionnel.",
+    "caption": "Une salle de conférence.",
     "credit": "US Army Africa from Vicenza, Italy",
     "license": "CC BY 2.0",
     "source": "https://commons.wikimedia.org/wiki/File:U.S._Army_Africa_commander_addresses_security_conference_(7159391219).jpg",
@@ -2056,6 +2056,981 @@ export const MEDIA: Record<string, MediaAsset> = {
         "w": 1280,
         "h": 720,
         "bytes": 315144
+      }
+    ]
+  },
+  "littoral-pongara": {
+    "id": "littoral-pongara",
+    "alt": "Vue aérienne du littoral gabonais : plage de sable, océan turquoise et forêt dense jusqu'au rivage.",
+    "caption": "Le littoral du parc national de Pongara, face à Libreville : la forêt rejoint l'océan.",
+    "credit": "Allmania23",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:PongaraLodge.jpg",
+    "color": "#7898c8",
+    "width": 1280,
+    "height": 720,
+    "avif": [
+      {
+        "w": 320,
+        "h": 180,
+        "bytes": 5275
+      },
+      {
+        "w": 480,
+        "h": 270,
+        "bytes": 11178
+      },
+      {
+        "w": 640,
+        "h": 360,
+        "bytes": 14321
+      },
+      {
+        "w": 768,
+        "h": 432,
+        "bytes": 19983
+      },
+      {
+        "w": 960,
+        "h": 540,
+        "bytes": 30125
+      },
+      {
+        "w": 1280,
+        "h": 720,
+        "bytes": 51425
+      }
+    ],
+    "webp": [
+      {
+        "w": 320,
+        "h": 180,
+        "bytes": 7988
+      },
+      {
+        "w": 480,
+        "h": 270,
+        "bytes": 17304
+      },
+      {
+        "w": 640,
+        "h": 360,
+        "bytes": 27116
+      },
+      {
+        "w": 768,
+        "h": 432,
+        "bytes": 38354
+      },
+      {
+        "w": 960,
+        "h": 540,
+        "bytes": 59662
+      },
+      {
+        "w": 1280,
+        "h": 720,
+        "bytes": 101180
+      }
+    ]
+  },
+  "parc-loango": {
+    "id": "parc-loango",
+    "alt": "Deux éléphants de forêt, un adulte et un jeune, traversent une savane herbeuse en lisière de forêt.",
+    "caption": "Éléphants de forêt dans le parc national de Loango, sur la côte de l'Ogooué-Maritime.",
+    "credit": "Kurt Dundy at English Wikipedia",
+    "license": "CC BY 3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Gabon_Loango_National_Park_Elephant_with_offspring.jpeg",
+    "color": "#283838",
+    "width": 1280,
+    "height": 720,
+    "avif": [
+      {
+        "w": 320,
+        "h": 180,
+        "bytes": 7325
+      },
+      {
+        "w": 480,
+        "h": 270,
+        "bytes": 17178
+      },
+      {
+        "w": 640,
+        "h": 360,
+        "bytes": 22074
+      },
+      {
+        "w": 768,
+        "h": 432,
+        "bytes": 33435
+      },
+      {
+        "w": 960,
+        "h": 540,
+        "bytes": 48915
+      },
+      {
+        "w": 1280,
+        "h": 720,
+        "bytes": 76480
+      }
+    ],
+    "webp": [
+      {
+        "w": 320,
+        "h": 180,
+        "bytes": 12450
+      },
+      {
+        "w": 480,
+        "h": 270,
+        "bytes": 30306
+      },
+      {
+        "w": 640,
+        "h": 360,
+        "bytes": 48168
+      },
+      {
+        "w": 768,
+        "h": 432,
+        "bytes": 71908
+      },
+      {
+        "w": 960,
+        "h": 540,
+        "bytes": 104672
+      },
+      {
+        "w": 1280,
+        "h": 720,
+        "bytes": 154616
+      }
+    ]
+  },
+  "elephants-foret": {
+    "id": "elephants-foret",
+    "alt": "Troupeau d'éléphants de forêt, adultes et petits, dans une clairière marécageuse bordée d'arbres.",
+    "caption": "Un troupeau d'éléphants de forêt dans une clairière marécageuse, un « baï ».",
+    "credit": "Lucy Keith-Diagne",
+    "license": "CC BY 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Loxodonta_cyclotis_153942221.jpg",
+    "color": "#282828",
+    "width": 1280,
+    "height": 720,
+    "avif": [
+      {
+        "w": 320,
+        "h": 180,
+        "bytes": 10062
+      },
+      {
+        "w": 480,
+        "h": 270,
+        "bytes": 22621
+      },
+      {
+        "w": 640,
+        "h": 360,
+        "bytes": 28202
+      },
+      {
+        "w": 768,
+        "h": 432,
+        "bytes": 40638
+      },
+      {
+        "w": 960,
+        "h": 540,
+        "bytes": 58989
+      },
+      {
+        "w": 1280,
+        "h": 720,
+        "bytes": 90065
+      }
+    ],
+    "webp": [
+      {
+        "w": 320,
+        "h": 180,
+        "bytes": 18456
+      },
+      {
+        "w": 480,
+        "h": 270,
+        "bytes": 42598
+      },
+      {
+        "w": 640,
+        "h": 360,
+        "bytes": 66096
+      },
+      {
+        "w": 768,
+        "h": 432,
+        "bytes": 93898
+      },
+      {
+        "w": 960,
+        "h": 540,
+        "bytes": 135646
+      },
+      {
+        "w": 1280,
+        "h": 720,
+        "bytes": 203992
+      }
+    ]
+  },
+  "parc-lope": {
+    "id": "parc-lope",
+    "alt": "Paysage de savane et de forêt-galerie au pied de collines, quelques éléphants au loin.",
+    "caption": "La mosaïque de savanes et de forêts du parc national de la Lopé, inscrit au patrimoine mondial.",
+    "credit": "Ngangorica",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Elephants_in_Lop%C3%A9_National_Park.JPG",
+    "color": "#e8e8e8",
+    "width": 1280,
+    "height": 720,
+    "avif": [
+      {
+        "w": 320,
+        "h": 180,
+        "bytes": 3014
+      },
+      {
+        "w": 480,
+        "h": 270,
+        "bytes": 5812
+      },
+      {
+        "w": 640,
+        "h": 360,
+        "bytes": 6735
+      },
+      {
+        "w": 768,
+        "h": 432,
+        "bytes": 9257
+      },
+      {
+        "w": 960,
+        "h": 540,
+        "bytes": 13527
+      },
+      {
+        "w": 1280,
+        "h": 720,
+        "bytes": 21365
+      }
+    ],
+    "webp": [
+      {
+        "w": 320,
+        "h": 180,
+        "bytes": 3684
+      },
+      {
+        "w": 480,
+        "h": 270,
+        "bytes": 6918
+      },
+      {
+        "w": 640,
+        "h": 360,
+        "bytes": 9614
+      },
+      {
+        "w": 768,
+        "h": 432,
+        "bytes": 13408
+      },
+      {
+        "w": 960,
+        "h": 540,
+        "bytes": 19760
+      },
+      {
+        "w": 1280,
+        "h": 720,
+        "bytes": 32616
+      }
+    ]
+  },
+  "pointe-denis": {
+    "id": "pointe-denis",
+    "alt": "Plage de sable clair, bateaux à moteur au mouillage et rideau d'arbres sur la presqu'île.",
+    "caption": "La plage de la Pointe-Denis, sur la rive gauche de l'estuaire, face à Libreville.",
+    "credit": "Nolween",
+    "license": "CC BY-SA 3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Pointe_Denis.JPG",
+    "color": "#98a8b8",
+    "width": 1280,
+    "height": 720,
+    "avif": [
+      {
+        "w": 320,
+        "h": 180,
+        "bytes": 3942
+      },
+      {
+        "w": 480,
+        "h": 270,
+        "bytes": 8615
+      },
+      {
+        "w": 640,
+        "h": 360,
+        "bytes": 10282
+      },
+      {
+        "w": 768,
+        "h": 432,
+        "bytes": 15814
+      },
+      {
+        "w": 960,
+        "h": 540,
+        "bytes": 23678
+      },
+      {
+        "w": 1280,
+        "h": 720,
+        "bytes": 37685
+      }
+    ],
+    "webp": [
+      {
+        "w": 320,
+        "h": 180,
+        "bytes": 5790
+      },
+      {
+        "w": 480,
+        "h": 270,
+        "bytes": 12254
+      },
+      {
+        "w": 640,
+        "h": 360,
+        "bytes": 18952
+      },
+      {
+        "w": 768,
+        "h": 432,
+        "bytes": 28596
+      },
+      {
+        "w": 960,
+        "h": 540,
+        "bytes": 42806
+      },
+      {
+        "w": 1280,
+        "h": 720,
+        "bytes": 67576
+      }
+    ]
+  },
+  "lodge-loango": {
+    "id": "lodge-loango",
+    "alt": "Lodge en bois sur pilotis au bord d'une lagune, ponton et palmiers.",
+    "caption": "Un lodge en bordure de lagune, dans le parc national de Loango.",
+    "credit": "Kurt Dundy at English Wikipedia",
+    "license": "CC BY 3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Gabon_Loango_National_Park_View_of_Lodge_from_water.jpeg",
+    "color": "#f8f8f8",
+    "width": 1280,
+    "height": 720,
+    "avif": [
+      {
+        "w": 320,
+        "h": 180,
+        "bytes": 8694
+      },
+      {
+        "w": 480,
+        "h": 270,
+        "bytes": 18964
+      },
+      {
+        "w": 640,
+        "h": 360,
+        "bytes": 26835
+      },
+      {
+        "w": 768,
+        "h": 432,
+        "bytes": 38464
+      },
+      {
+        "w": 960,
+        "h": 540,
+        "bytes": 59811
+      },
+      {
+        "w": 1280,
+        "h": 720,
+        "bytes": 102611
+      }
+    ],
+    "webp": [
+      {
+        "w": 320,
+        "h": 180,
+        "bytes": 15008
+      },
+      {
+        "w": 480,
+        "h": 270,
+        "bytes": 33488
+      },
+      {
+        "w": 640,
+        "h": 360,
+        "bytes": 54872
+      },
+      {
+        "w": 768,
+        "h": 432,
+        "bytes": 78926
+      },
+      {
+        "w": 960,
+        "h": 540,
+        "bytes": 123274
+      },
+      {
+        "w": 1280,
+        "h": 720,
+        "bytes": 210646
+      }
+    ]
+  },
+  "assemblee-nationale": {
+    "id": "assemblee-nationale",
+    "alt": "Façade courbe du palais Léon-Mba, siège de l'Assemblée nationale, derrière une pelouse et des palmiers.",
+    "caption": "Le palais Léon-Mba, siège de l'Assemblée nationale, à Libreville.",
+    "credit": "Daniel Beloumou / European Union, 2023 / EC - Audiovisual Service",
+    "license": "CC BY 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:The_L%C3%A9on_Mba_Palace_(National_Assembly_Palace)_-_2023.jpg",
+    "color": "#f8f8f8",
+    "width": 1280,
+    "height": 720,
+    "avif": [
+      {
+        "w": 320,
+        "h": 180,
+        "bytes": 6459
+      },
+      {
+        "w": 480,
+        "h": 270,
+        "bytes": 13008
+      },
+      {
+        "w": 640,
+        "h": 360,
+        "bytes": 17849
+      },
+      {
+        "w": 768,
+        "h": 432,
+        "bytes": 25422
+      },
+      {
+        "w": 960,
+        "h": 540,
+        "bytes": 42109
+      },
+      {
+        "w": 1280,
+        "h": 720,
+        "bytes": 77054
+      }
+    ],
+    "webp": [
+      {
+        "w": 320,
+        "h": 180,
+        "bytes": 11314
+      },
+      {
+        "w": 480,
+        "h": 270,
+        "bytes": 24412
+      },
+      {
+        "w": 640,
+        "h": 360,
+        "bytes": 39226
+      },
+      {
+        "w": 768,
+        "h": 432,
+        "bytes": 57076
+      },
+      {
+        "w": 960,
+        "h": 540,
+        "bytes": 91392
+      },
+      {
+        "w": 1280,
+        "h": 720,
+        "bytes": 167424
+      }
+    ]
+  },
+  "senat-gabon": {
+    "id": "senat-gabon",
+    "alt": "Le palais Omar-Bongo-Ondimba, siège du Sénat : bâtiment bas à colonnade derrière des jardins.",
+    "caption": "Le palais Omar-Bongo-Ondimba, siège du Sénat, à Libreville.",
+    "credit": "Daniel Beloumou / European Union, 2023 / EC - Audiovisual Service",
+    "license": "CC BY 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:The_Omar_Bongo_Ondimba_Palace_(Gabonese_Senate_Palace)_-_Libreville,_2023.jpg",
+    "color": "#e8f8f8",
+    "width": 1280,
+    "height": 720,
+    "avif": [
+      {
+        "w": 320,
+        "h": 180,
+        "bytes": 5943
+      },
+      {
+        "w": 480,
+        "h": 270,
+        "bytes": 12434
+      },
+      {
+        "w": 640,
+        "h": 360,
+        "bytes": 16706
+      },
+      {
+        "w": 768,
+        "h": 432,
+        "bytes": 25680
+      },
+      {
+        "w": 960,
+        "h": 540,
+        "bytes": 43690
+      },
+      {
+        "w": 1280,
+        "h": 720,
+        "bytes": 83028
+      }
+    ],
+    "webp": [
+      {
+        "w": 320,
+        "h": 180,
+        "bytes": 9804
+      },
+      {
+        "w": 480,
+        "h": 270,
+        "bytes": 22126
+      },
+      {
+        "w": 640,
+        "h": 360,
+        "bytes": 37976
+      },
+      {
+        "w": 768,
+        "h": 432,
+        "bytes": 57256
+      },
+      {
+        "w": 960,
+        "h": 540,
+        "bytes": 95452
+      },
+      {
+        "w": 1280,
+        "h": 720,
+        "bytes": 178254
+      }
+    ]
+  },
+  "lambarene-ville": {
+    "id": "lambarene-ville",
+    "alt": "Rue principale de Lambaréné longeant l'Ogooué : voitures, bâtiments bas et végétation.",
+    "caption": "Lambaréné, chef-lieu du Moyen-Ogooué, au bord de l'Ogooué.",
+    "credit": "Lambaiya",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Voie_primaire_de_l%27Ogoou%C3%A9_%C3%A0_Lambar%C3%A9n%C3%A9_JPEG.jpg",
+    "color": "#c8c8c8",
+    "width": 1280,
+    "height": 720,
+    "avif": [
+      {
+        "w": 320,
+        "h": 180,
+        "bytes": 4707
+      },
+      {
+        "w": 480,
+        "h": 270,
+        "bytes": 9830
+      },
+      {
+        "w": 640,
+        "h": 360,
+        "bytes": 12314
+      },
+      {
+        "w": 768,
+        "h": 432,
+        "bytes": 18918
+      },
+      {
+        "w": 960,
+        "h": 540,
+        "bytes": 29047
+      },
+      {
+        "w": 1280,
+        "h": 720,
+        "bytes": 50275
+      }
+    ],
+    "webp": [
+      {
+        "w": 320,
+        "h": 180,
+        "bytes": 6960
+      },
+      {
+        "w": 480,
+        "h": 270,
+        "bytes": 15360
+      },
+      {
+        "w": 640,
+        "h": 360,
+        "bytes": 24436
+      },
+      {
+        "w": 768,
+        "h": 432,
+        "bytes": 36738
+      },
+      {
+        "w": 960,
+        "h": 540,
+        "bytes": 57806
+      },
+      {
+        "w": 1280,
+        "h": 720,
+        "bytes": 100754
+      }
+    ]
+  },
+  "hopital-lambarene": {
+    "id": "hopital-lambarene",
+    "alt": "Pavillons aux toits rouges de l'hôpital Albert-Schweitzer, entourés de grands arbres.",
+    "caption": "L'hôpital Albert-Schweitzer de Lambaréné, dans le Moyen-Ogooué.",
+    "credit": "Patrice H",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Hospital_Albert_Schweitzer1.jpg",
+    "color": "#e8e8f8",
+    "width": 1280,
+    "height": 720,
+    "avif": [
+      {
+        "w": 320,
+        "h": 180,
+        "bytes": 8413
+      },
+      {
+        "w": 480,
+        "h": 270,
+        "bytes": 17935
+      },
+      {
+        "w": 640,
+        "h": 360,
+        "bytes": 23120
+      },
+      {
+        "w": 768,
+        "h": 432,
+        "bytes": 33948
+      },
+      {
+        "w": 960,
+        "h": 540,
+        "bytes": 52209
+      },
+      {
+        "w": 1280,
+        "h": 720,
+        "bytes": 87942
+      }
+    ],
+    "webp": [
+      {
+        "w": 320,
+        "h": 180,
+        "bytes": 15138
+      },
+      {
+        "w": 480,
+        "h": 270,
+        "bytes": 33504
+      },
+      {
+        "w": 640,
+        "h": 360,
+        "bytes": 50990
+      },
+      {
+        "w": 768,
+        "h": 432,
+        "bytes": 75794
+      },
+      {
+        "w": 960,
+        "h": 540,
+        "bytes": 114906
+      },
+      {
+        "w": 1280,
+        "h": 720,
+        "bytes": 193060
+      }
+    ]
+  },
+  "football-plage": {
+    "id": "football-plage",
+    "alt": "Des jeunes disputent un match de football sur une plage de sable, filet de volley à l'arrière-plan.",
+    "caption": "Match de football sur une plage gabonaise.",
+    "credit": "Vinod Narbar",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Beach_Football_in_Gabon.JPG",
+    "color": "#989898",
+    "width": 1280,
+    "height": 720,
+    "avif": [
+      {
+        "w": 320,
+        "h": 180,
+        "bytes": 6380
+      },
+      {
+        "w": 480,
+        "h": 270,
+        "bytes": 12032
+      },
+      {
+        "w": 640,
+        "h": 360,
+        "bytes": 13610
+      },
+      {
+        "w": 768,
+        "h": 432,
+        "bytes": 17732
+      },
+      {
+        "w": 960,
+        "h": 540,
+        "bytes": 24567
+      },
+      {
+        "w": 1280,
+        "h": 720,
+        "bytes": 34691
+      }
+    ],
+    "webp": [
+      {
+        "w": 320,
+        "h": 180,
+        "bytes": 10662
+      },
+      {
+        "w": 480,
+        "h": 270,
+        "bytes": 19520
+      },
+      {
+        "w": 640,
+        "h": 360,
+        "bytes": 24682
+      },
+      {
+        "w": 768,
+        "h": 432,
+        "bytes": 31532
+      },
+      {
+        "w": 960,
+        "h": 540,
+        "bytes": 40580
+      },
+      {
+        "w": 1280,
+        "h": 720,
+        "bytes": 57144
+      }
+    ]
+  },
+  "musee-national": {
+    "id": "musee-national",
+    "alt": "Bracelets et collier anciens en métal présentés dans une vitrine de musée.",
+    "caption": "Parures anciennes en métal exposées au musée national, à Libreville.",
+    "credit": "Kani Beat",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Mus%C3%A9e_national_d%E2%80%99art_de_Libreville_05.jpg",
+    "color": "#c8c8c8",
+    "width": 1280,
+    "height": 720,
+    "avif": [
+      {
+        "w": 320,
+        "h": 180,
+        "bytes": 3320
+      },
+      {
+        "w": 480,
+        "h": 270,
+        "bytes": 5965
+      },
+      {
+        "w": 640,
+        "h": 360,
+        "bytes": 7312
+      },
+      {
+        "w": 768,
+        "h": 432,
+        "bytes": 10756
+      },
+      {
+        "w": 960,
+        "h": 540,
+        "bytes": 15961
+      },
+      {
+        "w": 1280,
+        "h": 720,
+        "bytes": 26574
+      }
+    ],
+    "webp": [
+      {
+        "w": 320,
+        "h": 180,
+        "bytes": 4074
+      },
+      {
+        "w": 480,
+        "h": 270,
+        "bytes": 7686
+      },
+      {
+        "w": 640,
+        "h": 360,
+        "bytes": 11604
+      },
+      {
+        "w": 768,
+        "h": 432,
+        "bytes": 17296
+      },
+      {
+        "w": 960,
+        "h": 540,
+        "bytes": 27472
+      },
+      {
+        "w": 1280,
+        "h": 720,
+        "bytes": 50442
+      }
+    ]
+  },
+  "mvet-instrument": {
+    "id": "mvet-instrument",
+    "alt": "Un mvet, cithare traditionnelle : tige de bois, cordes et trois calebasses de résonance.",
+    "caption": "Le mvet, instrument à cordes des épopées fang.",
+    "credit": "Sguastevi",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Mvet_(MDMB_679).jpg",
+    "color": "#b8b8b8",
+    "width": 1280,
+    "height": 720,
+    "avif": [
+      {
+        "w": 320,
+        "h": 180,
+        "bytes": 2127
+      },
+      {
+        "w": 480,
+        "h": 270,
+        "bytes": 3302
+      },
+      {
+        "w": 640,
+        "h": 360,
+        "bytes": 3872
+      },
+      {
+        "w": 768,
+        "h": 432,
+        "bytes": 5003
+      },
+      {
+        "w": 960,
+        "h": 540,
+        "bytes": 7132
+      },
+      {
+        "w": 1280,
+        "h": 720,
+        "bytes": 10984
+      }
+    ],
+    "webp": [
+      {
+        "w": 320,
+        "h": 180,
+        "bytes": 2628
+      },
+      {
+        "w": 480,
+        "h": 270,
+        "bytes": 4794
+      },
+      {
+        "w": 640,
+        "h": 360,
+        "bytes": 6990
+      },
+      {
+        "w": 768,
+        "h": 432,
+        "bytes": 9648
+      },
+      {
+        "w": 960,
+        "h": 540,
+        "bytes": 13972
+      },
+      {
+        "w": 1280,
+        "h": 720,
+        "bytes": 22120
       }
     ]
   }
