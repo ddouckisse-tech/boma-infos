@@ -1,3 +1,9 @@
+> **Héritage du socle.** Ce document décrit la construction des espaces privés, du portail
+> entreprise et des agents pour le titre d'origine, « Le Corporate ». Il est conservé comme
+> historique technique et n'a pas été réécrit : il décrit sept agents, BOMA Infos en compte
+> huit (CDC §4.6). L'identité, la charte, les rubriques et les agents en vigueur sont ceux de
+> BOMA Infos : voir [`README.md`](../README.md) et [`CAHIER-DES-CHARGES.md`](../CAHIER-DES-CHARGES.md).
+
 # Prompt 3/3 — Espaces privés, portail entreprise et agents
 
 > À exécuter après les lots 1 et 2. Référence : `../CAHIER-DES-CHARGES.md` (§4.3, §4.4, §4.6, §5.3).

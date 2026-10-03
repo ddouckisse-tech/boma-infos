@@ -1,10 +1,12 @@
-# Recette des encarts — 13 septembre 2026
+# Recette des encarts — socle, 13 septembre 2026
 
-Branche locale `codex/public-advertising`, base `52f081b`, worktree
-`/Users/okatech/.codex/worktrees/2032/LeCorporate`. Les captures utilisent le
-corpus de développement et des autopromotions explicitement identifiées.
-Cette branche précède la migration WordPress et le nouveau logo réalisés
-en parallèle ; leur intégration reste à faire sans écraser ces travaux.
+Recette réalisée sur le socle (branche locale `codex/public-advertising`, base
+`52f081b`) avant la reprise par BOMA Infos du 03/10/2026. Les captures utilisaient
+le corpus de développement du socle et des autopromotions explicitement
+identifiées. Les mesures et résultats ci-dessous sont ceux du socle : ils ne
+valent pas recette de BOMA Infos, dont le logo, les rubriques et le corpus de
+démonstration diffèrent. La section « Limites et mise en service » donne la
+procédure à suivre pour BOMA Infos.
 
 ## Contrôles réalisés
 
@@ -33,7 +35,7 @@ en parallèle ; leur intégration reste à faire sans écraser ces travaux.
   rechargement, aucune erreur CSP ou d’hydratation. Unité vide repliée hors écran,
   fermeture conservée après rechargement, aucun débordement à 320 px.
 
-## Budget mesuré
+## Budget mesuré sur le socle
 
 Même plafonds : 600 Kio accueil, 400 Kio article, 180 Kio JavaScript, 50 requêtes.
 
@@ -58,7 +60,8 @@ emplacement article sont limitées à 16 Kio pour préserver la marge de lecture
 
 ## Preuves locales
 
-Dans `output/ads/` (fichiers de recette ignorés par Git) :
+La recette du socle a écrit, dans `output/ads/` (ignoré par Git, donc absent du
+dépôt) :
 
 - `home-desktop.png`, `home-mobile.png`, `article-desktop.png`, `article-mobile.png`.
 - `article-dark.png`, `article-closed.png`, `fixture-real-posters-*.png`.
@@ -68,14 +71,19 @@ Dans `output/ads/` (fichiers de recette ignorés par Git) :
 
 ## Limites et mise en service
 
-Les fonctions Convex publicitaires n’ont pas été déployées et aucune campagne
-réelle n’a été écrite. La sauvegarde complète depuis l’administration reste à
-valider après publication autorisée des nouvelles fonctions ; les protections
-serveur et validations sont présentes et testées au niveau du modèle.
+Pour BOMA Infos, la mise en service suit cet ordre :
+
+1. déployer les fonctions Convex publicitaires sur l’environnement cible, lors
+   d’une publication autorisée ; le dépôt ne fournit aucune campagne réelle ;
+2. écrire les campagnes depuis `/redaction/publicites` ;
+3. valider la sauvegarde complète depuis l’administration, après la publication
+   des nouvelles fonctions ; les protections serveur et validations sont
+   présentes et testées au niveau du modèle.
 
 Pour AdSense : vrais identifiants, compte autorisé, CMP certifiée configurée,
 unités manuelles et options de compte décrites dans [adsense.md](adsense.md).
 Reconstruction requise avec la configuration définitive. Le remplissage réel,
-les revenus et le poids des ressources tierces ne sont pas validés ici.
+les revenus et le poids des ressources tierces ne sont pas validés par cette
+recette.
 
-Aucun push, merge ni déploiement réalisé par cette tâche.
+La recette du socle n’a comporté ni push, ni merge, ni déploiement.

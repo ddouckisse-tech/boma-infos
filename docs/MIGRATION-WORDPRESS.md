@@ -1,3 +1,9 @@
+> **Héritage du socle.** La migration décrite ci-dessous est celle du titre d'origine,
+> « Le Corporate » : le domaine, le déploiement, les volumes et les dates y sont les siens.
+> BOMA Infos n'a pas d'archive à reprendre, faute de site antérieur ; l'outillage d'import
+> WordPress reste disponible dans le dépôt, non utilisé. L'identité en vigueur est celle de
+> BOMA Infos : voir [`README.md`](../README.md) et [`CAHIER-DES-CHARGES.md`](../CAHIER-DES-CHARGES.md) (§5.6).
+
 # Migration du fonds WordPress
 
 Source : https://le-corporate.com/ ; destination : https://lecorporate.com/.
