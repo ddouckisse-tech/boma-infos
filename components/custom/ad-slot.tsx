@@ -101,7 +101,7 @@ function AdArtwork({
     >
       {isEditorial ? (
         <>
-          <span className="lc-ad-house-brand">Le Corporate</span>
+          <span className="lc-ad-house-brand">BOMA Infos</span>
           <span className="lc-ad-house-title">{creative.title}</span>
           <span className="lc-ad-house-cta">
             {english ? "Discover" : "Découvrir"}{" "}
@@ -144,8 +144,8 @@ function AdFrame({
       aria-label={
         creative.kind === "house"
           ? english
-            ? "Advertisement — Le Corporate promotion"
-            : "Publicité — autopromotion Le Corporate"
+            ? "Advertisement — BOMA Infos promotion"
+            : "Publicité — autopromotion BOMA Infos"
           : english
             ? "Advertisement"
             : "Publicité"

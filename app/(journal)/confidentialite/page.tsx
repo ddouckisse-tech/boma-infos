@@ -9,8 +9,7 @@ import { getAdSenseCmpConfig } from "@/lib/ads/adsense-config";
 
 export const metadata: Metadata = {
   title: "Politique de confidentialité",
-  description:
-    "Quelles données Le Corporate collecte, pourquoi, combien de temps, et comment exercer vos droits.",
+  description: `Quelles données ${SITE.name} collecte, pourquoi, combien de temps, et comment exercer vos droits.`,
   alternates: { canonical: "/confidentialite" },
 };
 
@@ -130,7 +129,7 @@ export default function PrivacyPage() {
               </li>
               <li>Finalité&nbsp;: répondre à votre demande.</li>
               <li>
-                Destinataire&nbsp;: la rédaction du Corporate, elle seule.
+                Destinataire&nbsp;: la rédaction de {SITE.name}, elle seule.
               </li>
               <li>Conservation&nbsp;: douze mois.</li>
               <li>
@@ -250,7 +249,7 @@ export default function PrivacyPage() {
                 message.
               </li>
               <li>Purpose: to respond to your request.</li>
-              <li>Recipient: the Le Corporate editorial team only.</li>
+              <li>Recipient: the {SITE.name} editorial team only.</li>
               <li>Retention: twelve months.</li>
               <li>
                 Legal basis: your consent, collected through the form checkbox.

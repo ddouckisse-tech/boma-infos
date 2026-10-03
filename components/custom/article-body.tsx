@@ -1,4 +1,3 @@
-import { Quote } from "lucide-react";
 import { HeavyMedia } from "@/components/custom/heavy-media";
 import { ResponsiveImage } from "@/components/custom/responsive-image";
 import { RichText } from "@/components/custom/rich-text";
@@ -23,20 +22,24 @@ function PullQuote({
   text: string;
   attribution?: string;
 }) {
+  // L'emphase de la charte — serif grasse italique, en or — se balise comme
+  // dans un paragraphe : `*les mots à retenir*`. Sa fonte n'est jamais
+  // préchargée : seule une citation qui s'en sert la fait télécharger, et
+  // `data-face` le signale au contrôle de budget (CDC §5.4), qui la compte.
+  const emphasised = /\*[^*]+\*/.test(text);
   return (
-    <figure className="my-8 border-l-2 border-brand-magenta pl-5 sm:pl-6">
-      <Quote
-        aria-hidden="true"
-        className="mb-2 size-5 text-brand-magenta-600 dark:text-brand-magenta-dark"
-      />
-      {/* Droit, pas italique : la fonte italique de Source Serif pèse 47 Ko
-          sur chaque page du site. Le filet, le guillemet et le corps
-          suffisent à détacher la citation (CDC §5.4). */}
-      <blockquote className="font-display type-h3 leading-snug text-foreground">
-        {text}
+    // La carte « citation » de la charte : île marine, trame de points,
+    // serif blanche, filet tricolore.
+    <figure
+      data-face={emphasised ? "emphase" : undefined}
+      className="boma-quote dark my-8 rounded-md border border-border boma-field px-5 py-6 text-foreground sm:px-8 sm:py-8"
+    >
+      <blockquote className="font-display type-h2 leading-snug text-balance">
+        <RichText text={text} />
       </blockquote>
+      <span aria-hidden="true" className="mt-5 boma-rule" />
       {attribution && (
-        <figcaption className="mt-3 type-small text-muted-foreground">
+        <figcaption className="mt-4 type-small text-muted-foreground">
           — {attribution}
         </figcaption>
       )}

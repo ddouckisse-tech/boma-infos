@@ -9,7 +9,7 @@ import { useEffect } from "react";
  * Registration is deferred to the `load` event so it never competes with the
  * first paint. In development it is not only skipped: any worker already
  * controlling this origin is **unregistered and its caches dropped**. A
- * worker installed by a production run on the same `localhost:3000` would
+ * worker installed by a production run on the same `localhost` port would
  * otherwise outlive it and keep serving Turbopack's chunks from cache, so
  * that every edit shows up as "module factory is not available" — measured,
  * not hypothetical.

@@ -13,7 +13,13 @@ import { LocalizedText } from "@/components/custom/localized-text";
 import { NewsletterForm } from "@/components/custom/newsletter-form";
 import { ThemeToggle } from "@/components/custom/theme-toggle";
 import { cn } from "@/lib/utils";
-import { NAV_LEGAL_PAGES, NAV_STATIC_PAGES, SITE } from "@/lib/site";
+import {
+  DEMO_CONTENT_NOTICE,
+  NAV_LEGAL_PAGES,
+  NAV_STATIC_PAGES,
+  PUBLISHER_NAME,
+  SITE,
+} from "@/lib/site";
 
 const SOCIAL_ICONS = {
   whatsapp: WhatsAppIcon,
@@ -56,9 +62,15 @@ const PAGE_LABELS_EN: Readonly<Record<string, string>> = {
  * take the full width, each on a single line, instead of wrapping onto a
  * third; below `lg` everything stacks in reading order.
  *
- * Every link resolves. The audit counted nine links on the legacy footer, of
- * which one worked; the social URLs are still generic because the real
- * accounts were not communicated, and are marked as opening a new window.
+ * Every link resolves. The social URLs are still generic because the real
+ * accounts were not communicated, and are marked as opening a new window; the
+ * phone number is only printed once the owner has provided one.
+ *
+ * Like the masthead, the footer is a **navy island** — the ground of the
+ * charter, with its dotted field — opened by the tricolour rule and closed,
+ * as the charter is, by the address of the site between two hairlines. While
+ * the demonstration corpus is online, the notice that it is fictional is
+ * printed here, on every page (`DEMO_CONTENT_NOTICE`).
  */
 export function Footer() {
   const link =
@@ -73,15 +85,27 @@ export function Footer() {
     "flex min-w-0 flex-col gap-2 lg:col-span-2 lg:flex-row lg:flex-wrap lg:gap-x-5 xl:col-span-1 xl:flex-col";
 
   return (
-    <footer className="mt-16 border-t border-border bg-surface-muted">
+    <footer className="dark mt-16 boma-field text-foreground">
+      <span aria-hidden="true" className="boma-rule rounded-none" />
       <Container className="pt-8 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+        {DEMO_CONTENT_NOTICE && (
+          <p
+            role="note"
+            className="mb-6 rounded-md border border-border bg-card px-4 py-3 type-small text-muted-foreground"
+          >
+            <LocalizedText
+              fr={DEMO_CONTENT_NOTICE.fr}
+              en={DEMO_CONTENT_NOTICE.en}
+            />
+          </p>
+        )}
         <div className="grid gap-x-12 gap-y-6 lg:grid-cols-2 lg:gap-y-4">
           <div className="min-w-0">
             <BrandWordmark />
             <p className="mt-1 max-w-[60ch] type-small text-muted-foreground">
               <LocalizedText
-                fr={`Magazine économique gabonais, édité par ${SITE.publisher}. ${SITE.tagline}.`}
-                en={`Gabonese business magazine published by ${SITE.publisher}. Gabon and CEMAC economic news.`}
+                fr={`${SITE.tagline}\u00a0: politique, économie, société, tourisme, culture et sport.`}
+                en={`${SITE.taglineEn}: politics, the economy, society, tourism, culture and sport.`}
               />
             </p>
           </div>
@@ -101,12 +125,14 @@ export function Footer() {
                   {SITE.email}
                 </a>
               </li>
-              <li>
-                <a href={SITE.phoneHref} className={link}>
-                  <Phone aria-hidden="true" className="size-4 shrink-0" />
-                  {SITE.phone}
-                </a>
-              </li>
+              {SITE.phone && SITE.phoneHref && (
+                <li>
+                  <a href={SITE.phoneHref} className={link}>
+                    <Phone aria-hidden="true" className="size-4 shrink-0" />
+                    {SITE.phone}
+                  </a>
+                </li>
+              )}
             </ul>
             <ul className="flex flex-wrap gap-2">
               {SOCIAL_LINKS.map(({ key, label, href }) => {
@@ -197,13 +223,23 @@ export function Footer() {
           <div className="flex items-center gap-1">
             <p className="type-small text-muted-foreground">
               <LocalizedText
-                fr={`© ${new Date().getFullYear()} ${SITE.name} — ${SITE.publisher}. Tous droits réservés.`}
-                en={`© ${new Date().getFullYear()} ${SITE.name} — ${SITE.publisher}. All rights reserved.`}
+                fr={`© ${new Date().getFullYear()} ${PUBLISHER_NAME}. Tous droits réservés.`}
+                en={`© ${new Date().getFullYear()} ${PUBLISHER_NAME}. All rights reserved.`}
               />
             </p>
             <AdminEntry />
           </div>
         </div>
+
+        {/* La signature de la charte : l'adresse du site entre deux filets. */}
+        <p
+          aria-hidden="true"
+          className="mt-6 flex items-center gap-4 type-small font-semibold tracking-wide text-foreground"
+        >
+          <span className="h-px flex-1 bg-gradient-to-r from-transparent to-border-strong" />
+          {SITE.domain}
+          <span className="h-px flex-1 bg-gradient-to-l from-transparent to-border-strong" />
+        </p>
       </Container>
     </footer>
   );

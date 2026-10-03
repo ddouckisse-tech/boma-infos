@@ -3,13 +3,15 @@
  *
  *   bun run scripts/make-icons.ts
  *
- * The icon uses the approved wordmark's capital C and magenta point over
- * the brand navy. The C is the original vector path, with no font dependency,
- * rasterised by sharp — four PNG files, none above 12 Ko, committed to
+ * The icon is the capital B of the wordmark, in white on the navy of the
+ * charter, underlined by its three dots — green, yellow, blue. The whole
+ * name would be illegible in a browser tab; the B and the dots are what the
+ * eye keeps of it. The B is the original vector path, with no font
+ * dependency, rasterised by sharp — four PNG files committed to
  * `public/icons/`.
  *
- * The maskable variant keeps the glyph inside the 80 % safe area Android
- * crops to, so the letters are never clipped by a circular mask.
+ * The maskable variant keeps the artwork inside the 80 % safe area Android
+ * crops to, so nothing is ever clipped by a circular mask.
  */
 
 import { mkdir, readFile, writeFile } from "node:fs/promises";
@@ -19,39 +21,42 @@ import dimensions from "../assets/brand/dimensions.json";
 
 const OUT_DIR = path.resolve(import.meta.dirname, "..", "public", "icons");
 
-const NAVY = "#002060";
-const MAGENTA = "#C74794";
+const NAVY = "#0B1848";
 const artwork = await readFile(
-  path.resolve(
-    import.meta.dirname,
-    "..",
-    "assets",
-    "brand",
-    "le-corporate.svg"
-  ),
+  path.resolve(import.meta.dirname, "..", "assets", "brand", "boma-infos.svg"),
   "utf8"
 );
-const capitalC = artwork
-  .match(/<path\b[^>]*\bid="capital-c"[^>]*>/)?.[0]
+const capitalB = artwork
+  .match(/<path\b[^>]*\bid="capital-b"[^>]*>/)?.[0]
   .match(/\bd="([^"]+)"/)?.[1];
-if (!capitalC) throw new Error("The approved logo has no capital-c path.");
+if (!capitalB) throw new Error("The logo master has no capital-b path.");
 
-/** `safe` is the fraction of the canvas the glyph is allowed to occupy. */
+/** `safe` is the fraction of the canvas the artwork is allowed to occupy. */
 function icon(size: number, safe: number, rounded: boolean): string {
-  const bounds = dimensions.capitalC;
-  const glyphHeight = size * safe * 0.66;
+  const bounds = dimensions.capitalB;
+  const glyphHeight = size * safe * 0.5;
   const scale = glyphHeight / bounds.height;
   const glyphWidth = bounds.width * scale;
+  // Trois pastilles sous la lettre, de la largeur du B.
   const dot = size * safe * 0.055;
-  const gap = size * safe * 0.025;
-  const left = (size - glyphWidth - gap - dot * 2) / 2;
-  const top = (size - glyphHeight) / 2;
+  const step = (glyphWidth - dot * 2) / 2;
+  const gap = size * safe * 0.09;
+  const blockHeight = glyphHeight + gap + dot * 2;
+  const left = (size - glyphWidth) / 2;
+  const top = (size - blockHeight) / 2;
+  const cy = top + glyphHeight + gap + dot;
   const radius = rounded ? Math.round(size * 0.18) : 0;
+  const dots = dimensions.dots
+    .map(
+      (item, index) =>
+        `<circle cx="${left + dot + step * index}" cy="${cy}" r="${dot}" fill="${item.color}"/>`
+    )
+    .join("\n  ");
   // Even the bounding rectangle fits inside the maskable 80 % safe circle.
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
   <rect width="${size}" height="${size}" rx="${radius}" fill="${NAVY}"/>
-  <path d="${capitalC}" fill="#FFFFFF" transform="translate(${left} ${top}) scale(${scale}) translate(${-bounds.x} ${-bounds.y})"/>
-  <circle cx="${left + glyphWidth + gap + dot}" cy="${top + glyphHeight - dot}" r="${dot}" fill="${MAGENTA}"/>
+  <path d="${capitalB}" fill="#FFFFFF" transform="translate(${left} ${top}) scale(${scale})"/>
+  ${dots}
 </svg>`;
 }
 

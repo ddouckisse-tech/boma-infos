@@ -21,9 +21,10 @@ type CategoryBadgeProps = {
 };
 
 /**
- * Section marker. The audit measured the legacy pill at 4,4:1 — just under
- * the threshold; every pair used here is at or above 4,5:1 and the brand
- * magenta `#C74794` is never asked to carry a label (CDC §3.5).
+ * Section marker. Every pair used here is at or above 4,5:1
+ * (`lib/navigation.ts`): the gold of the charter never carries a label on a
+ * white ground — as a fill it carries navy text, as on the charter itself
+ * (CDC §3.5).
  *
  * Rendered as a link: a section marker that cannot be clicked is a wasted
  * navigation affordance on a press site.

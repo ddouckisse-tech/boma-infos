@@ -22,7 +22,7 @@ export function KeyPoints({
     <aside
       aria-labelledby="essentiel"
       className={cn(
-        "rounded-md border border-l-2 border-border border-l-brand-magenta bg-surface-muted p-5",
+        "rounded-md border border-l-2 border-border border-l-brand-gold bg-surface-muted p-5",
         className
       )}
     >

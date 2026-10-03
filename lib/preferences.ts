@@ -18,9 +18,9 @@ export type ThemeChoice = "light" | "dark" | "system";
 export type ResolvedTheme = "light" | "dark";
 export type LocaleChoice = "fr" | "en";
 
-export const THEME_STORAGE_KEY = "lecorporate.theme";
-export const DATA_SAVER_STORAGE_KEY = "lecorporate.data-saver";
-export const LOCALE_STORAGE_KEY = "lecorporate.locale";
+export const THEME_STORAGE_KEY = "bomainfos.theme";
+export const DATA_SAVER_STORAGE_KEY = "bomainfos.data-saver";
+export const LOCALE_STORAGE_KEY = "bomainfos.locale";
 
 /**
  * Le mode économie est aussi écrit dans un cookie : c'est `proxy.ts` qui le
@@ -28,7 +28,7 @@ export const LOCALE_STORAGE_KEY = "lecorporate.locale";
  * (CDC §2.2). Le script bloquant ci-dessous le remet à chaque visite, de
  * sorte qu'un cookie expiré ou effacé se répare tout seul.
  */
-export const DATA_SAVER_COOKIE = "lc-eco";
+export const DATA_SAVER_COOKIE = "bomainfos-eco";
 
 export const dataSaverCookie = (enabled: boolean): string =>
   `${DATA_SAVER_COOKIE}=${enabled ? "1" : "0"}; Path=/; Max-Age=${

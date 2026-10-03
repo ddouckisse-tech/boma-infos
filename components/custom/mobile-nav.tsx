@@ -63,8 +63,8 @@ export function MobileNav({
             <p className="font-display type-h3">Navigation</p>
             <p className="type-small text-muted-foreground">
               {english
-                ? `${sections.length} magazine sections.`
-                : `Les ${sections.length} rubriques du magazine.`}
+                ? `The ${sections.length} sections of the site.`
+                : `Les ${sections.length} rubriques du journal.`}
             </p>
           </div>
           <CloseButton onClick={close} />

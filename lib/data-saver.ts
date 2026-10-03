@@ -8,7 +8,7 @@
  */
 
 /** Read by `proxy.ts` on every picture request. Value is "1" or absent. */
-export const DATA_SAVER_COOKIE = "lc-eco";
+export const DATA_SAVER_COOKIE = "bomainfos-eco";
 
 /**
  * Ceiling of a downgraded picture, in pixels.

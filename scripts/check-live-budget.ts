@@ -1,7 +1,7 @@
 /**
  * Performance budget of the site AS SERVED — CAHIER-DES-CHARGES.md §5.4.
  *
- *   bun run scripts/check-live-budget.ts [https://lecorporate.com]
+ *   bun run scripts/check-live-budget.ts [https://www.bomainfos.com]
  *
  * `scripts/check-budget.ts` refuses a compilation that exceeds a ceiling. It
  * cannot see what happens next: the home page and the articles are
@@ -27,7 +27,10 @@
 import { gzipSync } from "node:zlib";
 import { appendFileSync } from "node:fs";
 
-const BASE = (process.argv[2] ?? "https://lecorporate.com").replace(/\/+$/, "");
+const BASE = (process.argv[2] ?? "https://www.bomainfos.com").replace(
+  /\/+$/,
+  ""
+);
 const VIGILANCE = 0.95;
 const CAPS = {
   homeWeightKb: 600,
@@ -37,7 +40,7 @@ const CAPS = {
 } as const;
 const ARTICLES = 3;
 const USER_AGENT =
-  "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Mobile Safari/537.36 le-corporate-budget";
+  "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Mobile Safari/537.36 boma-infos-budget";
 
 type Asset = { url: string; bytes: number; kind: string };
 type Measure = {

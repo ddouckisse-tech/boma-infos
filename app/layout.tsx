@@ -1,15 +1,16 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Inter_Tight } from "next/font/google";
+import { Inter, Source_Serif_4 } from "next/font/google";
 import { headers } from "next/headers";
 import { PreferencesScript } from "@/components/custom/preferences-script";
 import { ServiceWorker } from "@/components/custom/service-worker";
 import { PreferencesProvider } from "@/components/providers/preferences-provider";
-import { SITE, siteUrl } from "@/lib/site";
+import { PUBLISHER_NAME, SITE, siteUrl } from "@/lib/site";
 import { getAdSenseRuntimeConfig } from "@/lib/ads/adsense-config";
 import "./globals.css";
 
 /**
- * Two families only (CDC §3.2), down from six.
+ * Two families only (CDC §3.2): the serif of the charter for headlines, a
+ * sans for everything that is read at length or operated.
  *
  * `next/font/google` downloads the woff2 files at build time and serves them
  * from this origin: no request to fonts.googleapis.com, and a size-adjusted
@@ -17,20 +18,36 @@ import "./globals.css";
  *
  * Only the `latin` subset is requested. `latin-ext` doubles the number of
  * preloaded font files and French needs none of it — é, à, ç, œ, « » and the
- * euro sign all live in `latin`. Both families are loaded as variable fonts,
- * so one file covers every weight the design uses.
+ * euro sign all live in `latin`.
  *
- * No italic face either. A second display-face file costs 47 Ko on *every*
- * page — eight per cent of the whole 600 Ko budget of §5.4 — for pull quotes
- * and the occasional emphasis. The pull quote is set upright instead (its
- * rule, its quote mark and its size already set it apart), and the rare
- * `<em>` falls back to a synthesised oblique. Two font requests for the
- * whole site, against the six families the legacy site loaded.
+ * **Source Serif 4** is the face of the charter: the « BOMA » of the logo and
+ * the quotation set in white on navy. It is loaded as ONE static weight, 600
+ * — the weight measured on the charter, a 22 Ko file, half of the variable
+ * grotesque it replaces (45 Ko). Measured: asking for two weights makes
+ * Google Fonts answer with the variable file instead (51 Ko), so every
+ * headline is set in that one weight. Inter stays variable: one file covers
+ * every weight of the interface.
+ *
+ * The charter's emphasis — bold italic, in gold — is a third file. It is
+ * declared with `preload: false`: the browser only fetches it on a page that
+ * actually sets text in it (`.boma-em`, the pull quote of an article), and
+ * `scripts/check-budget.ts` charges that page for it. Preloading it
+ * everywhere would spend 21 Ko of the §5.4 budget on pages that never use it.
  */
-const interTight = Inter_Tight({
-  variable: "--font-inter-tight",
+const sourceSerif = Source_Serif_4({
+  variable: "--font-source-serif",
   subsets: ["latin"],
+  weight: "600",
   display: "swap",
+});
+
+const sourceSerifItalic = Source_Serif_4({
+  variable: "--font-source-serif-italic",
+  subsets: ["latin"],
+  weight: "700",
+  style: "italic",
+  display: "swap",
+  preload: false,
 });
 
 const inter = Inter({
@@ -43,20 +60,20 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
   title: {
     default: SITE.title,
-    template: "%s · Le Corporate",
+    template: `%s · ${SITE.name}`,
   },
   description: SITE.description,
   applicationName: SITE.name,
-  authors: [{ name: SITE.publisher }],
+  authors: [{ name: PUBLISHER_NAME }],
   generator: undefined,
   formatDetection: { telephone: false },
   manifest: "/manifest.webmanifest",
-  icons: { apple: "/icons/apple-touch-icon.png?v=editorial-1" },
+  icons: { apple: "/icons/apple-touch-icon.png?v=boma-1" },
   alternates: {
     canonical: "/",
     types: {
       "application/rss+xml": [
-        { url: "/rss.xml", title: "Le Corporate — tous les articles" },
+        { url: "/rss.xml", title: `${SITE.name} — tous les articles` },
       ],
     },
   },
@@ -85,10 +102,9 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#121212" },
-  ],
+  // Le bandeau est marine dans les deux thèmes : la barre du navigateur le
+  // prolonge au lieu de poser une bande blanche au-dessus de lui.
+  themeColor: "#050d2b",
 };
 
 /**
@@ -111,7 +127,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="fr-FR"
       suppressHydrationWarning
-      className={`${interTight.variable} ${inter.variable} h-full`}
+      className={`${sourceSerif.variable} ${sourceSerifItalic.variable} ${inter.variable} h-full`}
     >
       <head>
         <PreferencesScript nonce={nonce} />

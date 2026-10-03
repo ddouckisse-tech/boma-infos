@@ -129,7 +129,7 @@ export default function SubmissionReviewPage({
               <>
                 <Sparkles
                   aria-hidden="true"
-                  className="size-5 shrink-0 text-brand-magenta"
+                  className="size-5 shrink-0 text-gold-600 dark:text-gold-400"
                 />
                 Fiche de pré-qualification
               </>

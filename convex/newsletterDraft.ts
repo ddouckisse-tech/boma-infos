@@ -83,7 +83,7 @@ export const upsert = internalMutation({
 
     const payload = {
       week,
-      subject: find("newsletter.subject") || `Le Corporate — semaine ${week}`,
+      subject: find("newsletter.subject") || `BOMA Infos — semaine ${week}`,
       intro: find("newsletter.intro"),
       items,
       status: "draft" as const,

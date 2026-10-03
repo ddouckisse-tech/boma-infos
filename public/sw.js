@@ -1,5 +1,5 @@
 /*
- * Service worker — Le Corporate.
+ * Service worker — BOMA Infos.
  * CAHIER-DES-CHARGES.md §2.2 : « Coupures fréquentes. PWA avec service
  * worker : les articles consultés restent lisibles hors-ligne, une page
  * hors-ligne soignée remplace l'erreur. »
@@ -16,10 +16,10 @@
  *  - Le reste : réseau seul. Rien n'est mis en cache par accident.
  */
 
-const VERSION = "v2";
-const SHELL_CACHE = `lecorporate-shell-${VERSION}`;
-const PAGES_CACHE = `lecorporate-pages-${VERSION}`;
-const ASSETS_CACHE = `lecorporate-assets-${VERSION}`;
+const VERSION = "v3";
+const SHELL_CACHE = `bomainfos-shell-${VERSION}`;
+const PAGES_CACHE = `bomainfos-pages-${VERSION}`;
+const ASSETS_CACHE = `bomainfos-assets-${VERSION}`;
 
 const OFFLINE_URL = "/hors-ligne";
 

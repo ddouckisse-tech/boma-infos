@@ -508,7 +508,7 @@ export default function ArticleEditorPage({
             <h2 className="flex items-center gap-2 font-display type-h3">
               <Sparkles
                 aria-hidden="true"
-                className="size-5 text-brand-magenta"
+                className="size-5 text-gold-600 dark:text-gold-400"
               />
               Agents
             </h2>

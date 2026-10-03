@@ -87,7 +87,7 @@ export function ArticleCard({
         <div className="flex items-baseline gap-3">
           <span
             aria-hidden="true"
-            className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-magenta"
+            className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-gold"
           />
           <div className="min-w-0">
             <Heading className="font-display type-body font-semibold text-balance">

@@ -440,7 +440,7 @@ export const createUploaded = mutation({
       key,
       alt: args.alt.trim(),
       caption: args.caption.trim(),
-      credit: args.credit.trim() || "Le Corporate",
+      credit: args.credit.trim() || "BOMA Infos",
     };
     const id = await ctx.db.insert("media", {
       ...text,

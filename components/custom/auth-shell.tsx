@@ -49,7 +49,7 @@ export function AuthShell({
             <h1 className="font-display type-h2 text-foreground">{title}</h1>
             <span
               aria-hidden="true"
-              className="mt-3 block h-[3px] w-12 rounded-xs bg-brand-magenta"
+              className="mt-3 boma-rule w-16"
             />
             {intro && (
               <div className="mt-4 type-small text-muted-foreground">

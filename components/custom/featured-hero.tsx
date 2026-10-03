@@ -22,9 +22,10 @@ const englishDate = (value: number) =>
 const englishReadingTime = (minutes: number) => `${minutes}\u00a0min read`;
 
 /**
- * The lead story: headline and dek on a dark panel at the left, the
- * photograph at the right, the two fused by a horizontal gradient
- * (`.lc-hero`, app/globals.css). One screen tall, text centred.
+ * The lead story, laid out as the charter is: headline and dek in white serif
+ * on the navy panel at the left, the photograph at the right, the two fused
+ * by a horizontal gradient (`.lc-hero`, app/globals.css), and the tricolour
+ * rule under the headline. One screen tall, text centred.
  *
  * Its picture is the only one on the page rendered with `priority`: it is the
  * Largest Contentful Paint, so it is fetched eagerly and at high priority
@@ -46,11 +47,11 @@ export function FeaturedHero({
   const media = getMediaAsset(article.heroMediaKey);
 
   return (
-    // `dark` : île sombre — les composants imbriqués prennent leurs jetons
-    // sombres quel que soit le thème de la page (voir `.lc-hero`).
+    // `dark` : île marine — les composants imbriqués prennent les jetons du
+    // thème sombre quel que soit le thème de la page (voir `.lc-hero`).
     <section
       aria-labelledby="featured-article-label"
-      className={cn("lc-hero", className)}
+      className={cn("lc-hero dark", className)}
     >
       <span id="featured-article-label" className="sr-only">
         <LocalizedText fr="Article à la une" en="Featured article" />
@@ -76,10 +77,10 @@ export function FeaturedHero({
             de 1280 — le voile est opaque là où elle s'arrête. */}
         <div className="md:max-w-[58%] xl:max-w-[54%]">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-2 type-small font-semibold tracking-wide text-brand-magenta uppercase dark:text-brand-magenta-dark">
+            <span className="inline-flex items-center gap-2 type-small font-semibold tracking-wide text-gold-400 uppercase">
               <span
                 aria-hidden="true"
-                className="inline-block h-[3px] w-6 bg-brand-magenta dark:bg-brand-magenta-dark"
+                className="inline-block h-[3px] w-6 bg-gold-400"
               />
               <LocalizedText fr="À la une" en="Featured" />
             </span>
@@ -101,7 +102,10 @@ export function FeaturedHero({
             </Link>
           </h2>
 
-          <p className="mt-4 max-w-[40rem] type-body text-foreground/90">
+          {/* Le filet de la charte, sous le titre comme sous la citation. */}
+          <span aria-hidden="true" className="mt-5 boma-rule w-40 md:w-56" />
+
+          <p className="mt-5 max-w-[40rem] type-body text-foreground/90">
             {article.dek}
           </p>
 

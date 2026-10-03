@@ -10,7 +10,7 @@ import { LocalizedText } from "@/components/custom/localized-text";
 import { Section } from "@/components/custom/section";
 import { BreadcrumbStructuredData } from "@/components/custom/structured-data";
 import { getAuthor, getAuthors } from "@/lib/content/server";
-import { absoluteUrl } from "@/lib/site";
+import { absoluteUrl, DEMO_CONTENT_NOTICE, SITE } from "@/lib/site";
 
 // Littéral et non `REVALIDATE_SECONDS` : Next analyse statiquement les
 // exports de configuration de segment et n'en résout pas les identifiants
@@ -44,12 +44,12 @@ export async function generateMetadata({
   const { author, total } = data;
   return {
     title: author.name,
-    description: `${author.role} au Corporate. ${author.bio}`.slice(0, 158),
+    description: `${author.role} à ${SITE.name}. ${author.bio}`.slice(0, 158),
     alternates: { canonical: `/auteur/${author.slug}` },
     openGraph: {
       type: "profile",
       title: `${author.name} — ${author.role}`,
-      description: `${total} article${total > 1 ? "s" : ""} publié${total > 1 ? "s" : ""} au Corporate.`,
+      description: `${total} article${total > 1 ? "s" : ""} publié${total > 1 ? "s" : ""} sur ${SITE.name}.`,
       url: `/auteur/${author.slug}`,
     },
   };
@@ -86,7 +86,7 @@ export default async function AuthorPage({
               jobTitle: author.role,
               description: author.bio,
               url: absoluteUrl(`/auteur/${author.slug}`),
-              worksFor: { "@type": "Organization", name: "Le Corporate" },
+              worksFor: { "@type": "Organization", name: SITE.name },
             },
           }).replace(/</g, "\\u003c"),
         }}
@@ -139,10 +139,20 @@ export default async function AuthorPage({
                 {author.role}
               </p>
               <h1 className="mt-1 font-display type-h1">{author.name}</h1>
-              <span
-                aria-hidden="true"
-                className="mt-4 block h-[3px] w-16 rounded-xs bg-brand-magenta"
-              />
+              <span aria-hidden="true" className="mt-4 boma-rule w-20" />
+              {/* Tant que le corpus de démonstration est en ligne, la page
+                  d'une signature dit qu'elle est inventée, avant sa notice. */}
+              {DEMO_CONTENT_NOTICE && (
+                <p
+                  role="note"
+                  className="mt-4 max-w-reading rounded-md border border-warning-token/40 bg-warning-token/10 px-4 py-3 type-small text-foreground"
+                >
+                  <LocalizedText
+                    fr={DEMO_CONTENT_NOTICE.authorFr}
+                    en={DEMO_CONTENT_NOTICE.authorEn}
+                  />
+                </p>
+              )}
               <p className="mt-4 max-w-reading type-body text-muted-foreground">
                 {author.bio}
               </p>

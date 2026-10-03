@@ -8,29 +8,67 @@ import { SITE } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Mentions légales",
-  description:
-    "Éditeur, directeur de publication, hébergeur et conditions d'utilisation du site Le Corporate.",
+  description: `Éditeur, directeur de publication, hébergeur et conditions d'utilisation du site ${SITE.name}.`,
   alternates: { canonical: "/mentions-legales" },
 };
 
 /**
  * Legal notice.
  *
- * The audit's first "urgence" was that this page did not exist — four
- * candidate URLs, four 404s — while the site tracked its readers. It exists
- * now; the fields the publisher alone can supply (directeur de publication,
- * RCCM, récépissé HAC, hébergeur) are shown as explicitly missing rather
- * than invented, because a legal notice filled with plausible-looking
- * fiction would be worse than none.
+ * The fields only the publisher can supply (publication director, publishing
+ * company, RCCM and NIF, HAC receipt, postal address, newsroom phone number,
+ * final newsroom email address, hosting provider, ISSN) are listed as
+ * explicitly missing rather than invented, because a legal notice filled with
+ * plausible-looking fiction would be worse than none. A field that
+ * `lib/site.ts` declares `null` is never printed: it appears in this list
+ * until the owner provides it.
  */
-const TO_PROVIDE = [
-  "Nom du directeur de la publication",
-  "Raison sociale complète et forme juridique de l'éditeur",
-  "Numéro d'immatriculation au registre du commerce (RCCM) et NIF",
-  "Numéro de récépissé ou d'agrément auprès de la Haute Autorité de la Communication (HAC)",
-  "Adresse postale précise du siège de la rédaction",
-  "Raison sociale et coordonnées de l'hébergeur retenu",
-  "Numéro ISSN, le cas échéant",
+const TO_PROVIDE: readonly { fr: string; en: string }[] = [
+  {
+    fr: "Nom du directeur de la publication",
+    en: "Name of the publication director",
+  },
+  SITE.publisher
+    ? {
+        fr: "Raison sociale complète et forme juridique de l'éditeur",
+        en: "Publisher's full legal name and legal form",
+      }
+    : {
+        fr: `Société éditrice de ${SITE.name} : raison sociale complète et forme juridique`,
+        en: `Company that publishes ${SITE.name}: full legal name and legal form`,
+      },
+  {
+    fr: "Numéro d'immatriculation au registre du commerce (RCCM) et NIF",
+    en: "Trade register number (RCCM) and tax identification number",
+  },
+  {
+    fr: "Numéro de récépissé ou d'agrément auprès de la Haute Autorité de la Communication (HAC)",
+    en: "Receipt or accreditation number from the High Authority for Communication (HAC)",
+  },
+  {
+    fr: "Adresse postale précise du siège de la rédaction",
+    en: "Full postal address of the editorial office",
+  },
+  ...(SITE.phone
+    ? []
+    : [
+        {
+          fr: "Numéro de téléphone de la rédaction",
+          en: "Newsroom phone number",
+        },
+      ]),
+  {
+    fr: `Adresse de courriel définitive de la rédaction (l'adresse affichée, ${SITE.email}, est déduite du nom de domaine et reste à confirmer)`,
+    en: `Final newsroom email address (the address shown, ${SITE.email}, is inferred from the domain name and remains to be confirmed)`,
+  },
+  {
+    fr: "Raison sociale et coordonnées de l'hébergeur retenu",
+    en: "Legal name and contact details of the hosting provider",
+  },
+  {
+    fr: "Numéro ISSN, le cas échéant",
+    en: "ISSN, where applicable",
+  },
 ];
 
 export default function LegalPage() {
@@ -71,17 +109,23 @@ export default function LegalPage() {
           <div className="lc-fr article-body mt-8 type-body" lang="fr">
             <h2 className="font-display type-h2">Éditeur du site</h2>
             <p>
-              {SITE.name}, magazine économique en ligne, édité par{" "}
-              {SITE.publisher}, {SITE.address}.
+              {SITE.name} ({SITE.domain}) est un média d&apos;information
+              générale en ligne, consacré à l&apos;actualité du Gabon.
+              {SITE.publisher && ` Il est édité par ${SITE.publisher}.`}
             </p>
             <ul className="list-disc space-y-2 ps-6">
               <li>
                 Courriel de la rédaction&nbsp;:{" "}
                 <a href={`mailto:${SITE.email}`}>{SITE.email}</a>
               </li>
-              <li>
-                Téléphone&nbsp;: <a href={SITE.phoneHref}>{SITE.phone}</a>
-              </li>
+              {SITE.phone && SITE.phoneHref && (
+                <li>
+                  Téléphone&nbsp;: <a href={SITE.phoneHref}>{SITE.phone}</a>
+                </li>
+              )}
+              {SITE.address && (
+                <li>Adresse de la rédaction&nbsp;: {SITE.address}</li>
+              )}
             </ul>
 
             <h2 className="font-display type-h2">Éléments à compléter</h2>
@@ -92,7 +136,7 @@ export default function LegalPage() {
             </p>
             <ul className="list-disc space-y-2 ps-6">
               {TO_PROVIDE.map((item) => (
-                <li key={item}>{item}</li>
+                <li key={item.fr}>{item.fr}</li>
               ))}
             </ul>
 
@@ -128,17 +172,21 @@ export default function LegalPage() {
           <div className="lc-en article-body mt-8 type-body" lang="en">
             <h2 className="font-display type-h2">Site publisher</h2>
             <p>
-              {SITE.name}, an online business magazine published by{" "}
-              {SITE.publisher}, {SITE.address}.
+              {SITE.name} ({SITE.domain}) is an online general news outlet
+              devoted to the news from Gabon.
+              {SITE.publisher && ` It is published by ${SITE.publisher}.`}
             </p>
             <ul className="list-disc space-y-2 ps-6">
               <li>
                 Editorial email:{" "}
                 <a href={`mailto:${SITE.email}`}>{SITE.email}</a>
               </li>
-              <li>
-                Phone: <a href={SITE.phoneHref}>{SITE.phone}</a>
-              </li>
+              {SITE.phone && SITE.phoneHref && (
+                <li>
+                  Phone: <a href={SITE.phoneHref}>{SITE.phone}</a>
+                </li>
+              )}
+              {SITE.address && <li>Editorial office: {SITE.address}</li>}
             </ul>
             <h2 className="font-display type-h2">
               Information to be completed
@@ -148,18 +196,9 @@ export default function LegalPage() {
               publisher must provide:
             </p>
             <ul className="list-disc space-y-2 ps-6">
-              <li>Name of the publication director</li>
-              <li>Publisher&apos;s full legal name and legal form</li>
-              <li>
-                Trade register number (RCCM) and tax identification number
-              </li>
-              <li>
-                Receipt or accreditation number from the High Authority for
-                Communication (HAC)
-              </li>
-              <li>Full postal address of the editorial office</li>
-              <li>Legal name and contact details of the hosting provider</li>
-              <li>ISSN, where applicable</li>
+              {TO_PROVIDE.map((item) => (
+                <li key={item.en}>{item.en}</li>
+              ))}
             </ul>
             <h2 className="font-display type-h2">Intellectual property</h2>
             <p>

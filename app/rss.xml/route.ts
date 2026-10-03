@@ -1,5 +1,5 @@
 import { getLatest, REVALIDATE_SECONDS } from "@/lib/content/server";
-import { absoluteUrl, SITE } from "@/lib/site";
+import { absoluteUrl, PUBLISHER_NAME, SITE } from "@/lib/site";
 
 // Littéral et non `REVALIDATE_SECONDS` : Next analyse statiquement les
 // exports de configuration de segment et n'en résout pas les identifiants
@@ -53,7 +53,7 @@ export async function GET() {
     <atom:link href="${absoluteUrl("/rss.xml")}" rel="self" type="application/rss+xml"/>
     <description>${escape(SITE.description)}</description>
     <language>fr-FR</language>
-    <copyright>© ${new Date().getFullYear()} ${escape(SITE.publisher)}</copyright>
+    <copyright>© ${new Date().getFullYear()} ${escape(PUBLISHER_NAME)}</copyright>
     <lastBuildDate>${new Date(updated).toUTCString()}</lastBuildDate>
     <ttl>60</ttl>
 ${items}

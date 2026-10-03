@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BrandWordmark } from "@/components/custom/brand-wordmark";
 import { Container } from "@/components/custom/container";
 import { PageHeader } from "@/components/custom/page-header";
 import { Section } from "@/components/custom/section";
@@ -7,9 +8,10 @@ import { ComponentStates } from "./_components/component-states";
 import {
   BRAND_SWATCHES,
   BREAKPOINTS,
+  FLAG_RAMP,
   FUNCTIONAL_SWATCHES,
   FUNCTIONAL_SWATCHES_DARK,
-  MAGENTA_RAMP,
+  GOLD_RAMP,
   NAVY_RAMP,
   NEUTRAL_RAMP,
   RADII,
@@ -22,7 +24,7 @@ import {
 export const metadata: Metadata = {
   title: "Design system",
   description:
-    "Palette, typographie, espacements et composants de base du magazine Le Corporate, en thème clair et sombre.",
+    "Palette, typographie, espacements et composants de base de BOMA Infos, en thème clair et sombre.",
   robots: { index: false, follow: false },
 };
 
@@ -32,99 +34,108 @@ export const metadata: Metadata = {
  */
 const CONTRAST_CHECKS = [
   {
-    pair: "#1A1A1A sur #FFFFFF",
-    ratio: "17,40:1",
+    pair: "#0D152A sur #FFFFFF",
+    ratio: "18,14:1",
     verdict: "AAA — corps de texte, thème clair",
     ok: true,
   },
   {
-    pair: "#1A1A1A sur #F5F5F5",
-    ratio: "15,96:1",
-    verdict: "AAA — corps de texte sur fond doux",
+    pair: "#0D152A sur #F3F6FB",
+    ratio: "16,74:1",
+    verdict: "AAA — corps de texte sur surface douce",
     ok: true,
   },
   {
-    pair: "#EDEDED sur #121212",
-    ratio: "16,00:1",
-    verdict: "AAA — corps de texte, thème sombre",
+    pair: "#ECF0F9 sur #050D2B",
+    ratio: "16,74:1",
+    verdict: "AAA — corps de texte sur fond nuit, thème sombre",
     ok: true,
   },
   {
-    pair: "#EDEDED sur #1F1F1F",
-    ratio: "14,08:1",
-    verdict: "AAA — corps de texte sur surface sombre",
+    pair: "#ECF0F9 sur #101C41",
+    ratio: "14,55:1",
+    verdict: "AAA — corps de texte sur surcouche sombre",
     ok: true,
   },
   {
-    pair: "#525252 sur #FFFFFF",
-    ratio: "7,81:1",
+    pair: "#4B556C sur #FFFFFF",
+    ratio: "7,46:1",
     verdict: "AAA — texte atténué, thème clair",
     ok: true,
   },
   {
-    pair: "#A3A3A3 sur #121212",
-    ratio: "7,43:1",
+    pair: "#ACB7D2 sur #050D2B",
+    ratio: "9,52:1",
     verdict: "AAA — texte atténué, thème sombre",
     ok: true,
   },
   {
-    pair: "#002060 sur #FFFFFF",
-    ratio: "15,27:1",
-    verdict: "AAA — navy de marque, thème clair",
+    pair: "#0B1848 sur #FFFFFF",
+    ratio: "16,96:1",
+    verdict: "AAA — marine de marque, thème clair",
     ok: true,
   },
   {
-    pair: "#002060 sur #121212",
-    ratio: "1,23:1",
-    verdict: "échec — navy proscrit en thème sombre",
+    pair: "#0B1848 sur #050D2B",
+    ratio: "1,13:1",
+    verdict:
+      "échec — le marine ne porte pas de texte en thème sombre : on y utilise navy-300 (10,51:1)",
     ok: false,
   },
   {
-    pair: "#B83D85 sur #FFFFFF",
-    ratio: "5,19:1",
-    verdict: "AA — magenta textuel",
+    pair: "#0D54C6 sur #FFFFFF",
+    ratio: "6,77:1",
+    verdict: "AA — accent bleu textuel, thème clair",
     ok: true,
   },
   {
-    pair: "#B83D85 sur #F5F5F5",
-    ratio: "4,76:1",
-    verdict: "AA — magenta textuel sur fond doux",
+    pair: "#0D54C6 sur #F3F6FB",
+    ratio: "6,25:1",
+    verdict: "AA — accent bleu textuel sur surface douce",
     ok: true,
   },
   {
-    pair: "#C74794 sur #FFFFFF",
-    ratio: "4,41:1",
-    verdict: "échec AA texte — aplats et titres larges uniquement",
+    pair: "#F7C755 sur #FFFFFF",
+    ratio: "1,58:1",
+    verdict: "échec — jamais de texte or sur blanc",
     ok: false,
   },
   {
-    pair: "#C74794 sur #F5F5F5",
-    ratio: "4,05:1",
-    verdict: "échec AA texte — aplats et titres larges uniquement",
-    ok: false,
-  },
-  {
-    pair: "#E06BAD sur #121212",
-    ratio: "6,13:1",
-    verdict: "AA — magenta textuel, thème sombre",
+    pair: "#030921 sur #F7C755",
+    ratio: "12,45:1",
+    verdict: "AAA — texte marine sur aplat or",
     ok: true,
   },
   {
-    pair: "#8C8C8C sur #FFFFFF",
-    ratio: "3,36:1",
+    pair: "#F7C755 sur #050D2B",
+    ratio: "12,06:1",
+    verdict:
+      "AAA — or sur fond nuit : accent et action primaire du thème sombre",
+    ok: true,
+  },
+  {
+    pair: "#7D869C sur #FFFFFF",
+    ratio: "3,64:1",
     verdict: "AA non textuel — bordure de contrôle",
     ok: true,
   },
   {
-    pair: "#6B6B6B sur #121212",
-    ratio: "3,52:1",
+    pair: "#657498 sur #050D2B",
+    ratio: "4,10:1",
     verdict: "AA non textuel — bordure de contrôle sombre",
+    ok: true,
+  },
+  {
+    pair: "#1765E6 sur #FFFFFF",
+    ratio: "5,20:1",
+    verdict: "AA — anneau de focus, thème clair",
     ok: true,
   },
 ] as const;
 
 const SUMMARY = [
   { href: "#couleurs", label: "Couleurs" },
+  { href: "#signature", label: "Signature de la charte" },
   { href: "#typographie", label: "Typographie" },
   { href: "#lecture", label: "Colonne de lecture" },
   { href: "#espacements", label: "Espacements et formes" },
@@ -132,6 +143,13 @@ const SUMMARY = [
   { href: "#composants", label: "Composants" },
   { href: "#mise-en-page", label: "Mise en page" },
 ] as const;
+
+/**
+ * Les titres de l'échelle sont composés en Source Serif 4 ; le corps et les
+ * légendes déclarent déjà Inter dans leur propre classe.
+ */
+const sampleClass = (className: string) =>
+  className.includes("font-") ? className : `font-display ${className}`;
 
 function SwatchTile({ swatch }: { swatch: Swatch }) {
   return (
@@ -217,7 +235,7 @@ export default function DesignSystemPage() {
         id="couleurs"
         tone="muted"
         title="Couleurs"
-        description="Deux couleurs de marque relevées en production, leurs échelles dérivées, une échelle de neutres qui porte tous les fonds, quatre couleurs fonctionnelles. Aucune autre couleur n'existe dans le projet : les scories de greffons de l'ancien site (#148DFE, #066AAB, #461CFB, #DD8502) ont été supprimées, ainsi que les anciens fonds bleutés #E6E7F3 et #F1F6FE et l'encre #0D1B3E, remplacés par des neutres purs en v1.1 du cahier des charges."
+        description="Le marine porte l'identité (bandeau, une, pied de page, tout le thème sombre), l'or souligne, et le filet tricolore vert-jaune-bleu — les couleurs du drapeau gabonais — signe la page. Viennent ensuite leurs échelles dérivées, des neutres légèrement teintés marine et quatre couleurs fonctionnelles. Aucune autre couleur n'existe dans le projet : la palette par défaut de Tailwind est remise à zéro."
       >
         <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {BRAND_SWATCHES.map((swatch) => (
@@ -226,16 +244,20 @@ export default function DesignSystemPage() {
         </ul>
 
         <Ramp
-          title="Échelle de neutres — elle porte tous les fonds"
+          title="Neutres — très légèrement teintés marine"
           swatches={NEUTRAL_RAMP}
         />
         <Ramp
-          title="Échelle navy — navy-900 est la couleur de marque"
+          title="Échelle marine — navy-900 est le marine de marque, navy-950 le fond de la charte"
           swatches={NAVY_RAMP}
         />
         <Ramp
-          title="Échelle magenta — magenta-500 pour les aplats, magenta-600 pour le texte"
-          swatches={MAGENTA_RAMP}
+          title="Échelle or — gold-400 pour l'emphase et les aplats, gold-800 pour le texte sur blanc"
+          swatches={GOLD_RAMP}
+        />
+        <Ramp
+          title="Vert et bleu du filet tricolore — avec leur cran textuel"
+          swatches={FLAG_RAMP}
         />
 
         <div className="mt-8 grid gap-4 lg:grid-cols-2">
@@ -358,17 +380,96 @@ export default function DesignSystemPage() {
 
       {/* ---------------------------------------------------------------- */}
       <Section
+        id="signature"
+        tone="muted"
+        title="Signature de la charte"
+        description={
+          <>
+            Le logo, le filet tricolore et la trame de points : ce qui distingue
+            BOMA Infos au premier coup d&apos;œil. L&apos;emphase en or vit dans
+            la carte « citation » de la colonne de lecture. Un bloc qui pose la
+            classe <code className="font-mono">dark</code> devient une « île »
+            marine : il garde les couleurs de la charte quel que soit le thème
+            de la page.
+          </>
+        }
+      >
+        <div>
+          <h3 className="font-display type-h3 text-foreground">Le logo</h3>
+          <p className="mt-1 max-w-reading type-small text-muted-foreground">
+            « BOMA » en serif, « infos » en sans, et les trois pastilles — vert,
+            jaune, bleu — au-dessus. Les lettres prennent la couleur du thème où
+            elles se posent : marine sur blanc, blanches sur le marine. Les
+            pastilles gardent leurs trois couleurs partout.
+          </p>
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <figure>
+              {/* Bloc blanc quel que soit le thème de la page : les lettres y
+                  restent marine, même quand la page est sombre. */}
+              <div className="rounded-md border border-border bg-white p-6 [&_use:first-child]:fill-brand-navy">
+                <BrandWordmark />
+              </div>
+              <figcaption className="mt-2 type-small text-muted-foreground">
+                Sur fond blanc : lettres marine
+              </figcaption>
+            </figure>
+            <figure>
+              <div className="dark rounded-md boma-field p-6 text-foreground">
+                <BrandWordmark />
+              </div>
+              <figcaption className="mt-2 type-small text-muted-foreground">
+                Dans une île marine : lettres blanches
+              </figcaption>
+            </figure>
+          </div>
+        </div>
+
+        <div className="mt-8 grid gap-8 lg:grid-cols-2">
+          <div>
+            <h3 className="font-display type-h3 text-foreground">
+              Le filet tricolore
+            </h3>
+            <span aria-hidden="true" className="mt-4 boma-rule w-56" />
+            <p className="mt-3 max-w-reading type-small text-muted-foreground">
+              Vert, jaune, bleu, dans les proportions de la charte : 24 / 37 /
+              39 %. Il est décoratif — toujours masqué aux technologies
+              d&apos;assistance, jamais porteur d&apos;information.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="font-display type-h3 text-foreground">
+              La trame de points
+            </h3>
+            <div
+              aria-hidden="true"
+              className="mt-4 h-24 rounded-md boma-field"
+            />
+            <p className="mt-3 max-w-reading type-small text-muted-foreground">
+              Un point de 1 px tous les 14 px, à 9 % d&apos;opacité, que le halo
+              du projecteur éclaire en haut à droite. Elle est réservée aux îles
+              marine : la une, la carte « citation » et le pied de page.
+            </p>
+          </div>
+        </div>
+      </Section>
+
+      {/* ---------------------------------------------------------------- */}
+      <Section
         id="typographie"
         title="Typographie"
-        description="Deux familles au lieu de six : Inter Tight pour les titres et les chapôs, Inter pour le corps, l'interface et les données. Les deux sont auto-hébergées, sous-ensemble latin étendu, font-display: swap."
+        description="Deux familles : Source Serif 4 pour les titres, Inter pour le corps, l'interface et les données. Toutes deux auto-hébergées."
       >
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="rounded-md border border-border bg-card p-4">
-            <p className="type-small text-muted-foreground">Titres et chapôs</p>
-            <p className="mt-1 font-display type-h2">Inter Tight</p>
+            <p className="type-small text-muted-foreground">Titres</p>
+            <p className="mt-1 font-display type-h2">Source Serif 4</p>
             <p className="mt-2 type-small text-muted-foreground">
-              L&apos;autorité éditoriale qui manquait au Poppins de
-              l&apos;ancien site.
+              La serif de la charte, celle du « BOMA » du logo. Une seule
+              graisse est chargée, la 600. L&apos;emphase en gras italique,
+              troisième face jamais préchargée, n&apos;est téléchargée que par
+              une page qui s&apos;en sert : voir la carte « citation » de la
+              colonne de lecture.
             </p>
           </div>
           <div className="rounded-md border border-border bg-card p-4">
@@ -431,7 +532,9 @@ export default function DesignSystemPage() {
               <p className="font-mono type-small text-muted-foreground">
                 {entry.token} · {entry.mobile} → {entry.desktop}
               </p>
-              <p className={`${entry.className} mt-2`}>{entry.sample}</p>
+              <p className={`${sampleClass(entry.className)} mt-2`}>
+                {entry.sample}
+              </p>
             </li>
           ))}
         </ul>
@@ -446,7 +549,7 @@ export default function DesignSystemPage() {
       >
         <article className="rounded-md border border-border bg-card p-6 reading-column">
           <p className="type-small font-semibold tracking-wide text-accent uppercase">
-            Intelligence économique
+            Économie
           </p>
           <h3 className="mt-2 font-display type-h2">
             Ce que la mesure impose à la mise en page
@@ -467,9 +570,16 @@ export default function DesignSystemPage() {
             et les jambages ; celui des titres descend à 1,15 pour qu&apos;un
             titre sur trois lignes reste un bloc et non un empilement.
           </p>
-          <blockquote className="mt-6 border-l-2 border-brand-magenta pl-4 font-display type-body italic">
-            « Chaque kilo-octet est un arbitrage éditorial. »
-          </blockquote>
+          <figure className="boma-quote dark mt-6 max-w-reading rounded-md border border-border boma-field px-5 py-6 text-foreground sm:px-8 sm:py-8">
+            <blockquote className="font-display type-h2 leading-snug text-balance">
+              Une information se vérifie <em>avant</em> d&apos;être publiée,{" "}
+              <em>jamais après</em>.
+            </blockquote>
+            <span aria-hidden="true" className="mt-5 boma-rule" />
+            <figcaption className="mt-4 type-small text-muted-foreground">
+              — Exemple de carte « citation »
+            </figcaption>
+          </figure>
           <p className="mt-6 type-small text-muted-foreground">
             Mesure de ce bloc : min(68ch, 39rem), soit 624 px. Relevé à 65–66
             caractères par ligne entre 1024 et 1440 px ; 70 caractères pour un
@@ -498,7 +608,7 @@ export default function DesignSystemPage() {
                   </span>
                   <span
                     aria-hidden="true"
-                    className="block h-3 rounded-xs bg-brand-magenta"
+                    className="block h-3 rounded-xs bg-brand-gold"
                     style={{ width: `${step.px}px` }}
                   />
                   <span className="font-mono type-small text-muted-foreground">
@@ -547,7 +657,10 @@ export default function DesignSystemPage() {
             <h3 className="mt-8 font-display type-h3">Séparation</h3>
             <div className="mt-3 rounded-md border border-border bg-card">
               <p className="p-3 type-small hairline">
-                Filet d&apos;un pixel en navy-100
+                Filet d&apos;un pixel : classe{" "}
+                <code className="font-mono">hairline</code>, couleur du jeton{" "}
+                <code className="font-mono">--border</code> (neutral-200 en
+                thème clair)
               </p>
               <p className="bg-surface-muted p-3 type-small">
                 Aplat de surface douce
@@ -624,16 +737,22 @@ export default function DesignSystemPage() {
           </div>
           <p className="mt-4 max-w-reading type-small text-muted-foreground">
             <strong className="font-semibold text-foreground">
-              Le magenta de marque #C74794 est réservé au non textuel.
+              L&apos;or de marque #F7C755 est réservé au marine et au non
+              textuel.
             </strong>{" "}
-            À 4,41:1 sur blanc et 4,05:1 sur le fond doux, il échoue au seuil AA
-            pour le texte courant : il ne sert qu&apos;aux aplats, filets,
-            puces, fonds de badge et titres larges (≥ 24 px, ou ≥ 18,7 px en
-            gras, où le seuil tombe à 3:1). Dès qu&apos;il porte du texte,
-            c&apos;est <code className="font-mono">--brand-magenta-600</code>{" "}
-            #B83D85 qui s&apos;applique. De même, le navy #002060 tombe à 1,23:1
-            sur le fond sombre : il y est proscrit, les titres passent à
-            #EDEDED.
+            À 1,58:1 sur blanc, il ne sert qu&apos;aux aplats, filets et
+            pastilles à texte marine (12,45:1) ; sur le marine, il porte
+            l&apos;emphase et l&apos;action primaire (12,06:1). Dès qu&apos;il
+            porte du texte sur blanc, c&apos;est{" "}
+            <code className="font-mono">gold-800</code> #735606 qui
+            s&apos;applique (6,86:1).{" "}
+            <strong className="font-semibold text-foreground">
+              Le marine de marque #0B1848 ne porte pas de texte sur le fond
+              nuit.
+            </strong>{" "}
+            Il y tombe à 1,13:1 : les titres y passent à{" "}
+            <code className="font-mono">--foreground</code> #ECF0F9 et
+            l&apos;action primaire à l&apos;or.
           </p>
         </div>
 
@@ -642,7 +761,9 @@ export default function DesignSystemPage() {
             <h3 className="font-display type-h3">Focus visible</h3>
             <p className="mt-1 type-small text-muted-foreground">
               Contour de 2 px, décalé de 2 px, dans la couleur d&apos;anneau du
-              thème. Parcourez cette page avec Tab pour le vérifier.
+              thème : le bleu de la charte (5,20:1 sur blanc) en thème clair,
+              l&apos;or en thème sombre. Parcourez cette page avec Tab pour le
+              vérifier.
             </p>
             <button
               type="button"
@@ -657,7 +778,7 @@ export default function DesignSystemPage() {
             <p className="mt-1 type-small text-muted-foreground">
               44 × 44 px au minimum, y compris pour les boutons à icône.
             </p>
-            <div className="mt-3 inline-flex size-11 items-center justify-center rounded-md border border-dashed border-brand-magenta bg-brand-magenta/15">
+            <div className="mt-3 inline-flex size-11 items-center justify-center rounded-md border border-dashed border-brand-gold bg-brand-gold/15">
               <span className="font-mono type-small" data-numeric>
                 44
               </span>
@@ -718,8 +839,9 @@ export default function DesignSystemPage() {
           <div className="rounded-md border border-border bg-card p-4">
             <dt className="font-display type-h3">PageHeader</dt>
             <dd className="mt-1 type-small text-muted-foreground">
-              Émet l&apos;unique h1 de la page, son surtitre et son filet
-              d&apos;accent. Le bloc en tête de cette page en est un.
+              Émet l&apos;unique h1 de la page, son surtitre et, dessous, le
+              filet tricolore de la charte. Le bloc en tête de cette page en est
+              un.
             </dd>
           </div>
         </dl>
@@ -739,7 +861,7 @@ export default function DesignSystemPage() {
 function ThemeSample() {
   return (
     <div className="mt-3 grid gap-3">
-      <p className="font-display type-h3">Titre en Inter Tight</p>
+      <p className="font-display type-h3">Titre en Source Serif 4</p>
       <p className="type-body">
         Corps de texte en Inter, sur le fond de lecture du thème.
       </p>

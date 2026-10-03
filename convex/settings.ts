@@ -17,20 +17,22 @@ import { periodOf } from "./model/text";
 
 const DEFAULTS = {
   key: "site",
-  siteName: "Le Corporate",
-  tagline: "L'économie du Gabon et de la zone CEMAC",
-  contactEmail: "redaction@le-corporate.com",
-  contactPhone: "+241 77 86 10 08",
+  siteName: "BOMA Infos",
+  tagline: "Toute l'actualité du Gabon",
+  contactEmail: "redaction@bomainfos.com",
+  /** Non communiqué par le propriétaire : rien n'est inventé ici. */
+  contactPhone: "",
   social: [
     { label: "WhatsApp", url: "https://wa.me/" },
     { label: "LinkedIn", url: "https://www.linkedin.com/" },
     { label: "Facebook", url: "https://www.facebook.com/" },
   ],
-  newsletterSenderName: "La rédaction du Corporate",
+  newsletterSenderName: "La rédaction de BOMA Infos",
   /** 4 = jeudi, jour d'envoi de l'hebdomadaire. */
   newsletterDay: 4,
-  /** 25 $ par mois : de quoi faire tourner les sept agents sur un rythme
-   *  d'un article par jour, et un plafond qui se voit passer. */
+  /** 25 $ par mois : de quoi faire tourner les huit agents sur un rythme
+   *  d'un article par jour — veille quotidienne comprise, qui en consomme
+   *  à elle seule une bonne part — et un plafond qui se voit passer. */
   agentsMonthlyCapMicros: 25_000_000,
   agentsAlertRatio: 0.8,
 } as const;

@@ -339,12 +339,12 @@ export const approveOrganization = mutation({
     await queueNotification(ctx, {
       email: organization.contactEmail,
       whatsapp: organization.whatsapp,
-      subject: `Le Corporate — votre espace entreprise est ouvert`,
+      subject: `BOMA Infos — votre espace entreprise est ouvert`,
       body:
         `Bonjour ${organization.contactName},\n\n` +
         `Le compte de ${organization.name} a été validé par la rédaction. ` +
         `Vous pouvez déposer vos actualités depuis votre espace :\n` +
-        `/entreprise\n\nLa rédaction du Corporate`,
+        `/entreprise\n\nLa rédaction de BOMA Infos`,
       organizationId: id,
     });
     return null;
@@ -383,12 +383,12 @@ export const rejectOrganization = mutation({
     await queueNotification(ctx, {
       email: organization.contactEmail,
       whatsapp: organization.whatsapp,
-      subject: "Le Corporate — votre demande d'espace entreprise",
+      subject: "BOMA Infos — votre demande d'espace entreprise",
       body:
         `Bonjour ${organization.contactName},\n\n` +
         `La rédaction n'a pas donné suite à la demande d'espace de ` +
         `${organization.name}.\n\nMotif : ${trimmed}\n\n` +
-        `La rédaction du Corporate`,
+        `La rédaction de BOMA Infos`,
       organizationId: id,
     });
     return null;

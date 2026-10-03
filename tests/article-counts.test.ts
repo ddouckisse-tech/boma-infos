@@ -30,7 +30,7 @@ type Article = Doc<"articles">;
 const draft: CountedArticle = {
   status: "draft",
   categorySlug: "editorial",
-  authorSlug: "le-corporate",
+  authorSlug: "boma-infos",
   origin: "redaction",
 };
 
@@ -38,7 +38,7 @@ test("cellules : chaque article compte partout, publié compte côté journal", 
   assert.deepEqual(countCells(draft), [
     { group: "status", key: "draft" },
     { group: "category", key: "editorial" },
-    { group: "author", key: "le-corporate" },
+    { group: "author", key: "boma-infos" },
     { group: "origin", key: "redaction" },
   ]);
   const published = countCells({
@@ -51,7 +51,7 @@ test("cellules : chaque article compte partout, publié compte côté journal", 
     [
       { group: "published_category", key: "editorial" },
       { group: "published_subcategory", key: "big-deal" },
-      { group: "published_author", key: "le-corporate" },
+      { group: "published_author", key: "boma-infos" },
     ]
   );
 });
@@ -63,7 +63,7 @@ test("écart : rien pour un enregistrement qui ne change ni statut ni rubrique",
       `${a.group}${a.key}`.localeCompare(`${b.group}${b.key}`)
     ),
     [
-      { group: "published_author", key: "le-corporate", change: 1 },
+      { group: "published_author", key: "boma-infos", change: 1 },
       { group: "published_category", key: "editorial", change: 1 },
       { group: "status", key: "draft", change: -1 },
       { group: "status", key: "published", change: 1 },
@@ -92,7 +92,7 @@ const STATUSES: Article["status"][] = [
 ];
 const SECTIONS = ["editorial", "tribune", "espace-pro"];
 const SUBS = [undefined, "big-deal", "leader"];
-const AUTHORS = ["le-corporate", "invite"];
+const AUTHORS = ["boma-infos", "invite"];
 
 function fields(slug: string, next: () => number): ArticleFields {
   const pick = <T>(values: readonly T[]) =>

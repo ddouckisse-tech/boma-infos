@@ -8,7 +8,7 @@ import { PageHeader } from "@/components/custom/page-header";
 import { Section } from "@/components/custom/section";
 import { BreadcrumbStructuredData } from "@/components/custom/structured-data";
 import { getAuthors } from "@/lib/content/server";
-import { SITE } from "@/lib/site";
+import { DEMO_CONTENT_NOTICE, SITE } from "@/lib/site";
 
 // Littéral et non `REVALIDATE_SECONDS` : Next analyse statiquement les
 // exports de configuration de segment et n'en résout pas les identifiants
@@ -17,15 +17,13 @@ export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "À propos",
-  description:
-    "Le Corporate, magazine économique gabonais édité par Up Concept : ligne éditoriale, équipe, méthode et règles de transparence.",
+  description: `${SITE.name}, média gabonais d'information générale en ligne : ligne éditoriale, rubriques, équipe, méthode et règles de transparence.`,
   alternates: { canonical: "/a-propos" },
   openGraph: {
     type: "website",
     url: "/a-propos",
-    title: "À propos — Le Corporate",
-    description:
-      "Ligne éditoriale, équipe et règles de transparence du magazine économique Le Corporate.",
+    title: `À propos — ${SITE.name}`,
+    description: `Ligne éditoriale, équipe et règles de transparence de ${SITE.name}, média d'information générale sur le Gabon.`,
   },
 };
 
@@ -45,12 +43,15 @@ export default async function AboutPage() {
       <PageHeader
         eyebrow={<LocalizedText fr="Le journal" en="The journal" />}
         title={
-          <LocalizedText fr="À propos du Corporate" en="About Le Corporate" />
+          <LocalizedText
+            fr={`À propos de ${SITE.name}`}
+            en={`About ${SITE.name}`}
+          />
         }
         description={
           <LocalizedText
-            fr="Un magazine économique gabonais, édité par Up Concept, qui traite l'économie du Gabon et de la zone CEMAC pour les dirigeants, les cadres et les institutions."
-            en="A Gabonese business magazine published by Up Concept, covering the economies of Gabon and the CEMAC region for executives, professionals and institutions."
+            fr="Un média gabonais d'information générale en ligne : toute l'actualité du Gabon, de la politique au sport, pour les Gabonais, la diaspora et toute personne qui suit ou visite le pays."
+            en="A Gabonese online news outlet covering all the news from Gabon, from politics to sport, for Gabonese readers, the diaspora and anyone who follows or visits the country."
           />
         }
       />
@@ -62,14 +63,14 @@ export default async function AboutPage() {
           </h2>
           <p>
             <LocalizedText
-              fr="Le Corporate couvre l'économie réelle : opérations d'entreprise, filières extractives, logistique et infrastructures, réglementation, financement, formation. Nous écrivons pour des lecteurs qui décident — dirigeants, cadres, institutions, bailleurs et partenaires régionaux — et qui ont besoin d'une information vérifiable plutôt que d'un commentaire."
-              en="Le Corporate covers the real economy: corporate operations, extractive industries, logistics and infrastructure, regulation, finance and training. We write for decision-makers who need verifiable information rather than commentary."
+              fr={`${SITE.name} couvre toute l'actualité du Gabon : politique, économie, société, tourisme, environnement, culture et sport. Nous écrivons pour les Gabonais, pour la diaspora et pour toute personne qui suit ou visite le pays. Notre objectif : une information vérifiée et expliquée, plutôt qu'un commentaire.`}
+              en={`${SITE.name} covers all the news from Gabon: politics, the economy, society, tourism, the environment, culture and sport. We write for Gabonese readers, for the diaspora and for anyone who follows or visits the country. Our aim is checked and explained information rather than commentary.`}
             />
           </p>
           <p>
             <LocalizedText
-              fr="Huit rubriques structurent le journal. Elles sont consultables depuis le menu, et chacune annonce ce qu'elle contient. Une rubrique sans article le dit : nous ne remplaçons jamais un contenu absent par un flux générique."
-              en="Eight sections structure the journal. Each one is available from the menu and explains what it contains. An empty section says so clearly: we never replace missing content with a generic feed."
+              fr="Le journal s'organise en rubriques, consultables depuis le menu, chacune annonçant ce qu'elle contient. L'actualité se répartit entre Politique, Économie, Société, Tourisme, Environnement, Culture et Sport. L'Éditorial porte la position de la rédaction, Idées accueille tribunes et entretiens, et l'Espace pro réunit l'information utile aux professionnels. Une rubrique sans article le dit : nous ne remplaçons jamais un contenu absent par un flux générique."
+              en="The journal is organised into sections, all available from the menu, and each one explains what it contains. The news is divided between Politics, Economy, Society, Tourism, Environment, Culture and Sport. Editorial carries the newsroom's position, Ideas hosts opinion pieces and interviews, and Professional resources gathers information that is useful to professionals. An empty section says so clearly: we never replace missing content with a generic feed."
             />
           </p>
 
@@ -85,8 +86,8 @@ export default async function AboutPage() {
             </li>
             <li>
               <LocalizedText
-                fr="Les chiffres sont sourcés, et la source est indiquée à côté du chiffre."
-                en="Figures are sourced, with the source shown beside each figure."
+                fr="Les faits sont vérifiés avant publication. Les chiffres sont sourcés, et la source est indiquée à côté du chiffre."
+                en="Facts are checked before publication. Figures are sourced, with the source shown beside each figure."
               />
             </li>
             <li>
@@ -108,8 +109,8 @@ export default async function AboutPage() {
           </h2>
           <p>
             <LocalizedText
-              fr="Les entreprises peuvent déposer leur actualité. Tout contenu d'origine commerciale porte la mention « Contenu partenaire », visible sur la carte comme sur la page de l'article. Cette mention ne peut pas être retirée à la demande de l'annonceur. La rédaction conserve la décision de publier, la date et le titre."
-              en="Companies may submit their news. Commercial content is clearly labelled “Partner content” on both the card and article page. Advertisers cannot request its removal, and the editorial team retains control over publication, date and title."
+              fr="Les entreprises peuvent déposer leur actualité. Tout contenu d'origine commerciale porte la mention « Contenu partenaire », visible sur la carte comme sur la page de l'article : il ne se confond jamais avec un article de la rédaction. Cette mention ne peut pas être retirée à la demande de l'annonceur. La rédaction conserve la décision de publier, la date et le titre."
+              en="Companies may submit their news. Commercial content is clearly labelled “Partner content” on both the card and the article page, so it is never mistaken for a newsroom article. Advertisers cannot request its removal, and the editorial team retains control over publication, date and title."
             />
           </p>
 
@@ -128,6 +129,16 @@ export default async function AboutPage() {
       <Section
         tone="muted"
         title={<LocalizedText fr="La rédaction" en="Editorial team" />}
+        description={
+          DEMO_CONTENT_NOTICE && (
+            <span role="note">
+              <LocalizedText
+                fr={DEMO_CONTENT_NOTICE.teamFr}
+                en={DEMO_CONTENT_NOTICE.teamEn}
+              />
+            </span>
+          )
+        }
       >
         <ul lang="fr" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {authors.map((author) => (
@@ -195,25 +206,29 @@ export default async function AboutPage() {
                   </a>
                 </dd>
               </div>
-              <div className="flex flex-wrap gap-2">
-                <dt className="text-muted-foreground">
-                  <LocalizedText fr="Téléphone :" en="Phone:" />
-                </dt>
-                <dd>
-                  <a
-                    href={SITE.phoneHref}
-                    className="text-accent underline underline-offset-4"
-                  >
-                    {SITE.phone}
-                  </a>
-                </dd>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <dt className="text-muted-foreground">
-                  <LocalizedText fr="Adresse :" en="Address:" />
-                </dt>
-                <dd>{SITE.address}</dd>
-              </div>
+              {SITE.phone && SITE.phoneHref && (
+                <div className="flex flex-wrap gap-2">
+                  <dt className="text-muted-foreground">
+                    <LocalizedText fr="Téléphone :" en="Phone:" />
+                  </dt>
+                  <dd>
+                    <a
+                      href={SITE.phoneHref}
+                      className="text-accent underline underline-offset-4"
+                    >
+                      {SITE.phone}
+                    </a>
+                  </dd>
+                </div>
+              )}
+              {SITE.address && (
+                <div className="flex flex-wrap gap-2">
+                  <dt className="text-muted-foreground">
+                    <LocalizedText fr="Adresse :" en="Address:" />
+                  </dt>
+                  <dd>{SITE.address}</dd>
+                </div>
+              )}
             </dl>
             <Link
               href="/contacts"

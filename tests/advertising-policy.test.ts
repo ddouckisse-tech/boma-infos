@@ -35,7 +35,7 @@ const creative = (
 ): AdCreative => ({
   id,
   title: "Des repères pour entreprendre.",
-  advertiser: "Le Corporate",
+  advertiser: "BOMA Infos",
   kind: "house",
   format: "banner",
   href: "/docutheque",

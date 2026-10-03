@@ -454,13 +454,13 @@ await check(
 
 const document = {
   slug: "wp-journal-1",
-  title: "Le Corporate — Numéro 1",
+  title: "BOMA Infos — Numéro 1",
   description: "Magazine original",
   kind: "Magazine",
   fileUrl: "https://source.test/original.pdf",
   fileFormat: "PDF",
   fileBytes: 2048,
-  publisher: "Le Corporate",
+  publisher: "BOMA Infos",
   publishedAt: 300,
   wordpressId: 75,
   sourceUrl: "https://source.test/original.pdf",

@@ -12,7 +12,7 @@ import { isAcceptablePassword, PASSWORD_RULE_MESSAGE } from "./model/password";
  * Public site URL, used by Better Auth to build absolute callback URLs.
  * Set `SITE_URL` on the Convex deployment (`npx convex env set SITE_URL ...`).
  */
-const siteUrl = process.env.SITE_URL ?? "http://localhost:3000";
+const siteUrl = process.env.SITE_URL ?? "http://localhost:3040";
 
 /** Backend handle on the Better Auth Convex component. */
 export const authComponent = createClient<DataModel>(components.betterAuth);
@@ -71,13 +71,13 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
         await ctx.runMutation(internal.notifications.queueRaw, {
           channel: "email",
           to: user.email,
-          subject: "Le Corporate — réinitialisation de votre mot de passe",
+          subject: "BOMA Infos — réinitialisation de votre mot de passe",
           body:
             `Bonjour,\n\nUne réinitialisation de mot de passe a été demandée ` +
             `pour ce compte. Le lien ci-dessous est valable une heure et ne ` +
             `sert qu'une fois.\n\n${url}\n\nSi vous n'êtes pas à l'origine ` +
             `de cette demande, ignorez ce message : rien n'a changé.\n\n` +
-            `La rédaction du Corporate`,
+            `La rédaction de BOMA Infos`,
         });
       },
     },
@@ -151,7 +151,7 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
     },
     plugins: [
       twoFactor({
-        issuer: "Le Corporate",
+        issuer: "BOMA Infos",
         totpOptions: { digits: 6, period: 30 },
         // Dix codes de secours : perdre son téléphone ne doit pas couper
         // la rédaction de son back-office un soir de bouclage.

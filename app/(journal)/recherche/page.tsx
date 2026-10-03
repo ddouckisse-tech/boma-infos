@@ -7,11 +7,11 @@ import { PageHeader } from "@/components/custom/page-header";
 import { Section } from "@/components/custom/section";
 import { SearchForm } from "@/components/custom/search-form";
 import { getLatest, searchArticles } from "@/lib/content/server";
+import { SITE } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Recherche",
-  description:
-    "Rechercher dans les articles publiés par Le Corporate : titres, chapôs et corps de texte.",
+  description: `Rechercher dans les articles publiés par ${SITE.name} : titres, chapôs et corps de texte.`,
   // Un espace infini de chaînes de requête n'a rien à faire dans un index.
   robots: { index: false, follow: true },
 };

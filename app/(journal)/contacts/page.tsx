@@ -11,14 +11,13 @@ import { SITE } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Contacts",
-  description:
-    "Joindre la rédaction du Corporate : formulaire, adresse électronique, téléphone. Information, communiqué, droit de réponse, proposition de tribune.",
+  description: `Joindre la rédaction de ${SITE.name} : formulaire et adresse électronique. Information, communiqué, droit de réponse, proposition de tribune.`,
   alternates: { canonical: "/contacts" },
   openGraph: {
     type: "website",
     url: "/contacts",
-    title: "Contacts — Le Corporate",
-    description: "Joindre la rédaction du magazine économique Le Corporate.",
+    title: `Contacts — ${SITE.name}`,
+    description: `Joindre la rédaction de ${SITE.name}.`,
   },
 };
 
@@ -32,6 +31,18 @@ export const metadata: Metadata = {
 export default function ContactsPage() {
   const line =
     "flex items-start gap-3 rounded-md border border-border bg-card p-4";
+
+  // « Édité par » n'est affiché que si l'éditeur est connu (`SITE.publisher`).
+  const publishedBy = SITE.publisher && (
+    <p className="type-small text-muted-foreground">
+      <span className="lc-fr" lang="fr">
+        Édité par {SITE.publisher}
+      </span>
+      <span className="lc-en" lang="en">
+        Published by {SITE.publisher}
+      </span>
+    </p>
+  );
 
   return (
     <>
@@ -131,43 +142,42 @@ export default function ContactsPage() {
                     </a>
                   </div>
                 </li>
-                <li className={line}>
-                  <Phone
-                    aria-hidden="true"
-                    className="mt-0.5 size-5 shrink-0 text-muted-foreground"
-                  />
-                  <div className="min-w-0">
-                    <p className="type-small text-muted-foreground">
-                      <LocalizedText fr="Téléphone" en="Phone" />
-                    </p>
-                    <a
-                      href={SITE.phoneHref}
-                      className="type-body text-accent underline underline-offset-4"
-                    >
-                      {SITE.phone}
-                    </a>
-                  </div>
-                </li>
-                <li className={line}>
-                  <MapPin
-                    aria-hidden="true"
-                    className="mt-0.5 size-5 shrink-0 text-muted-foreground"
-                  />
-                  <div className="min-w-0">
-                    <p className="type-small text-muted-foreground">
-                      <LocalizedText fr="Adresse" en="Address" />
-                    </p>
-                    <p className="type-body">{SITE.address}</p>
-                    <p className="type-small text-muted-foreground">
-                      <span className="lc-fr" lang="fr">
-                        Édité par {SITE.publisher}
-                      </span>
-                      <span className="lc-en" lang="en">
-                        Published by {SITE.publisher}
-                      </span>
-                    </p>
-                  </div>
-                </li>
+                {SITE.phone && SITE.phoneHref && (
+                  <li className={line}>
+                    <Phone
+                      aria-hidden="true"
+                      className="mt-0.5 size-5 shrink-0 text-muted-foreground"
+                    />
+                    <div className="min-w-0">
+                      <p className="type-small text-muted-foreground">
+                        <LocalizedText fr="Téléphone" en="Phone" />
+                      </p>
+                      <a
+                        href={SITE.phoneHref}
+                        className="type-body text-accent underline underline-offset-4"
+                      >
+                        {SITE.phone}
+                      </a>
+                    </div>
+                  </li>
+                )}
+                {SITE.address ? (
+                  <li className={line}>
+                    <MapPin
+                      aria-hidden="true"
+                      className="mt-0.5 size-5 shrink-0 text-muted-foreground"
+                    />
+                    <div className="min-w-0">
+                      <p className="type-small text-muted-foreground">
+                        <LocalizedText fr="Adresse" en="Address" />
+                      </p>
+                      <p className="type-body">{SITE.address}</p>
+                      {publishedBy}
+                    </div>
+                  </li>
+                ) : (
+                  publishedBy && <li className={line}>{publishedBy}</li>
+                )}
               </ul>
 
               <div className="mt-6 rounded-md border border-border bg-surface-muted p-4">

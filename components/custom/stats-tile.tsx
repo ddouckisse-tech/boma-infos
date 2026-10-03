@@ -4,8 +4,8 @@ import { cn } from "@/lib/utils";
  * One figure, named — CDC §3.4 (`StatsTile`).
  *
  * Inter's tabular figures are used on purpose (§3.2): a column of numbers
- * that shifts as the value changes is unreadable at a glance, and this is a
- * business magazine.
+ * that shifts as the value changes is unreadable at a glance, and a
+ * newsroom reads its figures by comparing them.
  */
 export function StatsTile({
   label,
