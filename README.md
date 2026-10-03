@@ -15,10 +15,10 @@ qui vient du socle et ne sert pas ici est listé dans « Ce qui vient du socle
 d'origine ».
 
 **BOMA Infos n'a aucun site antérieur** : il n'y a ni archive à reprendre ni
-adresse à préserver. Rien n'est en ligne à ce jour. Le backend est le projet
-Convex `boma-info` de l'équipe `okatech`, créé le 03/10/2026 : il n'a qu'un
-déploiement de développement. Il n'existe ni déploiement de production, ni
-hébergement du site.
+adresse à préserver. Le site est en ligne **en préparation** depuis le
+03/10/2026 à l'adresse `https://boma-infos.vercel.app`, avec son jeu de
+démonstration et sans indexation par les moteurs de recherche. Le nom de
+domaine `www.bomainfos.com` n'y est pas encore branché. Voir « Déploiement ».
 
 **Coordonnées non communiquées.** La société éditrice, le téléphone et
 l'adresse postale ne sont pas connus : `lib/site.ts` les déclare `null`, rien
@@ -115,9 +115,9 @@ bun run dev            # http://localhost:3040
 > les fonctions ne sont pas poussées sur le déploiement que vise `.env.local` :
 > lancer `bunx convex dev --once`.
 
-**Production.** Le projet `boma-info` n'a pas encore de déploiement de
-production : le premier `convex deploy` le créerait. **Ne jamais lancer
-`convex deploy`** sans demande explicite.
+**Production.** Le déploiement de production et la façon de le viser sont
+décrits dans « Déploiement ». **Ne jamais lancer `convex deploy`** sans demande
+explicite.
 
 **Sans compte Convex.** Un backend local anonyme reste possible :
 `CONVEX_AGENT_MODE=anonymous bunx convex dev`. Il exige Node 20, 22 ou 24 pour
@@ -337,7 +337,7 @@ contrôle n'a de sens qu'une fois le site en ligne : tant que
 adresse.
 
 ```bash
-bun run scripts/check-live-budget.ts https://www.bomainfos.com
+bun run scripts/check-live-budget.ts https://boma-infos.vercel.app
 ```
 
 Deux partis pris de mesure, tous deux du côté sévère :
@@ -921,6 +921,67 @@ dépendances en intégration continue, et le retrait du jeu de démonstration.
 
 ---
 
+## Déploiement
+
+|                | Développement           | Production                                                       |
+| -------------- | ----------------------- | ---------------------------------------------------------------- |
+| Site           | `http://localhost:3040` | `https://boma-infos.vercel.app`                                  |
+| Hébergement    | poste local             | Vercel, projet `boma-infos`, équipe `okatechs-projects-f0102678` |
+| Backend Convex | `mild-lynx-189`         | `cheery-dachshund-789`                                           |
+
+Les deux déploiements Convex appartiennent au projet `boma-info` de l'équipe
+`okatech`. La production sert le commit `1932abc` depuis le 03/10/2026, avec
+le jeu de démonstration. Elle ne contient **aucun compte** tant que le premier
+n'a pas été créé (commande plus bas).
+
+Le déploiement se fait à la main, en ligne de commande : le projet Vercel
+n'est pas relié au dépôt Git, un `git push` ne déploie rien.
+
+Variables posées :
+
+- sur Vercel, en production : `NEXT_PUBLIC_CONVEX_URL` et
+  `NEXT_PUBLIC_CONVEX_SITE_URL`, les deux adresses du déploiement Convex de
+  production. `NEXT_PUBLIC_SITE_URL` n'est pas posée : `lib/site.ts` prend
+  l'adresse de production du projet Vercel ;
+- sur le déploiement Convex de production :
+  `SITE_URL=https://boma-infos.vercel.app` et `BETTER_AUTH_SECRET`, généré.
+
+**Redéployer après un commit sur `main`.** Convex d'abord : les fonctions
+doivent exister avant le site qui les appelle.
+
+```bash
+# 1. Backend : pousse le schéma et les fonctions sur la production du projet.
+bunx convex deploy -y
+
+# 2. Site : un instantané propre du commit, jamais le dossier de travail,
+#    qui contient des fichiers locaux que Vercel téléverserait.
+mkdir /tmp/boma-infos-deploiement
+git archive HEAD | tar -x -C /tmp/boma-infos-deploiement
+cd /tmp/boma-infos-deploiement
+vercel link --yes --project boma-infos --scope okatechs-projects-f0102678
+vercel deploy --prod --yes --scope okatechs-projects-f0102678
+
+# 3. Contrôle du site réellement servi.
+bun run scripts/check-live-budget.ts https://boma-infos.vercel.app
+```
+
+**Viser la production avec la CLI Convex.** Préfixer la commande de
+`CONVEX_DEPLOYMENT=prod:cheery-dachshund-789`. Par exemple, pour créer le
+premier compte de production :
+
+```bash
+CONVEX_DEPLOYMENT=prod:cheery-dachshund-789 bun run compte -- \
+  --email=vous@bomainfos.com --nom="Votre nom" --motdepasse=123456 \
+  --role=administrateur
+```
+
+**Brancher `www.bomainfos.com`.** Ajouter le domaine au projet Vercel et
+pointer le DNS dessus. Poser ensuite la nouvelle adresse dans `SITE_URL` sur la
+production Convex et dans `NEXT_PUBLIC_SITE_URL` sur Vercel, puis redéployer :
+sans cela, la connexion au back-office est refusée depuis le nouveau domaine.
+
+---
+
 ## Ce qui vient du socle d'origine
 
 Ce dépôt part du socle applicatif de « Le Corporate », un autre titre. Ce qui
@@ -968,18 +1029,19 @@ suit en vient et ne sert pas ici, ou en porte encore la trace.
       redessiné, puis `bun run brand`.
 - [ ] **Nom de domaine et DNS** de `www.bomainfos.com` ; régler
       `NEXT_PUBLIC_SITE_URL` et `SITE_URL` dessus.
-- [ ] **Déploiement de production et hébergement.** Le projet Convex
-      `boma-info` (équipe `okatech`) n'a que son déploiement de développement.
-      Restent le déploiement de production, `SITE_URL` et `BETTER_AUTH_SECRET`
-      posés dessus, et l'hébergement du site.
+- [x] **Déploiement de production et hébergement.** Faits le 03/10/2026 :
+      voir « Déploiement ».
+- [ ] **Premier compte administrateur en production.** La base de production
+      n'en contient aucun : commande dans « Déploiement ».
 - [ ] **`ANTHROPIC_API_KEY`** (`bun run agents:cle`) et premier appel réel de la
       veille, surveillé.
 - [ ] **Prestataire de courriel.** Aucun n'est branché : les notifications du
       portail restent dans la corbeille de sortie, et la confirmation
       d'inscription à la newsletter n'est pas envoyée par courriel.
 - [ ] **Contrôle quotidien du budget en production**
-      (`.github/workflows/budget-production.yml`) : à activer une fois le site
-      en ligne.
+      (`.github/workflows/budget-production.yml`) : il vise
+      `www.bomainfos.com`, à activer une fois le domaine branché. D'ici là, le
+      script se lance à la main sur l'adresse Vercel.
 - [ ] **Retrait du jeu de démonstration et de sa mention**
       (`DEMO_CONTENT_NOTICE` à `null`), ce qui rouvre aussi l'indexation par
       les moteurs de recherche.
