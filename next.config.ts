@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 import { legacyRedirects } from "./lib/legacy-redirects";
 import { securityHeaders } from "./lib/security-headers";
+import { SEARCH_INDEXABLE } from "./lib/site";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -44,8 +45,16 @@ const nextConfig: NextConfig = {
     return [
       {
         // Toutes les réponses, y compris les pages prérendues statiquement.
+        // Tant que le corpus de démonstration est en ligne, aucune n'est
+        // indexable : l'en-tête couvre aussi ce qu'une balise ne peut pas
+        // porter — flux RSS, plans de site, PDF, images Open Graph.
         source: "/:path*",
-        headers: securityHeaders(),
+        headers: SEARCH_INDEXABLE
+          ? securityHeaders()
+          : [
+              ...securityHeaders(),
+              { key: "X-Robots-Tag", value: "noindex, nofollow" },
+            ],
       },
       {
         // Les fichiers de `public/medias` sont immuables : leur nom porte la

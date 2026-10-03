@@ -113,6 +113,19 @@ export const DEMO_CONTENT_NOTICE: {
 };
 
 /**
+ * Whether search engines may index the site.
+ *
+ * Not while the demonstration corpus is online. Its articles are fiction, and
+ * a search engine — or an aggregator reading the news sitemap — would list
+ * them as reporting from a Gabonese outlet, whatever the notice on the page
+ * says. Every response then carries `X-Robots-Tag: noindex, nofollow`
+ * (`next.config.ts`), the pages carry the same robots metadata, and
+ * `robots.txt` stops advertising the sitemaps. Indexing opens by itself the
+ * day `DEMO_CONTENT_NOTICE` is set to `null`.
+ */
+export const SEARCH_INDEXABLE: boolean = DEMO_CONTENT_NOTICE === null;
+
+/**
  * Social reach. WhatsApp first — it is the sharing channel of the audience
  * (CDC §2.2). The URLs are generic placeholders: the real accounts were not
  * communicated, and inventing them would reproduce the dead links the audit

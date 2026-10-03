@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { absoluteUrl } from "@/lib/site";
+import { absoluteUrl, SEARCH_INDEXABLE } from "@/lib/site";
 
 /**
  * robots.txt.
@@ -9,16 +9,23 @@ import { absoluteUrl } from "@/lib/site";
  * routes with nothing to index are closed. `/recherche` is excluded because
  * an infinite space of query strings dilutes a crawl budget for no gain;
  * `/design-system` is an internal reference.
+ *
+ * While the demonstration corpus is online (`SEARCH_INDEXABLE` false) the
+ * sitemaps are no longer advertised. Crawling itself stays open on purpose:
+ * a robot has to fetch a page to read the `noindex` it carries, and a page
+ * closed here could still be listed by its bare address.
  */
 export default function robots(): MetadataRoute.Robots {
+  const rules: MetadataRoute.Robots["rules"] = [
+    {
+      userAgent: "*",
+      allow: "/",
+      disallow: ["/api/", "/recherche", "/design-system", "/newsletter/"],
+    },
+  ];
+  if (!SEARCH_INDEXABLE) return { rules };
   return {
-    rules: [
-      {
-        userAgent: "*",
-        allow: "/",
-        disallow: ["/api/", "/recherche", "/design-system", "/newsletter/"],
-      },
-    ],
+    rules,
     sitemap: [absoluteUrl("/sitemap.xml"), absoluteUrl("/news-sitemap.xml")],
     host: absoluteUrl("/").replace(/\/$/, ""),
   };

@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import { PreferencesScript } from "@/components/custom/preferences-script";
 import { ServiceWorker } from "@/components/custom/service-worker";
 import { PreferencesProvider } from "@/components/providers/preferences-provider";
-import { PUBLISHER_NAME, SITE, siteUrl } from "@/lib/site";
+import { PUBLISHER_NAME, SEARCH_INDEXABLE, SITE, siteUrl } from "@/lib/site";
 import { getAdSenseRuntimeConfig } from "@/lib/ads/adsense-config";
 import "./globals.css";
 
@@ -90,7 +90,12 @@ export const metadata: Metadata = {
     title: SITE.title,
     description: SITE.description,
   },
-  robots: { index: true, follow: true },
+  // Pas d'indexation tant que le corpus de démonstration est en ligne : voir
+  // `SEARCH_INDEXABLE`. L'en-tête `X-Robots-Tag` de `next.config.ts` couvre
+  // les pages qui déclarent leurs propres consignes.
+  robots: SEARCH_INDEXABLE
+    ? { index: true, follow: true }
+    : { index: false, follow: false },
   appleWebApp: {
     capable: true,
     title: SITE.name,

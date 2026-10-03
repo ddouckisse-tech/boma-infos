@@ -437,6 +437,14 @@ Graph 1200×630 générée pour chaque article, composée comme la charte (fond
 marine, logo, titre en serif blanche, filet tricolore, adresse du site) sur la
 photographie de l'article.
 
+**Indexation fermée pendant la démonstration.** Tant que la mention
+`DEMO_CONTENT_NOTICE` est posée (`lib/site.ts`), aucun moteur ne doit lister
+des articles fictifs comme de l'information : toutes les réponses portent
+`X-Robots-Tag: noindex, nofollow` (`next.config.ts`), les pages portent la même
+consigne et `robots.txt` n'annonce plus les plans de site. L'exploration reste
+ouverte, car un robot doit lire une page pour y voir la consigne. L'indexation
+s'ouvre d'elle-même quand la mention passe à `null` (`tests/indexing.test.ts`).
+
 **Redirections.** `lib/legacy-redirects.ts` ne contient plus le plan d'un
 ancien site : BOMA Infos n'en a pas. Il garde des adresses conventionnelles,
 celles que lecteurs, lecteurs de flux et moteurs de recherche essaient sur tout
@@ -973,4 +981,5 @@ suit en vient et ne sert pas ici, ou en porte encore la trace.
       (`.github/workflows/budget-production.yml`) : à activer une fois le site
       en ligne.
 - [ ] **Retrait du jeu de démonstration et de sa mention**
-      (`DEMO_CONTENT_NOTICE` à `null`).
+      (`DEMO_CONTENT_NOTICE` à `null`), ce qui rouvre aussi l'indexation par
+      les moteurs de recherche.
