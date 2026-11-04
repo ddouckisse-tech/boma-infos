@@ -17,6 +17,7 @@ import {
   DOCUMENTS,
 } from "./seed";
 import type { SeedArticle } from "./seed/types";
+import { normalizeDemoArticle, normalizeDemoAuthor } from "./seed/people";
 
 /**
  * Loads the demonstration dataset into the deployment.
@@ -36,7 +37,7 @@ const ALL_ARTICLES: readonly SeedArticle[] = [
   ...ARTICLES_2,
   ...ARTICLES_3,
   ...ARTICLES_4,
-];
+].map(normalizeDemoArticle);
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -177,6 +178,16 @@ export const run = internalMutation({
   handler: async (ctx, { reset }) => {
     validate();
 
+    // The first install adds data without deleting anything. Refuse a second
+    // run before writing, rather than creating duplicate slugs or replacing work.
+    if (reset === false) {
+      for (const table of ["categories", "authors", "media", "articles", "documents"] as const) {
+        if (await ctx.db.query(table).first()) {
+          throw new Error("Le jeu de démonstration sans effacement exige un journal vide.");
+        }
+      }
+    }
+
     // Le jeu de démonstration est remplacé, pas complété : deux exécutions
     // successives ne doivent pas produire vingt-six doublons.
     if (reset !== false) {
@@ -209,7 +220,7 @@ export const run = internalMutation({
     }
 
     for (const author of AUTHORS) {
-      await ctx.db.insert("authors", { ...author, links: [...author.links] });
+      await ctx.db.insert("authors", { ...normalizeDemoAuthor(author), links: [...author.links] });
     }
 
     for (const asset of Object.values(MEDIA)) {

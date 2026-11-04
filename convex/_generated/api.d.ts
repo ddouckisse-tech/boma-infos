@@ -49,6 +49,7 @@ import type * as seed_articles3 from "../seed/articles3.js";
 import type * as seed_articles4 from "../seed/articles4.js";
 import type * as seed_catalog from "../seed/catalog.js";
 import type * as seed_index from "../seed/index.js";
+import type * as seed_people from "../seed/people.js";
 import type * as seed_types from "../seed/types.js";
 import type * as seeding from "../seeding.js";
 import type * as settings from "../settings.js";
@@ -104,6 +105,7 @@ declare const fullApi: ApiFromModules<{
   "seed/articles4": typeof seed_articles4;
   "seed/catalog": typeof seed_catalog;
   "seed/index": typeof seed_index;
+  "seed/people": typeof seed_people;
   "seed/types": typeof seed_types;
   seeding: typeof seeding;
   settings: typeof settings;
