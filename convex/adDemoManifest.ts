@@ -14,7 +14,23 @@ export const AD_DEMO_MEDIA: Record<string, MediaAsset> = {
     color: "#163d35",
     width: 1440,
     height: 480,
-    avif: [],
+    avif: [
+      {
+        w: 320,
+        h: 107,
+        bytes: 1769,
+      },
+      {
+        w: 480,
+        h: 160,
+        bytes: 2555,
+      },
+      {
+        w: 640,
+        h: 213,
+        bytes: 3631,
+      },
+    ],
     webp: [
       {
         w: 320,
@@ -50,7 +66,23 @@ export const AD_DEMO_MEDIA: Record<string, MediaAsset> = {
     color: "#122f4b",
     width: 1440,
     height: 480,
-    avif: [],
+    avif: [
+      {
+        w: 320,
+        h: 107,
+        bytes: 2211,
+      },
+      {
+        w: 480,
+        h: 160,
+        bytes: 3062,
+      },
+      {
+        w: 640,
+        h: 213,
+        bytes: 4027,
+      },
+    ],
     webp: [
       {
         w: 320,
@@ -86,7 +118,23 @@ export const AD_DEMO_MEDIA: Record<string, MediaAsset> = {
     color: "#f1e9d8",
     width: 1440,
     height: 480,
-    avif: [],
+    avif: [
+      {
+        w: 320,
+        h: 107,
+        bytes: 1793,
+      },
+      {
+        w: 480,
+        h: 160,
+        bytes: 2603,
+      },
+      {
+        w: 640,
+        h: 213,
+        bytes: 3622,
+      },
+    ],
     webp: [
       {
         w: 320,
@@ -122,7 +170,23 @@ export const AD_DEMO_MEDIA: Record<string, MediaAsset> = {
     color: "#273e35",
     width: 640,
     height: 640,
-    avif: [],
+    avif: [
+      {
+        w: 320,
+        h: 320,
+        bytes: 3921,
+      },
+      {
+        w: 480,
+        h: 480,
+        bytes: 6083,
+      },
+      {
+        w: 640,
+        h: 640,
+        bytes: 8159,
+      },
+    ],
     webp: [
       {
         w: 320,
@@ -153,7 +217,23 @@ export const AD_DEMO_MEDIA: Record<string, MediaAsset> = {
     color: "#f8d763",
     width: 1440,
     height: 480,
-    avif: [],
+    avif: [
+      {
+        w: 320,
+        h: 107,
+        bytes: 2048,
+      },
+      {
+        w: 480,
+        h: 160,
+        bytes: 2923,
+      },
+      {
+        w: 640,
+        h: 213,
+        bytes: 4056,
+      },
+    ],
     webp: [
       {
         w: 320,
@@ -189,7 +269,23 @@ export const AD_DEMO_MEDIA: Record<string, MediaAsset> = {
     color: "#eae0d1",
     width: 640,
     height: 640,
-    avif: [],
+    avif: [
+      {
+        w: 320,
+        h: 320,
+        bytes: 3319,
+      },
+      {
+        w: 480,
+        h: 480,
+        bytes: 5128,
+      },
+      {
+        w: 640,
+        h: 640,
+        bytes: 6562,
+      },
+    ],
     webp: [
       {
         w: 320,
@@ -220,7 +316,23 @@ export const AD_DEMO_MEDIA: Record<string, MediaAsset> = {
     color: "#233f68",
     width: 640,
     height: 640,
-    avif: [],
+    avif: [
+      {
+        w: 320,
+        h: 320,
+        bytes: 3412,
+      },
+      {
+        w: 480,
+        h: 480,
+        bytes: 5184,
+      },
+      {
+        w: 640,
+        h: 640,
+        bytes: 6841,
+      },
+    ],
     webp: [
       {
         w: 320,
@@ -251,7 +363,23 @@ export const AD_DEMO_MEDIA: Record<string, MediaAsset> = {
     color: "#f1e9c9",
     width: 640,
     height: 640,
-    avif: [],
+    avif: [
+      {
+        w: 320,
+        h: 320,
+        bytes: 3598,
+      },
+      {
+        w: 480,
+        h: 480,
+        bytes: 5584,
+      },
+      {
+        w: 640,
+        h: 640,
+        bytes: 7346,
+      },
+    ],
     webp: [
       {
         w: 320,
@@ -282,7 +410,23 @@ export const AD_DEMO_MEDIA: Record<string, MediaAsset> = {
     color: "#4a2f57",
     width: 640,
     height: 640,
-    avif: [],
+    avif: [
+      {
+        w: 320,
+        h: 320,
+        bytes: 3299,
+      },
+      {
+        w: 480,
+        h: 480,
+        bytes: 5356,
+      },
+      {
+        w: 640,
+        h: 640,
+        bytes: 6964,
+      },
+    ],
     webp: [
       {
         w: 320,
@@ -313,7 +457,23 @@ export const AD_DEMO_MEDIA: Record<string, MediaAsset> = {
     color: "#172d45",
     width: 1440,
     height: 480,
-    avif: [],
+    avif: [
+      {
+        w: 320,
+        h: 107,
+        bytes: 2313,
+      },
+      {
+        w: 480,
+        h: 160,
+        bytes: 3254,
+      },
+      {
+        w: 640,
+        h: 213,
+        bytes: 3954,
+      },
+    ],
     webp: [
       {
         w: 320,

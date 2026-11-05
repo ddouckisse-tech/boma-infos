@@ -39,7 +39,7 @@ export default function AdvertisingPage() {
           ))}
         </div>
       </Section>
-      <Section title="10 exemples de campagnes" tone="muted" description="Ces annonceurs, offres et visuels sont fictifs. Ils illustrent les formats disponibles et ne constituent ni une offre commerciale ni un partenariat réel.">
+      <Section title={`${DEMO_ADS.length} exemples de campagnes`} tone="muted" description="Ces annonceurs, offres et visuels sont fictifs. Ils illustrent les formats disponibles et ne constituent ni une offre commerciale ni un partenariat réel.">
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {DEMO_ADS.map((ad) => {
             const media = getMediaAsset(ad.mediaKey);

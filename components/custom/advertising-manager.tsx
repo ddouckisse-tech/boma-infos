@@ -422,7 +422,7 @@ export function AdvertisingManager() {
               <Layers aria-hidden="true" className="size-4" />
               {loadingExamples
                 ? "Chargement des exemples…"
-                : "Charger les 10 exemples"}
+                : "Charger les 5 exemples"}
             </ActionButton>
             <ActionButton
               type="button"
@@ -449,7 +449,7 @@ export function AdvertisingManager() {
         </p>
       </div>
       <p className="mb-6 type-small text-muted-foreground">
-        Les dix exemples sont fictifs et identifiés dans la liste. Les charger à
+        Les cinq exemples sont fictifs et identifiés dans la liste. Les charger à
         nouveau ne duplique pas les campagnes déjà présentes.
       </p>
       <div className="mb-6 grid grid-cols-2 gap-3 xl:grid-cols-4">

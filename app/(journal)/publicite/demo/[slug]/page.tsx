@@ -4,19 +4,19 @@ import { notFound } from "next/navigation";
 import { Container } from "@/components/custom/container";
 import { PageHeader } from "@/components/custom/page-header";
 import { ResponsiveImage } from "@/components/custom/responsive-image";
-import { DEMO_ADS } from "@/lib/ads/demo";
+import { DEMO_POSTERS } from "@/lib/ads/demo";
 import { getMediaAsset } from "@/lib/media";
 
 export const dynamicParams = false;
 export const revalidate = 300;
 
 export function generateStaticParams() {
-  return DEMO_ADS.map(({ slug }) => ({ slug }));
+  return DEMO_POSTERS.map(({ slug }) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const ad = DEMO_ADS.find((item) => item.slug === slug);
+  const ad = DEMO_POSTERS.find((item) => item.slug === slug);
   return {
     title: ad ? `${ad.advertiser} — exemple publicitaire` : "Exemple introuvable",
     robots: { index: false, follow: false },
@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function DemoAdvertisementPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const ad = DEMO_ADS.find((item) => item.slug === slug);
+  const ad = DEMO_POSTERS.find((item) => item.slug === slug);
   if (!ad) notFound();
   const media = getMediaAsset(ad.mediaKey);
   return (

@@ -31,16 +31,18 @@ Le lecteur peut fermer la publicité ; les préférences d’économie de donné
 de réduction des animations suspendent ces formats. Les campagnes ciblées sur
 un autre écran ne téléchargent pas leur affiche.
 
-## Dix exemples fictifs
+## Cinq exemples fictifs
 
-**Charger les 10 exemples** ajoute dix campagnes et leurs médias manquants. Le
+**Charger les 5 exemples** ajoute cinq campagnes et leurs médias manquants. Le
 chargement peut être répété : les campagnes existantes, leurs modifications et
 l’ensemble du contenu rédactionnel sont conservés. Chaque exemple est identifié
 dans l’administration, sur l’affiche et dans son encart. Ses liens aboutissent à
 une page de démonstration, sans achat ni réservation.
 
 Le catalogue public est accessible depuis le pied de page, **Publicité**, à
-`/publicite`. Les dix pages `/publicite/demo/<slug>` ne sont pas indexables.
+`/publicite`. Les pages `/publicite/demo/<slug>` ne sont pas indexables ; les
+anciens liens des campagnes en pause restent valides.
+Les cinq anciennes campagnes supplémentaires restent en pause après réduction du catalogue.
 Les visuels originaux sont générés par `scripts/make-demo-ads.ts` et leur
 manifeste est séparé de la photothèque rédactionnelle. Les variantes comprennent
 480 px pour le mode économie de données.
@@ -79,7 +81,7 @@ Configuration serveur :
   aucun encart. Les nouvelles fonctions doivent être livrées sur l’environnement
   cible lors d’une publication autorisée.
 - `ADS_MODE=off` : aucun encart.
-- `ADS_MODE=preview` : dix campagnes fictives de recette ; aucune
+- `ADS_MODE=preview` : cinq campagnes fictives de recette ; aucune
   écriture en base. Ce mode est utilisé pour les captures locales.
 - `ADS_FEED_URL` et `ADS_FEED_TOKEN` facultatifs : ordonnanceur HTTPS renvoyant
   `{ "campaignIds": ["identifiant-de-campagne-existant"] }`. Le serveur sélectionne

@@ -10,7 +10,7 @@ import {
 } from "./_generated/server";
 import { MEDIA } from "./mediaManifest";
 import { AD_DEMO_MEDIA } from "./adDemoManifest";
-import { DEMO_ADS } from "../lib/ads/demo";
+import { DEMO_ADS, DEMO_POSTERS } from "../lib/ads/demo";
 import { accessError, PERMISSIONS, requirePermission } from "./model/access";
 import {
   AD_FEED_LIMIT,
@@ -437,4 +437,82 @@ export const loadExamplesInternal = internalMutation({
       name: "Chargement interne des exemples",
       roleSlug: "interne",
     }),
+});
+
+/** Explicit operator transition: retain all rows, pause only known retired demos. */
+export const useFiveExamples = internalMutation({
+  args: {},
+  returns: v.object({ active: v.number(), paused: v.number() }),
+  handler: async (ctx): Promise<{ active: number; paused: number }> => {
+    const actor = {
+      subject: "internal:use-five-ad-examples",
+      name: "Sélection des cinq exemples publicitaires",
+      roleSlug: "interne",
+    };
+    await insertExamples(ctx, actor);
+    let active = 0;
+    let paused = 0;
+    let changed = 0;
+    const now = Date.now();
+    for (const poster of DEMO_POSTERS) {
+      const row = await ctx.db
+        .query("adCampaigns")
+        .withIndex("by_demo_key", (q) => q.eq("demoKey", poster.slug))
+        .unique();
+      if (!row) continue;
+      const selected = DEMO_ADS.find((ad) => ad.slug === poster.slug);
+      if (selected) {
+        active += 1;
+        const campaign = validateCampaign({
+          ...row,
+          placements: [...selected.placements],
+          device: selected.device,
+          enabled: true,
+        });
+        await campaignMedia(
+          ctx,
+          campaign.mediaKey,
+          campaign.format,
+          campaign.placements
+        );
+        if (
+          row.enabled &&
+          row.device === selected.device &&
+          JSON.stringify(row.placements) === JSON.stringify(selected.placements)
+        )
+          continue;
+        const patch = {
+          enabled: true,
+          placements: [...selected.placements],
+          device: selected.device,
+          updatedAt: now,
+          updatedBy: actor.name,
+        };
+        await ctx.db.patch(row._id, patch);
+        await scheduleBoundary(ctx, { ...row, ...patch });
+      } else {
+        paused += 1;
+        if (!row.enabled) continue;
+        await ctx.db.patch(row._id, {
+          enabled: false,
+          updatedAt: now,
+          updatedBy: actor.name,
+        });
+      }
+      changed += 1;
+    }
+    if (changed > 0) {
+      await ctx.db.insert("auditLog", {
+        at: now,
+        actorSubject: actor.subject,
+        actorName: actor.name,
+        actorRole: actor.roleSlug,
+        action: "settings.update",
+        targetType: "adCampaigns",
+        targetId: "demo-examples",
+        summary: `Sélection de démonstration : ${active} campagne(s) activée(s), ${paused} mise(s) en pause, aucune suppression.`,
+      });
+    }
+    return { active, paused };
+  },
 });

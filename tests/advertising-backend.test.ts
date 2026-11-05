@@ -11,14 +11,16 @@ import {
   refreshDelivery,
   save,
   setEnabled,
+  useFiveExamples,
 } from "../convex/advertising";
 import { AD_DEMO_MEDIA } from "../convex/adDemoManifest";
 import {
   AD_ARTICLE_IMAGE_BUDGET,
+  constrainAdMedia,
   validateCampaign,
   type CampaignInput,
 } from "../convex/model/advertising";
-import { DEMO_ADS } from "../lib/ads/demo";
+import { DEMO_ADS, DEMO_POSTERS } from "../lib/ads/demo";
 import { AD_PLACEMENTS, type AdCreative } from "../lib/ads/types";
 import { getMediaAsset } from "../lib/media";
 import { createFakeDb, handlerOf, signedIn } from "./support/fake-convex";
@@ -34,6 +36,10 @@ const load = handlerOf<Record<string, never>, ExampleResult>(loadExamples);
 const loadInternal = handlerOf<Record<string, never>, ExampleResult>(
   loadExamplesInternal
 );
+const useFive = handlerOf<
+  Record<string, never>,
+  { active: number; paused: number }
+>(useFiveExamples);
 const readList = handlerOf<Record<string, never>, CampaignRow[]>(list);
 const readFeed = handlerOf<Record<string, never>, AdCreative[]>(publicFeed);
 const writeCampaign = handlerOf<CampaignInput & { id?: string }, string>(save);
@@ -83,22 +89,22 @@ test("demo loading is idempotent and leaves editorial data untouched", async () 
   ]);
   const before = fake.all("articles");
   assert.deepEqual(await load(ctx, {}), {
-    created: 10,
+    created: 5,
     existing: 0,
-    total: 10,
+    total: 5,
   });
   assert.deepEqual(await load(ctx, {}), {
     created: 0,
-    existing: 10,
-    total: 10,
+    existing: 5,
+    total: 5,
   });
   assert.deepEqual(await loadInternal(ctx, {}), {
     created: 0,
-    existing: 10,
-    total: 10,
+    existing: 5,
+    total: 5,
   });
-  assert.equal(fake.all("media").length, 10);
-  assert.equal(fake.all("adCampaigns").length, 10);
+  assert.equal(fake.all("media").length, 5);
+  assert.equal(fake.all("adCampaigns").length, 5);
   assert.deepEqual(fake.all("articles"), before);
   assert.equal(
     fake.all("auditLog").length,
@@ -106,7 +112,7 @@ test("demo loading is idempotent and leaves editorial data untouched", async () 
     "an unchanged second load writes nothing"
   );
   const feed = await readFeed(ctx, {});
-  assert.equal(feed.length, 10);
+  assert.equal(feed.length, 5);
   assert.ok(feed.every((creative) => creative.demo === true));
   assert.deepEqual(
     new Set(feed.flatMap((creative) => creative.placements)),
@@ -155,8 +161,8 @@ test("saving an example preserves its marker and later loads preserve campaigns 
   const mediaBefore = fake.all("media");
   assert.deepEqual(await load(ctx, {}), {
     created: 0,
-    existing: 10,
-    total: 10,
+    existing: 5,
+    total: 5,
   });
   assert.deepEqual(fake.all("adCampaigns"), campaignsBefore);
   assert.deepEqual(fake.all("media"), mediaBefore);
@@ -273,30 +279,154 @@ test("every new placement has explicit format and device validation", () => {
 });
 
 test("original demo posters exist at every declared size, with data-saver support and real budgets", async () => {
-  assert.equal(DEMO_ADS.length, 10);
-  assert.equal(new Set(DEMO_ADS.map((ad) => ad.slug)).size, 10);
-  for (const ad of DEMO_ADS) {
+  assert.equal(DEMO_ADS.length, 5);
+  assert.equal(DEMO_POSTERS.length, 10);
+  assert.equal(new Set(DEMO_POSTERS.map((ad) => ad.slug)).size, 10);
+  for (const ad of DEMO_POSTERS) {
     const asset = AD_DEMO_MEDIA[ad.mediaKey];
     assert.ok(asset);
     assert.equal(getMediaAsset(ad.mediaKey), asset);
     assert.match(asset.alt, /fictif/);
-    assert.ok(asset.webp.some((variant) => variant.w === 320));
-    assert.ok(asset.webp.some((variant) => variant.w === 480));
-    assert.ok(asset.webp.some((variant) => variant.w === 640));
-    for (const variant of asset.webp) {
-      const file = await readFile(
-        path.resolve(
-          import.meta.dirname,
-          "../public/medias",
-          `${ad.mediaKey}-${variant.w}.webp`
-        )
-      );
-      const metadata = await sharp(file).metadata();
-      assert.equal(file.length, variant.bytes);
-      assert.equal(metadata.width, variant.w);
-      assert.equal(metadata.height, variant.h);
-      assert.equal(metadata.format, "webp");
-      assert.ok(file.length <= AD_ARTICLE_IMAGE_BUDGET);
+    const constrained = constrainAdMedia(asset, ad.format, ad.placements);
+    for (const format of ["webp", "avif"] as const) {
+      assert.deepEqual(constrained[format], asset[format]);
+      for (const width of [320, 480, 640]) {
+        assert.ok(asset[format].some((variant) => variant.w === width));
+      }
+      for (const variant of asset[format]) {
+        const file = await readFile(
+          path.resolve(
+            import.meta.dirname,
+            "../public/medias",
+            `${ad.mediaKey}-${variant.w}.${format}`
+          )
+        );
+        const metadata = await sharp(file).metadata();
+        assert.equal(file.length, variant.bytes);
+        assert.equal(metadata.width, variant.w);
+        assert.equal(metadata.height, variant.h);
+        assert.equal(metadata.format, format === "avif" ? "heif" : "webp");
+        if (format === "avif")
+          assert.equal(file.toString("ascii", 4, 12), "ftypavif");
+        assert.ok(file.length <= AD_ARTICLE_IMAGE_BUDGET);
+      }
+    }
+    const avif640 = asset.avif.find((variant) => variant.w === 640)!;
+    assert.ok(
+      avif640.bytes < asset.webp.find((variant) => variant.w === 640)!.bytes
+    );
+    if (ad.format === "banner") {
+      assert.ok(avif640.bytes <= 4 * 1024);
     }
   }
+});
+
+test("the operator transition keeps ten originals, activates five and pauses five without touching real campaigns", async () => {
+  const fake = createFakeDb();
+  const ctx = signedIn(fake);
+  for (const poster of DEMO_POSTERS) {
+    const asset = AD_DEMO_MEDIA[poster.mediaKey];
+    fake.seed("media", [
+      {
+        key: asset.id,
+        alt: asset.alt,
+        caption: "Légende personnalisée conservée",
+        credit: asset.credit,
+        license: asset.license,
+        source: asset.source,
+        color: asset.color,
+        width: asset.width,
+        height: asset.height,
+        variants: [
+          ...asset.webp.map((variant) => ({ format: "webp", ...variant })),
+          ...asset.avif.map((variant) => ({ format: "avif", ...variant })),
+        ],
+      },
+    ]);
+    fake.seed("adCampaigns", [
+      {
+        ...input({
+          title: `Titre conservé : ${poster.title}`,
+          advertiser: poster.advertiser,
+          format: poster.format,
+          mediaKey: poster.mediaKey,
+          placements: [...poster.placements],
+          device: poster.device,
+          href: `/publicite/demo/${poster.slug}`,
+          priority: 31,
+        }),
+        demoKey: poster.slug,
+        updatedAt: 1,
+        updatedBy: "Version précédente",
+      },
+    ]);
+  }
+  const realId = await writeCampaign(
+    ctx,
+    input({ title: "Campagne réelle à conserver" })
+  );
+  const [unknownId] = fake.seed("adCampaigns", [
+    {
+      ...input({ title: "Autre marqueur à conserver" }),
+      demoKey: "unknown-example",
+      updatedAt: 1,
+      updatedBy: "Autre opérateur",
+    },
+  ]);
+  const realBefore = await fake.db.get(realId);
+  const unknownBefore = await fake.db.get(unknownId);
+  const originals = await readList(ctx, {});
+  const mediaBefore = fake.all("media");
+  assert.equal((await readFeed(ctx, {})).length, 12);
+  assert.deepEqual(await useFive(ctx, {}), { active: 5, paused: 5 });
+  const rows = await readList(ctx, {});
+  assert.equal(rows.length, 12, "no campaign is deleted");
+  assert.deepEqual(await fake.db.get(realId), realBefore);
+  assert.deepEqual(await fake.db.get(unknownId), unknownBefore);
+  assert.deepEqual(fake.all("media"), mediaBefore);
+  for (const poster of DEMO_POSTERS) {
+    const row = rows.find((candidate) => candidate.demoKey === poster.slug)!;
+    const before = originals.find((candidate) => candidate._id === row._id)!;
+    const selected = DEMO_ADS.find((ad) => ad.slug === poster.slug);
+    assert.equal(row.enabled, Boolean(selected));
+    assert.equal(row.title, before.title);
+    assert.equal(row.mediaKey, before.mediaKey);
+    assert.equal(row.href, before.href);
+    assert.equal(row.priority, before.priority);
+    if (selected) {
+      assert.deepEqual(row.placements, selected.placements);
+      assert.equal(row.device, selected.device);
+    }
+  }
+  const knownIds = new Set(
+    originals
+      .filter((row) => DEMO_POSTERS.some((ad) => ad.slug === row.demoKey))
+      .map((row) => row._id)
+  );
+  assert.equal(
+    (await readFeed(ctx, {})).filter((creative) => knownIds.has(creative.id))
+      .length,
+    5
+  );
+  const writesBeforeRepeat = fake.writes.length;
+  assert.deepEqual(await useFive(ctx, {}), { active: 5, paused: 5 });
+  assert.equal(
+    fake.writes.length,
+    writesBeforeRepeat,
+    "the transition is idempotent"
+  );
+  assert.ok(
+    fake
+      .all("auditLog")
+      .some((row) => String(row.summary).includes("aucune suppression"))
+  );
+});
+
+test("the operator transition only creates the selected five on an empty database", async () => {
+  const fake = createFakeDb();
+  const ctx = signedIn(fake);
+  assert.deepEqual(await useFive(ctx, {}), { active: 5, paused: 0 });
+  assert.equal(fake.all("adCampaigns").length, 5);
+  assert.equal(fake.all("media").length, 5);
+  assert.equal((await readFeed(ctx, {})).length, 5);
 });

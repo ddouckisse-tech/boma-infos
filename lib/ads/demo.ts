@@ -12,8 +12,8 @@ export type DemoAd = {
   mediaKey: string;
 };
 
-/** Original fictional organisations. These examples advertise no real offer. */
-export const DEMO_ADS: readonly DemoAd[] = [
+/** Keep the ten original designs and their order for archived links and palettes. */
+export const DEMO_POSTERS: readonly DemoAd[] = [
   {
     slug: "komo-atelier",
     title: "Du bois, du sens.",
@@ -125,3 +125,26 @@ export const DEMO_ADS: readonly DemoAd[] = [
     mediaKey: "demo-ad-baobab-connexions",
   },
 ];
+
+/** Only these five examples are offered in the catalogue and insert-only loader. */
+export const DEMO_ADS: readonly DemoAd[] = (
+  [
+    {
+      slug: "komo-atelier",
+      placements: ["home-primary", "listing"],
+      device: "all",
+    },
+    { slug: "canopee-studio", placements: ["article"], device: "desktop" },
+    {
+      slug: "soleil-okala",
+      placements: ["home-secondary", "article-inline"],
+      device: "all",
+    },
+    { slug: "ntem-formation", placements: ["popup"], device: "desktop" },
+    { slug: "rivage-marche", placements: ["floating"], device: "mobile" },
+  ] satisfies readonly Pick<DemoAd, "slug" | "placements" | "device">[]
+).map((selection) => {
+  const poster = DEMO_POSTERS.find((entry) => entry.slug === selection.slug);
+  if (!poster) throw new Error(`Unknown demo poster: ${selection.slug}`);
+  return { ...poster, ...selection };
+});

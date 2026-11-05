@@ -7,7 +7,7 @@ import { DEMO_ADS } from "./demo";
 import { feedUrl, parseCampaignSelection, selectFeedCampaigns } from "./feed";
 import type { AdCreative, AdPlacement } from "./types";
 
-/** Explicit local visual preview of the same ten examples available to administrators. */
+/** Explicit local visual preview of the same five examples available to administrators. */
 function previewCampaigns(): AdCreative[] {
   return DEMO_ADS.flatMap((item, index) => {
     const media = AD_DEMO_MEDIA[item.mediaKey];

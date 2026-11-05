@@ -57,5 +57,5 @@ test("admin form → persisted campaign → mobile delivery → close → pause 
   assert.ok(!(await feed(ctx, {})).some((item) => item.id === id));
   await enable(ctx, { id, enabled: true });
   assert.ok((await feed(ctx, {})).some((item) => item.id === id));
-  assert.equal(fake.all("adCampaigns").length, 11, "resuming does not duplicate the campaign");
+  assert.equal(fake.all("adCampaigns").length, DEMO_ADS.length + 1, "resuming does not duplicate the campaign");
 });

@@ -1,18 +1,19 @@
 /**
  * Original vector posters, rasterised offline. No network, photos or randomness.
- * Run: bun run scripts/make-demo-ads.ts
+ * Run: bun run scripts/make-demo-ads.ts (or --avif-only to preserve existing WebP files)
  * Regenerates only the ten demo posters and their separate server-side manifest.
  */
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 import { format } from "prettier";
-import { DEMO_ADS } from "../lib/ads/demo";
+import { DEMO_POSTERS } from "../lib/ads/demo";
 import type { MediaAsset } from "../convex/mediaManifest";
 
 const root = path.resolve(import.meta.dirname, "..");
 const directory = path.join(root, "public/medias");
 const MAX_BYTES = 16 * 1024;
+const avifOnly = process.argv.includes("--avif-only");
 const palettes = [
   ["#163d35", "#f7ecce", "#d29c62", "#96b99c"],
   ["#122f4b", "#fff2d7", "#edaa6d", "#73b9bf"],
@@ -60,7 +61,7 @@ function motif(index: number, accent: string, secondary: string): string {
 
 await mkdir(directory, { recursive: true });
 const manifest: Record<string, MediaAsset> = {};
-for (const [index, ad] of DEMO_ADS.entries()) {
+for (const [index, ad] of DEMO_POSTERS.entries()) {
   const [background, ink, accent, secondary] = palettes[index];
   const square = ad.format === "square";
   const width = square ? 640 : 1440;
@@ -91,8 +92,11 @@ for (const [index, ad] of DEMO_ADS.entries()) {
   </svg>`;
   const webp: { w: number; h: number; bytes: number }[] = [];
   for (const target of square ? [320, 480, 640] : [320, 480, 640, 1280]) {
-    let encoded: Buffer | undefined;
-    for (const quality of [78, 68, 58, 48, 38]) {
+    const file = `${ad.mediaKey}-${target}.webp`;
+    let encoded: Buffer | undefined = avifOnly
+      ? await readFile(path.join(directory, file))
+      : undefined;
+    for (const quality of avifOnly ? [] : [78, 68, 58, 48, 38]) {
       encoded = await sharp(Buffer.from(svg))
         .resize(target)
         .webp({ quality, effort: 6 })
@@ -101,9 +105,30 @@ for (const [index, ad] of DEMO_ADS.entries()) {
     }
     if (!encoded || encoded.length > MAX_BYTES)
       throw new Error(`Poster exceeds 16 KiB: ${ad.slug}-${target}`);
-    const file = `${ad.mediaKey}-${target}.webp`;
-    await writeFile(path.join(directory, file), encoded);
+    if (!avifOnly) await writeFile(path.join(directory, file), encoded);
     webp.push({
+      w: target,
+      h: Math.round((height * target) / width),
+      bytes: encoded.length,
+    });
+    console.log(`${file}: ${encoded.length} bytes`);
+  }
+  const avif: { w: number; h: number; bytes: number }[] = [];
+  for (const target of [320, 480, 640]) {
+    const budget = !square && target === 640 ? 4 * 1024 : MAX_BYTES;
+    let encoded: Buffer | undefined;
+    for (const quality of !square && target === 640 ? [50, 45, 40] : [50]) {
+      encoded = await sharp(Buffer.from(svg))
+        .resize(target)
+        .avif({ quality, effort: 4, chromaSubsampling: "4:4:4" })
+        .toBuffer();
+      if (encoded.length <= budget) break;
+    }
+    if (!encoded || encoded.length > budget)
+      throw new Error(`AVIF poster exceeds its budget: ${ad.slug}-${target}`);
+    const file = `${ad.mediaKey}-${target}.avif`;
+    await writeFile(path.join(directory, file), encoded);
+    avif.push({
       w: target,
       h: Math.round((height * target) / width),
       bytes: encoded.length,
@@ -121,7 +146,7 @@ for (const [index, ad] of DEMO_ADS.entries()) {
     color: background,
     width,
     height,
-    avif: [],
+    avif,
     webp,
   };
 }
@@ -132,4 +157,4 @@ await writeFile(
     { parser: "typescript" }
   )
 );
-console.log(`Generated ${DEMO_ADS.length} original demonstration posters.`);
+console.log(`Generated ${DEMO_POSTERS.length} original demonstration posters.`);
