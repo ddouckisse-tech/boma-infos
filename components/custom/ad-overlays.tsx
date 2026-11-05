@@ -51,6 +51,7 @@ function isLimited(dataSaver: boolean): boolean {
 }
 
 function hasReadingInterruption(): boolean {
+  if (document.documentElement.dataset.pwaInstallActive === "true") return true;
   const dialogs = document.querySelectorAll<HTMLElement>(
     'dialog[open], [aria-modal="true"], [role="dialog"][data-state="open"], [role="alertdialog"], iframe[title*="consent" i]'
   );

@@ -16,10 +16,12 @@
  *  - Le reste : réseau seul. Rien n'est mis en cache par accident.
  */
 
-const VERSION = "v3";
+const VERSION = "v4";
+const CACHE_PREFIX = "bomainfos-";
 const SHELL_CACHE = `bomainfos-shell-${VERSION}`;
 const PAGES_CACHE = `bomainfos-pages-${VERSION}`;
 const ASSETS_CACHE = `bomainfos-assets-${VERSION}`;
+const CURRENT_CACHES = [SHELL_CACHE, PAGES_CACHE, ASSETS_CACHE];
 
 const OFFLINE_URL = "/hors-ligne";
 
@@ -50,7 +52,7 @@ self.addEventListener("activate", (event) => {
       .then((keys) =>
         Promise.all(
           keys
-            .filter((key) => !key.endsWith(VERSION))
+            .filter((key) => key.startsWith(CACHE_PREFIX) && !CURRENT_CACHES.includes(key))
             .map((key) => caches.delete(key))
         )
       )
@@ -77,9 +79,46 @@ function isVersionedAsset(url) {
   );
 }
 
+/** Never cache or replay account, editorial workspace or API requests. */
+function isNetworkOnly(url) {
+  let pathname;
+  try {
+    pathname = decodeURIComponent(url.pathname).replace(/\/{2,}/g, "/");
+  } catch {
+    return true;
+  }
+  return [
+    "/redaction",
+    "/entreprise",
+    "/compte",
+    "/connexion",
+    "/inscription-entreprise",
+    "/mot-de-passe-oublie",
+    "/reinitialisation",
+    "/api",
+  ].some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+}
+
+/** Storage denial must not prevent an otherwise usable network request. */
+async function openCache(name) {
+  try {
+    return await caches.open(name);
+  } catch {
+    return undefined;
+  }
+}
+
 async function cacheFirst(request) {
-  const cached = await caches.match(request);
-  if (cached) return cached;
+  const cache = await openCache(ASSETS_CACHE);
+  if (cache) {
+    try {
+      const cached = await cache.match(request);
+      if (cached && canCacheDocument(cached)) return cached;
+      if (cached) await cache.delete(request);
+    } catch {
+      // Cache access is optional; continue with the network.
+    }
+  }
   const response = await fetch(request);
   // Seules les réponses que le serveur déclare IMMUABLES entrent en cache.
   // En production, /_next/static, /medias et /icons le sont (nom porteur
@@ -89,12 +128,15 @@ async function cacheFirst(request) {
   // alors des chunks périmés au serveur de dev — constaté, d'où cette règle.
   const cacheControl = response.headers.get("cache-control") || "";
   if (
-    response.ok &&
+    cache && canCacheDocument(response) &&
     response.type === "basic" &&
-    /\bimmutable\b/.test(cacheControl)
+    /\bimmutable\b/i.test(cacheControl)
   ) {
-    const cache = await caches.open(ASSETS_CACHE);
-    cache.put(request, response.clone());
+    try {
+      await cache.put(request, response.clone());
+    } catch {
+      // A quota error must not replace the successful network response.
+    }
   }
   return response;
 }
@@ -102,35 +144,60 @@ async function cacheFirst(request) {
 /** A request nonce must never be replayed by the offline document cache. */
 function canCacheDocument(response) {
   return response.ok &&
-    !/\bno-store\b/i.test(response.headers.get("cache-control") || "") &&
+    !/\b(?:no-store|private)\b/i.test(response.headers.get("cache-control") || "") &&
     !(response.headers.get("content-security-policy") || "").includes("'nonce-");
 }
 
 async function networkFirstDocument(request) {
-  const cache = await caches.open(PAGES_CACHE);
+  if (isNetworkOnly(new URL(request.url))) return fetch(request);
+  const cache = await openCache(PAGES_CACHE);
 
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), NETWORK_TIMEOUT_MS);
-    const response = await fetch(request, { signal: controller.signal });
-    clearTimeout(timer);
+    let response;
+    try {
+      response = await fetch(request, { signal: controller.signal });
+    } finally {
+      clearTimeout(timer);
+    }
 
-    if (canCacheDocument(response)) {
-      // On ne conserve que le HTML : les charges utiles RSC des navigations
-      // clientes changent de nom à chaque déploiement.
-      cache.put(request, response.clone());
-      trim(PAGES_CACHE, MAX_PAGES);
-    } else {
-      // A page which has switched to nonce rendering supersedes its old copy.
-      await cache.delete(request);
+    if (cache) {
+      try {
+        if (canCacheDocument(response)) {
+          // On ne conserve que le HTML : les charges utiles RSC des navigations
+          // clientes changent de nom à chaque déploiement.
+          await cache.put(request, response.clone());
+          await trim(PAGES_CACHE, MAX_PAGES);
+        } else {
+          // A page which has switched to nonce rendering supersedes its old copy.
+          await cache.delete(request);
+        }
+      } catch {
+        // Cache maintenance never turns a successful network reply into a fallback.
+      }
     }
     return response;
   } catch {
-    const cached = await cache.match(request);
-    if (cached && canCacheDocument(cached)) return cached;
+    if (cache) {
+      try {
+        const cached = await cache.match(request);
+        if (cached && canCacheDocument(cached)) return cached;
+        if (cached) await cache.delete(request);
+      } catch {
+        // Try the public offline shell if this cache cannot be read.
+      }
+    }
 
-    const offline = await caches.match(OFFLINE_URL);
-    if (offline && canCacheDocument(offline)) return offline;
+    const shell = await openCache(SHELL_CACHE);
+    if (shell) {
+      try {
+        const offline = await shell.match(OFFLINE_URL);
+        if (offline && canCacheDocument(offline)) return offline;
+      } catch {
+        // With no readable cache, return the built-in offline document.
+      }
+    }
 
     return new Response(
       "<!doctype html><meta charset=utf-8><title>Hors ligne</title><p>Vous êtes hors ligne.",
@@ -162,9 +229,8 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
-  // La recherche et les flux ne sont jamais servis depuis le cache : une
-  // liste d'articles périmée est pire qu'une erreur franche.
-  if (url.pathname.startsWith("/api/")) return;
+  // Ces routes restent réseau seul, même si un ancien cache les contient.
+  if (isNetworkOnly(url)) return;
 
   if (request.mode === "navigate") {
     event.respondWith(networkFirstDocument(request));

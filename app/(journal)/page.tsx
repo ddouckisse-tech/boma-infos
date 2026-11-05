@@ -15,6 +15,7 @@ import { categoryDescription, categoryLabel } from "@/lib/i18n";
 import { accentTextClass, sectionHref, toAccent } from "@/lib/navigation";
 import { SITE } from "@/lib/site";
 import { cn } from "@/lib/utils";
+import { PwaInstallInvitation } from "@/components/custom/pwa-install";
 
 // Littéral et non `REVALIDATE_SECONDS` : Next analyse statiquement les
 // exports de configuration de segment et n'en résout pas les identifiants
@@ -128,6 +129,8 @@ export default async function HomePage() {
           </ul>
         </Section>
       )}
+
+      <Container><PwaInstallInvitation /></Container>
 
       <Advertising
         placement="home-primary"

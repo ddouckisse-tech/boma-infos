@@ -188,6 +188,11 @@ export function Footer() {
                 </li>
               ))}
               <li>
+                <Link href="/installer" prefetch={false} className={cn(pageLink, "text-foreground")}>
+                  <LocalizedText fr="Installer l’application" en="Install the app" />
+                </Link>
+              </li>
+              <li>
                 <Link href="/publicite" prefetch={false} className={cn(pageLink, "text-foreground")}>
                   <LocalizedText fr="Publicité" en="Advertising" />
                 </Link>

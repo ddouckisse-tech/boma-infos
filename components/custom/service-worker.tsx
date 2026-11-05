@@ -8,7 +8,7 @@ import { useEffect } from "react";
  *
  * Registration is deferred to the `load` event so it never competes with the
  * first paint. In development it is not only skipped: any worker already
- * controlling this origin is **unregistered and its caches dropped**. A
+ * controlling BOMA is **unregistered and its own caches dropped**. A
  * worker installed by a production run on the same `localhost` port would
  * otherwise outlive it and keep serving Turbopack's chunks from cache, so
  * that every edit shows up as "module factory is not available" — measured,
@@ -23,11 +23,32 @@ export function ServiceWorker() {
         .getRegistrations()
         .then((registrations) =>
           Promise.all(
-            registrations.map((registration) => registration.unregister())
+            registrations
+              .filter((registration) =>
+                [
+                  registration.active,
+                  registration.waiting,
+                  registration.installing,
+                ].some((worker) => {
+                  if (!worker) return false;
+                  const script = new URL(worker.scriptURL);
+                  return (
+                    script.origin === window.location.origin &&
+                    script.pathname === "/sw.js"
+                  );
+                })
+              )
+              .map((registration) => registration.unregister())
           )
         )
         .then(() => ("caches" in window ? caches.keys() : []))
-        .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
+        .then((keys) =>
+          Promise.all(
+            keys
+              .filter((key) => key.startsWith("bomainfos-"))
+              .map((key) => caches.delete(key))
+          )
+        )
         .catch(() => {
           // Sans accès au stockage (navigation privée), rien à nettoyer.
         });
@@ -35,10 +56,12 @@ export function ServiceWorker() {
     }
 
     const register = () => {
-      navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {
-        // Navigation privée ou service worker refusé : le site fonctionne,
-        // simplement sans lecture hors-ligne.
-      });
+      navigator.serviceWorker
+        .register("/sw.js", { scope: "/", updateViaCache: "none" })
+        .catch(() => {
+          // Navigation privée ou service worker refusé : le site fonctionne,
+          // simplement sans lecture hors-ligne.
+        });
     };
 
     if (document.readyState === "complete") {

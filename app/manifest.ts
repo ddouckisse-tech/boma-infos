@@ -16,6 +16,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: SITE.description,
     lang: "fr-FR",
     dir: "ltr",
+    // Preserve the existing implicit identity, including its source query.
+    id: "/?source=pwa",
     start_url: "/?source=pwa",
     scope: "/",
     display: "standalone",
