@@ -20,7 +20,7 @@ import { authClient } from "@/lib/auth-client";
 import { localize } from "@/lib/i18n";
 import type { Viewer } from "@/lib/viewer";
 
-/** Newsroom roles use a six-digit code; company and reader accounts a long password. */
+/** Newsroom codes use six digits followed by one letter; other roles a long password. */
 export const passwordModeFor = (viewer: Viewer): "pin" | "password" =>
   viewer.roleSlug === "administrateur" || viewer.roleSlug === "editeur"
     ? "pin"
@@ -133,8 +133,8 @@ export function AccountPanels({
           viewer.passwordChangeRequired
             ? mode === "pin"
               ? localize(locale, {
-                  fr: "Le code qui vous a été remis est provisoire : choisissez le vôtre. Trois fois six chiffres.",
-                  en: "The code you received is temporary: choose your own. Enter six digits three times.",
+                  fr: "Le code qui vous a été remis est provisoire : choisissez six chiffres suivis d’une lettre, puis confirmez ce nouveau code.",
+                  en: "The code you received is temporary: choose six digits followed by one letter, then confirm the new code.",
                 })
               : localize(locale, {
                   fr: "Votre mot de passe est provisoire : choisissez-en un définitif.",
@@ -142,8 +142,8 @@ export function AccountPanels({
                 })
             : mode === "pin"
               ? localize(locale, {
-                  fr: "Six chiffres, connus de vous seul. Le changement déconnecte vos autres appareils.",
-                  en: "Six digits known only to you. Changing it signs out your other devices.",
+                  fr: "Six chiffres suivis d’une lettre, connus de vous seul. La casse compte. Le changement déconnecte vos autres appareils.",
+                  en: "Six digits followed by one letter known only to you. Case matters. Changing it signs out your other devices.",
                 })
               : localize(locale, {
                   fr: "Douze caractères au minimum. Le changement ferme vos autres sessions.",

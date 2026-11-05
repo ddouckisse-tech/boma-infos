@@ -74,8 +74,8 @@ export function SecurityReminder({ viewer }: { viewer: Viewer }) {
               </p>
               <p className="mt-1 type-small text-muted-foreground">
                 {localize(locale, {
-                  fr: "Le code à six chiffres qui vous a été remis est provisoire. Choisissez le vôtre — trois fois six chiffres, trente secondes.",
-                  en: "The six-digit code you received is temporary. Choose your own — enter six digits three times, in about thirty seconds.",
+                  fr: "Le code qui vous a été remis est provisoire. Choisissez six chiffres suivis d’une lettre, puis confirmez ce nouveau code.",
+                  en: "The code you received is temporary. Choose six digits followed by one letter, then confirm the new code.",
                 })}
               </p>
             </div>

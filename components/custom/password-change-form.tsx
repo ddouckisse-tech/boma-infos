@@ -8,7 +8,7 @@ import { FormError } from "@/components/custom/auth-shell";
 import { TextField } from "@/components/custom/form-field";
 import { PinField } from "@/components/custom/pin-field";
 import { usePreferences } from "@/components/providers/preferences-provider";
-import { isPinCode } from "@/convex/model/password";
+import { ACCESS_CODE_LENGTH, isAccessCode } from "@/convex/model/password";
 import { authClient } from "@/lib/auth-client";
 import { localize } from "@/lib/i18n";
 
@@ -17,9 +17,10 @@ const LONG_MINIMUM = 12;
 /**
  * "Changement du mot de passe" — the newsroom's security gesture (12/09/2026).
  *
- * `pin` mode is the newsroom's: three rows of six boxes — the current code,
- * the new one, the new one again. `password` mode keeps the classic three
- * fields for company accounts, whose password is twelve characters or more.
+ * `pin` mode accepts the current password as-is, including legacy codes,
+ * then asks twice for six digits followed by one letter. `password` mode
+ * keeps the classic three fields for company accounts, whose password is
+ * twelve characters or more.
  * Both call Better Auth's `changePassword`, which revokes every other
  * session: whoever knew the previous code is out. The provisional flag on
  * the profile falls server-side (`convex/auth.ts`, hooks.after), never here.
@@ -44,17 +45,17 @@ export function PasswordChangeForm({
 
   const pin = mode === "pin";
   const complete = pin
-    ? [current, next, confirmation].every(isPinCode)
+    ? current !== "" && isAccessCode(next) && isAccessCode(confirmation)
     : current !== "" && next.length >= LONG_MINIMUM && confirmation !== "";
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError("");
-    if (pin && !isPinCode(next)) {
+    if (pin && !isAccessCode(next)) {
       setError(
         localize(locale, {
-          fr: "Le nouveau code doit compter exactement six chiffres.",
-          en: "The new code must contain exactly six digits.",
+          fr: "Le nouveau code doit contenir six chiffres suivis d'une lettre.",
+          en: "The new code must contain six digits followed by one letter.",
         })
       );
       return;
@@ -152,10 +153,13 @@ export function PasswordChangeForm({
 
       {pin ? (
         <>
-          <PinField
+          <TextField
             label={localize(locale, { fr: "Code actuel", en: "Current code" })}
+            type="password"
+            autoComplete="current-password"
+            required
             value={current}
-            onChange={setCurrent}
+            onChange={(event) => setCurrent(event.target.value)}
             disabled={busy}
             autoFocus={autoFocus}
           />
@@ -165,8 +169,8 @@ export function PasswordChangeForm({
             onChange={setNext}
             disabled={busy}
             hint={localize(locale, {
-              fr: "Six chiffres. Le changement déconnecte vos autres appareils.",
-              en: "Six digits. Changing it signs out your other devices.",
+              fr: "Six chiffres suivis d'une lettre. La casse compte. Le changement déconnecte vos autres appareils.",
+              en: "Six digits followed by one letter. Case matters. Changing it signs out your other devices.",
             })}
           />
           <PinField
@@ -178,7 +182,7 @@ export function PasswordChangeForm({
             onChange={setConfirmation}
             disabled={busy}
             error={
-              confirmation.length === 6 && confirmation !== next
+              confirmation.length === ACCESS_CODE_LENGTH && confirmation !== next
                 ? localize(locale, {
                     fr: "Les deux saisies diffèrent.",
                     en: "The two entries do not match.",

@@ -28,7 +28,7 @@ import { Modal } from "@/components/custom/modal";
 import { OfficeHeader, OfficeSection } from "@/components/custom/office-header";
 import { PinField, randomPin } from "@/components/custom/pin-field";
 import { StatsTile } from "@/components/custom/stats-tile";
-import { isPinCode } from "@/convex/model/password";
+import { isAccessCode } from "@/convex/model/password";
 import { formatDate, humanError } from "@/lib/private";
 import { cn } from "@/lib/utils";
 
@@ -82,8 +82,8 @@ const REVIEW_STATE_TONE: Record<string, string> = {
  * `approveOrganization` et `rejectOrganization` refusent un éditeur
  * exactement comme ils refuseraient un appel direct depuis la CLI.
  *
- * Un compte créé ici reçoit un code provisoire à six chiffres (décision du
- * client du 12/09/2026), que son titulaire remplace lui-même depuis « Mon
+ * Un compte créé ici reçoit un code provisoire à six chiffres suivis d'une
+ * lettre (décision du client du 05/11/2026), que son titulaire remplace lui-même depuis « Mon
  * compte » — il n'existe plus de rôle à double authentification obligatoire
  * (voir `convex/model/access.ts`).
  */
@@ -623,7 +623,7 @@ function CreateStaffForm({ roles }: { roles: Role[] }) {
             label="Code d'accès provisoire"
             value={password}
             onChange={setPassword}
-            hint="Six chiffres, remis à la personne hors ligne. Elle le remplacera depuis « Mon compte »."
+            hint="Six chiffres suivis d’une lettre, sensible à la casse, remis à la personne hors ligne. Elle le remplacera depuis « Mon compte »."
           />
           <ActionButton
             type="button"
@@ -669,7 +669,7 @@ function CreateStaffForm({ roles }: { roles: Role[] }) {
           creating ||
           email.trim() === "" ||
           displayName.trim() === "" ||
-          !isPinCode(password) ||
+          !isAccessCode(password) ||
           roleSlug === ""
         }
         className="justify-self-start sm:col-span-2"

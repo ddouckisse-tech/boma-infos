@@ -12,7 +12,7 @@
  *
  * Run again on a known address, it replaces the password and revokes every
  * open session. Under twelve characters the code is PROVISIONAL: the
- * interface reminds the holder to choose their own six-digit code (nothing
+ * interface reminds the holder to choose six digits followed by one letter (nothing
  * is refused meanwhile — client decision of 12/09/2026).
  *
  * Everything goes through `accounts:ensureAccount`, a Convex action. No HTTP
@@ -33,6 +33,10 @@
 
 import { spawnSync } from "node:child_process";
 import path from "node:path";
+import {
+  isAcceptablePassword,
+  PASSWORD_RULE_MESSAGE,
+} from "../convex/model/password";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 const ROLES = ["administrateur", "editeur", "entreprise", "lecteur"];
@@ -83,10 +87,8 @@ if (!ROLES.includes(role)) {
   console.error(`Rôle inconnu « ${role} ». Attendu : ${ROLES.join(", ")}.`);
   process.exit(1);
 }
-if (!/^\d{6}$/.test(password) && password.length < 12) {
-  console.error(
-    "Le mot de passe doit être un code à six chiffres, ou compter au moins douze caractères."
-  );
+if (!isAcceptablePassword(password)) {
+  console.error(PASSWORD_RULE_MESSAGE);
   process.exit(1);
 }
 // Un code remis par un tiers est PROVISOIRE : l'interface rappelle à la
@@ -105,7 +107,7 @@ run("accounts:bootstrapProfile", {
 console.log(`\n✓ ${name} <${email}> — rôle « ${role} ».`);
 if (provisional) {
   console.log(
-    "  Code PROVISOIRE : un rappel invite la personne à choisir son propre code à six chiffres\n" +
+    "  Code PROVISOIRE : un rappel invite la personne à choisir son propre code de six chiffres suivis d’une lettre\n" +
       "  depuis « Mon compte » ou « Réglages ». Rien n'est bloqué entre-temps."
   );
 }

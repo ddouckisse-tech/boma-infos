@@ -48,11 +48,10 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
     secret: process.env.BETTER_AUTH_SECRET,
     emailAndPassword: {
       enabled: true,
-      // Six : la longueur du code d'accès de la rédaction (arbitrage du
-      // 12/09/2026). La forme exacte — six chiffres, ou douze caractères et
-      // plus pour une entreprise — est tenue dans `hooks.before` ci-dessous,
-      // dans `registerCompany` et dans `createStaff`
-      // (`convex/model/password.ts`).
+      // Six reste le plancher pour authentifier les anciens codes. Toute
+      // création ou modification exige désormais six chiffres suivis d'une
+      // lettre, ou douze caractères et plus : `hooks.before` et les actions
+      // de comptes appliquent `convex/model/password.ts`.
       minPasswordLength: 6,
       maxPasswordLength: 128,
       // Aucun courriel n'est encore expédié (aucun prestataire n'est câblé) :
@@ -117,20 +116,23 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
     },
     hooks: {
       /**
-       * Politique du mot de passe, côté serveur, sur les deux chemins où un
-       * titulaire choisit lui-même le sien : un code à six chiffres, ou
-       * douze caractères et plus (`convex/model/password.ts`). Le formulaire
-       * le dit aussi, mais le formulaire n'est pas une garantie.
+       * Politique des nouveaux mots de passe, à la création comme au
+       * changement : six chiffres suivis d'une lettre, ou douze caractères
+       * et plus. La connexion ne valide pas la forme : les anciens codes
+       * restent utilisables (`convex/model/password.ts`).
        */
       before: createAuthMiddleware(async (hook) => {
         if (
           hook.path !== "/change-password" &&
-          hook.path !== "/reset-password"
+          hook.path !== "/reset-password" &&
+          hook.path !== "/sign-up/email"
         ) {
           return;
         }
-        const next = (hook.body as { newPassword?: unknown } | undefined)
-          ?.newPassword;
+        const body = hook.body as
+          { password?: unknown; newPassword?: unknown } | undefined;
+        const next =
+          hook.path === "/sign-up/email" ? body?.password : body?.newPassword;
         if (typeof next !== "string" || !isAcceptablePassword(next)) {
           throw new APIError("BAD_REQUEST", { message: PASSWORD_RULE_MESSAGE });
         }

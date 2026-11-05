@@ -2,19 +2,14 @@
 
 import { useId, useRef, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
-import { PIN_LENGTH } from "@/convex/model/password";
+import { ACCESS_CODE_DIGITS, ACCESS_CODE_LENGTH } from "@/convex/model/password";
 import { cn } from "@/lib/utils";
 
 /**
- * Six boxes for a six-digit access code — the newsroom's password since the
- * client's decision of 12/09/2026.
+ * Seven boxes for six digits followed by one case-sensitive ASCII letter.
  *
- * One `<input>` per digit, because that is what the person sees: a code,
- * not a password field. The boxes behave as one field — typing advances,
- * Backspace retreats, a paste of six digits fills the row — and expose one
- * value to the form: a string of up to six digits. Masked by default (it is
- * a secret), with a single toggle for the row. `autoComplete="off"`: a
- * password manager has nothing sensible to do with six separate boxes.
+ * The boxes behave as one field: typing advances, Backspace retreats and a
+ * pasted complete code fills the row. Case is kept exactly as entered.
  */
 export function PinField({
   label,
@@ -38,28 +33,40 @@ export function PinField({
   const id = useId();
   const [visible, setVisible] = useState(false);
   const cells = useRef<(HTMLInputElement | null)[]>([]);
-  const digits = value.replace(/\D/g, "").slice(0, PIN_LENGTH);
+  const code = value.slice(0, ACCESS_CODE_LENGTH);
 
   const focusCell = (index: number) => {
-    const target = cells.current[Math.max(0, Math.min(PIN_LENGTH - 1, index))];
+    const target = cells.current[
+      Math.max(0, Math.min(ACCESS_CODE_LENGTH - 1, index))
+    ];
     target?.focus();
     target?.select();
   };
 
-  /** Writes `input` from `index` on, overwriting what follows. */
+  /** Replace occupied cells, without stripping or changing the final letter. */
   const write = (index: number, input: string) => {
-    const incoming = input.replace(/\D/g, "");
-    if (incoming === "") return;
-    const next = (digits.slice(0, index) + incoming).slice(0, PIN_LENGTH);
+    if (index > code.length) {
+      focusCell(code.length);
+      return;
+    }
+    if (input === "") {
+      onChange(code.slice(0, index));
+      focusCell(index);
+      return;
+    }
+    const next = code.slice(0, index) + input + code.slice(index + input.length);
+    // A partially entered code is digits only until all six digits exist.
+    // Invalid pasted text is rejected rather than silently becoming a new secret.
+    if (!/^(?:\d{0,6}|\d{6}[A-Za-z])$/.test(next)) return;
     onChange(next);
-    focusCell(next.length < PIN_LENGTH ? next.length : PIN_LENGTH - 1);
+    focusCell(Math.min(index + input.length, ACCESS_CODE_LENGTH - 1));
   };
 
-  /** Clears the digit of the box, or the previous one if the box is empty. */
+  /** Clears from this box, or from the preceding box if this one is empty. */
   const erase = (index: number) => {
-    const at = digits[index] !== undefined ? index : index - 1;
+    const at = code[index] !== undefined ? index : index - 1;
     if (at < 0) return;
-    onChange(digits.slice(0, at));
+    onChange(code.slice(0, at));
     focusCell(at);
   };
 
@@ -70,38 +77,47 @@ export function PinField({
 
   return (
     <fieldset
-      className={cn("grid gap-2", className)}
+      className={cn("grid w-full min-w-0 max-w-sm gap-2", className)}
       disabled={disabled}
       aria-describedby={describedBy}
     >
       <legend className="type-small font-medium">{label}</legend>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <div
-          className="flex gap-1.5 sm:gap-2"
+          className="grid w-full min-w-0 max-w-sm grid-cols-7 gap-1 sm:gap-2"
           onPaste={(event) => {
             event.preventDefault();
-            write(0, event.clipboardData.getData("text"));
+            write(0, event.clipboardData.getData("text").trim());
           }}
         >
-          {Array.from({ length: PIN_LENGTH }, (_, index) => (
+          {Array.from({ length: ACCESS_CODE_LENGTH }, (_, index) => (
             <input
               key={index}
               ref={(node) => {
                 cells.current[index] = node;
               }}
               type={visible ? "text" : "password"}
-              inputMode="numeric"
-              pattern="[0-9]*"
+              inputMode={index < ACCESS_CODE_DIGITS ? "numeric" : "text"}
+              pattern={index < ACCESS_CODE_DIGITS ? "[0-9]" : "[A-Za-z]"}
               autoComplete="off"
+              autoCapitalize="none"
+              spellCheck={false}
               autoFocus={autoFocus && index === 0}
-              aria-label={`${label}, chiffre ${index + 1} sur ${PIN_LENGTH}`}
+              aria-label={
+                index < ACCESS_CODE_DIGITS
+                  ? `${label}, chiffre ${index + 1} sur ${ACCESS_CODE_DIGITS}`
+                  : `${label}, lettre finale, majuscule ou minuscule`
+              }
               aria-invalid={error ? true : undefined}
-              value={digits[index] ?? ""}
+              value={code[index] ?? ""}
               onChange={(event) => write(index, event.target.value)}
               onKeyDown={(event) => {
                 if (event.key === "Backspace") {
                   event.preventDefault();
                   erase(index);
+                } else if (event.key === "Delete") {
+                  event.preventDefault();
+                  onChange(code.slice(0, index));
                 } else if (event.key === "ArrowLeft") {
                   event.preventDefault();
                   focusCell(index - 1);
@@ -112,11 +128,11 @@ export function PinField({
               }}
               onFocus={(event) => event.target.select()}
               className={cn(
-                "size-11 rounded-md border bg-background text-center font-mono type-h3 text-foreground transition-colors outline-none sm:size-12",
+                "h-11 w-full min-w-0 rounded-md border bg-background text-center font-mono type-h3 text-foreground transition-colors outline-none sm:h-12",
                 "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
                 error
                   ? "border-destructive"
-                  : digits[index] !== undefined
+                  : code[index] !== undefined
                     ? "border-foreground/50"
                     : "border-input"
               )}
@@ -156,9 +172,19 @@ export function PinField({
   );
 }
 
-/** A random six-digit code, for an administrator creating an account. */
+/** Uniform cryptographic sampling; avoids modulo bias for digits and letters. */
+function randomBelow(limit: number): number {
+  const bytes = new Uint8Array(1);
+  const ceiling = 256 - (256 % limit);
+  do {
+    crypto.getRandomValues(bytes);
+  } while (bytes[0] >= ceiling);
+  return bytes[0] % limit;
+}
+
+/** Six random digits and one ASCII letter, for a provisional staff code. */
 export function randomPin(): string {
-  const bytes = new Uint32Array(PIN_LENGTH);
-  crypto.getRandomValues(bytes);
-  return Array.from(bytes, (n) => String(n % 10)).join("");
+  const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+  return Array.from({ length: ACCESS_CODE_DIGITS }, () => String(randomBelow(10)))
+    .join("") + letters[randomBelow(letters.length)];
 }

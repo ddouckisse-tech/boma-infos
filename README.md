@@ -62,11 +62,11 @@ bun run seed
 
 # 3. Créer le premier compte. Le dépôt n'en contient AUCUN : ni `admin`,
 #    ni mot de passe par défaut — l'audit du site de l'autre titre avait
-#    relevé le contraire (CDC §5.3). Le mot de passe est un code à six
-#    chiffres, ou douze caractères et plus (comptes entreprise) ; sous douze
-#    caractères, il est PROVISOIRE.
-bun run compte -- --email=vous@bomainfos.com --nom="Votre nom" \
-  --motdepasse=123456 --role=administrateur
+#    relevé le contraire (CDC §5.3). Le mot de passe est un code de six
+#    chiffres suivis d'une lettre (A-Z ou a-z), ou douze caractères et plus
+#    (comptes entreprise) ; sous douze caractères, il est PROVISOIRE.
+bun run compte -- --email=vous@bomainfos.com --nom="Prénom NOM" \
+  --motdepasse=123456A --role=administrateur
 
 # 4. Serveur de développement Next.js
 bun run dev            # http://localhost:3040
@@ -84,7 +84,7 @@ bun run dev            # http://localhost:3040
 
 > Un code remis par un administrateur ou par `bun run compte` est
 > **provisoire** dès qu'il fait moins de douze caractères, donc pour un code
-> à six chiffres : une carte flottante le rappelle, fermable une semaine (le
+> de six chiffres suivis d'une lettre : une carte flottante le rappelle, fermable une semaine (le
 > choix est mémorisé sur le profil), et rien n'est bloqué entre-temps. Le
 > changement se fait depuis « Réglages » (administrateur) ou « Mon compte »
 > (tout rôle de rédaction, `/redaction/compte`). La vérification par
@@ -901,8 +901,10 @@ sur `/sw.js`.
 
 S'y ajoutent, côté application :
 
-- mot de passe **six chiffres exactement, ou douze caractères et plus** —
-  jamais huit (`convex/model/password.ts`) ;
+- nouveau mot de passe **six chiffres suivis d'une lettre (A-Z ou a-z), ou
+  douze caractères et plus** (`convex/model/password.ts`) ; les anciens codes
+  à six chiffres restent acceptés à la connexion, mais ne peuvent plus être
+  choisis lors d'une création ou d'un changement ;
 - **limitation de débit en base** sur la connexion, le second facteur et la
   réinitialisation — l'audit du site de l'autre titre relevait l'absence totale
   de limitation ;
@@ -971,7 +973,7 @@ premier compte de production :
 
 ```bash
 CONVEX_DEPLOYMENT=prod:cheery-dachshund-789 bun run compte -- \
-  --email=vous@bomainfos.com --nom="Votre nom" --motdepasse=123456 \
+  --email=vous@bomainfos.com --nom="Prénom NOM" --motdepasse=123456A \
   --role=administrateur
 ```
 

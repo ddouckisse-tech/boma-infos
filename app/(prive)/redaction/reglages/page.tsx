@@ -329,8 +329,8 @@ export default function ReglagesPage() {
       />
 
       {/* La sécurité de l'accès d'abord — c'est ici que le client attend le
-          « changement du mot de passe » (12/09/2026) : trois rangées de six
-          cases, et la vérification par application repliée dessous. */}
+          « changement du mot de passe » : mot de passe actuel, puis nouveau code
+          à six chiffres suivis d’une lettre à confirmer. La vérification par application est repliée dessous. */}
       <OfficeSection
         id="mot-de-passe"
         icon={KeyRound}
@@ -338,8 +338,8 @@ export default function ReglagesPage() {
         title="Changement du code d'accès"
         description={
           viewer?.passwordChangeRequired
-            ? "Le code qui vous a été remis est provisoire : choisissez le vôtre. Trois fois six chiffres."
-            : "Six chiffres, connus de vous seul. Le changement déconnecte vos autres appareils."
+            ? "Le code qui vous a été remis est provisoire : choisissez six chiffres suivis d’une lettre, puis confirmez ce nouveau code."
+            : "Six chiffres suivis d’une lettre, connus de vous seul. La casse compte. Le changement déconnecte vos autres appareils."
         }
         className="mb-8"
       >

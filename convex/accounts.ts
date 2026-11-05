@@ -570,9 +570,9 @@ export const registerCompany = action({
     if (!organizationId) return { status: "received" };
 
     // CDC §4.3 : douze caractères pour un mot de passe définitif. La
-    // bibliothèque n'impose plus que le plancher des mots de passe
-    // provisoires (six), réservés à la ligne de commande — ici, la règle
-    // est tenue côté serveur, quoi que dise le formulaire.
+    // bibliothèque conserve un plancher de six pour les anciens codes —
+    // ici, la règle entreprise est tenue côté serveur, quoi que dise le
+    // formulaire.
     if (args.password.length < 12) {
       throw new Error(
         "Le mot de passe doit compter au moins douze caractères."
@@ -608,7 +608,7 @@ export const registerCompany = action({
 /**
  * Nominative staff account, created by an administrator (§4.3: "aucun
  * identifiant par défaut"). The access code is chosen at creation — six
- * digits, typically — and handed over out of band; the profile is flagged
+ * digits followed by one letter — and handed over out of band; the profile is flagged
  * so the interface reminds the holder to pick their own. Nothing is locked
  * meanwhile (12/09/2026).
  */
@@ -825,8 +825,8 @@ export const ensureAccount = internalAction({
   args: { email: v.string(), name: v.string(), password: v.string() },
   returns: v.string(),
   handler: async (ctx, args): Promise<string> => {
-    if (args.password.length < 6) {
-      throw new Error("Le mot de passe doit compter au moins six caractères.");
+    if (!isAcceptablePassword(args.password)) {
+      throw new Error(PASSWORD_RULE_MESSAGE);
     }
     const email = args.email.trim().toLowerCase();
     const provisional = args.password.length < 12;
@@ -853,8 +853,8 @@ export const setProvisionalPassword = internalAction({
   args: { email: v.string(), password: v.string() },
   returns: v.string(),
   handler: async (ctx, args): Promise<string> => {
-    if (args.password.length < 6) {
-      throw new Error("Le mot de passe doit compter au moins six caractères.");
+    if (!isAcceptablePassword(args.password)) {
+      throw new Error(PASSWORD_RULE_MESSAGE);
     }
     const email = args.email.trim().toLowerCase();
     const context = await createAuth(ctx).$context;
