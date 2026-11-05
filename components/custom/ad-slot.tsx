@@ -44,6 +44,7 @@ const desktopQuery = "(min-width: 1024px)";
 const motionQuery = "(prefers-reduced-motion: reduce)";
 const serverFalse = () => false;
 const serverTrue = () => true;
+const serverViewport = () => undefined;
 const isDesktop = () => window.matchMedia(desktopQuery).matches;
 const reducedMotion = () => window.matchMedia(motionQuery).matches;
 const isDocumentVisible = () => document.visibilityState === "visible";
@@ -83,7 +84,7 @@ type AdFrameProps = {
   english?: boolean;
 };
 
-function AdArtwork({
+export function AdArtwork({
   creative,
   english,
 }: {
@@ -126,7 +127,7 @@ function AdArtwork({
   );
 }
 
-function AdFrame({
+export function AdFrame({
   creative,
   placement,
   className,
@@ -142,20 +143,27 @@ function AdFrame({
       data-ad-campaign={creative.id}
       data-ad-format={creative.format}
       aria-label={
-        creative.kind === "house"
+        creative.demo
           ? english
-            ? "Advertisement — BOMA Infos promotion"
-            : "Publicité — autopromotion BOMA Infos"
-          : english
-            ? "Advertisement"
-            : "Publicité"
+            ? "Advertisement — fictional example"
+            : "Publicité — exemple fictif"
+          : creative.kind === "house"
+            ? english
+              ? "Advertisement — BOMA Infos promotion"
+              : "Publicité — autopromotion BOMA Infos"
+            : english
+              ? "Advertisement"
+              : "Publicité"
       }
     >
       <div className="lc-ad-header">
         <span className="lc-ad-label">
           {english ? "Advertisement" : "Publicité"}
-          {creative.kind === "house" && (
+          {creative.kind === "house" && !creative.demo && (
             <span> · {english ? "Promotion" : "Autopromotion"}</span>
+          )}
+          {creative.demo && (
+            <span> · {english ? "Fictional example" : "Exemple fictif"}</span>
           )}
         </span>
         <div className="lc-ad-controls">{controls}</div>
@@ -171,11 +179,31 @@ function AdFrame({
       ) : (
         <div className="lc-ad-artwork" />
       )}
+      {loadCreative && !expired && creative.format === "banner" && (
+        <a
+          className="lc-ad-mobile-details"
+          href={creative.href}
+          rel={creative.kind === "paid" ? "sponsored" : undefined}
+        >
+          <span>{creative.title}</span>
+          <strong>
+            {english ? "Discover" : "Découvrir"}{" "}
+            <span aria-hidden="true">→</span>
+          </strong>
+        </a>
+      )}
       <p
         className="lc-ad-caption"
-        aria-hidden={expired || creative.kind === "house" || undefined}
+        aria-hidden={
+          !loadCreative ||
+          expired ||
+          (creative.kind === "house" && !creative.demo) ||
+          undefined
+        }
       >
-        {!expired && creative.kind === "paid" ? creative.advertiser : "\u00a0"}
+        {loadCreative && !expired && (creative.kind === "paid" || creative.demo)
+          ? creative.advertiser
+          : "\u00a0"}
       </p>
     </aside>
   );
@@ -200,16 +228,21 @@ export function AdSlot({
   const desktop = useSyncExternalStore(
     subscribeDesktop,
     isDesktop,
-    serverFalse
+    serverViewport
   );
   const candidates = useMemo(
     () =>
       candidatesForSlot(
         creatives,
         placement,
-        snapshot.ready ? snapshot.navigationAt : undefined
+        snapshot.ready ? snapshot.navigationAt : undefined,
+        snapshot.ready && desktop !== undefined
+          ? desktop
+            ? "desktop"
+            : "mobile"
+          : undefined
       ),
-    [creatives, placement, snapshot.ready, snapshot.navigationAt]
+    [creatives, placement, snapshot.ready, snapshot.navigationAt, desktop]
   );
   if (
     candidates.length === 0 ||
@@ -222,27 +255,27 @@ export function AdSlot({
   );
   if (available.length === 0) return null;
 
-  // A hidden lazy <img> can still download in Chrome. The desktop-only slot
-  // emits no image until its media query matches; CSS reserves its desktop box.
-  if (!snapshot.ready) {
+  // A hidden lazy <img> can still download. Device-targeted campaigns emit
+  // no image until the real media query is known after hydration.
+  if (!snapshot.ready || desktop === undefined) {
     return (
       <AdFrame
         creative={available[0]}
         placement={placement}
         className={className}
-        loadCreative={placement !== "home-secondary"}
+        loadCreative={!available[0].device || available[0].device === "all"}
       />
     );
   }
 
   return (
     <ActiveAdSlot
-      key={`${pageKey}:${placement}`}
+      key={`${pageKey}:${placement}:${desktop ? "desktop" : "mobile"}`}
       placement={placement}
       creatives={available}
       dismissals={snapshot.dismissals}
       className={className}
-      viewportEnabled={placement !== "home-secondary" || desktop}
+      viewportEnabled
     />
   );
 }

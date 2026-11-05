@@ -9,9 +9,12 @@ import {
   type QueryCtx,
 } from "./_generated/server";
 import { MEDIA } from "./mediaManifest";
+import { AD_DEMO_MEDIA } from "./adDemoManifest";
+import { DEMO_ADS } from "../lib/ads/demo";
 import { accessError, PERMISSIONS, requirePermission } from "./model/access";
 import {
   AD_FEED_LIMIT,
+  adDevice,
   adFormat,
   adKind,
   adPlacement,
@@ -21,13 +24,14 @@ import {
   validateCampaign,
 } from "./model/advertising";
 import { recordAudit } from "./model/audit";
-import { resolveRenditions } from "./model/media";
+import { mediaDerivedFields, resolveRenditions } from "./model/media";
 import type { AdCreative, AdFormat, AdPlacement } from "../lib/ads/types";
 import type { MediaAsset } from "../lib/media-core";
 
 const campaignShape = v.object({
   _id: v.id("adCampaigns"),
   ...campaignFields,
+  demoKey: v.optional(v.string()),
   updatedAt: v.number(),
   updatedBy: v.string(),
 });
@@ -44,6 +48,8 @@ const creativeShape = v.object({
   format: adFormat,
   href: v.string(),
   placements: v.array(adPlacement),
+  device: v.optional(adDevice),
+  demo: v.optional(v.boolean()),
   startsAt: v.optional(v.number()),
   endsAt: v.optional(v.number()),
   priority: v.number(),
@@ -84,7 +90,7 @@ async function campaignMedia(
     source: row.source,
   };
   if (!row.storage?.length) {
-    const asset = MEDIA[key];
+    const asset = MEDIA[key] ?? AD_DEMO_MEDIA[key];
     if (!asset)
       throw new Error("Ce média ne dispose d'aucun fichier disponible.");
     return constrainAdMedia({ ...asset, ...metadata }, format, placements);
@@ -166,6 +172,8 @@ export const list = query({
         href: row.href,
         mediaKey: row.mediaKey,
         placements: row.placements,
+        device: row.device ?? "all",
+        demoKey: row.demoKey,
         startsAt: row.startsAt,
         endsAt: row.endsAt,
         enabled: row.enabled,
@@ -185,7 +193,12 @@ export const save = mutation({
     const existing = id ? await ctx.db.get(id) : null;
     if (id && !existing) throw accessError("FORBIDDEN");
     await campaignMedia(ctx, input.mediaKey, input.format, input.placements);
-    const payload = { ...input, updatedAt: Date.now(), updatedBy: viewer.name };
+    const payload = {
+      ...input,
+      ...(existing?.demoKey !== undefined ? { demoKey: existing.demoKey } : {}),
+      updatedAt: Date.now(),
+      updatedBy: viewer.name,
+    };
     let campaignId: Id<"adCampaigns">;
     if (id) {
       // replace clears an optional start/end removed in the editor as well.
@@ -276,6 +289,8 @@ export const publicFeed = query({
           format: campaign.format,
           href: campaign.href,
           placements: campaign.placements,
+          device: campaign.device,
+          ...(row.demoKey !== undefined ? { demo: true } : {}),
           startsAt: campaign.startsAt,
           endsAt: campaign.endsAt,
           priority: campaign.priority,
@@ -295,4 +310,131 @@ export const publicFeed = query({
       },
     }));
   },
+});
+
+const exampleResult = v.object({
+  created: v.number(),
+  existing: v.number(),
+  total: v.number(),
+});
+
+type ExampleResult = { created: number; existing: number; total: number };
+
+/** Insert-only: neither an edited campaign nor a library row is ever replaced. */
+async function insertExamples(
+  ctx: MutationCtx,
+  actor: { subject: string; name: string; roleSlug: string }
+): Promise<ExampleResult> {
+  let created = 0;
+  let mediaCreated = 0;
+  const now = Date.now();
+  for (const ad of DEMO_ADS) {
+    const asset = AD_DEMO_MEDIA[ad.mediaKey];
+    if (!asset)
+      throw new Error(`Affiche de démonstration manquante : ${ad.slug}.`);
+    const media = await ctx.db
+      .query("media")
+      .withIndex("by_key", (q) => q.eq("key", ad.mediaKey))
+      .unique();
+    if (!media) {
+      const text = {
+        key: ad.mediaKey,
+        alt: asset.alt,
+        caption: asset.caption,
+        credit: asset.credit,
+      };
+      await ctx.db.insert("media", {
+        ...text,
+        ...mediaDerivedFields(text),
+        license: asset.license,
+        source: asset.source,
+        color: asset.color,
+        width: asset.width,
+        height: asset.height,
+        variants: [
+          ...asset.avif.map((variant) => ({
+            format: "avif" as const,
+            ...variant,
+          })),
+          ...asset.webp.map((variant) => ({
+            format: "webp" as const,
+            ...variant,
+          })),
+        ],
+      });
+      mediaCreated += 1;
+    }
+    const existing = await ctx.db
+      .query("adCampaigns")
+      .withIndex("by_demo_key", (q) => q.eq("demoKey", ad.slug))
+      .unique();
+    if (existing) continue;
+    const campaign = validateCampaign({
+      title: ad.title,
+      advertiser: ad.advertiser,
+      kind: "house",
+      format: ad.format,
+      href: `/publicite/demo/${ad.slug}`,
+      mediaKey: ad.mediaKey,
+      placements: [...ad.placements],
+      device: ad.device,
+      enabled: true,
+      priority: 25,
+    });
+    await campaignMedia(
+      ctx,
+      campaign.mediaKey,
+      campaign.format,
+      campaign.placements
+    );
+    await ctx.db.insert("adCampaigns", {
+      ...campaign,
+      demoKey: ad.slug,
+      updatedAt: now,
+      updatedBy: actor.name,
+    });
+    created += 1;
+  }
+  if (created > 0 || mediaCreated > 0) {
+    await ctx.db.insert("auditLog", {
+      at: now,
+      actorSubject: actor.subject,
+      actorName: actor.name,
+      actorRole: actor.roleSlug,
+      action: "settings.update",
+      targetType: "adCampaigns",
+      targetId: "demo-examples",
+      summary: `Exemples publicitaires : ${created} campagne(s), ${mediaCreated} affiche(s) ajoutée(s), sans remplacement.`,
+    });
+  }
+  return {
+    created,
+    existing: DEMO_ADS.length - created,
+    total: DEMO_ADS.length,
+  };
+}
+
+export const loadExamples = mutation({
+  args: {},
+  returns: exampleResult,
+  handler: async (ctx): Promise<ExampleResult> => {
+    const viewer = await requirePermission(ctx, PERMISSIONS.settingsManage);
+    return await insertExamples(ctx, {
+      subject: viewer.subject,
+      name: viewer.name,
+      roleSlug: viewer.role.slug,
+    });
+  },
+});
+
+/** Explicit local/operator tooling only; absent from the public Convex API. */
+export const loadExamplesInternal = internalMutation({
+  args: {},
+  returns: exampleResult,
+  handler: async (ctx): Promise<ExampleResult> =>
+    await insertExamples(ctx, {
+      subject: "internal:ad-examples",
+      name: "Chargement interne des exemples",
+      roleSlug: "interne",
+    }),
 });

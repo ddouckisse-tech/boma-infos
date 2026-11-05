@@ -15,7 +15,8 @@ export type AdSenseConfig = {
   nonce?: string;
 };
 
-const SLOT_VARIABLES: Record<AdPlacement, string> = {
+// Overlays are first-party campaigns only; they never host third-party code.
+const SLOT_VARIABLES: Partial<Record<AdPlacement, string>> = {
   "home-primary": "ADSENSE_SLOT_HOME_PRIMARY",
   "home-secondary": "ADSENSE_SLOT_HOME_SECONDARY",
   article: "ADSENSE_SLOT_ARTICLE",
@@ -71,7 +72,8 @@ export function getAdSenseRuntimeConfig(env: Environment = process.env) {
   if (!origins.includes(scriptUrl.origin)) return null;
   const slots: Partial<Record<AdPlacement, string>> = {};
   for (const placement of AD_PLACEMENTS) {
-    const value = env[SLOT_VARIABLES[placement]];
+    const variable = SLOT_VARIABLES[placement];
+    const value = variable ? env[variable] : undefined;
     if (value && SLOT_ID.test(value)) slots[placement] = value;
   }
   if (Object.keys(slots).length === 0) return null;

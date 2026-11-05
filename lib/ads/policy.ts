@@ -4,6 +4,7 @@ import {
   AD_PLACEMENTS,
   AD_ROTATION_MS,
   type AdCreative,
+  type AdDevice,
   type AdPlacement,
 } from "@/lib/ads/types";
 
@@ -98,9 +99,23 @@ export function dismissAd(
 
 /** Relative editorial destinations or HTTPS only; reject ambiguous URL forms. */
 export function isSafeAdHref(href: string): boolean {
-  if (!href || href !== href.trim() || /[\u0000-\u0020\\]/.test(href))
+  if (
+    !href ||
+    href.length > 2048 ||
+    href !== href.trim() ||
+    /[\u0000-\u0020\\<>]/.test(href)
+  )
     return false;
-  if (href.startsWith("/") && !href.startsWith("//")) return true;
+  if (href.startsWith("/")) {
+    try {
+      const decoded = decodeURIComponent(href);
+      return (
+        !decoded.includes("//") && !/[\\\u0000-\u001f\u007f]/.test(decoded)
+      );
+    } catch {
+      return false;
+    }
+  }
   try {
     const url = new URL(href);
     return url.protocol === "https:" && !url.username && !url.password;
@@ -113,7 +128,8 @@ export function isSafeAdHref(href: string): boolean {
 export function candidatesForSlot(
   creatives: readonly AdCreative[],
   placement: AdPlacement,
-  at?: number
+  at?: number,
+  device?: Exclude<AdDevice, "all">
 ): AdCreative[] {
   const safe = creatives.filter(
     (creative) =>
@@ -122,9 +138,12 @@ export function candidatesForSlot(
       creative.id.length <= 200 &&
       isSafeAdHref(creative.href) &&
       creative.media.webp.length > 0 &&
+      (device === undefined || matchesAdDevice(creative, device)) &&
       (at === undefined || isCreativeActive(creative, at)) &&
-      (creative.format === "banner" ||
-        (placement === "article" && creative.format === "square"))
+      (placement === "popup" || placement === "floating"
+        ? creative.format === "square"
+        : creative.format === "banner" ||
+          (placement === "article" && creative.format === "square"))
   );
   const format = safe[0]?.format;
   const seen = new Set<string>();
@@ -135,6 +154,87 @@ export function candidatesForSlot(
       return true;
     })
     .slice(0, 6);
+}
+
+export function matchesAdDevice(
+  creative: Pick<AdCreative, "device">,
+  device: "desktop" | "mobile"
+): boolean {
+  return (
+    creative.device === undefined ||
+    creative.device === "all" ||
+    creative.device === device
+  );
+}
+
+/** Overlays belong to editorial reading, never to a form or a private area. */
+export function isOverlayPage(pathname: string): boolean {
+  return pathname === "/" || /^\/(article|rubrique)\/[^/]+/.test(pathname);
+}
+
+export function selectOverlay(
+  creatives: readonly AdCreative[],
+  dismissals: AdDismissals,
+  device: "desktop" | "mobile",
+  now: number
+): { placement: "popup" | "floating"; creative: AdCreative } | undefined {
+  const placements =
+    device === "desktop"
+      ? (["popup", "floating"] as const)
+      : (["floating", "popup"] as const);
+  for (const placement of placements) {
+    if (isPlacementDismissed(dismissals, placement)) continue;
+    const creative = candidatesForSlot(creatives, placement, now, device).find(
+      (item) => !isCampaignDismissed(dismissals, item.id)
+    );
+    if (creative) return { placement, creative };
+  }
+}
+
+/** A reader must have started reading; background or interrupted time never triggers an ad. */
+export function canShowOverlay({
+  placement,
+  visibleMs,
+  scrollFraction,
+  blocked,
+  limited,
+  capUntil,
+  now,
+}: {
+  placement: "popup" | "floating";
+  visibleMs: number;
+  scrollFraction: number;
+  blocked: boolean;
+  limited: boolean;
+  capUntil: number;
+  now: number;
+}): boolean {
+  return (
+    !blocked &&
+    !limited &&
+    capUntil <= now &&
+    scrollFraction >= 0.25 &&
+    visibleMs >= (placement === "popup" ? 12_000 : 8_000)
+  );
+}
+
+/** Untrusted storage cannot extend a frequency cap past its documented 24 hours. */
+export function parseOverlayCap(raw: string | null, now: number): number {
+  try {
+    const value: unknown = JSON.parse(raw ?? "null");
+    if (
+      !isRecord(value) ||
+      value.version !== 1 ||
+      typeof value.until !== "number" ||
+      !Number.isSafeInteger(value.until) ||
+      value.until <= now ||
+      value.until > now + AD_DISMISS_MS
+    )
+      return 0;
+    return value.until;
+  } catch {
+    return 0;
+  }
 }
 
 /** Start is inclusive; end is exclusive, including stale server-cache data. */

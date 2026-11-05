@@ -94,7 +94,7 @@ test("campaign fields are normalized and never contain HTML", () => {
   }
 });
 
-test("square campaigns only use the article placement; banners can share placements", () => {
+test("squares avoid banner-only slots; banners can share existing placements", () => {
   assert.doesNotThrow(() =>
     validateCampaign({ ...campaign, format: "square", placements: ["article"] })
   );

@@ -5,9 +5,14 @@ export const AD_PLACEMENTS = [
   "home-secondary",
   "article",
   "listing",
+  "article-inline",
+  "popup",
+  "floating",
 ] as const;
 export type AdPlacement = (typeof AD_PLACEMENTS)[number];
 export type AdFormat = "square" | "banner";
+export const AD_DEVICES = ["all", "desktop", "mobile"] as const;
+export type AdDevice = (typeof AD_DEVICES)[number];
 export type AdCreative = {
   id: string;
   title: string;
@@ -18,6 +23,10 @@ export type AdCreative = {
   format: AdFormat;
   href: string;
   placements: AdPlacement[];
+  /** Missing on existing campaigns means every device. */
+  device?: AdDevice;
+  /** Explicit example campaign, never a claim of a real advertiser. */
+  demo?: boolean;
   startsAt?: number;
   endsAt?: number;
   priority: number;

@@ -12,6 +12,7 @@
 
 .lc-ad-slot[data-ad-placement="home-primary"],
 .lc-ad-slot[data-ad-placement="home-secondary"],
+.lc-ad-slot[data-ad-placement="article-inline"],
 .lc-ad-slot[data-ad-placement="listing"] {
   max-inline-size: min(40rem, calc(100% - 2rem));
 }
@@ -110,6 +111,10 @@
   text-overflow: ellipsis;
 }
 
+.lc-ad-mobile-details {
+  display: none;
+}
+
 .lc-ad-expired {
   display: flex;
   align-items: center;
@@ -177,20 +182,45 @@ html[data-ad-dismissed~="listing"] .lc-ad-slot[data-ad-placement="listing"] {
   display: none !important;
 }
 
-@media (width < 1024px) {
-  .lc-ad-slot[data-ad-placement="home-secondary"] {
-    display: none;
-  }
+html[data-ad-dismissed~="article-inline"]
+  .lc-ad-slot[data-ad-placement="article-inline"],
+html[data-ad-dismissed~="popup"] .lc-ad-slot[data-ad-placement="popup"],
+html[data-ad-dismissed~="floating"] .lc-ad-slot[data-ad-placement="floating"] {
+  display: none !important;
 }
 
 @media (width < 640px) {
   .lc-ad-slot[data-ad-format="banner"] .lc-ad-artwork {
-    aspect-ratio: 2 / 1;
+    aspect-ratio: 3 / 1;
+  }
+
+  .lc-ad-mobile-details {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    min-block-size: 44px;
+    padding-block: 0.5rem;
+    color: var(--foreground);
+    text-decoration: none;
+    font-size: 0.8125rem;
+    line-height: 1.35;
+  }
+
+  .lc-ad-mobile-details strong {
+    flex-shrink: 0;
+    color: var(--primary);
+    font-size: 0.6875rem;
+  }
+
+  .lc-ad-mobile-details:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 3px;
   }
 }
 
 @container (width < 400px) {
   .lc-ad-slot[data-ad-format="banner"] .lc-ad-artwork {
-    aspect-ratio: 2 / 1;
+    aspect-ratio: 3 / 1;
   }
 }

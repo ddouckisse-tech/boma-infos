@@ -6,6 +6,8 @@ import { buildSections } from "@/lib/navigation";
 import { headers } from "next/headers";
 import { AdsConsent } from "@/components/custom/adsense-slot";
 import { getAdSenseCmpConfig } from "@/lib/ads/adsense-config";
+import { getAdvertising } from "@/lib/ads/server";
+import { AdOverlays } from "@/components/custom/ad-overlays";
 
 /**
  * Masthead, reading area and footer of the **public journal**.
@@ -22,6 +24,11 @@ export async function JournalChrome({
   children: React.ReactNode;
 }) {
   const sections = buildSections(await getNavigation());
+  const overlays = (await getAdvertising()).filter((campaign) =>
+    campaign.placements.some((placement) =>
+      placement === "popup" || placement === "floating"
+    )
+  );
   // Keep the public layout and global not-found on the same client graph;
   // different graphs make Turbopack duplicate the whole header/footer bundle.
   const cmp = getAdSenseCmpConfig();
@@ -44,6 +51,7 @@ export async function JournalChrome({
         {children}
       </main>
       <Footer />
+      {overlays.length > 0 && <AdOverlays creatives={overlays} />}
     </>
   );
 }

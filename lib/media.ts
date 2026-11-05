@@ -1,4 +1,5 @@
 import { MEDIA } from "@/convex/mediaManifest";
+import { AD_DEMO_MEDIA } from "@/convex/adDemoManifest";
 import type { MediaAsset } from "@/lib/media-core";
 
 /**
@@ -44,4 +45,4 @@ export function registerMedia(assets: readonly MediaAsset[]): void {
 export const getMediaAsset = (
   key: string | undefined
 ): MediaAsset | undefined =>
-  key ? (MEDIA[key] ?? uploaded.get(key)) : undefined;
+  key ? (MEDIA[key] ?? AD_DEMO_MEDIA[key] ?? uploaded.get(key)) : undefined;

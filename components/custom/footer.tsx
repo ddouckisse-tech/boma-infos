@@ -187,6 +187,11 @@ export function Footer() {
                   </Link>
                 </li>
               ))}
+              <li>
+                <Link href="/publicite" prefetch={false} className={cn(pageLink, "text-foreground")}>
+                  <LocalizedText fr="Publicité" en="Advertising" />
+                </Link>
+              </li>
             </ul>
             <ul className="flex flex-wrap gap-x-5">
               {NAV_LEGAL_PAGES.map((page) => (

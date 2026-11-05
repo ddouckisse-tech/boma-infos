@@ -2,51 +2,33 @@ import "server-only";
 import { cache } from "react";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
-import { getMediaAsset } from "@/lib/media";
+import { AD_DEMO_MEDIA } from "@/convex/adDemoManifest";
+import { DEMO_ADS } from "./demo";
 import { feedUrl, parseCampaignSelection, selectFeedCampaigns } from "./feed";
 import type { AdCreative, AdPlacement } from "./types";
 
-/** Explicit visual preview, never written to Convex or presented as a paid campaign. */
+/** Explicit local visual preview of the same ten examples available to administrators. */
 function previewCampaigns(): AdCreative[] {
-  const media = getMediaAsset("documents-bureau");
-  if (!media) return [];
-  return [
-    {
-      id: "preview-resources",
-      title: "Des repères pour entreprendre.",
-      href: "/docutheque",
-      format: "banner",
-      placements: ["home-primary", "listing"],
-    },
-    {
-      id: "preview-entreprises",
-      title: "Faites connaître votre entreprise.",
-      href: "/contacts",
-      format: "banner",
-      placements: ["home-secondary", "home-primary", "listing"],
-    },
-    {
-      id: "preview-lecture",
-      title: "L’économie mérite votre attention.",
-      href: "/newsletter",
-      format: "square",
-      placements: ["article"],
-    },
-    {
-      id: "preview-docutheque",
-      title: "Les ressources pour aller plus loin.",
-      href: "/docutheque",
-      format: "square",
-      placements: ["article"],
-    },
-  ].map((item) => ({
-    ...item,
-    advertiser: "BOMA Infos",
-    kind: "house",
-    presentation: "editorial",
-    priority: 0,
-    media,
-  })) as AdCreative[];
+  return DEMO_ADS.flatMap((item, index) => {
+    const media = AD_DEMO_MEDIA[item.mediaKey];
+    return media
+      ? [
+          {
+            id: `preview-${item.slug}`,
+            title: item.title,
+            advertiser: item.advertiser,
+            href: `/publicite/demo/${item.slug}`,
+            format: item.format,
+            placements: [...item.placements],
+            device: item.device,
+            kind: "house" as const,
+            demo: true,
+            priority: 50 - index,
+            media,
+          },
+        ]
+      : [];
+  });
 }
 
 let reportedUnavailable = false;
@@ -120,9 +102,14 @@ export const campaignsFor = (
     campaign.placements.includes(placement)
   );
   // The browser chooses a fixed format after rechecking the dates from ISR.
-  return selected
-    .filter(
-      (campaign) => placement === "article" || campaign.format === "banner"
-    )
-    .slice(0, 6);
+  return (
+    selected
+      .filter((campaign) =>
+        placement === "popup" || placement === "floating"
+          ? campaign.format === "square"
+          : placement === "article" || campaign.format === "banner"
+      )
+      // Device targeting is resolved in the browser, before limiting each queue.
+      .slice(0, 24)
+  );
 };

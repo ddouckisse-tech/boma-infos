@@ -127,10 +127,13 @@ export default defineSchema({
   /** Image campaigns managed with site settings; no external creative HTML. */
   adCampaigns: defineTable({
     ...campaignFields,
+    /** Reserved marker for idempotent demo loading; never an editor input. */
+    demoKey: v.optional(v.string()),
     updatedAt: v.number(),
     updatedBy: v.string(),
   })
     .index("by_enabled_priority", ["enabled", "priority"])
+    .index("by_demo_key", ["demoKey"])
     .index("by_media", ["mediaKey"]),
 
   articles: defineTable({

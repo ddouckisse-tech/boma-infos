@@ -1,14 +1,28 @@
 import { v } from "convex/values";
-import type { AdCreative, AdFormat, AdPlacement } from "../../lib/ads/types";
+import {
+  AD_DEVICES,
+  AD_PLACEMENTS,
+  type AdCreative,
+  type AdFormat,
+  type AdPlacement,
+} from "../../lib/ads/types";
 import type { MediaAsset, MediaVariant } from "../../lib/media-core";
 
 export const adKind = v.union(v.literal("paid"), v.literal("house"));
 export const adFormat = v.union(v.literal("square"), v.literal("banner"));
+export const adDevice = v.union(
+  v.literal("all"),
+  v.literal("desktop"),
+  v.literal("mobile")
+);
 export const adPlacement = v.union(
   v.literal("home-primary"),
   v.literal("home-secondary"),
   v.literal("article"),
-  v.literal("listing")
+  v.literal("listing"),
+  v.literal("article-inline"),
+  v.literal("popup"),
+  v.literal("floating")
 );
 
 export const campaignFields = {
@@ -19,13 +33,17 @@ export const campaignFields = {
   href: v.string(),
   mediaKey: v.string(),
   placements: v.array(adPlacement),
+  device: v.optional(adDevice),
   startsAt: v.optional(v.number()),
   endsAt: v.optional(v.number()),
   enabled: v.boolean(),
   priority: v.number(),
 };
 
-export type CampaignInput = Omit<AdCreative, "id" | "media"> & {
+export type CampaignInput = Omit<
+  AdCreative,
+  "id" | "media" | "presentation" | "demo"
+> & {
   mediaKey: string;
   enabled: boolean;
 };
@@ -97,6 +115,8 @@ export function validateCampaign(input: CampaignInput): CampaignInput {
     throw new Error("Nature de campagne invalide.");
   if (!["square", "banner"].includes(input.format))
     throw new Error("Format publicitaire invalide.");
+  const device = input.device ?? "all";
+  if (!AD_DEVICES.includes(device)) throw new Error("Appareil cible invalide.");
   if (typeof input.enabled !== "boolean")
     throw new Error("Activation invalide.");
   if (
@@ -108,22 +128,29 @@ export function validateCampaign(input: CampaignInput): CampaignInput {
   }
   if (
     input.placements.length === 0 ||
-    input.placements.length > 4 ||
+    input.placements.length > AD_PLACEMENTS.length ||
     new Set(input.placements).size !== input.placements.length ||
-    input.placements.some(
-      (placement) =>
-        !["home-primary", "home-secondary", "article", "listing"].includes(
-          placement
-        )
-    )
+    input.placements.some((placement) => !AD_PLACEMENTS.includes(placement))
   )
-    throw new Error("Choisissez entre un et quatre emplacements distincts.");
+    throw new Error("Choisissez entre un et sept emplacements distincts.");
   if (
     input.format === "square" &&
-    input.placements.some((placement) => placement !== "article")
+    input.placements.some(
+      (placement) => !["article", "popup", "floating"].includes(placement)
+    )
   ) {
     throw new Error(
-      "Le format carré est réservé à la colonne article ; les autres emplacements accueillent un bandeau."
+      "Le format carré est réservé à la colonne article, aux pop-up et aux blocs flottants."
+    );
+  }
+  if (
+    input.format === "banner" &&
+    input.placements.some((placement) =>
+      ["popup", "floating"].includes(placement)
+    )
+  ) {
+    throw new Error(
+      "Les pop-up et les blocs flottants accueillent un format carré."
     );
   }
   for (const date of [input.startsAt, input.endsAt]) {
@@ -147,6 +174,7 @@ export function validateCampaign(input: CampaignInput): CampaignInput {
     advertiser,
     href,
     mediaKey,
+    device,
     placements: [...input.placements],
   };
 }
@@ -190,7 +218,9 @@ export function constrainAdMedia(
   placements: readonly AdPlacement[] = []
 ): MediaAsset {
   // A shared campaign must fit the tightest page that can display it.
-  const maxBytes = placements.includes("article")
+  const maxBytes = placements.some((placement) =>
+    ["article", "article-inline", "popup", "floating"].includes(placement)
+  )
     ? AD_ARTICLE_IMAGE_BUDGET
     : AD_IMAGE_BUDGET[format];
   const alt = cleanText(asset.alt, "Texte alternatif", 500);

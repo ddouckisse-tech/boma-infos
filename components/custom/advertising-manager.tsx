@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery } from "convex/react";
-import type { FunctionReturnType } from "convex/server";
+import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import {
   ImageOff,
+  Layers,
   Megaphone,
   Pause,
   Pencil,
@@ -23,22 +24,92 @@ import {
   type PickedMedia,
 } from "@/components/custom/media-picker";
 import { OfficeHeader, OfficeSection } from "@/components/custom/office-header";
+import { StatsTile } from "@/components/custom/stats-tile";
 import type { AdFormat, AdPlacement } from "@/lib/ads/types";
 import { mediaUrl } from "@/lib/media-core";
 import { formatDateTime, humanError } from "@/lib/private";
 import { cn } from "@/lib/utils";
 
 type Campaign = FunctionReturnType<typeof api.advertising.list>[number];
+type CampaignDevice = "all" | "desktop" | "mobile";
+type StatusFilter = "all" | "active" | "scheduled" | "paused" | "ended";
 
-const PLACEMENTS: readonly { value: AdPlacement; label: string }[] = [
-  { value: "home-primary", label: "Accueil · entre les grands blocs" },
-  { value: "home-secondary", label: "Accueil · après les derniers articles" },
+const PLACEMENTS: readonly {
+  value: AdPlacement;
+  label: string;
+  formats: readonly AdFormat[];
+}[] = [
+  {
+    value: "home-primary",
+    label: "Accueil · entre les grands blocs",
+    formats: ["banner"],
+  },
+  {
+    value: "home-secondary",
+    label: "Accueil · après les derniers articles",
+    formats: ["banner"],
+  },
   {
     value: "article",
     label: "Article · colonne complémentaire ou sous le texte",
+    formats: ["banner", "square"],
   },
-  { value: "listing", label: "Listes d’articles · entre les résultats" },
+  {
+    value: "article-inline",
+    label: "Article · au fil de la lecture",
+    formats: ["banner"],
+  },
+  {
+    value: "listing",
+    label: "Listes d’articles · entre les résultats",
+    formats: ["banner"],
+  },
+  {
+    value: "popup",
+    label: "Fenêtre superposée · après un délai",
+    formats: ["square"],
+  },
+  {
+    value: "floating",
+    label: "Affiche flottante · bas de l’écran",
+    formats: ["square"],
+  },
 ];
+
+const DEVICE_OPTIONS: readonly { value: CampaignDevice; label: string }[] = [
+  { value: "all", label: "Ordinateur et mobile" },
+  { value: "desktop", label: "Ordinateur uniquement" },
+  { value: "mobile", label: "Mobile uniquement" },
+];
+
+const STATUS_OPTIONS: readonly { value: StatusFilter; label: string }[] = [
+  { value: "all", label: "Tous les statuts" },
+  { value: "active", label: "En cours" },
+  { value: "scheduled", label: "Planifiées" },
+  { value: "paused", label: "En pause" },
+  { value: "ended", label: "Terminées" },
+];
+
+const placementLabel = (placement: AdPlacement): string =>
+  PLACEMENTS.find((item) => item.value === placement)?.label ?? placement;
+
+const deviceLabel = (device: CampaignDevice | undefined): string =>
+  DEVICE_OPTIONS.find((item) => item.value === (device ?? "all"))!.label;
+
+const searchable = (value: string): string =>
+  value
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLocaleLowerCase("fr-FR");
+
+function placementAllowsFormat(
+  placement: AdPlacement,
+  format: AdFormat
+): boolean {
+  return PLACEMENTS.some(
+    (item) => item.value === placement && item.formats.includes(format)
+  );
+}
 
 const FORMAT_OPTIONS = [
   { value: "banner", label: "Rectangle horizontal" },
@@ -47,18 +118,34 @@ const FORMAT_OPTIONS = [
 
 function campaignStatus(campaign: Campaign, now: number) {
   if (!campaign.enabled)
-    return { label: "En pause", tone: "text-muted-foreground" };
+    return {
+      key: "paused" as const,
+      label: "En pause",
+      tone: "text-muted-foreground",
+    };
   if (campaign.endsAt !== undefined && campaign.endsAt <= now) {
-    return { label: "Terminée", tone: "text-muted-foreground" };
+    return {
+      key: "ended" as const,
+      label: "Terminée",
+      tone: "text-muted-foreground",
+    };
   }
   if (campaign.startsAt !== undefined && campaign.startsAt > now) {
-    return { label: "Planifiée", tone: "text-accent" };
+    return {
+      key: "scheduled" as const,
+      label: "Planifiée",
+      tone: "text-accent",
+    };
   }
-  return { label: "En cours", tone: "text-success-token" };
+  return {
+    key: "active" as const,
+    label: "En cours",
+    tone: "text-success-token",
+  };
 }
 
 /** Keep local wall time and milliseconds; unchanged fields retain their exact timestamp. */
-function localDateInput(value: number | undefined): string {
+export function localDateInput(value: number | undefined): string {
   if (value === undefined) return "";
   const date = new Date(value);
   return new Date(value - date.getTimezoneOffset() * 60_000)
@@ -69,6 +156,78 @@ function localDateInput(value: number | undefined): string {
 function dateFromInput(value: string, original: number | undefined) {
   if (value === localDateInput(original)) return original;
   return value === "" ? undefined : new Date(value).getTime();
+}
+
+type CampaignFormValues = {
+  title: string;
+  advertiser: string;
+  kind: "paid" | "house";
+  format: AdFormat;
+  device?: CampaignDevice;
+  href: string;
+  mediaKey: string;
+  placements: AdPlacement[];
+  startsAt: string;
+  endsAt: string;
+  priority: string;
+  enabled: boolean;
+};
+
+/** The exact payload sent by the editor; unchanged dates keep their original instant. */
+export function buildCampaignSubmission(
+  values: CampaignFormValues,
+  campaign: {
+    _id: Campaign["_id"];
+    startsAt?: number;
+    endsAt?: number;
+  } | null
+): FunctionArgs<typeof api.advertising.save> {
+  const start = dateFromInput(values.startsAt, campaign?.startsAt);
+  const end = dateFromInput(values.endsAt, campaign?.endsAt);
+  const weight = Number(values.priority);
+  if (
+    (start !== undefined && !Number.isFinite(start)) ||
+    (end !== undefined && !Number.isFinite(end))
+  )
+    throw new Error("Vérifiez les dates de diffusion.");
+  if (start !== undefined && end !== undefined && end <= start) {
+    throw new Error("La date de fin doit être postérieure à la date de début.");
+  }
+  if (
+    values.priority.trim() === "" ||
+    !Number.isInteger(weight) ||
+    weight < 0 ||
+    weight > 100
+  ) {
+    throw new Error("La priorité doit être un entier de 0 à 100.");
+  }
+  if (values.placements.length === 0) {
+    throw new Error("Choisissez au moins un emplacement de diffusion.");
+  }
+  if (
+    values.placements.some(
+      (placement) => !placementAllowsFormat(placement, values.format)
+    )
+  ) {
+    throw new Error(
+      "Un emplacement sélectionné n’accepte pas ce format. Vérifiez les emplacements de diffusion."
+    );
+  }
+  return {
+    id: campaign?._id,
+    title: values.title.trim(),
+    advertiser: values.advertiser.trim(),
+    kind: values.kind,
+    format: values.format,
+    device: values.device ?? "all",
+    href: values.href.trim(),
+    mediaKey: values.mediaKey,
+    placements: [...values.placements],
+    startsAt: start,
+    endsAt: end,
+    enabled: values.enabled,
+    priority: weight,
+  };
 }
 
 function previewSource(media: PickedMedia, stored?: string | null): string {
@@ -149,10 +308,42 @@ function CampaignRowPreview({
 export function AdvertisingManager() {
   const campaigns = useQuery(api.advertising.list, {});
   const setEnabled = useMutation(api.advertising.setEnabled);
+  const loadExamples = useMutation(api.advertising.loadExamples);
   const [editing, setEditing] = useState<Campaign | null>(null);
   const [editorVersion, setEditorVersion] = useState(0);
+  const [editorSaving, setEditorSaving] = useState(false);
   const [busyId, setBusyId] = useState<Campaign["_id"] | null>(null);
   const [now, setNow] = useState(() => Date.now());
+  const [loadingExamples, setLoadingExamples] = useState(false);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [deviceFilter, setDeviceFilter] = useState<CampaignDevice | "any">(
+    "any"
+  );
+
+  const counts = { active: 0, scheduled: 0, paused: 0, ended: 0 };
+  for (const campaign of campaigns ?? [])
+    counts[campaignStatus(campaign, now).key] += 1;
+  const searchTerm = searchable(search.trim());
+  const visibleCampaigns = (campaigns ?? []).filter((campaign) => {
+    if (
+      statusFilter !== "all" &&
+      campaignStatus(campaign, now).key !== statusFilter
+    )
+      return false;
+    if (deviceFilter !== "any" && (campaign.device ?? "all") !== deviceFilter)
+      return false;
+    const text = [
+      campaign.title,
+      campaign.advertiser,
+      deviceLabel(campaign.device),
+      ...campaign.placements.map(placementLabel),
+      campaign.demoKey ? "exemple démonstration" : "",
+    ].join(" ");
+    return searchTerm === "" || searchable(text).includes(searchTerm);
+  });
+  const hasFilters =
+    search.trim() !== "" || statusFilter !== "all" || deviceFilter !== "any";
 
   useEffect(() => {
     const refresh = () => setNow(Date.now());
@@ -190,6 +381,28 @@ export function AdvertisingManager() {
     }
   };
 
+  const handleLoadExamples = async () => {
+    setLoadingExamples(true);
+    try {
+      const result = await loadExamples({});
+      toast.success(
+        result.created === 0
+          ? `Les ${result.total} exemples sont déjà disponibles.`
+          : `${result.created} exemple${result.created > 1 ? "s" : ""} ajouté${result.created > 1 ? "s" : ""} ; ${result.existing} déjà présent${result.existing > 1 ? "s" : ""}.`
+      );
+    } catch (error) {
+      toast.error(humanError(error));
+    } finally {
+      setLoadingExamples(false);
+    }
+  };
+
+  const resetFilters = () => {
+    setSearch("");
+    setStatusFilter("all");
+    setDeviceFilter("any");
+  };
+
   return (
     <>
       <OfficeHeader
@@ -197,23 +410,124 @@ export function AdvertisingManager() {
         title="Publicités"
         description="Gérez les affiches et leur calendrier de diffusion sur le journal. Cet écran est réservé aux administrateurs."
         actions={
-          <ActionButton type="button" onClick={() => openEditor(null)}>
-            <Plus aria-hidden="true" className="size-4" />
-            Nouvelle campagne
-          </ActionButton>
+          <>
+            <ActionButton
+              type="button"
+              variant="outline"
+              disabled={
+                loadingExamples || editorSaving || campaigns === undefined
+              }
+              onClick={() => void handleLoadExamples()}
+            >
+              <Layers aria-hidden="true" className="size-4" />
+              {loadingExamples
+                ? "Chargement des exemples…"
+                : "Charger les 10 exemples"}
+            </ActionButton>
+            <ActionButton
+              type="button"
+              disabled={editorSaving}
+              onClick={() => openEditor(null)}
+            >
+              <Plus aria-hidden="true" className="size-4" />
+              Nouvelle campagne
+            </ActionButton>
+          </>
         }
       />
-      <p className="mb-6 max-w-reading type-small text-muted-foreground">
-        Chaque encart porte la mention « Publicité ». Le site limite les
-        emplacements, gère une rotation lente et respecte les fermetures des
-        lecteurs. Une campagne active reste soumise à son calendrier et aux
-        places disponibles.
+      <div className="mb-6 grid gap-3 rounded-lg border border-border bg-surface-muted p-4 type-small text-muted-foreground sm:grid-cols-2">
+        <p>
+          Chaque affiche porte la mention « Publicité ». Après sa fermeture, la
+          campagne et son emplacement restent masqués pendant 24 heures pour ce
+          lecteur.
+        </p>
+        <p>
+          La fenêtre superposée apparaît après un délai. Sur mobile, l’affiche
+          flottante s’affiche en bas de l’écran. Ces affiches automatiques
+          apparaissent au plus une fois par jour pour le lecteur. La mise à jour
+          des pages publiques peut prendre environ cinq minutes.
+        </p>
+      </div>
+      <p className="mb-6 type-small text-muted-foreground">
+        Les dix exemples sont fictifs et identifiés dans la liste. Les charger à
+        nouveau ne duplique pas les campagnes déjà présentes.
       </p>
+      <div className="mb-6 grid grid-cols-2 gap-3 xl:grid-cols-4">
+        <StatsTile
+          label="Campagnes"
+          value={campaigns?.length ?? "—"}
+          hint="Tous les formats"
+        />
+        <StatsTile
+          label="En cours"
+          value={campaigns === undefined ? "—" : counts.active}
+          tone={counts.active > 0 ? "success" : "default"}
+          hint="Actives selon le calendrier"
+        />
+        <StatsTile
+          label="Planifiées"
+          value={campaigns === undefined ? "—" : counts.scheduled}
+          hint="Diffusion à venir"
+        />
+        <StatsTile
+          label="En pause"
+          value={campaigns === undefined ? "—" : counts.paused}
+          hint="Réglages conservés"
+        />
+      </div>
       <OfficeSection
         title="Campagnes"
         icon={Megaphone}
         description="Le statut suit l’activation et les dates, dans l’heure locale de votre navigateur."
       >
+        {campaigns !== undefined && campaigns.length > 0 && (
+          <div className="mb-5 grid gap-3">
+            <div className="grid gap-3 md:grid-cols-3">
+              <TextField
+                label="Rechercher une campagne"
+                type="search"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Nom, annonceur ou emplacement…"
+              />
+              <SelectField
+                label="Statut"
+                value={statusFilter}
+                onChange={(event) =>
+                  setStatusFilter(event.target.value as StatusFilter)
+                }
+                options={STATUS_OPTIONS}
+              />
+              <SelectField
+                label="Écran visé"
+                value={deviceFilter}
+                onChange={(event) =>
+                  setDeviceFilter(event.target.value as CampaignDevice | "any")
+                }
+                options={[
+                  { value: "any", label: "Tous les ciblages" },
+                  ...DEVICE_OPTIONS,
+                ]}
+              />
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p role="status" className="type-small text-muted-foreground">
+                {visibleCampaigns.length} campagne
+                {visibleCampaigns.length > 1 ? "s" : ""} affichée
+                {visibleCampaigns.length > 1 ? "s" : ""} sur {campaigns.length}
+              </p>
+              {hasFilters && (
+                <ActionButton
+                  type="button"
+                  variant="ghost"
+                  onClick={resetFilters}
+                >
+                  Réinitialiser les filtres
+                </ActionButton>
+              )}
+            </div>
+          </div>
+        )}
         {campaigns === undefined ? (
           <p className="type-body text-muted-foreground" role="status">
             Chargement des campagnes…
@@ -223,9 +537,13 @@ export function AdvertisingManager() {
             Aucune campagne enregistrée. Ajoutez une affiche pour préparer une
             diffusion.
           </p>
+        ) : visibleCampaigns.length === 0 ? (
+          <p className="rounded-lg border border-dashed border-border-strong p-6 type-small text-muted-foreground">
+            Aucune campagne ne correspond à ces filtres.
+          </p>
         ) : (
           <ul className="grid gap-4">
-            {campaigns.map((campaign) => {
+            {visibleCampaigns.map((campaign) => {
               const status = campaignStatus(campaign, now);
               return (
                 <li
@@ -249,6 +567,11 @@ export function AdvertisingManager() {
                       >
                         {status.label}
                       </span>
+                      {campaign.demoKey && (
+                        <span className="rounded-full bg-accent-surface px-2 py-0.5 type-small text-accent">
+                          Exemple
+                        </span>
+                      )}
                     </div>
                     <p className="mt-1 type-small text-muted-foreground">
                       {campaign.advertiser} ·{" "}
@@ -258,14 +581,11 @@ export function AdvertisingManager() {
                       · {campaign.format === "square" ? "Carré" : "Rectangle"} ·
                       Priorité {campaign.priority}
                     </p>
+                    <p className="mt-1 type-small font-medium">
+                      {deviceLabel(campaign.device)}
+                    </p>
                     <p className="mt-2 type-small text-muted-foreground">
-                      {campaign.placements
-                        .map(
-                          (placement) =>
-                            PLACEMENTS.find((item) => item.value === placement)
-                              ?.label
-                        )
-                        .join(" ; ")}
+                      {campaign.placements.map(placementLabel).join(" ; ")}
                     </p>
                     <p className="mt-1 type-small text-muted-foreground">
                       {campaign.startsAt === undefined
@@ -285,7 +605,9 @@ export function AdvertisingManager() {
                         variant="outline"
                         onClick={() => openEditor(campaign)}
                         disabled={
-                          busyId !== null || editing?._id === campaign._id
+                          editorSaving ||
+                          busyId !== null ||
+                          editing?._id === campaign._id
                         }
                       >
                         <Pencil aria-hidden="true" className="size-4" />
@@ -298,7 +620,9 @@ export function AdvertisingManager() {
                         variant="outline"
                         onClick={() => toggle(campaign)}
                         disabled={
-                          busyId !== null || editing?._id === campaign._id
+                          editorSaving ||
+                          busyId !== null ||
+                          editing?._id === campaign._id
                         }
                         title={
                           editing?._id === campaign._id
@@ -336,6 +660,7 @@ export function AdvertisingManager() {
           campaign={editing}
           onSaved={() => openEditor(null, false)}
           onCancel={() => openEditor(null)}
+          onSavingChange={setEditorSaving}
         />
       </OfficeSection>
     </>
@@ -346,16 +671,21 @@ function CampaignForm({
   campaign,
   onSaved,
   onCancel,
+  onSavingChange,
 }: {
   campaign: Campaign | null;
   onSaved: () => void;
   onCancel: () => void;
+  onSavingChange: (saving: boolean) => void;
 }) {
   const save = useMutation(api.advertising.save);
   const [title, setTitle] = useState(campaign?.title ?? "");
   const [advertiser, setAdvertiser] = useState(campaign?.advertiser ?? "");
   const [kind, setKind] = useState<"paid" | "house">(campaign?.kind ?? "house");
   const [format, setFormat] = useState<AdFormat>(campaign?.format ?? "banner");
+  const [device, setDevice] = useState<CampaignDevice>(
+    campaign?.device ?? "all"
+  );
   const [href, setHref] = useState(campaign?.href ?? "");
   const [mediaKey, setMediaKey] = useState(campaign?.mediaKey ?? "");
   const [placements, setPlacements] = useState<AdPlacement[]>(
@@ -370,8 +700,8 @@ function CampaignForm({
   // `undefined` pendant la recherche, `null` si la clé n'existe plus.
   const lookup = useMediaByKey(mediaKey);
   const selectedMedia = lookup ?? undefined;
-  const availablePlacements = PLACEMENTS.filter(
-    (item) => format === "banner" || item.value === "article"
+  const availablePlacements = PLACEMENTS.filter((item) =>
+    item.formats.includes(format)
   );
   const missingAlt =
     selectedMedia !== undefined && selectedMedia.alt.trim() === "";
@@ -379,52 +709,46 @@ function CampaignForm({
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
-    const start = dateFromInput(startsAt, campaign?.startsAt);
-    const end = dateFromInput(endsAt, campaign?.endsAt);
-    const weight = Number(priority);
-    if (
-      (start !== undefined && !Number.isFinite(start)) ||
-      (end !== undefined && !Number.isFinite(end))
-    ) {
-      setError("Vérifiez les dates de diffusion.");
-      return;
-    }
-    if (start !== undefined && end !== undefined && end <= start) {
-      setError("La date de fin doit être postérieure à la date de début.");
-      return;
-    }
-    if (!Number.isInteger(weight) || weight < 0 || weight > 100) {
-      setError("La priorité doit être un entier de 0 à 100.");
-      return;
-    }
     if (!selectedMedia || missingAlt || placements.length === 0) {
       setError(
         "Choisissez une affiche avec un texte alternatif et au moins un emplacement."
       );
       return;
     }
-    setSaving(true);
+    let payload: FunctionArgs<typeof api.advertising.save>;
     try {
-      await save({
-        id: campaign?._id,
-        title: title.trim(),
-        advertiser: advertiser.trim(),
-        kind,
-        format,
-        href: href.trim(),
-        mediaKey,
-        placements,
-        startsAt: start,
-        endsAt: end,
-        enabled,
-        priority: weight,
-      });
+      payload = buildCampaignSubmission(
+        {
+          title,
+          advertiser,
+          kind,
+          format,
+          device,
+          href,
+          mediaKey,
+          placements,
+          startsAt,
+          endsAt,
+          priority,
+          enabled,
+        },
+        campaign
+      );
+    } catch (cause) {
+      setError(humanError(cause));
+      return;
+    }
+    setSaving(true);
+    onSavingChange(true);
+    try {
+      await save(payload);
       toast.success(campaign ? "Campagne enregistrée." : "Campagne créée.");
       onSaved();
     } catch (cause) {
       setError(humanError(cause));
     } finally {
       setSaving(false);
+      onSavingChange(false);
     }
   };
 
@@ -462,14 +786,27 @@ function CampaignForm({
           onChange={(event) => {
             const next = event.target.value as AdFormat;
             setFormat(next);
-            if (next === "square")
-              setPlacements((current) =>
-                current.filter((placement) => placement === "article")
-              );
+            setPlacements((current) =>
+              current.filter((placement) =>
+                placementAllowsFormat(placement, next)
+              )
+            );
           }}
           options={FORMAT_OPTIONS}
-          hint="Le carré est réservé aux pages de lecture. Les autres emplacements accueillent un rectangle horizontal."
+          hint="Le carré convient à la colonne article, à la fenêtre superposée et à l’affiche flottante. Les autres emplacements accueillent un rectangle horizontal."
         />
+        <SelectField
+          label="Écrans de diffusion"
+          value={device}
+          onChange={(event) => setDevice(event.target.value as CampaignDevice)}
+          options={DEVICE_OPTIONS}
+          hint="Choisissez le même visuel pour tous les écrans, ou préparez une campagne dédiée à l’ordinateur ou au mobile."
+        />
+        {campaign?.demoKey && (
+          <p className="self-center rounded-md bg-accent-surface p-3 type-small text-accent">
+            Cette campagne reste identifiée comme un exemple après modification.
+          </p>
+        )}
         <TextField
           label="Lien de destination"
           required

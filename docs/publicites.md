@@ -1,58 +1,70 @@
-# Encarts publics — BOMA Infos
+# Publicités BOMA Infos
 
-Fonctionnalité héritée du socle de BOMA Infos : implémentée localement le
-13 septembre 2026 (branche `codex/public-advertising`, base `52f081b`), avant la
-reprise du code le 03/10/2026. Le dépôt ne fournit aucune campagne payante et
-rien n’est supposé déployé : la mise en service est une procédure à suivre pour
-BOMA Infos, décrite dans [le compte rendu de recette](recette-publicites.md).
+La régie interne utilise les campagnes Convex et les affiches de la médiathèque.
+L’administration est accessible dans **Rédaction → Publicités**, aux administrateurs
+disposant de la permission de gestion des réglages. Les mêmes contrôles sont
+appliqués aux requêtes et mutations du serveur.
 
-## Emplacements
+## Préparer et diffuser une campagne
 
-| Page                                           | Emplacement                                                        | Grand écran                                              | Petit écran                                      |
-| ---------------------------------------------- | ------------------------------------------------------------------ | -------------------------------------------------------- | ------------------------------------------------ |
-| Accueil                                        | `home-primary` après « À la une », avant le dossier                | 1 rectangle centré                                       | 1 rectangle plus court                           |
-| Accueil                                        | `home-secondary` après « Derniers articles » (au moins 4 articles) | 1 rectangle supplémentaire                               | Aucun                                            |
-| Article                                        | `article` dans la colonne complémentaire                           | 1 affiche carrée ou rectangulaire, sous 2 lectures liées | Les recommandations et l’encart suivent le texte |
-| Rubrique et sous-rubrique, pagination comprise | `listing` après les résultats (au moins 4 articles)                | 1 rectangle                                              | 1 rectangle                                      |
+1. Choisir **Nouvelle campagne**, renseigner le titre, l’annonceur et un lien local
+   ou HTTPS, puis sélectionner l’affiche dans la médiathèque.
+2. Choisir le format, les emplacements et le ciblage **Tous les écrans**,
+   **Ordinateur** ou **Mobile et tablette**. Les emplacements incompatibles avec
+   le format ne sont pas proposés.
+3. Renseigner si nécessaire un début et une fin dans l’heure locale du navigateur.
+   Le début est inclus, la fin exclue. La priorité va de 0 à 100.
+4. Activer et enregistrer. Une campagne peut être modifiée ou mise en pause depuis
+   la liste. La publication utilise le cache du journal, renouvelé sous environ
+   cinq minutes à la prochaine visite.
 
-Pas d’encart dans la une, au milieu d’un paragraphe, dans les formulaires,
-le pied de page, les pages de recherche/contact/compte ou les espaces privés.
-La colonne droite mesure 300 px ; la largeur de lecture reste inchangée.
-Les recommandations réutilisent `journal.related` (sous-rubrique, rubrique,
-étiquettes en commun, puis date), sans répéter les mêmes liens au pied.
-Le sommaire reste distinct. La colonne ne devient sticky qu’à partir de
-1024 px **et** si sa hauteur complète tient sous l’en-tête. Sinon elle défile
-normalement. Aucun élément ne chevauche le texte.
+Les bandeaux occupent les pauses entre les blocs d’accueil, les listes et les
+articles longs. Le format carré occupe la colonne complémentaire d’article ou
+les formats superposés. Aucun encart ne coupe une phrase ou un bloc d’article.
 
-## Lecture et fermetures
+Sur ordinateur, la fenêtre publicitaire est prioritaire ; sur mobile, la carte
+flottante compacte l’est. L’autre format sert de repli si aucune campagne du
+format prioritaire n’est disponible. Une publicité superposée apparaît seulement
+après un temps de lecture visible et 25 % de défilement. Une seule est permise
+pendant 24 heures, dès son affichage, même après navigation ou rechargement.
+Le lecteur peut fermer la publicité ; les préférences d’économie de données et
+de réduction des animations suspendent ces formats. Les campagnes ciblées sur
+un autre écran ne téléchargent pas leur affiche.
 
-- Mention « Publicité » permanente ; « Autopromotion » si concerné.
-- Croix indépendante de l’affiche, cible tactile de 44 px, libellé clavier.
-- Fermeture de l’emplacement **et de la campagne** pendant 24 heures,
-  conservée localement, partagée entre onglets ; jamais de retour sur une page
-  laissée ouverte. Expiration du refus évaluée lors d’une nouvelle navigation.
-- Campagnes internes : 90 secondes de visibilité effective entre changements,
-  **deux changements maximum par page**. Le compteur s’arrête si l’encart est
-  hors écran, l’onglet masqué, survolé ou focalisé. Bouton pause/reprise.
-- Rotation suspendue avec animations réduites ou économie de données.
-- Dates de campagne recontrôlées dans le navigateur même sur une page ISR.
-- Aucun espace réservé si aucun candidat n’est disponible. Géométrie constante
-  pendant la rotation ; affiches non recadrées et chargées paresseusement.
-- Sans stockage disponible, le refus reste en mémoire pendant l’exécution de
-  l’application ; un rechargement complet peut perdre cette préférence.
+## Dix exemples fictifs
 
-## Alimentation interne
+**Charger les 10 exemples** ajoute dix campagnes et leurs médias manquants. Le
+chargement peut être répété : les campagnes existantes, leurs modifications et
+l’ensemble du contenu rédactionnel sont conservés. Chaque exemple est identifié
+dans l’administration, sur l’affiche et dans son encart. Ses liens aboutissent à
+une page de démonstration, sans achat ni réservation.
 
-Dans `/redaction/publicites`, l’administrateur choisit une affiche de la
-médiathèque (ou l’envoie via le sélecteur existant), son texte alternatif,
-un titre, l’annonceur, le lien, les emplacements, les dates et la priorité.
-Création, modification, activation et pause sont protégées **côté Convex** par
-`settings:manage` et consignées dans le journal d’audit.
+Le catalogue public est accessible depuis le pied de page, **Publicité**, à
+`/publicite`. Les dix pages `/publicite/demo/<slug>` ne sont pas indexables.
+Les visuels originaux sont générés par `scripts/make-demo-ads.ts` et leur
+manifeste est séparé de la photothèque rédactionnelle. Les variantes comprennent
+480 px pour le mode économie de données.
+
+Le mode local explicite `ADS_MODE=preview` présente ces mêmes exemples sans
+écrire dans Convex. Le mode habituel `campaigns` diffuse uniquement les campagnes
+actives du compte configuré. `off` masque les campagnes. Les fenêtres et cartes
+flottantes de cette régie ne chargent aucun script publicitaire tiers.
+
+## Vérifier une modification
+
+Les tests publicitaires couvrent la validation, les droits, les calendriers, le
+ciblage, le chargement répété et les fermetures. Exécuter ensuite le contrôle des
+types, le lint et la compilation avec son budget. Pour la recette visuelle,
+contrôler l’accueil, un article long, une rubrique et l’administration à 390 px,
+834 px et 1440 px, puis le parcours modification → diffusion → fermeture →
+navigation/rechargement.
+
+## Configuration technique conservée
 
 `advertising.publicFeed` ne publie que les campagnes actives et valides,
 24 maximum. Les fichiers sont issus du manifeste du site ou du stockage
 Convex ; chaque rendu est limité à **16 Kio dès que la campagne inclut
-l’emplacement article**, carré comme rectangle, même si elle partage aussi
+un emplacement article, article-inline, popup ou floating**, carré comme rectangle, même si elle partage aussi
 l’accueil ou les listes. Ailleurs, les plafonds restent de 32 Kio pour un
 carré et 55 Kio pour un rectangle (1 Kio = 1024 octets). La taille réelle des
 fichiers envoyés est vérifiée avant d’appliquer le plafond, à l’enregistrement,
@@ -67,7 +79,7 @@ Configuration serveur :
   aucun encart. Les nouvelles fonctions doivent être livrées sur l’environnement
   cible lors d’une publication autorisée.
 - `ADS_MODE=off` : aucun encart.
-- `ADS_MODE=preview` : quatre autopromotions typographiques de recette ; aucune
+- `ADS_MODE=preview` : dix campagnes fictives de recette ; aucune
   écriture en base. Ce mode est utilisé pour les captures locales.
 - `ADS_FEED_URL` et `ADS_FEED_TOKEN` facultatifs : ordonnanceur HTTPS renvoyant
   `{ "campaignIds": ["identifiant-de-campagne-existant"] }`. Le serveur sélectionne
@@ -111,8 +123,8 @@ puis y reporter les composants de publicité et la table additionnelle.
 Le contrôle des images Convex ajouté par l’import doit être conservé en combinant
 le contrôle des pages dynamiques de cette branche. La marque du fallback
 `app/error.tsx` doit reprendre le logo en vigueur (`BRAND_LOGO`) sans
-réintroduire `next/link`. Les encarts ne modifient ni le footer ni
-`lib/content/server.ts`.
+réintroduire `next/link`. Le pied de page propose un lien vers le catalogue public de la régie ;
+`lib/content/server.ts` conserve son fonctionnement éditorial.
 
 ## Recette locale
 

@@ -1,0 +1,124 @@
+.lc-ad-popup {
+  inline-size: min(24rem, calc(100vw - 2rem));
+  max-block-size: calc(100dvh - 3rem);
+  margin: auto;
+  overflow: auto;
+  padding: 0.75rem 1rem 1rem;
+  color: var(--foreground);
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 0.875rem;
+  box-shadow: 0 1.5rem 5rem #0003;
+}
+
+.lc-ad-popup::backdrop {
+  background: #101a2080;
+}
+
+.lc-ad-popup .lc-ad-slot {
+  max-inline-size: 20rem;
+}
+
+.lc-ad-overlay-note {
+  max-inline-size: 32ch;
+  margin: 0.5rem auto 0;
+  color: var(--muted-foreground);
+  font-size: 0.6875rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.lc-ad-floating {
+  position: fixed;
+  z-index: 35;
+  inset-inline-end: 1.25rem;
+  inset-block-end: max(1.25rem, env(safe-area-inset-bottom));
+  inline-size: 19rem;
+  max-inline-size: calc(100vw - 2rem);
+  margin: 0;
+  padding: 0 0.875rem 0.875rem;
+  border: 1px solid var(--border);
+  border-radius: 0.875rem;
+  background: var(--background);
+  box-shadow: 0 0.5rem 2rem #0002;
+}
+
+.lc-ad-floating-link {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  color: inherit;
+  text-decoration: none;
+  border-radius: 0.375rem;
+}
+
+.lc-ad-floating-link:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+}
+
+.lc-ad-floating-image {
+  display: block;
+  inline-size: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 0.375rem;
+}
+
+.lc-ad-floating-image img {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+.lc-ad-floating-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  min-inline-size: 0;
+}
+
+.lc-ad-floating-brand {
+  color: var(--muted-foreground);
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.lc-ad-floating-copy strong {
+  font-family: var(--font-heading, Georgia, serif);
+  font-size: 1.0625rem;
+  line-height: 1.25;
+  text-wrap: balance;
+}
+
+.lc-ad-floating-cta {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+@media (width < 1024px) {
+  .lc-ad-floating {
+    inset-inline: 0.75rem;
+    inset-block-end: max(0.75rem, env(safe-area-inset-bottom));
+    inline-size: auto;
+    max-inline-size: none;
+    padding: 0 0.75rem 0.75rem;
+  }
+
+  .lc-ad-floating-link {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.875rem;
+  }
+
+  .lc-ad-floating-image {
+    inline-size: 5rem;
+    flex: 0 0 5rem;
+  }
+
+  .lc-ad-floating-copy strong {
+    font-size: 0.9375rem;
+  }
+}

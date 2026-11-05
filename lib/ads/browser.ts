@@ -4,11 +4,13 @@ import {
   emptyDismissals,
   mergeDismissals,
   parseDismissals,
+  parseOverlayCap,
   serializeDismissals,
   type AdDismissals,
 } from "@/lib/ads/policy";
 import {
   AD_PLACEMENTS,
+  AD_DISMISS_MS,
   AD_STORAGE_KEY,
   type AdPlacement,
 } from "@/lib/ads/types";
@@ -28,6 +30,36 @@ let snapshot = SERVER_SNAPSHOT;
 let memory = emptyDismissals();
 let pageKey: string | undefined;
 const listeners = new Set<() => void>();
+const OVERLAY_STORAGE_KEY = "boma-ad-overlay-frequency-v1";
+let overlayCapUntil = 0;
+
+export function getOverlayCap(now = Date.now()): number {
+  let persistedCap = 0;
+  try {
+    persistedCap = parseOverlayCap(
+      window.localStorage.getItem(OVERLAY_STORAGE_KEY),
+      now
+    );
+  } catch {
+    // Refusing storage still limits overlays in the open tab.
+  }
+  return Math.max(overlayCapUntil, persistedCap);
+}
+
+/** Claim on display, rather than on close: a refresh cannot show a second overlay. */
+export function claimOverlay(now = Date.now()): boolean {
+  if (getOverlayCap(now) > now) return false;
+  overlayCapUntil = now + AD_DISMISS_MS;
+  try {
+    window.localStorage.setItem(
+      OVERLAY_STORAGE_KEY,
+      JSON.stringify({ version: 1, until: overlayCapUntil })
+    );
+  } catch {
+    // The in-memory cap remains active until the tab closes.
+  }
+  return true;
+}
 
 /**
  * Append to PREFERENCES_SCRIPT in the head. Placement rules live in the slot

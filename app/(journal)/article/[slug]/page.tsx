@@ -141,6 +141,16 @@ export default async function ArticlePage({
     return total;
   }, 0);
 
+  // One break in a long article, between complete blocks and away from the
+  // introduction. Short stories keep their uninterrupted reading column.
+  const adBreak = article.body.length >= 8
+    ? article.body.findIndex((block, index) =>
+        index >= Math.floor(article.body.length / 2) &&
+        index < article.body.length - 2 &&
+        block.type === "paragraph"
+      )
+    : -1;
+
   return (
     <>
       {/* Filet de progression : piloté par `animation-timeline: scroll()`,
@@ -318,7 +328,19 @@ export default async function ArticlePage({
                 className="mb-8 border-y border-border py-4"
               />
 
-              <ArticleBody blocks={article.body} />
+              {adBreak >= 0 ? (
+                <>
+                  <ArticleBody blocks={article.body.slice(0, adBreak + 1)} />
+                  <Advertising
+                    placement="article-inline"
+                    pageKey={`/article/${article.slug}`}
+                    className="my-10"
+                  />
+                  <ArticleBody blocks={article.body.slice(adBreak + 1)} />
+                </>
+              ) : (
+                <ArticleBody blocks={article.body} />
+              )}
 
               {article.tags.length > 0 && (
                 <div className="mt-10 border-t border-border pt-6">
