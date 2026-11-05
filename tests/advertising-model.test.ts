@@ -94,6 +94,28 @@ test("campaign fields are normalized and never contain HTML", () => {
   }
 });
 
+test("the optional mobile poster key is trimmed, removable and validated", () => {
+  assert.equal(validateCampaign(campaign).mobileMediaKey, undefined);
+  assert.equal(
+    validateCampaign({ ...campaign, mobileMediaKey: "  " }).mobileMediaKey,
+    undefined
+  );
+  assert.equal(
+    validateCampaign({ ...campaign, mobileMediaKey: "  edition-mobile  " })
+      .mobileMediaKey,
+    "edition-mobile"
+  );
+  for (const mobileMediaKey of [
+    "../image",
+    "https://example.invalid/image",
+    "MOBILE",
+    "two words",
+    "a".repeat(81),
+  ]) {
+    assert.throws(() => validateCampaign({ ...campaign, mobileMediaKey }));
+  }
+});
+
 test("squares avoid banner-only slots; banners can share existing placements", () => {
   assert.doesNotThrow(() =>
     validateCampaign({ ...campaign, format: "square", placements: ["article"] })

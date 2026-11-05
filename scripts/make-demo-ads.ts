@@ -1,19 +1,26 @@
 /**
  * Original vector posters, rasterised offline. No network, photos or randomness.
- * Run: bun run scripts/make-demo-ads.ts (or --avif-only to preserve existing WebP files)
- * Regenerates only the ten demo posters and their separate server-side manifest.
+ * Run: bun run scripts/make-demo-ads.ts
+ * --mobile-only adds the five 16:9 compositions without touching desktop assets.
+ * --avif-only preserves existing desktop WebP files.
+ * Regenerates only the original demo posters and their separate server-side manifest.
  */
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 import { format } from "prettier";
-import { DEMO_POSTERS } from "../lib/ads/demo";
+import { DEMO_ADS, DEMO_POSTERS, type DemoAd } from "../lib/ads/demo";
+import { AD_DEMO_MEDIA as EXISTING_MEDIA } from "../convex/adDemoManifest";
 import type { MediaAsset } from "../convex/mediaManifest";
 
 const root = path.resolve(import.meta.dirname, "..");
 const directory = path.join(root, "public/medias");
 const MAX_BYTES = 16 * 1024;
 const avifOnly = process.argv.includes("--avif-only");
+const mobileOnly = process.argv.includes("--mobile-only");
+if (avifOnly && mobileOnly) {
+  throw new Error("Choose either --avif-only or --mobile-only.");
+}
 const palettes = [
   ["#163d35", "#f7ecce", "#d29c62", "#96b99c"],
   ["#122f4b", "#fff2d7", "#edaa6d", "#73b9bf"],
@@ -60,8 +67,10 @@ function motif(index: number, accent: string, secondary: string): string {
 }
 
 await mkdir(directory, { recursive: true });
-const manifest: Record<string, MediaAsset> = {};
-for (const [index, ad] of DEMO_POSTERS.entries()) {
+const manifest: Record<string, MediaAsset> = mobileOnly
+  ? { ...EXISTING_MEDIA }
+  : {};
+for (const [index, ad] of mobileOnly ? [] : DEMO_POSTERS.entries()) {
   const [background, ink, accent, secondary] = palettes[index];
   const square = ad.format === "square";
   const width = square ? 640 : 1440;
@@ -150,6 +159,94 @@ for (const [index, ad] of DEMO_POSTERS.entries()) {
     webp,
   };
 }
+
+/** Native 16:9 art direction: no cropping, padding or enlargement of the desktop banner. */
+function mobilePoster(ad: DemoAd, index: number): string {
+  const [background, ink, accent, secondary] = palettes[index];
+  const titles: Record<string, readonly string[]> = {
+    "komo-atelier": ["Du bois,", "du sens."],
+    "canopee-studio": ["Vos idées", "prennent racine."],
+    "soleil-okala": ["Chaque toit", "a son soleil."],
+    "ntem-formation": ["Votre prochain", "chapitre."],
+    "rivage-marche": ["Le goût des jours", "heureux."],
+  };
+  const title = titles[ad.slug];
+  if (!title) throw new Error(`Missing mobile composition: ${ad.slug}`);
+  const headline = title
+    .map(
+      (line, position) =>
+        `<tspan x="54" dy="${position ? 79 : 0}">${escape(line)}</tspan>`
+    )
+    .join("");
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540">
+    <rect width="960" height="540" fill="${background}"/>
+    <g font-family="Arial, sans-serif" fill="${ink}">
+      <text x="54" y="74" font-size="34" font-weight="700" letter-spacing=".5">${escape(ad.advertiser)}</text>
+      <g transform="translate(624 120) scale(.91)">${motif(index, accent, secondary)}</g>
+      <text x="54" y="205" font-size="68" font-weight="700" letter-spacing="-1.5">${headline}</text>
+      <rect x="54" y="358" width="306" height="65" rx="32.5" fill="${ink}"/>
+      <text x="82" y="401" font-size="34" font-weight="700" fill="${background}">Découvrir →</text>
+      <text x="54" y="493" font-size="28" font-weight="700" letter-spacing=".6">DÉMO · ANNONCEUR FICTIF</text>
+    </g>
+  </svg>`;
+}
+
+for (const ad of DEMO_ADS) {
+  const index = DEMO_POSTERS.findIndex((poster) => poster.slug === ad.slug);
+  if (index < 0 || !ad.mobileMediaKey)
+    throw new Error(`Missing mobile metadata: ${ad.slug}`);
+  const svg = mobilePoster(ad, index);
+  const source = Buffer.from(svg);
+  const variants: {
+    avif: { w: number; h: number; bytes: number }[];
+    webp: { w: number; h: number; bytes: number }[];
+  } = {
+    avif: [],
+    webp: [],
+  };
+  for (const target of [320, 480, 640]) {
+    for (const encoding of ["avif", "webp"] as const) {
+      const budget = encoding === "avif" ? 4 * 1024 : MAX_BYTES;
+      let encoded: Buffer | undefined;
+      for (const quality of encoding === "avif"
+        ? [44, 38, 32, 28, 24]
+        : [78, 68, 58, 48]) {
+        const image = sharp(source).resize(target);
+        encoded = await (
+          encoding === "avif"
+            ? image.avif({ quality, effort: 6, chromaSubsampling: "4:4:4" })
+            : image.webp({ quality, effort: 6 })
+        ).toBuffer();
+        if (encoded.length <= budget) break;
+      }
+      if (!encoded || encoded.length > budget)
+        throw new Error(
+          `Mobile poster exceeds budget: ${ad.slug}-${target}.${encoding}`
+        );
+      const file = `${ad.mobileMediaKey}-${target}.${encoding}`;
+      await writeFile(path.join(directory, file), encoded);
+      variants[encoding].push({
+        w: target,
+        h: (target * 9) / 16,
+        bytes: encoded.length,
+      });
+      console.log(`${file}: ${encoded.length} bytes`);
+    }
+  }
+  manifest[ad.mobileMediaKey] = {
+    id: ad.mobileMediaKey,
+    alt: `Affiche mobile de démonstration de ${ad.advertiser} : ${ad.title} Annonceur fictif.`,
+    caption: `${ad.advertiser} — création mobile 16:9, exemple publicitaire fictif sans offre commerciale réelle.`,
+    credit: "BOMA Infos — création graphique originale",
+    license: "Création originale de démonstration",
+    source:
+      "Composition vectorielle mobile 16:9 originale, générée par scripts/make-demo-ads.ts sans photographie",
+    color: palettes[index][0],
+    width: 960,
+    height: 540,
+    ...variants,
+  };
+}
 await writeFile(
   path.join(root, "convex/adDemoManifest.ts"),
   await format(
@@ -157,4 +254,6 @@ await writeFile(
     { parser: "typescript" }
   )
 );
-console.log(`Generated ${DEMO_POSTERS.length} original demonstration posters.`);
+console.log(
+  `Generated ${mobileOnly ? 0 : DEMO_POSTERS.length} desktop and ${DEMO_ADS.length} mobile demonstration posters.`
+);

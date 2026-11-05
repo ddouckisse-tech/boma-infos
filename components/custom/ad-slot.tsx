@@ -87,9 +87,11 @@ type AdFrameProps = {
 export function AdArtwork({
   creative,
   english,
+  placement,
 }: {
   creative: AdCreative;
   english: boolean;
+  placement?: AdPlacement;
 }) {
   const isHouse = creative.kind === "house";
   const isEditorial = isHouse && creative.presentation === "editorial";
@@ -112,13 +114,15 @@ export function AdArtwork({
       ) : (
         <ResponsiveImage
           media={creative.media}
+          mobileMedia={creative.mobileMedia}
+          mobileSizes="calc(100vw - 2rem)"
           alt={creative.media.alt || creative.title}
           sizes={
             creative.format === "square"
-              ? "320px"
-              : "(min-width: 704px) 640px, 92vw"
+              ? placement === "article" ? "320px" : "(min-width: 576px) 480px, 84vw"
+              : "(min-width: 832px) 768px, 92vw"
           }
-          maxWidth={creative.format === "square" ? 320 : 640}
+          maxWidth={creative.format === "square" && placement === "article" ? 320 : 640}
           wrapperClassName="lc-ad-image"
           className="object-contain"
         />
@@ -142,6 +146,7 @@ export function AdFrame({
       data-ad-placement={placement}
       data-ad-campaign={creative.id}
       data-ad-format={creative.format}
+      data-ad-mobile-artwork={Boolean(creative.mobileMedia)}
       aria-label={
         creative.demo
           ? english
@@ -175,7 +180,7 @@ export function AdFrame({
             : "Cette publicité est terminée."}
         </div>
       ) : loadCreative ? (
-        <AdArtwork creative={creative} english={english} />
+        <AdArtwork creative={creative} english={english} placement={placement} />
       ) : (
         <div className="lc-ad-artwork" />
       )}

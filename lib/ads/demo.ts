@@ -10,6 +10,8 @@ export type DemoAd = {
   placements: readonly AdPlacement[];
   device: AdDevice;
   mediaKey: string;
+  /** Art-directed 16:9 poster for compact screens, independently composed. */
+  mobileMediaKey?: string;
 };
 
 /** Keep the ten original designs and their order for archived links and palettes. */
@@ -146,5 +148,9 @@ export const DEMO_ADS: readonly DemoAd[] = (
 ).map((selection) => {
   const poster = DEMO_POSTERS.find((entry) => entry.slug === selection.slug);
   if (!poster) throw new Error(`Unknown demo poster: ${selection.slug}`);
-  return { ...poster, ...selection };
+  return {
+    ...poster,
+    ...selection,
+    mobileMediaKey: `${poster.mediaKey}-mobile`,
+  };
 });

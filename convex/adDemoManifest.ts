@@ -497,4 +497,239 @@ export const AD_DEMO_MEDIA: Record<string, MediaAsset> = {
       },
     ],
   },
+  "demo-ad-komo-atelier-mobile": {
+    id: "demo-ad-komo-atelier-mobile",
+    alt: "Affiche mobile de démonstration de Komo Atelier : Du bois, du sens. Annonceur fictif.",
+    caption:
+      "Komo Atelier — création mobile 16:9, exemple publicitaire fictif sans offre commerciale réelle.",
+    credit: "BOMA Infos — création graphique originale",
+    license: "Création originale de démonstration",
+    source:
+      "Composition vectorielle mobile 16:9 originale, générée par scripts/make-demo-ads.ts sans photographie",
+    color: "#163d35",
+    width: 960,
+    height: 540,
+    avif: [
+      {
+        w: 320,
+        h: 180,
+        bytes: 2536,
+      },
+      {
+        w: 480,
+        h: 270,
+        bytes: 3382,
+      },
+      {
+        w: 640,
+        h: 360,
+        bytes: 3880,
+      },
+    ],
+    webp: [
+      {
+        w: 320,
+        h: 180,
+        bytes: 4086,
+      },
+      {
+        w: 480,
+        h: 270,
+        bytes: 6500,
+      },
+      {
+        w: 640,
+        h: 360,
+        bytes: 8708,
+      },
+    ],
+  },
+  "demo-ad-canopee-studio-mobile": {
+    id: "demo-ad-canopee-studio-mobile",
+    alt: "Affiche mobile de démonstration de Canopée Studio : Vos idées prennent racine. Annonceur fictif.",
+    caption:
+      "Canopée Studio — création mobile 16:9, exemple publicitaire fictif sans offre commerciale réelle.",
+    credit: "BOMA Infos — création graphique originale",
+    license: "Création originale de démonstration",
+    source:
+      "Composition vectorielle mobile 16:9 originale, générée par scripts/make-demo-ads.ts sans photographie",
+    color: "#273e35",
+    width: 960,
+    height: 540,
+    avif: [
+      {
+        w: 320,
+        h: 180,
+        bytes: 2907,
+      },
+      {
+        w: 480,
+        h: 270,
+        bytes: 3912,
+      },
+      {
+        w: 640,
+        h: 360,
+        bytes: 4024,
+      },
+    ],
+    webp: [
+      {
+        w: 320,
+        h: 180,
+        bytes: 4542,
+      },
+      {
+        w: 480,
+        h: 270,
+        bytes: 7230,
+      },
+      {
+        w: 640,
+        h: 360,
+        bytes: 10158,
+      },
+    ],
+  },
+  "demo-ad-soleil-okala-mobile": {
+    id: "demo-ad-soleil-okala-mobile",
+    alt: "Affiche mobile de démonstration de Soleil d’Okala : Chaque toit a son soleil. Annonceur fictif.",
+    caption:
+      "Soleil d’Okala — création mobile 16:9, exemple publicitaire fictif sans offre commerciale réelle.",
+    credit: "BOMA Infos — création graphique originale",
+    license: "Création originale de démonstration",
+    source:
+      "Composition vectorielle mobile 16:9 originale, générée par scripts/make-demo-ads.ts sans photographie",
+    color: "#f8d763",
+    width: 960,
+    height: 540,
+    avif: [
+      {
+        w: 320,
+        h: 180,
+        bytes: 2745,
+      },
+      {
+        w: 480,
+        h: 270,
+        bytes: 3957,
+      },
+      {
+        w: 640,
+        h: 360,
+        bytes: 4063,
+      },
+    ],
+    webp: [
+      {
+        w: 320,
+        h: 180,
+        bytes: 5026,
+      },
+      {
+        w: 480,
+        h: 270,
+        bytes: 8378,
+      },
+      {
+        w: 640,
+        h: 360,
+        bytes: 11352,
+      },
+    ],
+  },
+  "demo-ad-ntem-formation-mobile": {
+    id: "demo-ad-ntem-formation-mobile",
+    alt: "Affiche mobile de démonstration de Ntem Formation : Votre prochain chapitre. Annonceur fictif.",
+    caption:
+      "Ntem Formation — création mobile 16:9, exemple publicitaire fictif sans offre commerciale réelle.",
+    credit: "BOMA Infos — création graphique originale",
+    license: "Création originale de démonstration",
+    source:
+      "Composition vectorielle mobile 16:9 originale, générée par scripts/make-demo-ads.ts sans photographie",
+    color: "#233f68",
+    width: 960,
+    height: 540,
+    avif: [
+      {
+        w: 320,
+        h: 180,
+        bytes: 2830,
+      },
+      {
+        w: 480,
+        h: 270,
+        bytes: 3809,
+      },
+      {
+        w: 640,
+        h: 360,
+        bytes: 3917,
+      },
+    ],
+    webp: [
+      {
+        w: 320,
+        h: 180,
+        bytes: 4608,
+      },
+      {
+        w: 480,
+        h: 270,
+        bytes: 7480,
+      },
+      {
+        w: 640,
+        h: 360,
+        bytes: 10008,
+      },
+    ],
+  },
+  "demo-ad-rivage-marche-mobile": {
+    id: "demo-ad-rivage-marche-mobile",
+    alt: "Affiche mobile de démonstration de Rivage Marché : Le goût des jours heureux. Annonceur fictif.",
+    caption:
+      "Rivage Marché — création mobile 16:9, exemple publicitaire fictif sans offre commerciale réelle.",
+    credit: "BOMA Infos — création graphique originale",
+    license: "Création originale de démonstration",
+    source:
+      "Composition vectorielle mobile 16:9 originale, générée par scripts/make-demo-ads.ts sans photographie",
+    color: "#f1e9c9",
+    width: 960,
+    height: 540,
+    avif: [
+      {
+        w: 320,
+        h: 180,
+        bytes: 2925,
+      },
+      {
+        w: 480,
+        h: 270,
+        bytes: 4006,
+      },
+      {
+        w: 640,
+        h: 360,
+        bytes: 3933,
+      },
+    ],
+    webp: [
+      {
+        w: 320,
+        h: 180,
+        bytes: 4552,
+      },
+      {
+        w: 480,
+        h: 270,
+        bytes: 7236,
+      },
+      {
+        w: 640,
+        h: 360,
+        bytes: 9666,
+      },
+    ],
+  },
 };

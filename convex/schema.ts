@@ -134,6 +134,7 @@ export default defineSchema({
   })
     .index("by_enabled_priority", ["enabled", "priority"])
     .index("by_demo_key", ["demoKey"])
+    .index("by_mobile_media", ["mobileMediaKey"])
     .index("by_media", ["mediaKey"]),
 
   articles: defineTable({

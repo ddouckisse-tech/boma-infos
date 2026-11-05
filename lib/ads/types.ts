@@ -31,6 +31,8 @@ export type AdCreative = {
   endsAt?: number;
   priority: number;
   media: MediaAsset;
+  /** Optional smartphone poster; otherwise render the usual campaign image. */
+  mobileMedia?: MediaAsset;
 };
 
 export const AD_ROTATION_MS = 90_000;

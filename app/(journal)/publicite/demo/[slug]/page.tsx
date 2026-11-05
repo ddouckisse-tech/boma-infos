@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { Container } from "@/components/custom/container";
 import { PageHeader } from "@/components/custom/page-header";
 import { ResponsiveImage } from "@/components/custom/responsive-image";
-import { DEMO_POSTERS } from "@/lib/ads/demo";
+import { DEMO_ADS, DEMO_POSTERS } from "@/lib/ads/demo";
 import { getMediaAsset } from "@/lib/media";
 
 export const dynamicParams = false;
@@ -28,6 +28,7 @@ export default async function DemoAdvertisementPage({ params }: { params: Promis
   const ad = DEMO_POSTERS.find((item) => item.slug === slug);
   if (!ad) notFound();
   const media = getMediaAsset(ad.mediaKey);
+  const mobile = getMediaAsset(DEMO_ADS.find((item) => item.slug === slug)?.mobileMediaKey);
   return (
     <>
       <PageHeader
@@ -37,7 +38,7 @@ export default async function DemoAdvertisementPage({ params }: { params: Promis
         breadcrumb={<Link href="/publicite" prefetch={false} className="inline-flex min-h-11 items-center text-accent underline underline-offset-4">← Tous les exemples publicitaires</Link>}
       />
       <Container width="reading" className="py-10 md:py-14">
-        {media && <ResponsiveImage media={media} sizes="(min-width: 768px) 640px, 92vw" maxWidth={640} wrapperClassName={ad.format === "square" ? "mx-auto aspect-square max-w-sm overflow-hidden rounded-lg" : "aspect-[3/1] overflow-hidden rounded-lg"} className="object-contain" />}
+        {media && <ResponsiveImage media={media} mobileMedia={mobile} sizes="(min-width: 768px) 640px, 92vw" maxWidth={640} wrapperClassName={ad.format === "square" ? "mx-auto aspect-video overflow-hidden rounded-lg lg:aspect-square lg:max-w-md" : "aspect-video overflow-hidden rounded-lg lg:aspect-[3/1]"} className="object-contain" />}
         <p role="note" className="mt-8 rounded-md border border-warning-token/40 bg-warning-token/10 p-4 type-small">Cet annonceur et cette offre sont fictifs. Cette page sert uniquement à démontrer le parcours d’une publicité sur BOMA Infos. Aucun achat ni aucune réservation ne sont proposés.</p>
         <p className="mt-6 type-body">{ad.description}</p>
         <div className="mt-8 flex flex-wrap gap-4">

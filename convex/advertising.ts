@@ -40,6 +40,20 @@ const variantShape = v.object({
   h: v.number(),
   bytes: v.number(),
 });
+const mediaAssetShape = v.object({
+  id: v.string(),
+  alt: v.string(),
+  caption: v.string(),
+  credit: v.string(),
+  license: v.string(),
+  source: v.string(),
+  color: v.string(),
+  width: v.number(),
+  height: v.number(),
+  avif: v.array(variantShape),
+  webp: v.array(variantShape),
+  urls: v.optional(v.record(v.string(), v.string())),
+});
 const creativeShape = v.object({
   id: v.string(),
   title: v.string(),
@@ -53,20 +67,8 @@ const creativeShape = v.object({
   startsAt: v.optional(v.number()),
   endsAt: v.optional(v.number()),
   priority: v.number(),
-  media: v.object({
-    id: v.string(),
-    alt: v.string(),
-    caption: v.string(),
-    credit: v.string(),
-    license: v.string(),
-    source: v.string(),
-    color: v.string(),
-    width: v.number(),
-    height: v.number(),
-    avif: v.array(variantShape),
-    webp: v.array(variantShape),
-    urls: v.optional(v.record(v.string(), v.string())),
-  }),
+  media: mediaAssetShape,
+  mobileMedia: v.optional(mediaAssetShape),
 });
 
 /** No third-party image URL input: use the manifest or this project's storage. */
@@ -171,6 +173,7 @@ export const list = query({
         format: row.format,
         href: row.href,
         mediaKey: row.mediaKey,
+        mobileMediaKey: row.mobileMediaKey,
         placements: row.placements,
         device: row.device ?? "all",
         demoKey: row.demoKey,
@@ -193,6 +196,13 @@ export const save = mutation({
     const existing = id ? await ctx.db.get(id) : null;
     if (id && !existing) throw accessError("FORBIDDEN");
     await campaignMedia(ctx, input.mediaKey, input.format, input.placements);
+    if (input.mobileMediaKey)
+      await campaignMedia(
+        ctx,
+        input.mobileMediaKey,
+        input.format,
+        input.placements
+      );
     const payload = {
       ...input,
       ...(existing?.demoKey !== undefined ? { demoKey: existing.demoKey } : {}),
@@ -228,8 +238,20 @@ export const setEnabled = mutation({
     const row = await ctx.db.get(id);
     if (!row) throw accessError("FORBIDDEN");
     if (enabled) {
-      validateCampaign(row);
-      await campaignMedia(ctx, row.mediaKey, row.format, row.placements);
+      const campaign = validateCampaign(row);
+      await campaignMedia(
+        ctx,
+        campaign.mediaKey,
+        campaign.format,
+        campaign.placements
+      );
+      if (campaign.mobileMediaKey)
+        await campaignMedia(
+          ctx,
+          campaign.mobileMediaKey,
+          campaign.format,
+          campaign.placements
+        );
     }
     const payload = { enabled, updatedAt: Date.now(), updatedBy: viewer.name };
     await ctx.db.patch(id, payload);
@@ -274,13 +296,31 @@ export const publicFeed = query({
     for (const row of active) {
       if (creatives.length === AD_FEED_LIMIT) break;
       try {
-        const campaign = validateCampaign(row);
+        // An obsolete optional mobile reference must not hide a valid main image.
+        const campaign = validateCampaign({
+          ...row,
+          mobileMediaKey: undefined,
+        });
         const media = await campaignMedia(
           ctx,
           campaign.mediaKey,
           campaign.format,
           campaign.placements
         );
+        let mobileMedia: MediaAsset | undefined;
+        const mobileMediaKey = row.mobileMediaKey?.trim();
+        if (mobileMediaKey) {
+          try {
+            mobileMedia = await campaignMedia(
+              ctx,
+              mobileMediaKey,
+              campaign.format,
+              campaign.placements
+            );
+          } catch {
+            // Keep this campaign usable with its main poster until the admin repairs it.
+          }
+        }
         creatives.push({
           id: row._id,
           title: campaign.title,
@@ -295,19 +335,29 @@ export const publicFeed = query({
           endsAt: campaign.endsAt,
           priority: campaign.priority,
           media,
+          ...(mobileMedia ? { mobileMedia } : {}),
         });
       } catch {
         // A deleted file, incomplete alt or outdated data never breaks reading.
         // Re-enabling/saving the campaign surfaces the validation in the editor.
       }
     }
-    return creatives.map((creative) => ({
+    return creatives.map(({ mobileMedia, ...creative }) => ({
       ...creative,
       media: {
         ...creative.media,
         avif: [...creative.media.avif],
         webp: [...creative.media.webp],
       },
+      ...(mobileMedia
+        ? {
+            mobileMedia: {
+              ...mobileMedia,
+              avif: [...mobileMedia.avif],
+              webp: [...mobileMedia.webp],
+            },
+          }
+        : {}),
     }));
   },
 });
@@ -320,6 +370,40 @@ const exampleResult = v.object({
 
 type ExampleResult = { created: number; existing: number; total: number };
 
+/** The same insert-only media path is used by loading and responsive upgrades. */
+async function ensureDemoMedia(
+  ctx: MutationCtx,
+  key: string
+): Promise<boolean> {
+  const asset = AD_DEMO_MEDIA[key];
+  if (!asset) throw new Error(`Affiche de démonstration manquante : ${key}.`);
+  const existing = await ctx.db
+    .query("media")
+    .withIndex("by_key", (q) => q.eq("key", key))
+    .unique();
+  if (existing) return false;
+  const text = {
+    key,
+    alt: asset.alt,
+    caption: asset.caption,
+    credit: asset.credit,
+  };
+  await ctx.db.insert("media", {
+    ...text,
+    ...mediaDerivedFields(text),
+    license: asset.license,
+    source: asset.source,
+    color: asset.color,
+    width: asset.width,
+    height: asset.height,
+    variants: [
+      ...asset.avif.map((variant) => ({ format: "avif" as const, ...variant })),
+      ...asset.webp.map((variant) => ({ format: "webp" as const, ...variant })),
+    ],
+  });
+  return true;
+}
+
 /** Insert-only: neither an edited campaign nor a library row is ever replaced. */
 async function insertExamples(
   ctx: MutationCtx,
@@ -329,41 +413,9 @@ async function insertExamples(
   let mediaCreated = 0;
   const now = Date.now();
   for (const ad of DEMO_ADS) {
-    const asset = AD_DEMO_MEDIA[ad.mediaKey];
-    if (!asset)
-      throw new Error(`Affiche de démonstration manquante : ${ad.slug}.`);
-    const media = await ctx.db
-      .query("media")
-      .withIndex("by_key", (q) => q.eq("key", ad.mediaKey))
-      .unique();
-    if (!media) {
-      const text = {
-        key: ad.mediaKey,
-        alt: asset.alt,
-        caption: asset.caption,
-        credit: asset.credit,
-      };
-      await ctx.db.insert("media", {
-        ...text,
-        ...mediaDerivedFields(text),
-        license: asset.license,
-        source: asset.source,
-        color: asset.color,
-        width: asset.width,
-        height: asset.height,
-        variants: [
-          ...asset.avif.map((variant) => ({
-            format: "avif" as const,
-            ...variant,
-          })),
-          ...asset.webp.map((variant) => ({
-            format: "webp" as const,
-            ...variant,
-          })),
-        ],
-      });
+    if (await ensureDemoMedia(ctx, ad.mediaKey)) mediaCreated += 1;
+    if (ad.mobileMediaKey && (await ensureDemoMedia(ctx, ad.mobileMediaKey)))
       mediaCreated += 1;
-    }
     const existing = await ctx.db
       .query("adCampaigns")
       .withIndex("by_demo_key", (q) => q.eq("demoKey", ad.slug))
@@ -376,6 +428,7 @@ async function insertExamples(
       format: ad.format,
       href: `/publicite/demo/${ad.slug}`,
       mediaKey: ad.mediaKey,
+      mobileMediaKey: ad.mobileMediaKey,
       placements: [...ad.placements],
       device: ad.device,
       enabled: true,
@@ -387,6 +440,13 @@ async function insertExamples(
       campaign.format,
       campaign.placements
     );
+    if (campaign.mobileMediaKey)
+      await campaignMedia(
+        ctx,
+        campaign.mobileMediaKey,
+        campaign.format,
+        campaign.placements
+      );
     await ctx.db.insert("adCampaigns", {
       ...campaign,
       demoKey: ad.slug,
@@ -514,5 +574,66 @@ export const useFiveExamples = internalMutation({
       });
     }
     return { active, paused };
+  },
+});
+
+/** Enrich existing selected examples only; do not reconfigure or enable a campaign. */
+export const upgradeResponsiveExamples = internalMutation({
+  args: {},
+  returns: v.object({
+    updated: v.number(),
+    existing: v.number(),
+    skipped: v.number(),
+  }),
+  handler: async (
+    ctx
+  ): Promise<{ updated: number; existing: number; skipped: number }> => {
+    const now = Date.now();
+    const actor = "Ajout des affiches mobiles de démonstration";
+    let updated = 0;
+    let existing = 0;
+    let skipped = 0;
+    let mediaCreated = 0;
+    for (const ad of DEMO_ADS) {
+      if (!ad.mobileMediaKey) {
+        skipped += 1;
+        continue;
+      }
+      if (await ensureDemoMedia(ctx, ad.mobileMediaKey)) mediaCreated += 1;
+      const row = await ctx.db
+        .query("adCampaigns")
+        .withIndex("by_demo_key", (q) => q.eq("demoKey", ad.slug))
+        .unique();
+      if (!row || row.mediaKey !== ad.mediaKey) {
+        skipped += 1;
+        continue;
+      }
+      if (row.mobileMediaKey !== undefined) {
+        existing += 1;
+        continue;
+      }
+      await campaignMedia(ctx, ad.mobileMediaKey, row.format, row.placements);
+      const patch = {
+        mobileMediaKey: ad.mobileMediaKey,
+        updatedAt: now,
+        updatedBy: actor,
+      };
+      await ctx.db.patch(row._id, patch);
+      await scheduleBoundary(ctx, { ...row, ...patch });
+      updated += 1;
+    }
+    if (updated > 0 || mediaCreated > 0) {
+      await ctx.db.insert("auditLog", {
+        at: now,
+        actorSubject: "internal:responsive-ad-examples",
+        actorName: actor,
+        actorRole: "interne",
+        action: "settings.update",
+        targetType: "adCampaigns",
+        targetId: "responsive-demo-examples",
+        summary: `Affiches mobiles : ${updated} campagne(s) enrichie(s), ${mediaCreated} média(s) ajouté(s), sans changement de diffusion.`,
+      });
+    }
+    return { updated, existing, skipped };
   },
 });

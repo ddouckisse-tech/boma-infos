@@ -32,6 +32,7 @@ export const campaignFields = {
   format: adFormat,
   href: v.string(),
   mediaKey: v.string(),
+  mobileMediaKey: v.optional(v.string()),
   placements: v.array(adPlacement),
   device: v.optional(adDevice),
   startsAt: v.optional(v.number()),
@@ -42,9 +43,10 @@ export const campaignFields = {
 
 export type CampaignInput = Omit<
   AdCreative,
-  "id" | "media" | "presentation" | "demo"
+  "id" | "media" | "mobileMedia" | "presentation" | "demo"
 > & {
   mediaKey: string;
+  mobileMediaKey?: string;
   enabled: boolean;
 };
 
@@ -105,8 +107,11 @@ export function validateCampaign(input: CampaignInput): CampaignInput {
   const title = cleanText(input.title, "Titre", 120);
   const advertiser = cleanText(input.advertiser, "Annonceur", 100);
   const mediaKey = input.mediaKey.trim();
+  const mobileMediaKey = input.mobileMediaKey?.trim() || undefined;
   const href = input.href.trim();
   if (!KEY.test(mediaKey)) throw new Error("Clé de média invalide.");
+  if (mobileMediaKey !== undefined && !KEY.test(mobileMediaKey))
+    throw new Error("Clé de média mobile invalide.");
   if (!isSafeAdHref(href))
     throw new Error(
       "Lien invalide : utilisez un chemin local ou une URL HTTPS sans identifiants."
@@ -174,6 +179,7 @@ export function validateCampaign(input: CampaignInput): CampaignInput {
     advertiser,
     href,
     mediaKey,
+    mobileMediaKey,
     device,
     placements: [...input.placements],
   };

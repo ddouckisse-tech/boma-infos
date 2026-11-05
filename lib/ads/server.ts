@@ -11,6 +11,9 @@ import type { AdCreative, AdPlacement } from "./types";
 function previewCampaigns(): AdCreative[] {
   return DEMO_ADS.flatMap((item, index) => {
     const media = AD_DEMO_MEDIA[item.mediaKey];
+    const mobileMedia = item.mobileMediaKey
+      ? AD_DEMO_MEDIA[item.mobileMediaKey]
+      : undefined;
     return media
       ? [
           {
@@ -25,6 +28,7 @@ function previewCampaigns(): AdCreative[] {
             demo: true,
             priority: 50 - index,
             media,
+            ...(mobileMedia ? { mobileMedia } : {}),
           },
         ]
       : [];

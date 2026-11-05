@@ -167,6 +167,15 @@ function libraryQuery(
   return media.withIndex("by_uploaded").order("desc");
 }
 
+/** Both posters remain protected while referenced, including paused campaigns. */
+async function campaignUsesMedia(ctx: QueryCtx, key: string): Promise<boolean> {
+  const [primary, mobile] = await Promise.all([
+    ctx.db.query("adCampaigns").withIndex("by_media", (q) => q.eq("mediaKey", key)).first(),
+    ctx.db.query("adCampaigns").withIndex("by_mobile_media", (q) => q.eq("mobileMediaKey", key)).first(),
+  ]);
+  return primary !== null || mobile !== null;
+}
+
 /** One card of the médiathèque: a handful of indexed reads, whatever the library holds. */
 async function libraryItem(
   ctx: QueryCtx,
@@ -185,10 +194,7 @@ async function libraryItem(
           .eq("status", "pending")
       )
       .take(USAGE_CAP + 1),
-    ctx.db
-      .query("adCampaigns")
-      .withIndex("by_media", (q) => q.eq("mediaKey", row.key))
-      .first(),
+    campaignUsesMedia(ctx, row.key),
   ]);
   return {
     _id: row._id,
@@ -203,7 +209,7 @@ async function libraryItem(
     color: row.color,
     variants: row.variants,
     usedBy,
-    usedByCampaign: campaign !== null,
+    usedByCampaign: campaign,
     pendingSuggestions: pending.length,
     thumbUrl,
     uploadedAt: row.uploadedAt,
@@ -476,10 +482,7 @@ export const remove = mutation({
     const viewer = await requirePermission(ctx, PERMISSIONS.mediaWrite);
     const row = await ctx.db.get(id);
     if (!row) throw accessError("FORBIDDEN");
-    const campaign = await ctx.db
-      .query("adCampaigns")
-      .withIndex("by_media", (q) => q.eq("mediaKey", row.key))
-      .first();
+    const campaign = await campaignUsesMedia(ctx, row.key);
     if (campaign) {
       throw new Error(
         "Cette image est encore utilisée par une campagne publicitaire, même inactive : remplacez son média avant de la supprimer."

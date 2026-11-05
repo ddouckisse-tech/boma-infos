@@ -46,7 +46,7 @@ export default function AdvertisingPage() {
             return (
               <article key={ad.slug} className="overflow-hidden rounded-lg border border-border bg-card">
                 <Link href={`/publicite/demo/${ad.slug}`} prefetch={false} className="block focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring">
-                  {media && <ResponsiveImage media={media} sizes="(min-width: 1024px) 400px, (min-width: 640px) 48vw, 92vw" maxWidth={640} wrapperClassName={ad.format === "square" ? "aspect-square" : "aspect-[3/1]"} className="object-contain" />}
+                  {media && <ResponsiveImage media={media} mobileMedia={getMediaAsset(ad.mobileMediaKey)} mobileSizes="(min-width: 640px) 48vw, 92vw" sizes="(min-width: 1024px) 400px, (min-width: 640px) 48vw, 92vw" maxWidth={640} wrapperClassName={ad.format === "square" ? "aspect-video lg:aspect-square" : "aspect-video lg:aspect-[3/1]"} className="object-contain" />}
                   <div className="p-5">
                     <p className="type-small font-semibold text-accent">Publicité · Démonstration</p>
                     <h3 className="mt-2 font-display type-h3">{ad.advertiser}</h3>

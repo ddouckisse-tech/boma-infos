@@ -10,6 +10,10 @@ import { cx } from "@/lib/cx";
 
 type ResponsiveImageProps = {
   media: MediaAsset;
+  /** Art-directed phone poster; one picture/source choice, never a second image. */
+  mobileMedia?: MediaAsset;
+  mobileSizes?: string;
+  mobileMaxWidth?: number;
   /** `sizes` attribute — use a preset from `SIZES`. */
   sizes: string;
   /** Overrides the manifest's alternative text. Never omit both. */
@@ -46,6 +50,9 @@ type ResponsiveImageProps = {
  */
 export function ResponsiveImage({
   media,
+  mobileMedia,
+  mobileSizes = "92vw",
+  mobileMaxWidth = 640,
   sizes,
   alt,
   priority = false,
@@ -61,8 +68,10 @@ export function ResponsiveImage({
   const webp = maxWidth
     ? srcSetCapped(media, "webp", maxWidth)
     : srcSet(media, "webp");
+  const mobileAvif = mobileMedia ? srcSetCapped(mobileMedia, "avif", mobileMaxWidth) : "";
+  const mobileWebp = mobileMedia ? srcSetCapped(mobileMedia, "webp", mobileMaxWidth) : "";
 
-  if (priority) {
+  if (priority && !mobileMedia) {
     // Hisse un <link rel="preload"> dans le <head>. Sans lui, l'analyseur de
     // préchargement ne découvre l'image de une qu'après la feuille de style :
     // 593 ms de retard au démarrage, mesurés par Lighthouse. Une image
@@ -83,6 +92,12 @@ export function ResponsiveImage({
       style={{ backgroundColor: media.color }}
     >
       <picture>
+        {mobileAvif !== "" && (
+          <source media="(max-width: 1023px)" type="image/avif" srcSet={mobileAvif} sizes={mobileSizes} />
+        )}
+        {mobileWebp !== "" && (
+          <source media="(max-width: 1023px)" type="image/webp" srcSet={mobileWebp} sizes={mobileSizes} />
+        )}
         {avif !== "" && (
           <source type="image/avif" srcSet={avif} sizes={sizes} />
         )}

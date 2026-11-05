@@ -341,9 +341,11 @@ function FloatingCard({
       >
         <ResponsiveImage
           media={creative.media}
+          mobileMedia={creative.mobileMedia}
+          mobileSizes="calc(100vw - 3rem)"
           alt={creative.media.alt || creative.title}
-          sizes="(min-width: 1024px) 272px, 80px"
-          maxWidth={320}
+          sizes="(min-width: 1024px) 272px, calc(100vw - 3rem)"
+          maxWidth={640}
           wrapperClassName="lc-ad-floating-image"
           className="object-cover"
         />

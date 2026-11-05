@@ -8,7 +8,9 @@ appliqués aux requêtes et mutations du serveur.
 ## Préparer et diffuser une campagne
 
 1. Choisir **Nouvelle campagne**, renseigner le titre, l’annonceur et un lien local
-   ou HTTPS, puis sélectionner l’affiche dans la médiathèque.
+   ou HTTPS, puis sélectionner l’affiche dans la médiathèque. Une seconde affiche
+   smartphone facultative peut être choisie : privilégier une composition 16:9,
+   de 640 px de large minimum, avec un titre lisible sur un écran de 358 px.
 2. Choisir le format, les emplacements et le ciblage **Tous les écrans**,
    **Ordinateur** ou **Mobile et tablette**. Les emplacements incompatibles avec
    le format ne sont pas proposés.
@@ -21,6 +23,14 @@ appliqués aux requêtes et mutations du serveur.
 Les bandeaux occupent les pauses entre les blocs d’accueil, les listes et les
 articles longs. Le format carré occupe la colonne complémentaire d’article ou
 les formats superposés. Aucun encart ne coupe une phrase ou un bloc d’article.
+
+Sur téléphone et tablette (moins de 1024 px), l’affiche smartphone prend la
+largeur de lecture, au ratio 16:9 comme une image d’article. Le navigateur choisit
+sa source dans un seul élément picture, sans télécharger une seconde image
+cachée. Sans affiche smartphone, l’affiche principale reste disponible. Les
+bandeaux sur ordinateur peuvent atteindre 768 px ; leur format principal est
+conservé. La carte flottante mobile présente aussi un grand visuel, avec une
+hauteur bornée et une fermeture qui reste accessible pendant son défilement.
 
 Sur ordinateur, la fenêtre publicitaire est prioritaire ; sur mobile, la carte
 flottante compacte l’est. L’autre format sert de repli si aucune campagne du

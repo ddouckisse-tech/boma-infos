@@ -166,6 +166,7 @@ type CampaignFormValues = {
   device?: CampaignDevice;
   href: string;
   mediaKey: string;
+  mobileMediaKey?: string;
   placements: AdPlacement[];
   startsAt: string;
   endsAt: string;
@@ -222,6 +223,7 @@ export function buildCampaignSubmission(
     device: values.device ?? "all",
     href: values.href.trim(),
     mediaKey: values.mediaKey,
+    mobileMediaKey: values.mobileMediaKey?.trim() || undefined,
     placements: [...values.placements],
     startsAt: start,
     endsAt: end,
@@ -243,24 +245,22 @@ function previewSource(media: PickedMedia, stored?: string | null): string {
 function CampaignPreview({
   media,
   format,
-  compact = false,
+  mobile = false,
 }: {
   media?: PickedMedia;
   format: AdFormat;
-  compact?: boolean;
+  mobile?: boolean;
 }) {
-  // A picture is looked up with its thumbnail only; the full-width preview
-  // asks for the larger file of its one picture, a list row keeps the
-  // thumbnail.
+  // Use a larger rendition so poster copy remains readable in both previews.
   const stored = useQuery(
     api.library.previewUrl,
-    media?.thumbUrl && !compact ? { key: media.key } : "skip"
+    media?.thumbUrl ? { key: media.key } : "skip"
   );
   return (
     <div
       className={cn(
         "overflow-hidden rounded-lg border border-border bg-background",
-        compact ? "w-32 shrink-0" : "w-full max-w-xl"
+        mobile ? "w-full max-w-[358px]" : "w-full max-w-xl"
       )}
     >
       <p className="border-b border-border px-3 py-1.5 type-small text-muted-foreground">
@@ -269,7 +269,11 @@ function CampaignPreview({
       <div
         className={cn(
           "flex items-center justify-center bg-surface-muted",
-          format === "square" ? "aspect-square" : "aspect-[3/1]"
+          mobile
+            ? "aspect-video"
+            : format === "square"
+              ? "aspect-square"
+              : "aspect-[3/1]"
         )}
       >
         {media ? (
@@ -296,13 +300,37 @@ function CampaignPreview({
 /** A campaign row's preview: its poster looked up by key, not in the whole library. */
 function CampaignRowPreview({
   mediaKey,
+  mobileMediaKey,
   format,
 }: {
   mediaKey: string;
+  mobileMediaKey?: string;
   format: AdFormat;
 }) {
   const media = useMediaByKey(mediaKey);
-  return <CampaignPreview media={media ?? undefined} format={format} compact />;
+  const mobileMedia = useMediaByKey(mobileMediaKey ?? "");
+  return (
+    <div className="grid min-w-0 gap-5 lg:grid-cols-2">
+      <section className="grid min-w-0 content-start gap-2">
+        <h4 className="type-small font-medium">
+          Affiche principale · ordinateur
+        </h4>
+        <CampaignPreview media={media ?? undefined} format={format} />
+      </section>
+      {mobileMediaKey && (
+        <section className="grid min-w-0 content-start gap-2">
+          <h4 className="type-small font-medium">
+            Affiche smartphone dédiée · 16:9
+          </h4>
+          <CampaignPreview
+            media={mobileMedia ?? undefined}
+            format={format}
+            mobile
+          />
+        </section>
+      )}
+    </div>
+  );
 }
 
 export function AdvertisingManager() {
@@ -449,8 +477,8 @@ export function AdvertisingManager() {
         </p>
       </div>
       <p className="mb-6 type-small text-muted-foreground">
-        Les cinq exemples sont fictifs et identifiés dans la liste. Les charger à
-        nouveau ne duplique pas les campagnes déjà présentes.
+        Les cinq exemples sont fictifs et identifiés dans la liste. Les charger
+        à nouveau ne duplique pas les campagnes déjà présentes.
       </p>
       <div className="mb-6 grid grid-cols-2 gap-3 xl:grid-cols-4">
         <StatsTile
@@ -548,12 +576,8 @@ export function AdvertisingManager() {
               return (
                 <li
                   key={campaign._id}
-                  className="flex flex-col gap-4 rounded-lg border border-border p-4 sm:flex-row sm:items-start"
+                  className="grid min-w-0 gap-4 rounded-lg border border-border p-4"
                 >
-                  <CampaignRowPreview
-                    mediaKey={campaign.mediaKey}
-                    format={campaign.format}
-                  />
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="type-body font-semibold">
@@ -570,6 +594,11 @@ export function AdvertisingManager() {
                       {campaign.demoKey && (
                         <span className="rounded-full bg-accent-surface px-2 py-0.5 type-small text-accent">
                           Exemple
+                        </span>
+                      )}
+                      {campaign.mobileMediaKey && (
+                        <span className="rounded-full bg-surface-muted px-2 py-0.5 type-small text-muted-foreground">
+                          Affiche smartphone dédiée
                         </span>
                       )}
                     </div>
@@ -643,6 +672,11 @@ export function AdvertisingManager() {
                       </ActionButton>
                     </div>
                   </div>
+                  <CampaignRowPreview
+                    mediaKey={campaign.mediaKey}
+                    mobileMediaKey={campaign.mobileMediaKey}
+                    format={campaign.format}
+                  />
                 </li>
               );
             })}
@@ -688,6 +722,9 @@ function CampaignForm({
   );
   const [href, setHref] = useState(campaign?.href ?? "");
   const [mediaKey, setMediaKey] = useState(campaign?.mediaKey ?? "");
+  const [mobileMediaKey, setMobileMediaKey] = useState(
+    campaign?.mobileMediaKey ?? ""
+  );
   const [placements, setPlacements] = useState<AdPlacement[]>(
     campaign?.placements ?? []
   );
@@ -700,11 +737,17 @@ function CampaignForm({
   // `undefined` pendant la recherche, `null` si la clé n'existe plus.
   const lookup = useMediaByKey(mediaKey);
   const selectedMedia = lookup ?? undefined;
+  const mobileLookup = useMediaByKey(mobileMediaKey);
+  const selectedMobileMedia = mobileLookup ?? undefined;
   const availablePlacements = PLACEMENTS.filter((item) =>
     item.formats.includes(format)
   );
   const missingAlt =
     selectedMedia !== undefined && selectedMedia.alt.trim() === "";
+  const missingMobileAlt =
+    selectedMobileMedia !== undefined && selectedMobileMedia.alt.trim() === "";
+  const invalidMobileMedia =
+    mobileMediaKey !== "" && (!selectedMobileMedia || missingMobileAlt);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -712,6 +755,12 @@ function CampaignForm({
     if (!selectedMedia || missingAlt || placements.length === 0) {
       setError(
         "Choisissez une affiche avec un texte alternatif et au moins un emplacement."
+      );
+      return;
+    }
+    if (invalidMobileMedia) {
+      setError(
+        "Choisissez une affiche smartphone disponible avec un texte alternatif, ou retirez-la pour utiliser l’affiche principale."
       );
       return;
     }
@@ -726,6 +775,7 @@ function CampaignForm({
           device,
           href,
           mediaKey,
+          mobileMediaKey,
           placements,
           startsAt,
           endsAt,
@@ -800,7 +850,7 @@ function CampaignForm({
           value={device}
           onChange={(event) => setDevice(event.target.value as CampaignDevice)}
           options={DEVICE_OPTIONS}
-          hint="Choisissez le même visuel pour tous les écrans, ou préparez une campagne dédiée à l’ordinateur ou au mobile."
+          hint="Définissez où la campagne est diffusée. L’affiche smartphone peut être adaptée sans créer une seconde campagne."
         />
         {campaign?.demoKey && (
           <p className="self-center rounded-md bg-accent-surface p-3 type-small text-accent">
@@ -816,39 +866,82 @@ function CampaignForm({
           onChange={(event) => setHref(event.target.value)}
           hint="Adresse https:// complète ou chemin du journal commençant par / (par exemple /newsletter)."
         />
-        <div className="grid gap-3 sm:col-span-2">
-          <MediaPicker
-            label="Affiche publicitaire"
-            value={mediaKey}
-            onChange={setMediaKey}
-            allowNone={false}
-          />
-          {missingAlt && (
-            <p role="status" className="type-small text-warning-token">
-              Cette image n’a pas de texte alternatif.{" "}
-              <Link
-                href="/redaction/medias?filtre=sans-alt"
-                target="_blank"
-                rel="noopener"
-                className="underline underline-offset-4"
-              >
-                Compléter sa description dans la médiathèque (nouvel onglet)
-              </Link>{" "}
-              avant d’enregistrer la campagne. Le formulaire se mettra à jour
-              automatiquement.
+        <div className="grid min-w-0 gap-6 sm:col-span-2 lg:grid-cols-2">
+          <section className="grid min-w-0 content-start gap-3">
+            <MediaPicker
+              label="Affiche principale · ordinateur"
+              value={mediaKey}
+              onChange={setMediaKey}
+              allowNone={false}
+            />
+            {missingAlt && (
+              <p role="status" className="type-small text-warning-token">
+                Cette image n’a pas de texte alternatif.{" "}
+                <Link
+                  href="/redaction/medias?filtre=sans-alt"
+                  target="_blank"
+                  rel="noopener"
+                  className="underline underline-offset-4"
+                >
+                  Compléter sa description dans la médiathèque (nouvel onglet)
+                </Link>{" "}
+                avant d’enregistrer la campagne. Le formulaire se mettra à jour
+                automatiquement.
+              </p>
+            )}
+            {mediaKey && lookup === null && (
+              <p role="status" className="type-small text-warning-token">
+                L’affiche sélectionnée n’est pas encore disponible dans la
+                médiathèque.
+              </p>
+            )}
+            <CampaignPreview media={selectedMedia} format={format} />
+            <p className="type-small text-muted-foreground">
+              L’image principale reste entièrement visible, sans recadrage.
+              Choisissez une création adaptée au format de la campagne.
             </p>
-          )}
-          {mediaKey && lookup === null && (
-            <p role="status" className="type-small text-warning-token">
-              L’affiche sélectionnée n’est pas encore disponible dans la
-              médiathèque.
+          </section>
+          <section className="grid min-w-0 content-start gap-3">
+            <MediaPicker
+              label="Affiche smartphone · facultative"
+              value={mobileMediaKey}
+              onChange={setMobileMediaKey}
+              allowNone
+            />
+            <p className="type-small text-muted-foreground">
+              Préparez un visuel au format 16:9, d’au moins 640 px de large,
+              avec un texte lisible sur un smartphone. Sans affiche dédiée,
+              l’affiche principale est utilisée.
             </p>
-          )}
-          <CampaignPreview media={selectedMedia} format={format} />
-          <p className="type-small text-muted-foreground">
-            L’image reste entièrement visible, sans recadrage. Choisissez une
-            création adaptée au format.
-          </p>
+            {mobileMediaKey && mobileLookup === null && (
+              <p role="status" className="type-small text-warning-token">
+                Cette affiche smartphone est introuvable. Choisissez un autre
+                média ou retirez-la.
+              </p>
+            )}
+            {missingMobileAlt && (
+              <p role="status" className="type-small text-warning-token">
+                Ajoutez un texte alternatif à l’affiche smartphone dans la
+                médiathèque avant d’enregistrer.
+              </p>
+            )}
+            <CampaignPreview
+              media={mobileMediaKey ? selectedMobileMedia : selectedMedia}
+              format={format}
+              mobile
+            />
+            <p className="type-small text-muted-foreground">
+              {mobileMediaKey
+                ? "Aperçu smartphone du visuel dédié, à une largeur de référence de 358 px."
+                : "Aperçu smartphone : repli sur l’affiche principale. Une création dédiée permet d’agrandir le texte."}
+            </p>
+            {device === "desktop" && (
+              <p className="type-small text-muted-foreground">
+                Le ciblage actuel est limité à l’ordinateur ; l’affiche
+                smartphone est conservée pour une diffusion ultérieure.
+              </p>
+            )}
+          </section>
         </div>
         <fieldset className="min-w-0 rounded-lg border border-border p-3 sm:col-span-2">
           <legend className="px-1 type-small font-medium">
@@ -931,6 +1024,7 @@ function CampaignForm({
               !href.trim() ||
               !selectedMedia ||
               missingAlt ||
+              invalidMobileMedia ||
               placements.length === 0
             }
           >

@@ -12,6 +12,7 @@ import {
   save,
   setEnabled,
   useFiveExamples,
+  upgradeResponsiveExamples,
 } from "../convex/advertising";
 import { AD_DEMO_MEDIA } from "../convex/adDemoManifest";
 import {
@@ -40,6 +41,10 @@ const useFive = handlerOf<
   Record<string, never>,
   { active: number; paused: number }
 >(useFiveExamples);
+const upgradeResponsive = handlerOf<
+  Record<string, never>,
+  { updated: number; existing: number; skipped: number }
+>(upgradeResponsiveExamples);
 const readList = handlerOf<Record<string, never>, CampaignRow[]>(list);
 const readFeed = handlerOf<Record<string, never>, AdCreative[]>(publicFeed);
 const writeCampaign = handlerOf<CampaignInput & { id?: string }, string>(save);
@@ -60,6 +65,31 @@ const input = (patch: Partial<CampaignInput> = {}): CampaignInput => ({
   priority: 50,
   ...patch,
 });
+
+function seedAsset(
+  fake: ReturnType<typeof createFakeDb>,
+  key: string,
+  caption?: string
+): string {
+  const asset = AD_DEMO_MEDIA[key];
+  return fake.seed("media", [
+    {
+      key: asset.id,
+      alt: asset.alt,
+      caption: caption ?? asset.caption,
+      credit: asset.credit,
+      license: asset.license,
+      source: asset.source,
+      color: asset.color,
+      width: asset.width,
+      height: asset.height,
+      variants: [
+        ...asset.webp.map((variant) => ({ format: "webp", ...variant })),
+        ...asset.avif.map((variant) => ({ format: "avif", ...variant })),
+      ],
+    },
+  ])[0];
+}
 
 test("advertising administration requires settingsManage before any write", async () => {
   const fake = createFakeDb();
@@ -103,7 +133,7 @@ test("demo loading is idempotent and leaves editorial data untouched", async () 
     existing: 5,
     total: 5,
   });
-  assert.equal(fake.all("media").length, 5);
+  assert.equal(fake.all("media").length, 10);
   assert.equal(fake.all("adCampaigns").length, 5);
   assert.deepEqual(fake.all("articles"), before);
   assert.equal(
@@ -114,6 +144,13 @@ test("demo loading is idempotent and leaves editorial data untouched", async () 
   const feed = await readFeed(ctx, {});
   assert.equal(feed.length, 5);
   assert.ok(feed.every((creative) => creative.demo === true));
+  assert.ok(
+    feed.every(
+      (creative) =>
+        creative.mobileMedia?.id ===
+        DEMO_ADS.find((ad) => ad.mediaKey === creative.media.id)?.mobileMediaKey
+    )
+  );
   assert.deepEqual(
     new Set(feed.flatMap((creative) => creative.placements)),
     new Set(AD_PLACEMENTS)
@@ -325,24 +362,7 @@ test("the operator transition keeps ten originals, activates five and pauses fiv
   const fake = createFakeDb();
   const ctx = signedIn(fake);
   for (const poster of DEMO_POSTERS) {
-    const asset = AD_DEMO_MEDIA[poster.mediaKey];
-    fake.seed("media", [
-      {
-        key: asset.id,
-        alt: asset.alt,
-        caption: "Légende personnalisée conservée",
-        credit: asset.credit,
-        license: asset.license,
-        source: asset.source,
-        color: asset.color,
-        width: asset.width,
-        height: asset.height,
-        variants: [
-          ...asset.webp.map((variant) => ({ format: "webp", ...variant })),
-          ...asset.avif.map((variant) => ({ format: "avif", ...variant })),
-        ],
-      },
-    ]);
+    seedAsset(fake, poster.mediaKey, "Légende personnalisée conservée");
     fake.seed("adCampaigns", [
       {
         ...input({
@@ -361,6 +381,7 @@ test("the operator transition keeps ten originals, activates five and pauses fiv
       },
     ]);
   }
+  for (const ad of DEMO_ADS) seedAsset(fake, ad.mobileMediaKey!);
   const realId = await writeCampaign(
     ctx,
     input({ title: "Campagne réelle à conserver" })
@@ -427,6 +448,224 @@ test("the operator transition only creates the selected five on an empty databas
   const ctx = signedIn(fake);
   assert.deepEqual(await useFive(ctx, {}), { active: 5, paused: 0 });
   assert.equal(fake.all("adCampaigns").length, 5);
-  assert.equal(fake.all("media").length, 5);
+  assert.equal(fake.all("media").length, 10);
   assert.equal((await readFeed(ctx, {})).length, 5);
+});
+
+test("mobile posters can be selected, cleared and left absent on legacy campaigns", async () => {
+  const fake = createFakeDb();
+  const ctx = signedIn(fake);
+  await loadInternal(ctx, {});
+  const legacyId = await writeCampaign(ctx, input());
+  assert.equal(
+    (await readFeed(ctx, {})).find((creative) => creative.id === legacyId)
+      ?.mobileMedia,
+    undefined
+  );
+  const row = (await readList(ctx, {})).find(
+    (campaign) => campaign.demoKey === DEMO_ADS[0].slug
+  )!;
+  const mobileMediaKey = DEMO_ADS[0].mobileMediaKey!;
+  await writeCampaign(ctx, {
+    ...input({ mobileMediaKey: ` ${mobileMediaKey} ` }),
+    id: row._id,
+  });
+  assert.equal(
+    (await readList(ctx, {})).find((campaign) => campaign._id === row._id)
+      ?.mobileMediaKey,
+    mobileMediaKey
+  );
+  let creative = (await readFeed(ctx, {})).find(
+    (campaign) => campaign.id === row._id
+  )!;
+  assert.equal(creative.mobileMedia?.id, mobileMediaKey);
+  assert.equal(creative.media.id, row.mediaKey);
+  await writeCampaign(ctx, { ...input({ mobileMediaKey: "  " }), id: row._id });
+  assert.equal((await fake.db.get(row._id))?.mobileMediaKey, undefined);
+  await load(ctx, {});
+  assert.equal(
+    (await fake.db.get(row._id))?.mobileMediaKey,
+    undefined,
+    "the loader never changes an existing campaign"
+  );
+  creative = (await readFeed(ctx, {})).find(
+    (campaign) => campaign.id === row._id
+  )!;
+  assert.equal(creative.mobileMedia, undefined);
+  assert.equal(creative.media.id, row.mediaKey);
+});
+
+test("unavailable or invalid mobile files fall back publicly but block save and activation", async () => {
+  for (const failure of ["missing", "empty-alt", "over-budget"] as const) {
+    const fake = createFakeDb();
+    const ctx = signedIn(fake);
+    await loadInternal(ctx, {});
+    const mobileMediaKey = DEMO_ADS[0].mobileMediaKey!;
+    const id = await writeCampaign(
+      ctx,
+      input({ mobileMediaKey, placements: ["article-inline"] })
+    );
+    const mobile = fake.all("media").find((row) => row.key === mobileMediaKey)!;
+    if (failure === "missing") await fake.db.delete(mobile._id);
+    else if (failure === "empty-alt")
+      await fake.db.patch(mobile._id, { alt: "" });
+    else {
+      fake.files.set("storage:mobile-budget", {
+        size: AD_ARTICLE_IMAGE_BUDGET + 1,
+        contentType: "image/webp",
+      });
+      await fake.db.patch(mobile._id, {
+        storage: [
+          { w: 640, h: 360, bytes: 1, storageId: "storage:mobile-budget" },
+        ],
+      });
+    }
+    const creative = (await readFeed(ctx, {})).find(
+      (campaign) => campaign.id === id
+    );
+    assert.ok(creative, failure);
+    assert.equal(creative.mobileMedia, undefined, failure);
+    assert.equal(creative.media.id, DEMO_ADS[0].mediaKey, failure);
+    await assert.rejects(
+      writeCampaign(ctx, {
+        ...input({ mobileMediaKey, placements: ["article-inline"] }),
+        id,
+      })
+    );
+    await enable(ctx, { id, enabled: false });
+    await assert.rejects(enable(ctx, { id, enabled: true }));
+    assert.equal((await fake.db.get(id))?.enabled, false);
+  }
+});
+
+test("responsive upgrading is idempotent and preserves five active and five paused legacy demos", async () => {
+  const fake = createFakeDb();
+  const ctx = {
+    ...signedIn(fake),
+    scheduler: {
+      ...fake.scheduler,
+      runAt: async () => "scheduled:mobile-upgrade",
+    },
+  };
+  const startsAt = Date.now() - 60_000;
+  const endsAt = Date.now() + 86_400_000;
+  for (const poster of DEMO_POSTERS) {
+    seedAsset(fake, poster.mediaKey, "Légende ancienne à conserver");
+    const selected = DEMO_ADS.find((ad) => ad.slug === poster.slug);
+    fake.seed("adCampaigns", [
+      {
+        ...input({
+          title: `Titre ancien : ${poster.title}`,
+          advertiser: poster.advertiser,
+          format: poster.format,
+          mediaKey: poster.mediaKey,
+          placements: [...(selected?.placements ?? poster.placements)],
+          device: selected?.device ?? poster.device,
+          enabled: Boolean(selected),
+          href: `/publicite/demo/${poster.slug}`,
+          startsAt,
+          endsAt,
+        }),
+        demoKey: poster.slug,
+        updatedAt: 1,
+        updatedBy: "Avant migration mobile",
+      },
+    ]);
+  }
+  const before = await readList(ctx, {});
+  const mediaBefore = fake.all("media");
+  assert.deepEqual(await load(ctx, {}), { created: 0, existing: 5, total: 5 });
+  assert.ok(
+    (await readList(ctx, {})).every((row) => row.mobileMediaKey === undefined),
+    "loading remains insert-only"
+  );
+  // Simulate a legacy deployment without the new media rows as well.
+  for (const media of fake.all("media")) {
+    if (DEMO_ADS.some((ad) => ad.mobileMediaKey === media.key))
+      await fake.db.delete(media._id);
+  }
+  assert.deepEqual(await upgradeResponsive(ctx, {}), {
+    updated: 5,
+    existing: 0,
+    skipped: 0,
+  });
+  const after = await readList(ctx, {});
+  assert.equal(after.filter((row) => row.enabled).length, 5);
+  assert.equal(after.filter((row) => !row.enabled).length, 5);
+  assert.equal(fake.all("media").length, 15);
+  for (const oldMedia of mediaBefore)
+    assert.deepEqual(await fake.db.get(oldMedia._id), oldMedia);
+  for (const old of before) {
+    const row = after.find((candidate) => candidate._id === old._id)!;
+    const selected = DEMO_ADS.find((ad) => ad.slug === old.demoKey);
+    if (selected) assert.equal(row.mobileMediaKey, selected.mobileMediaKey);
+    else assert.deepEqual(row, old);
+    assert.deepEqual(
+      {
+        ...row,
+        mobileMediaKey: undefined,
+        updatedAt: old.updatedAt,
+        updatedBy: old.updatedBy,
+      },
+      { ...old, mobileMediaKey: undefined }
+    );
+  }
+  assert.equal((await readFeed(ctx, {})).length, 5);
+  const writesBeforeRepeat = fake.writes.length;
+  assert.deepEqual(await upgradeResponsive(ctx, {}), {
+    updated: 0,
+    existing: 5,
+    skipped: 0,
+  });
+  assert.equal(fake.writes.length, writesBeforeRepeat);
+});
+
+test("responsive upgrading preserves custom posters, missing demos and real campaigns", async () => {
+  const fake = createFakeDb();
+  const ctx = signedIn(fake);
+  await loadInternal(ctx, {});
+  const rows = await readList(ctx, {});
+  for (const row of rows)
+    await fake.db.patch(row._id, { mobileMediaKey: undefined });
+  const bySlug = (slug: string) => rows.find((row) => row.demoKey === slug)!;
+  const customMain = bySlug(DEMO_ADS[0].slug);
+  await fake.db.patch(customMain._id, { mediaKey: "custom-main-poster" });
+  const customMobile = bySlug(DEMO_ADS[1].slug);
+  await fake.db.patch(customMobile._id, {
+    mobileMediaKey: DEMO_ADS[0].mobileMediaKey,
+  });
+  const missing = bySlug(DEMO_ADS[2].slug);
+  await fake.db.delete(missing._id);
+  const paused = bySlug(DEMO_ADS[3].slug);
+  const startsAt = Date.now() + 60_000;
+  await fake.db.patch(paused._id, {
+    enabled: false,
+    placements: ["floating"],
+    device: "mobile",
+    startsAt,
+  });
+  const realId = await writeCampaign(
+    ctx,
+    input({ title: "Annonceur fictif hors démonstration" })
+  );
+  const realBefore = await fake.db.get(realId);
+  const mediaBefore = fake.all("media");
+  assert.deepEqual(await upgradeResponsive(ctx, {}), {
+    updated: 2,
+    existing: 1,
+    skipped: 2,
+  });
+  assert.equal((await fake.db.get(customMain._id))?.mobileMediaKey, undefined);
+  assert.equal(
+    (await fake.db.get(customMobile._id))?.mobileMediaKey,
+    DEMO_ADS[0].mobileMediaKey
+  );
+  assert.equal(await fake.db.get(missing._id), null);
+  const pausedAfter = await fake.db.get(paused._id);
+  assert.equal(pausedAfter?.enabled, false);
+  assert.deepEqual(pausedAfter?.placements, ["floating"]);
+  assert.equal(pausedAfter?.device, "mobile");
+  assert.equal(pausedAfter?.startsAt, startsAt);
+  assert.deepEqual(await fake.db.get(realId), realBefore);
+  assert.deepEqual(fake.all("media"), mediaBefore);
 });

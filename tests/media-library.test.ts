@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { Id } from "../convex/_generated/dataModel";
 import type { MutationCtx } from "../convex/_generated/server";
-import { byKeys, counts, list, reindex, remove } from "../convex/library";
+import { byKeys, counts, get, list, reindex, remove } from "../convex/library";
 import { editorOptions } from "../convex/newsroom";
 import {
   articleMediaKeys,
@@ -44,6 +44,7 @@ const countLibrary = handlerOf<
 >(counts);
 const findByKeys = handlerOf<{ keys: string[] }, { key: string }[]>(byKeys);
 const removePicture = handlerOf<{ id: string }, null>(remove);
+const getPicture = handlerOf<{ id: string }, { usedByCampaign: boolean }>(get);
 const runReindex = handlerOf<Record<string, unknown>, null>(reindex);
 const loadEditorOptions = handlerOf<Record<string, never>, object>(
   editorOptions
@@ -237,8 +238,8 @@ test("médiathèque : une page coûte autant pour 1 000 que pour 10 000 images",
 
   assert.equal(reads(large), reads(small));
   // One page of pictures, then per card: its URL, its usage, its pending
-  // proposals, its campaign — plus the viewer and the index flag.
-  assert.ok(reads(large) <= 48 * 4 + 5, `${reads(large)} lectures`);
+  // proposals, primary and mobile campaign references — plus viewer/index flag.
+  assert.ok(reads(large) <= 48 * 5 + 5, `${reads(large)} lectures`);
   assert.equal(large.tables.media, 48);
   assert.equal(large.tables.articles ?? 0, 0);
   assert.deepEqual(large.unindexed, []);
@@ -338,6 +339,18 @@ test("options de l'éditeur : plus aucune image", async () => {
   assert.deepEqual(Object.keys(options).sort(), ["authors", "categories"]);
   assert.equal(fake.reads.tables.media ?? 0, 0);
   assert.equal(fake.reads.urls, 0);
+});
+
+test("a mobile campaign poster is marked in use and protected even when its campaign is paused", async () => {
+  const fake = library(2);
+  const ctx = signedIn(fake);
+  const picture = fake.all("media")[0];
+  fake.seed("adCampaigns", [{ mediaKey: "another-poster", mobileMediaKey: picture.key, enabled: false }]);
+  assert.equal((await getPicture(ctx, { id: picture._id })).usedByCampaign, true);
+  await assert.rejects(removePicture(ctx, { id: picture._id }), /campagne publicitaire, même inactive/);
+  assert.ok(await fake.db.get(picture._id));
+  await fake.db.patch(fake.all("adCampaigns")[0]._id, { mobileMediaKey: undefined });
+  assert.equal((await getPicture(ctx, { id: picture._id })).usedByCampaign, false);
 });
 
 test("suppression refusée tant qu'un article l'affiche, index prêt ou non", async () => {
