@@ -12,10 +12,13 @@ import {
 } from "@/components/custom/auth-shell";
 import { TextField } from "@/components/custom/form-field";
 import { usePreferences } from "@/components/providers/preferences-provider";
+import {
+  ACCESS_CODE_LENGTH,
+  isAcceptablePassword,
+  PASSWORD_RULE_MESSAGE,
+} from "@/convex/model/password";
 import { authClient } from "@/lib/auth-client";
 import { localize } from "@/lib/i18n";
-
-const MINIMUM = 12;
 
 function ResetForm() {
   const router = useRouter();
@@ -31,11 +34,11 @@ function ResetForm() {
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError("");
-    if (password.length < MINIMUM) {
+    if (!isAcceptablePassword(password)) {
       setError(
         localize(locale, {
-          fr: `Le mot de passe doit compter au moins ${MINIMUM} caractères.`,
-          en: `The password must be at least ${MINIMUM} characters long.`,
+          fr: PASSWORD_RULE_MESSAGE,
+          en: "The password must contain six digits followed by one letter (A-Z or a-z), or be at least twelve characters long.",
         })
       );
       return;
@@ -118,10 +121,10 @@ function ResetForm() {
         type="password"
         autoComplete="new-password"
         required
-        minLength={MINIMUM}
+        minLength={ACCESS_CODE_LENGTH}
         hint={localize(locale, {
-          fr: "Douze caractères au minimum.",
-          en: "At least twelve characters.",
+          fr: "Six chiffres suivis d’une lettre, ou douze caractères au minimum. La casse compte.",
+          en: "Six digits followed by one letter, or at least twelve characters. Case matters.",
         })}
         value={password}
         onChange={(event) => setPassword(event.target.value)}
