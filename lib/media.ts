@@ -42,7 +42,9 @@ export function registerMedia(assets: readonly MediaAsset[]): void {
   for (const asset of assets) uploaded.set(asset.id, asset);
 }
 
-export const getMediaAsset = (
-  key: string | undefined
-): MediaAsset | undefined =>
-  key ? (MEDIA[key] ?? AD_DEMO_MEDIA[key] ?? uploaded.get(key)) : undefined;
+export function getMediaAsset(key: string | undefined): MediaAsset | undefined {
+  if (!key) return undefined;
+  if (Object.hasOwn(MEDIA, key)) return MEDIA[key];
+  if (Object.hasOwn(AD_DEMO_MEDIA, key)) return AD_DEMO_MEDIA[key];
+  return uploaded.get(key);
+}

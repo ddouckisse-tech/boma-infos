@@ -643,14 +643,17 @@ test("le contexte de veille ne suit que les rubriques thématiques", async () =>
   const data = await handlerOf<
     Record<string, never>,
     {
+      now: number;
       today: string;
       sections: { slug: string }[];
       coverage: { slug: string; lastPublishedAt: number | null }[];
     }
   >(watchContext)({ db: fake.db }, {});
 
-  // 06:00 UTC = 07:00 à Libreville, le même jour.
-  assert.equal(data.today, "2026-10-03");
+  const date = new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Africa/Libreville",
+  });
+  assert.equal(data.today, date.format(data.now));
   // L'espace pro n'est pas un domaine de veille ; la sous-rubrique suit sa rubrique.
   assert.deepEqual(
     data.sections.map((row) => row.slug),

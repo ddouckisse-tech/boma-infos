@@ -9,11 +9,12 @@ import { NewsletterForm } from "@/components/custom/newsletter-form";
 import { LocalizedText } from "@/components/custom/localized-text";
 import { Section } from "@/components/custom/section";
 import { SiteStructuredData } from "@/components/custom/structured-data";
+import { isDemoArticle } from "@/lib/content/demo";
 import { getHomepage } from "@/lib/content/server";
 import { formatDate } from "@/lib/format";
 import { categoryDescription, categoryLabel } from "@/lib/i18n";
 import { accentTextClass, sectionHref, toAccent } from "@/lib/navigation";
-import { SITE } from "@/lib/site";
+import { SEARCH_INDEXABLE, SITE } from "@/lib/site";
 import { cn } from "@/lib/utils";
 import { PwaInstallInvitation } from "@/components/custom/pwa-install";
 
@@ -43,27 +44,28 @@ const formatDateEn = (value: number) =>
  * cached document, not a database round trip.
  */
 export default async function HomePage() {
-  const { lead, top, dossier, latest, bySection, espacePro } =
-    await getHomepage();
-
-  if (!lead && latest.length === 0) {
-    return (
-      <Section>
-        <div className="lc-fr" lang="fr">
-          <EmptyState
-            title="Aucun article publié"
-            description="Les publications du journal seront bientôt disponibles."
-          />
-        </div>
-        <div className="lc-en" lang="en">
-          <EmptyState
-            title="No published articles"
-            description="The journal's articles will be available soon."
-          />
-        </div>
-      </Section>
-    );
-  }
+  const edition = await getHomepage();
+  const visible = ({ slug }: { slug: string }) =>
+    !SEARCH_INDEXABLE || !isDemoArticle(slug);
+  const lead = edition.lead && visible(edition.lead) ? edition.lead : null;
+  const dossier =
+    edition.dossier && visible(edition.dossier) ? edition.dossier : null;
+  const top = edition.top.filter(visible);
+  const latest = edition.latest.filter(visible);
+  const bySection = edition.bySection
+    .map((section) => ({
+      ...section,
+      articles: section.articles.filter(visible),
+    }))
+    .filter((section) => section.articles.length > 0);
+  const espacePro = edition.espacePro.filter(visible);
+  const empty =
+    !lead &&
+    !dossier &&
+    !top.length &&
+    !latest.length &&
+    !bySection.length &&
+    !espacePro.length;
 
   // Date de la dernière publication, et non l'horloge du serveur : c'est la
   // date d'édition du journal, et le rendu reste pur (règle React 19).
@@ -92,6 +94,23 @@ export default async function HomePage() {
           )}
         </Container>
       </div>
+
+      {empty && (
+        <Section>
+          <div className="lc-fr" lang="fr">
+            <EmptyState
+              title="Les prochaines publications"
+              description={SITE.description}
+            />
+          </div>
+          <div className="lc-en" lang="en">
+            <EmptyState
+              title="Upcoming news"
+              description={SITE.descriptionEn}
+            />
+          </div>
+        </Section>
+      )}
 
       {/* Pleine largeur, hors `Section` : la photo tapisse le bandeau d'un
           bord à l'autre de l'écran, le texte reste dans la grille. */}

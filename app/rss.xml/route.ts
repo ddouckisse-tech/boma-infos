@@ -1,5 +1,12 @@
 import { getLatest, REVALIDATE_SECONDS } from "@/lib/content/server";
-import { absoluteUrl, PUBLISHER_NAME, SITE } from "@/lib/site";
+import { isDemoArticle } from "@/lib/content/demo";
+import { fallbackVariant, getMediaAsset, variantUrl } from "@/lib/media";
+import {
+  absoluteUrl,
+  PUBLISHER_NAME,
+  SEARCH_INDEXABLE,
+  SITE,
+} from "@/lib/site";
 
 // Littéral et non `REVALIDATE_SECONDS` : Next analyse statiquement les
 // exports de configuration de segment et n'en résout pas les identifiants
@@ -22,12 +29,18 @@ const escape = (value: string) =>
     .replace(/"/g, "&quot;");
 
 export async function GET() {
-  const articles = await getLatest(20);
+  const articles = (await getLatest(30))
+    .filter(({ slug }) => !SEARCH_INDEXABLE || !isDemoArticle(slug))
+    .slice(0, 20);
   const updated = articles[0]?.publishedAt ?? Date.now();
 
   const items = articles
     .map((article) => {
       const url = absoluteUrl(`/article/${article.slug}`);
+      const cover = getMediaAsset(article.heroMediaKey);
+      const image = cover?.webp.length
+        ? fallbackVariant(cover, 960)
+        : undefined;
       return `    <item>
       <title>${escape(article.title)}</title>
       <link>${url}</link>
@@ -36,9 +49,9 @@ export async function GET() {
       <dc:creator>${escape(article.authorName)}</dc:creator>
       <category>${escape(article.categoryName)}</category>
       <description>${escape(article.dek)}</description>${
-        article.heroMediaKey
+        cover && image
           ? `
-      <enclosure url="${absoluteUrl(`/medias/${article.heroMediaKey}-960.avif`)}" type="image/avif" length="0"/>`
+      <enclosure url="${escape(new URL(variantUrl(cover, image.w, "webp"), url).href)}" type="image/webp" length="${image.bytes}"/>`
           : ""
       }
     </item>`;
@@ -52,7 +65,7 @@ export async function GET() {
     <link>${absoluteUrl("/")}</link>
     <atom:link href="${absoluteUrl("/rss.xml")}" rel="self" type="application/rss+xml"/>
     <description>${escape(SITE.description)}</description>
-    <language>fr-FR</language>
+    <language>fr-GA</language>
     <copyright>© ${new Date().getFullYear()} ${escape(PUBLISHER_NAME)}</copyright>
     <lastBuildDate>${new Date(updated).toUTCString()}</lastBuildDate>
     <ttl>60</ttl>

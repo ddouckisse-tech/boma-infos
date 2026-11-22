@@ -9,8 +9,14 @@ import { EmptyState } from "@/components/custom/empty-state";
 import { LocalizedText } from "@/components/custom/localized-text";
 import { Section } from "@/components/custom/section";
 import { BreadcrumbStructuredData } from "@/components/custom/structured-data";
+import { isDemoArticle, isDemoAuthor } from "@/lib/content/demo";
 import { getAuthor, getAuthors } from "@/lib/content/server";
-import { absoluteUrl, DEMO_CONTENT_NOTICE, SITE } from "@/lib/site";
+import {
+  absoluteUrl,
+  DEMO_CONTENT_NOTICE,
+  SEARCH_INDEXABLE,
+  SITE,
+} from "@/lib/site";
 
 // Littéral et non `REVALIDATE_SECONDS` : Next analyse statiquement les
 // exports de configuration de segment et n'en résout pas les identifiants
@@ -46,6 +52,9 @@ export async function generateMetadata({
     title: author.name,
     description: `${author.role} à ${SITE.name}. ${author.bio}`.slice(0, 158),
     alternates: { canonical: `/auteur/${author.slug}` },
+    robots: isDemoAuthor(author.slug)
+      ? { index: false, follow: true }
+      : undefined,
     openGraph: {
       type: "profile",
       title: `${author.name} — ${author.role}`,
@@ -62,7 +71,11 @@ export default async function AuthorPage({
   const data = await getAuthor(slug);
   if (!data) notFound();
 
-  const { author, articles, total } = data;
+  const { author, total } = data;
+  const demo = isDemoAuthor(author.slug);
+  const articles = data.articles.filter(
+    (item) => demo || !SEARCH_INDEXABLE || !isDemoArticle(item.slug)
+  );
   // The page lists the newest pieces; the sections carry the whole archive.
   const partial = total > articles.length;
 
@@ -142,7 +155,7 @@ export default async function AuthorPage({
               <span aria-hidden="true" className="mt-4 boma-rule w-20" />
               {/* Tant que le corpus de démonstration est en ligne, la page
                   d'une signature dit qu'elle est inventée, avant sa notice. */}
-              {DEMO_CONTENT_NOTICE && (
+              {demo && (
                 <p
                   role="note"
                   className="mt-4 max-w-reading rounded-md border border-warning-token/40 bg-warning-token/10 px-4 py-3 type-small text-foreground"

@@ -4,7 +4,8 @@ import { headers } from "next/headers";
 import { PreferencesScript } from "@/components/custom/preferences-script";
 import { ServiceWorker } from "@/components/custom/service-worker";
 import { PreferencesProvider } from "@/components/providers/preferences-provider";
-import { PUBLISHER_NAME, SEARCH_INDEXABLE, SITE, siteUrl } from "@/lib/site";
+import { BRAND_LOGO } from "@/lib/brand";
+import { EDITORIAL_ROBOTS, PUBLISHER_NAME, SITE, siteUrl } from "@/lib/site";
 import { getAdSenseRuntimeConfig } from "@/lib/ads/adsense-config";
 import "./globals.css";
 
@@ -68,7 +69,11 @@ export const metadata: Metadata = {
   generator: undefined,
   formatDetection: { telephone: false },
   manifest: "/manifest.webmanifest",
-  icons: { apple: "/icons/apple-touch-icon.png?v=boma-1" },
+  icons: {
+    icon: "/icons/icon-192.png",
+    apple: "/icons/apple-touch-icon.png?v=boma-1",
+  },
+  verification: { google: process.env.GOOGLE_SITE_VERIFICATION || undefined },
   alternates: {
     canonical: "/",
     types: {
@@ -84,18 +89,22 @@ export const metadata: Metadata = {
     title: SITE.title,
     description: SITE.description,
     url: "/",
+    images: [
+      {
+        url: BRAND_LOGO.social,
+        width: BRAND_LOGO.socialWidth,
+        height: BRAND_LOGO.socialHeight,
+        alt: SITE.name,
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: SITE.title,
     description: SITE.description,
+    images: [BRAND_LOGO.social],
   },
-  // Pas d'indexation tant que le corpus de démonstration est en ligne : voir
-  // `SEARCH_INDEXABLE`. L'en-tête `X-Robots-Tag` de `next.config.ts` couvre
-  // les pages qui déclarent leurs propres consignes.
-  robots: SEARCH_INDEXABLE
-    ? { index: true, follow: true }
-    : { index: false, follow: false },
+  robots: EDITORIAL_ROBOTS,
   appleWebApp: {
     capable: true,
     title: SITE.name,
@@ -130,7 +139,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     : undefined;
   return (
     <html
-      lang="fr-FR"
+      lang="fr-GA"
       suppressHydrationWarning
       className={`${sourceSerif.variable} ${sourceSerifItalic.variable} ${inter.variable} h-full`}
     >

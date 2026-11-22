@@ -1,7 +1,7 @@
 import { HeavyMedia } from "@/components/custom/heavy-media";
 import { ResponsiveImage } from "@/components/custom/responsive-image";
 import { RichText } from "@/components/custom/rich-text";
-import { getMediaAsset, SIZES } from "@/lib/media";
+import { getMediaAsset, SIZES, type MediaAsset } from "@/lib/media";
 import { slugifyHeading } from "@/lib/headings";
 import type { Block } from "@/convex/model/content";
 
@@ -74,8 +74,7 @@ function StatBlock({
   );
 }
 
-function Figure({ mediaKey, caption }: { mediaKey: string; caption?: string }) {
-  const media = getMediaAsset(mediaKey);
+function Figure({ media, caption }: { media?: MediaAsset; caption?: string }) {
   if (!media) return null;
   const legend = caption ?? media.caption;
 
@@ -105,7 +104,13 @@ function Figure({ mediaKey, caption }: { mediaKey: string; caption?: string }) {
   );
 }
 
-export function ArticleBody({ blocks }: { blocks: readonly Block[] }) {
+export function ArticleBody({
+  blocks,
+  mediaFor = getMediaAsset,
+}: {
+  blocks: readonly Block[];
+  mediaFor?: (key: string) => MediaAsset | undefined;
+}) {
   return (
     <div className="article-body type-body text-foreground">
       {blocks.map((block, index) => {
@@ -174,7 +179,7 @@ export function ArticleBody({ blocks }: { blocks: readonly Block[] }) {
             return (
               <Figure
                 key={key}
-                mediaKey={block.mediaKey}
+                media={mediaFor(block.mediaKey)}
                 caption={block.caption}
               />
             );
@@ -184,7 +189,7 @@ export function ArticleBody({ blocks }: { blocks: readonly Block[] }) {
               <div key={key} className="my-8">
                 <HeavyMedia
                   title={block.title}
-                  poster={getMediaAsset(block.posterMediaKey)}
+                  poster={mediaFor(block.posterMediaKey)}
                   src={block.src}
                   durationLabel={block.durationLabel}
                 />

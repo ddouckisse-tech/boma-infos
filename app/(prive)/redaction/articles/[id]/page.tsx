@@ -1,11 +1,12 @@
 "use client";
 
-import { use, useCallback, useEffect, useState } from "react";
+import { use, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAction, useMutation, useQuery } from "convex/react";
 import {
   Eye,
+  ExternalLink,
   History,
   Save,
   Send,
@@ -19,14 +20,13 @@ import type { Id } from "@/convex/_generated/dataModel";
 import type { Block } from "@/convex/model/content";
 import { ActionButton } from "@/components/custom/action-button";
 import { AgentSuggestionCard } from "@/components/custom/agent-suggestion-card";
-import { ArticleBody } from "@/components/custom/article-body";
+import { ArticlePreview } from "@/components/custom/article-preview";
 import { Editor } from "@/components/custom/editor";
 import {
   SelectField,
   TextAreaField,
   TextField,
 } from "@/components/custom/form-field";
-import { KeyPoints } from "@/components/custom/key-points";
 import { MediaPicker } from "@/components/custom/media-picker";
 import { PartnerTag } from "@/components/custom/partner-tag";
 import { StatusPill } from "@/components/custom/status-pill";
@@ -83,7 +83,10 @@ export default function ArticleEditorPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const articleId = id as Id<"articles">;
+  return <ArticleEditor key={id} articleId={id as Id<"articles">} />;
+}
+
+function ArticleEditor({ articleId }: { articleId: Id<"articles"> }) {
   const router = useRouter();
 
   const article = useQuery(api.newsroom.get, { id: articleId });
@@ -91,7 +94,7 @@ export default function ArticleEditorPage({
   const versions = useQuery(api.newsroom.versions, { id: articleId });
   const agent = useQuery(api.agents.forTarget, {
     targetType: "article",
-    targetId: id,
+    targetId: articleId,
   });
 
   const save = useMutation(api.newsroom.save);
@@ -121,7 +124,10 @@ export default function ArticleEditorPage({
   const [savedAt, setSavedAt] = useState(0);
   const [busy, setBusy] = useState(false);
   const [dirty, setDirty] = useState(false);
+  const [autoError, setAutoError] = useState(false);
   const [loadedStamp, setLoadedStamp] = useState(-1);
+  const revision = useRef(0);
+  const saveQueue = useRef<Promise<unknown>>(Promise.resolve());
 
   /**
    * Synchronisation avec le serveur, faite au rendu plutôt que dans un effet.
@@ -134,7 +140,12 @@ export default function ArticleEditorPage({
    * l'écran et le prochain enregistrement automatique l'écrirait par-dessus
    * la correction acceptée.
    */
-  if (article && !dirty && loadedStamp !== article.updatedAt) {
+  if (
+    article &&
+    !dirty &&
+    loadedStamp !== article.updatedAt &&
+    article.updatedAt >= savedAt
+  ) {
     setLoadedStamp(article.updatedAt);
     setForm({
       title: article.title,
@@ -156,51 +167,55 @@ export default function ArticleEditorPage({
 
   const persist = useCallback(
     async (auto: boolean) => {
-      if (!form) return;
-      const result = await save({
-        id: articleId,
-        title: form.title,
-        dek: form.dek,
-        body: form.body,
-        categorySlug: form.categorySlug,
-        subCategorySlug: form.subCategorySlug || undefined,
-        authorSlug: form.authorSlug,
-        heroMediaKey: form.heroMediaKey || undefined,
-        galleryMediaKeys: [],
-        keyPoints: form.keyPoints.split("\n").filter((line) => line.trim()),
-        seo: {
-          title: form.seoTitle || undefined,
-          description: form.seoDescription,
-          keywords: form.seoKeywords
+      if (!form || !article?.editable) return;
+      const savedRevision = revision.current;
+      const pendingSave = saveQueue.current.then(() =>
+        save({
+          id: articleId,
+          title: form.title,
+          dek: form.dek,
+          body: form.body,
+          categorySlug: form.categorySlug,
+          subCategorySlug: form.subCategorySlug || undefined,
+          authorSlug: form.authorSlug,
+          heroMediaKey: form.heroMediaKey || undefined,
+          galleryMediaKeys: article.galleryMediaKeys,
+          keyPoints: form.keyPoints.split("\n").filter((line) => line.trim()),
+          seo: {
+            title: form.seoTitle || undefined,
+            description: form.seoDescription,
+            keywords: form.seoKeywords
+              .split(",")
+              .map((word) => word.trim())
+              .filter(Boolean),
+          },
+          feature: form.feature,
+          tags: form.tags
             .split(",")
             .map((word) => word.trim())
             .filter(Boolean),
-        },
-        feature: form.feature,
-        tags: form.tags
-          .split(",")
-          .map((word) => word.trim())
-          .filter(Boolean),
-        slug: form.slug,
-        auto,
-      });
+          slug: form.slug,
+          auto,
+        })
+      );
+      saveQueue.current = pendingSave.catch(() => undefined);
+      const result = await pendingSave;
       setSavedAt(result.updatedAt);
-      setDirty(false);
+      setAutoError(false);
+      if (revision.current === savedRevision) setDirty(false);
       return result;
     },
-    [articleId, form, save]
+    [articleId, article?.editable, article?.galleryMediaKeys, form, save]
   );
 
   // Enregistrement automatique après quatre secondes de calme.
   useEffect(() => {
-    if (!form || !dirty) return;
+    if (!form || !dirty || busy) return;
     const timer = setTimeout(() => {
-      void persist(true).catch(() => {
-        // Silencieux : l'enregistrement manuel affiche l'erreur.
-      });
+      void persist(true).catch(() => setAutoError(true));
     }, AUTOSAVE_MS);
     return () => clearTimeout(timer);
-  }, [form, dirty, persist]);
+  }, [form, dirty, busy, persist]);
 
   /**
    * Garde-fou de fermeture : l'enregistrement automatique attend quatre
@@ -209,7 +224,10 @@ export default function ArticleEditorPage({
    */
   useEffect(() => {
     if (!dirty) return;
-    const warn = (event: BeforeUnloadEvent) => event.preventDefault();
+    const warn = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = true;
+    };
     window.addEventListener("beforeunload", warn);
     return () => window.removeEventListener("beforeunload", warn);
   }, [dirty]);
@@ -218,15 +236,20 @@ export default function ArticleEditorPage({
     key: Key,
     value: NonNullable<typeof form>[Key]
   ) => {
+    revision.current += 1;
     setDirty(true);
     setForm((current) => (current ? { ...current, [key]: value } : current));
   };
 
-  if (article === undefined || form === null) {
-    return <p className="type-body text-muted-foreground">Chargement…</p>;
-  }
   if (article === null) {
     return <h1 className="font-display type-h1">Article introuvable</h1>;
+  }
+  if (article === undefined || form === null) {
+    return (
+      <p role="status" className="type-body text-muted-foreground">
+        Chargement…
+      </p>
+    );
   }
 
   const categories = options?.categories ?? [];
@@ -244,13 +267,14 @@ export default function ArticleEditorPage({
   const act = async (task: () => Promise<unknown>, success: string) => {
     setBusy(true);
     try {
+      await saveQueue.current;
       await task();
       toast.success(success);
-      router.refresh();
     } catch (error) {
       toast.error(humanError(error));
+    } finally {
+      setBusy(false);
     }
-    setBusy(false);
   };
 
   return (
@@ -258,14 +282,14 @@ export default function ArticleEditorPage({
       <p className="type-small">
         <Link
           href="/redaction/articles"
-          className="text-muted-foreground underline underline-offset-2 hover:text-foreground"
+          className="inline-flex min-h-11 items-center text-muted-foreground underline underline-offset-2 hover:text-foreground"
         >
           ← Articles
         </Link>
       </p>
 
       <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
-        <h1 className="min-w-0 font-display type-h1">
+        <h1 className="min-w-0 font-display type-h1 [overflow-wrap:anywhere]">
           {form.title || "Sans titre"}
         </h1>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
@@ -273,40 +297,44 @@ export default function ArticleEditorPage({
           <StatusPill status={article.status} />
         </div>
       </div>
-      <p className="mt-1 type-small text-muted-foreground">
-        {savedAt > 0
-          ? `Enregistré à ${formatDateTime(savedAt)}`
+      <p role="status" className="mt-1 type-small text-muted-foreground">
+        {dirty
+          ? autoError
+            ? "L’enregistrement automatique a échoué. Utilisez « Enregistrer » pour réessayer."
+            : "Modifications en cours d’enregistrement"
           : `Dernière modification le ${formatDateTime(article.updatedAt)}`}
         {!article.editable &&
           " · lecture seule (rubrique hors de votre périmètre)"}
       </p>
 
-      {/* Barre d'actions collante sous `lg` : sur un téléphone, « Enregistrer »
-          et « Publier » restent sous le pouce, au-dessus de la barre d'onglets. */}
-      <div className="sticky top-2 z-10 mt-6 flex flex-wrap gap-2 rounded-xl border border-border bg-background p-2 shadow-floating lg:static lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
-        <ActionButton
-          type="button"
-          disabled={busy || !article.editable}
-          onClick={() => act(() => persist(false), "Article enregistré.")}
-        >
-          <Save aria-hidden="true" className="size-4" />
-          Enregistrer
-        </ActionButton>
+      <div className="sticky top-[env(safe-area-inset-top)] z-20 mt-4 flex flex-wrap gap-2 rounded-xl border border-border bg-background p-2 shadow-floating lg:static lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
         <ActionButton
           type="button"
           variant="outline"
-          onClick={() => setPreview((value) => !value)}
+          aria-haspopup="dialog"
+          onClick={() => setPreview(true)}
         >
           <Eye aria-hidden="true" className="size-4" />
-          {preview ? "Masquer l'aperçu" : "Aperçu"}
+          Aperçu
         </ActionButton>
-        {article.status !== "published" ? (
+        {article.editable && (
           <ActionButton
             type="button"
-            disabled={busy || !article.editable}
+            variant="outline"
+            disabled={busy}
+            onClick={() => act(() => persist(false), "Article enregistré.")}
+          >
+            <Save aria-hidden="true" className="size-4" />
+            Enregistrer
+          </ActionButton>
+        )}
+        {article.editable && article.status !== "published" && (
+          <ActionButton
+            type="button"
+            disabled={busy}
             onClick={() =>
               act(async () => {
-                await persist(false);
+                if (dirty) await persist(false);
                 await setStatus({ id: articleId, status: "published" });
               }, "Article publié.")
             }
@@ -314,40 +342,66 @@ export default function ArticleEditorPage({
             <Send aria-hidden="true" className="size-4" />
             Publier
           </ActionButton>
-        ) : (
-          <ActionButton
-            type="button"
-            variant="outline"
-            disabled={busy || !article.editable}
-            onClick={() =>
-              act(
-                () => setStatus({ id: articleId, status: "draft" }),
-                "Article dépublié."
-              )
-            }
-          >
-            Dépublier
-          </ActionButton>
         )}
-        <ActionButton
-          type="button"
-          variant="destructive"
-          disabled={busy || !article.editable}
-          onClick={() =>
-            act(async () => {
-              await remove({ id: articleId });
-              router.push("/redaction/articles");
-            }, "Article supprimé.")
-          }
-        >
-          <Trash2 aria-hidden="true" className="size-4" />
-          Supprimer
-        </ActionButton>
+        {article.status === "published" && (
+          <Link
+            href={`/article/${article.slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-md px-3 type-small font-semibold touch-target hover:bg-surface-muted"
+          >
+            <ExternalLink aria-hidden="true" className="size-4" />
+            Voir en ligne
+          </Link>
+        )}
       </div>
 
-      <div className="mt-8 grid gap-8 xl:grid-cols-[minmax(0,1fr)_24rem]">
-        <div className="grid min-w-0 gap-6">
-          <section className="rounded-lg border border-border bg-card p-6">
+      <ArticlePreview
+        open={preview}
+        onClose={() => setPreview(false)}
+        article={{
+          title: form.title,
+          dek: form.dek,
+          body: form.body,
+          heroMediaKey: form.heroMediaKey,
+          keyPoints: form.keyPoints.split("\n").filter((line) => line.trim()),
+          category: parents.find((row) => row.slug === form.categorySlug)?.name,
+          author: options?.authors.find((row) => row.slug === form.authorSlug)
+            ?.name,
+          isPartner: article.origin === "partenaire",
+        }}
+      />
+
+      <nav
+        aria-label="Sections de l’article"
+        className="mt-3 flex flex-wrap gap-x-3 lg:hidden"
+      >
+        {[
+          ["contenu-article", "Contenu"],
+          ["publication", "Publication"],
+          ["referencement", "Référencement"],
+          ["suivi", "Suivi"],
+        ].map(([section, label]) => (
+          <a
+            key={section}
+            href={`#${section}`}
+            className="inline-flex min-h-11 items-center type-small font-medium text-accent underline-offset-4 hover:underline"
+          >
+            {label}
+          </a>
+        ))}
+      </nav>
+
+      <div className="mt-4 grid gap-5 xl:mt-8 xl:grid-cols-[minmax(0,1fr)_minmax(16rem,21rem)] xl:gap-8">
+        <fieldset
+          disabled={busy || !article.editable}
+          className="grid min-w-0 gap-5"
+        >
+          <legend className="sr-only">Modifier l’article</legend>
+          <section
+            id="contenu-article"
+            className="scroll-mt-28 rounded-lg border border-border bg-card p-4 sm:p-6"
+          >
             <h2 className="font-display type-h2">Contenu</h2>
             <div className="mt-4 grid gap-5">
               <TextField
@@ -376,28 +430,10 @@ export default function ArticleEditorPage({
             </div>
           </section>
 
-          {preview && (
-            <section className="rounded-lg border border-border bg-card p-6">
-              <h2 className="font-display type-h2">Aperçu</h2>
-              <div className="mt-4 max-w-reading">
-                <p className="font-display type-h1">{form.title}</p>
-                <p className="mt-3 type-body font-medium text-muted-foreground">
-                  {form.dek}
-                </p>
-                <KeyPoints
-                  className="mt-6"
-                  points={form.keyPoints
-                    .split("\n")
-                    .filter((line) => line.trim())}
-                />
-                <div className="mt-6">
-                  <ArticleBody blocks={form.body} />
-                </div>
-              </div>
-            </section>
-          )}
-
-          <section className="rounded-lg border border-border bg-card p-6">
+          <section
+            id="publication"
+            className="scroll-mt-28 rounded-lg border border-border bg-card p-4 sm:p-6"
+          >
             <h2 className="font-display type-h2">Publication</h2>
             <div className="mt-4 grid gap-5 sm:grid-cols-2">
               <SelectField
@@ -444,6 +480,10 @@ export default function ArticleEditorPage({
                 onChange={(key) => update("heroMediaKey", key)}
                 className="sm:col-span-2"
               />
+              <p className="type-small text-muted-foreground sm:col-span-2">
+                Cette image apparaît au partage. Une photo de l’article est
+                utilisée si aucune couverture n’est choisie.
+              </p>
               <SelectField
                 label="Mise en avant"
                 value={form.feature}
@@ -469,7 +509,10 @@ export default function ArticleEditorPage({
             </div>
           </section>
 
-          <section className="rounded-lg border border-border bg-card p-6">
+          <section
+            id="referencement"
+            className="scroll-mt-28 rounded-lg border border-border bg-card p-4 sm:p-6"
+          >
             <h2 className="font-display type-h2">Référencement</h2>
             <div className="mt-4 grid gap-5">
               <TextField
@@ -501,9 +544,12 @@ export default function ArticleEditorPage({
               />
             </div>
           </section>
-        </div>
+        </fieldset>
 
-        <aside className="grid min-w-0 gap-6">
+        <aside
+          id="suivi"
+          className="grid min-w-0 scroll-mt-28 content-start gap-6"
+        >
           <section className="rounded-lg border border-border bg-card p-4">
             <h2 className="flex items-center gap-2 font-display type-h3">
               <Sparkles
@@ -521,7 +567,7 @@ export default function ArticleEditorPage({
                 <button
                   key={entry.key}
                   type="button"
-                  disabled={busy}
+                  disabled={busy || !article.editable}
                   onClick={() =>
                     act(async () => {
                       await persist(false);
@@ -538,7 +584,7 @@ export default function ArticleEditorPage({
               ))}
               <button
                 type="button"
-                disabled={busy}
+                disabled={busy || !article.editable}
                 onClick={() =>
                   act(async () => {
                     await persist(false);
@@ -614,7 +660,9 @@ export default function ArticleEditorPage({
                     disabled={busy || !article.editable}
                     onClick={() =>
                       act(async () => {
+                        if (dirty) await persist(false);
                         await restore({ id: version._id });
+                        setSavedAt(0);
                       }, "Version restaurée.")
                     }
                     className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 type-small hover:bg-surface-muted disabled:opacity-50"
@@ -626,6 +674,44 @@ export default function ArticleEditorPage({
               ))}
             </ul>
           </section>
+          {article.editable && (
+            <section className="flex flex-wrap gap-2 rounded-lg border border-border bg-card p-4">
+              {article.status === "published" ? (
+                <ActionButton
+                  type="button"
+                  variant="outline"
+                  disabled={busy}
+                  onClick={() =>
+                    act(
+                      () => setStatus({ id: articleId, status: "draft" }),
+                      "Article dépublié."
+                    )
+                  }
+                >
+                  Dépublier
+                </ActionButton>
+              ) : (
+                <ActionButton
+                  type="button"
+                  variant="destructive"
+                  disabled={busy}
+                  onClick={() => {
+                    if (
+                      !window.confirm("Supprimer définitivement cet article ?")
+                    )
+                      return;
+                    void act(async () => {
+                      await remove({ id: articleId });
+                      router.push("/redaction/articles");
+                    }, "Article supprimé.");
+                  }}
+                >
+                  <Trash2 aria-hidden="true" className="size-4" />
+                  Supprimer
+                </ActionButton>
+              )}
+            </section>
+          )}
         </aside>
       </div>
     </>

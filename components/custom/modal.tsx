@@ -54,7 +54,7 @@ export function Modal({
       return;
     }
 
-    if (dialog.open) dialog.close();
+    if (dialog.open && typeof dialog.close === "function") dialog.close();
     else dialog.removeAttribute("open");
 
     const previous = invoker.current;

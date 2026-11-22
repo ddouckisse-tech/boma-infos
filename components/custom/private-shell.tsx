@@ -307,10 +307,21 @@ export function PrivateShell({
   const showAccount = permissions.includes(account.permission);
   const canCreate =
     area === "newsroom" && permissions.includes("articles:write");
-  const tabs = groups.flatMap((group) => group.entries).slice(0, 4);
+  const entries = groups.flatMap((group) => group.entries);
+  const tabs = entries.slice(0, canCreate ? 3 : 4);
+  const mobileActions = canCreate
+    ? [...tabs.slice(0, 2), "create" as const, ...tabs.slice(2)]
+    : tabs;
+  const menuActive =
+    !tabs.some(isActive) &&
+    (entries.some(isActive) || (showAccount && isActive(account)));
 
-  const isActive = (entry: Entry) =>
-    entry.exact ? pathname === entry.href : pathname.startsWith(entry.href);
+  function isActive(entry: Entry) {
+    return (
+      pathname === entry.href ||
+      (!entry.exact && pathname.startsWith(`${entry.href}/`))
+    );
+  }
 
   const signOut = async () => {
     await authClient.signOut();
@@ -326,11 +337,14 @@ export function PrivateShell({
 
   return (
     <div className="flex min-h-dvh flex-col bg-surface-muted">
-      <header className="z-30 border-b border-border bg-background lg:sticky lg:top-0">
-        <Container width="wide" className="flex items-center gap-3 py-2">
+      <header className="z-30 border-b border-border bg-background pt-[env(safe-area-inset-top)] lg:sticky lg:top-0">
+        <Container
+          width="wide"
+          className="flex items-center gap-2 py-2 sm:gap-3"
+        >
           <BrandWordmark
             href={area === "newsroom" ? "/redaction" : "/entreprise"}
-            className="w-32 sm:w-44 lg:w-56"
+            className="w-28 shrink-0 sm:w-44 lg:w-56"
           />
           <span
             aria-hidden="true"
@@ -346,8 +360,9 @@ export function PrivateShell({
               <Link
                 href={account.href}
                 aria-current={isActive(account) ? "page" : undefined}
+                aria-label={account.label}
                 className={cn(
-                  "hidden items-center gap-2 rounded-md border px-2 type-small font-semibold transition-colors touch-target sm:inline-flex sm:px-3",
+                  "inline-flex items-center gap-2 rounded-md border px-2 type-small font-semibold transition-colors touch-target sm:px-3",
                   isActive(account)
                     ? "border-foreground/40 bg-surface-muted"
                     : "border-border hover:bg-surface-muted"
@@ -374,7 +389,10 @@ export function PrivateShell({
               onClick={() => setDrawer(true)}
               aria-expanded={drawer}
               aria-haspopup="dialog"
-              className="inline-flex items-center justify-center rounded-md border border-border text-foreground transition-colors touch-target hover:bg-surface-muted lg:hidden"
+              className={cn(
+                "inline-flex items-center justify-center rounded-md border border-border text-foreground transition-colors touch-target hover:bg-surface-muted lg:hidden",
+                tabs.length > 0 && "hidden"
+              )}
             >
               <Menu aria-hidden="true" className="size-5" />
               <span className="sr-only">
@@ -389,7 +407,7 @@ export function PrivateShell({
           hauteur de la rangée pour que la carte collante ait où voyager. */}
       <Container
         width="wide"
-        className="flex flex-1 gap-6 py-5 pb-24 lg:py-8 lg:pb-8"
+        className="flex flex-1 gap-6 py-4 pb-[calc(5rem+env(safe-area-inset-bottom))] lg:py-8"
       >
         {/* Le menu, détaché de la page : une carte collante à sa hauteur. */}
         <aside className="hidden lg:block lg:w-64 lg:shrink-0 xl:w-72">
@@ -431,25 +449,42 @@ export function PrivateShell({
         <main
           id="contenu"
           tabIndex={-1}
-          className="min-w-0 flex-1 focus-visible:outline-none"
+          className="min-w-0 flex-1 [overflow-wrap:anywhere] focus-visible:outline-none"
         >
           {children}
         </main>
       </Container>
 
-      {/* Téléphone et tablette : les quatre entrées les plus utilisées, et le reste derrière « Menu ». */}
       {tabs.length > 0 && (
         <nav
           aria-label={english ? "Quick navigation" : "Navigation rapide"}
-          className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background pb-[env(safe-area-inset-bottom)] lg:hidden"
+          className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background ps-[env(safe-area-inset-left)] pe-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] lg:hidden"
         >
           <ul
             className="grid"
             style={{
-              gridTemplateColumns: `repeat(${tabs.length + 1}, minmax(0, 1fr))`,
+              gridTemplateColumns: `repeat(${mobileActions.length + 1}, minmax(0, 1fr))`,
             }}
           >
-            {tabs.map((entry) => {
+            {mobileActions.map((entry) => {
+              if (entry === "create") {
+                return (
+                  <li key={entry}>
+                    <button
+                      type="button"
+                      onClick={openCreate}
+                      aria-label="Nouveau contenu"
+                      aria-haspopup="dialog"
+                      className="flex min-h-14 w-full flex-col items-center justify-center gap-0.5 px-1 text-[11px] leading-tight font-bold text-primary"
+                    >
+                      <span className="inline-flex size-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
+                        <Plus aria-hidden="true" className="size-4" />
+                      </span>
+                      Nouveau
+                    </button>
+                  </li>
+                );
+              }
               const Icon = entry.icon;
               const active = isActive(entry);
               const badge = counts && entry.badge ? entry.badge(counts) : 0;
@@ -461,7 +496,7 @@ export function PrivateShell({
                     className={cn(
                       "relative flex min-h-14 flex-col items-center justify-center gap-0.5 px-1 text-[11px] leading-tight font-semibold transition-colors",
                       active
-                        ? "text-accent"
+                        ? "bg-accent-surface text-accent"
                         : "text-muted-foreground hover:text-foreground"
                     )}
                   >
@@ -480,7 +515,12 @@ export function PrivateShell({
                 onClick={() => setDrawer(true)}
                 aria-expanded={drawer}
                 aria-haspopup="dialog"
-                className="flex min-h-14 w-full flex-col items-center justify-center gap-0.5 px-1 text-[11px] leading-tight font-semibold text-muted-foreground transition-colors hover:text-foreground"
+                className={cn(
+                  "flex min-h-14 w-full flex-col items-center justify-center gap-0.5 px-1 text-[11px] leading-tight font-semibold transition-colors hover:text-foreground",
+                  menuActive
+                    ? "bg-accent-surface text-accent"
+                    : "text-muted-foreground"
+                )}
               >
                 <Menu aria-hidden="true" className="size-5" />
                 <span>Menu</span>
@@ -495,9 +535,9 @@ export function PrivateShell({
         onClose={closeDrawer}
         label="Menu"
         variant="drawer"
-        className="pb-[env(safe-area-inset-bottom)]"
+        className="pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
       >
-        <div className="flex items-center justify-between gap-4 border-b border-border p-4">
+        <div className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-border bg-popover p-4">
           <div className="min-w-0">
             <p className="font-display type-h3">Menu</p>
             <p className="type-small text-muted-foreground">{areaLabel}</p>

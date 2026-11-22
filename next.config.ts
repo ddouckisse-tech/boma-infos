@@ -7,6 +7,9 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   // Nothing gained by advertising the framework version.
   poweredByHeader: false,
+  // Link previews need metadata in the initial HTML, including chat apps
+  // that send a generic browser user agent.
+  htmlLimitedBots: /.*/,
   experimental: {
     /**
      * Découpage des lots JavaScript de production (Turbopack).
@@ -44,10 +47,7 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        // Toutes les réponses, y compris les pages prérendues statiquement.
-        // Tant que le corpus de démonstration est en ligne, aucune n'est
-        // indexable : l'en-tête couvre aussi ce qu'une balise ne peut pas
-        // porter — flux RSS, plans de site, PDF, images Open Graph.
+        // L'en-tête couvre toutes les réponses des éditions de recette.
         source: "/:path*",
         headers: SEARCH_INDEXABLE
           ? securityHeaders()
@@ -101,6 +101,12 @@ const nextConfig: NextConfig = {
         ],
       },
     ];
+  },
+  outputFileTracingIncludes: {
+    "/article/*/opengraph-image": [
+      "./public/medias/*.webp",
+      "./public/brand/boma-infos-light.v1.png",
+    ],
   },
   // Plan de reprise des URL WordPress (CAHIER-DES-CHARGES.md §5.6).
   async redirects() {

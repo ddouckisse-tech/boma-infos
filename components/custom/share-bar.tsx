@@ -50,8 +50,6 @@ export function ShareBar({
   );
 
   const encodedUrl = encodeURIComponent(url);
-  const encodedTitle = encodeURIComponent(title);
-
   const [copyFailed, setCopyFailed] = useState(false);
 
   const copy = async () => {
@@ -71,8 +69,10 @@ export function ShareBar({
   const nativeShare = async () => {
     try {
       await navigator.share({ title, url });
-    } catch {
-      // L'utilisateur a fermé la feuille de partage : rien à signaler.
+    } catch (error) {
+      if (!(error instanceof DOMException && error.name === "AbortError")) {
+        await copy();
+      }
     }
   };
 
@@ -86,7 +86,7 @@ export function ShareBar({
       </span>
 
       <a
-        href={`https://wa.me/?text=${encodedTitle}%20${encodedUrl}`}
+        href={`https://wa.me/?text=${encodedUrl}`}
         data-partage="whatsapp"
         target="_blank"
         rel="noopener noreferrer"
@@ -162,11 +162,7 @@ export function ShareBar({
       )}
 
       {canShareNatively && (
-        <button
-          type="button"
-          onClick={nativeShare}
-          className={cx(secondary, "sm:hidden")}
-        >
+        <button type="button" onClick={nativeShare} className={secondary}>
           <Share2 aria-hidden="true" className="size-4 shrink-0" />
           {localize(locale, { fr: "Autre", en: "More" })}
         </button>

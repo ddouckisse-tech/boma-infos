@@ -11,6 +11,7 @@ import { PageHeader } from "@/components/custom/page-header";
 import { Pagination } from "@/components/custom/pagination";
 import { Section } from "@/components/custom/section";
 import { BreadcrumbStructuredData } from "@/components/custom/structured-data";
+import { isDemoArticle } from "@/lib/content/demo";
 import {
   getNavigation,
   getSectionCounts,
@@ -25,7 +26,11 @@ import {
   type Section as EditorialSection,
   type SubSection,
 } from "@/lib/navigation";
-import { ARTICLES_PER_PAGE } from "@/lib/site";
+import {
+  ARTICLES_PER_PAGE,
+  DEMO_CONTENT_NOTICE,
+  EDITORIAL_ROBOTS,
+} from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 // Littéral et non `REVALIDATE_SECONDS` : Next analyse statiquement les
@@ -130,6 +135,13 @@ export async function generateMetadata({
   if (!resolved) return { title: "Rubrique introuvable" };
 
   const { section, child, page, order } = resolved;
+  const { items } = await getSectionPage(
+    section.slug,
+    child?.slug,
+    page,
+    ARTICLES_PER_PAGE,
+    order
+  );
   const label = child ? `${child.label} — ${section.label}` : section.label;
   const suffix = page > 1 ? ` (page ${page})` : "";
 
@@ -142,12 +154,16 @@ export async function generateMetadata({
       canonical: buildHref(section.slug, child?.slug, "recent", page),
     },
     robots:
-      order === "ancien" ? { index: false, follow: true } : { index: true },
+      order === "ancien" ||
+      items.length === 0 ||
+      items.some(({ slug }) => isDemoArticle(slug))
+        ? { index: false, follow: true }
+        : EDITORIAL_ROBOTS,
     openGraph: {
       type: "website",
       title: `${label}${suffix}`,
       description: child?.description || section.description,
-      url: buildHref(section.slug, child?.slug, order, page),
+      url: buildHref(section.slug, child?.slug, "recent", page),
     },
   };
 }
@@ -355,6 +371,17 @@ export default async function SectionPage({
       </Container>
 
       <Section spacing="compact">
+        {list.items.some(({ slug }) => isDemoArticle(slug)) && (
+          <p
+            role="note"
+            className="mb-5 rounded-md border border-border bg-surface-muted p-3 type-small text-muted-foreground"
+          >
+            <LocalizedText
+              fr={DEMO_CONTENT_NOTICE.articleFr}
+              en={DEMO_CONTENT_NOTICE.articleEn}
+            />
+          </p>
+        )}
         {list.items.length === 0 ? (
           <>
             <div className="lc-fr" lang="fr">

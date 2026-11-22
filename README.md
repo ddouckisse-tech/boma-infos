@@ -2,7 +2,7 @@
 
 Média gabonais d'information générale, en ligne : toute l'actualité du Gabon —
 politique, économie, société, tourisme, environnement, culture, sport.
-Adresse : `www.bomainfos.com`. Dépôt :
+Adresse : `www.boma-infos.com`. Dépôt :
 [`okatech-org/boma-infos`](https://github.com/okatech-org/boma-infos).
 
 Pile : Next.js 16 (App Router), React 19, Convex, Better Auth, Tailwind CSS 4,
@@ -14,11 +14,9 @@ BOMA Infos : charte graphique, rubriques, contenu de démonstration, agents. Ce
 qui vient du socle et ne sert pas ici est listé dans « Ce qui vient du socle
 d'origine ».
 
-**BOMA Infos n'a aucun site antérieur** : il n'y a ni archive à reprendre ni
-adresse à préserver. Le site est en ligne **en préparation** depuis le
-03/10/2026 à l'adresse `https://boma-infos.vercel.app`, avec son jeu de
-démonstration et sans indexation par les moteurs de recherche. Le nom de
-domaine `www.bomainfos.com` n'y est pas encore branché. Voir « Déploiement ».
+L’édition publique est accessible sur `https://www.boma-infos.com`.
+Le déploiement historique sur `https://boma-infos.vercel.app` remonte au
+03/10/2026. Voir « Déploiement ».
 
 **Coordonnées non communiquées.** La société éditrice, le téléphone et
 l'adresse postale ne sont pas connus : `lib/site.ts` les déclare `null`, rien
@@ -201,7 +199,7 @@ app/
     layout.tsx                 masthead + pied ; aucun client Convex monté
     page.tsx                   accueil : une, à la une, dossier, rubriques
     [slug]/                    301 de /<slug> vers /article/<slug>
-    article/[slug]/            page d'article + opengraph-image.tsx (1200×630)
+    article/[slug]/            page d'article + opengraph-image/route.ts (1200×630)
     rubrique/[...segments]/    liste paginée, filtres, tri (tout dans le chemin)
     auteur/[slug]/ recherche/ docutheque/ newsletter/
     a-propos/ contacts/ hors-ligne/ mentions-legales/ confidentialite/
@@ -330,14 +328,10 @@ de plus dans un article long peut la consommer.
 change ensuite. `scripts/check-live-budget.ts` mesure l'accueil et les trois
 derniers articles réellement servis, avec les mêmes règles, et sort en erreur
 dès **95 %** d'un plafond. `.github/workflows/budget-production.yml` le lance
-chaque matin et sur demande ; GitHub prévient par courriel en cas d'échec. Ce
-contrôle n'a de sens qu'une fois le site en ligne : tant que
-`www.bomainfos.com` ne répond pas, il échoue chaque matin. Le désactiver
-(onglet Actions) jusqu'à la mise en ligne, ou le lancer à la main sur une autre
-adresse.
+chaque matin et sur demande ; GitHub prévient par courriel en cas d'échec.
 
 ```bash
-bun run scripts/check-live-budget.ts https://boma-infos.vercel.app
+bun run scripts/check-live-budget.ts https://www.boma-infos.com
 ```
 
 Deux partis pris de mesure, tous deux du côté sévère :
@@ -430,20 +424,23 @@ service worker resservirait celles de l'ancien mode.
 
 ### Référencement
 
-Un seul `<h1>` par page, métadonnées et canoniques par page, `NewsArticle` +
-`NewsMediaOrganization` + `BreadcrumbList` (avec le niveau « Accueil »),
-`sitemap.xml`, `news-sitemap.xml`, `rss.xml`, `robots.txt`, et une image Open
-Graph 1200×630 générée pour chaque article, composée comme la charte (fond
-marine, logo, titre en serif blanche, filet tricolore, adresse du site) sur la
-photographie de l'article.
+L’édition publique utilise `https://www.boma-infos.com` pour les URL canoniques,
+les liens de partage et les sitemaps. Les pages d’articles éditoriaux
+déclarent `NewsArticle` et autorisent les grands aperçus Google. Les articles
+et signatures du corpus fictif portent `noindex` et sont absents des sitemaps.
+L’accueil de production affiche les publications éditoriales. Les éditions
+de recette portent `X-Robots-Tag: noindex, nofollow`.
 
-**Indexation fermée pendant la démonstration.** Tant que la mention
-`DEMO_CONTENT_NOTICE` est posée (`lib/site.ts`), aucun moteur ne doit lister
-des articles fictifs comme de l'information : toutes les réponses portent
-`X-Robots-Tag: noindex, nofollow` (`next.config.ts`), les pages portent la même
-consigne et `robots.txt` n'annonce plus les plans de site. L'exploration reste
-ouverte, car un robot doit lire une page pour y voir la consigne. L'indexation
-s'ouvre d'elle-même quand la mention passe à `null` (`tests/indexing.test.ts`).
+La carte de partage utilise la couverture, une image dans l’article ou le
+visuel de marque en dernier recours. Elle est servie en JPEG 1200 × 630 sur
+le domaine public. Dans la rédaction, « Aperçu » montre le contenu en cours
+d’édition et les visuels choisis avant publication.
+
+Le fichier `public/googleab6f71318677252e.html` sert à vérifier la propriété
+dans Google Search Console. Après le déploiement sur le domaine public,
+vérifier la réponse HTTP 200 sur `/googleab6f71318677252e.html`, valider la
+propriété, puis soumettre `sitemap.xml` et `news-sitemap.xml`. Conserver le
+fichier après validation.
 
 **Redirections.** `lib/legacy-redirects.ts` ne contient plus le plan d'un
 ancien site : BOMA Infos n'en a pas. Il garde des adresses conventionnelles,
@@ -977,10 +974,11 @@ CONVEX_DEPLOYMENT=prod:cheery-dachshund-789 bun run compte -- \
   --role=administrateur
 ```
 
-**Brancher `www.bomainfos.com`.** Ajouter le domaine au projet Vercel et
-pointer le DNS dessus. Poser ensuite la nouvelle adresse dans `SITE_URL` sur la
-production Convex et dans `NEXT_PUBLIC_SITE_URL` sur Vercel, puis redéployer :
-sans cela, la connexion au back-office est refusée depuis le nouveau domaine.
+**Déployer sur `www.boma-infos.com`.** Identifier le projet qui sert déjà le
+domaine avant de déployer. Le projet historique `boma-infos.vercel.app` et
+son backend sont documentés ci-dessus. La valeur `SITE_URL` du backend Convex
+qui sert le site public doit correspondre à `https://www.boma-infos.com`
+pour les origines autorisées par Better Auth.
 
 ---
 
@@ -1029,8 +1027,6 @@ suit en vient et ne sert pas ici, ou en porte encore la trace.
       défaut de `convex/settings.ts`).
 - [ ] **Logo officiel en vectoriel**, s'il existe : il remplace le maître
       redessiné, puis `bun run brand`.
-- [ ] **Nom de domaine et DNS** de `www.bomainfos.com` ; régler
-      `NEXT_PUBLIC_SITE_URL` et `SITE_URL` dessus.
 - [x] **Déploiement de production et hébergement.** Faits le 03/10/2026 :
       voir « Déploiement ».
 - [ ] **Premier compte administrateur en production.** La base de production
@@ -1041,9 +1037,6 @@ suit en vient et ne sert pas ici, ou en porte encore la trace.
       portail restent dans la corbeille de sortie, et la confirmation
       d'inscription à la newsletter n'est pas envoyée par courriel.
 - [ ] **Contrôle quotidien du budget en production**
-      (`.github/workflows/budget-production.yml`) : il vise
-      `www.bomainfos.com`, à activer une fois le domaine branché. D'ici là, le
-      script se lance à la main sur l'adresse Vercel.
-- [ ] **Retrait du jeu de démonstration et de sa mention**
-      (`DEMO_CONTENT_NOTICE` à `null`), ce qui rouvre aussi l'indexation par
-      les moteurs de recherche.
+      (`.github/workflows/budget-production.yml`) sur `www.boma-infos.com`.
+- [ ] **Validation du domaine dans Google Search Console et soumission des
+      sitemaps** de l’édition publique.

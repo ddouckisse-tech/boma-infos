@@ -5,22 +5,23 @@
  * the RSS feed, the structured data and the legal pages is declared here.
  *
  * BOMA Infos is a general news outlet about Gabon — politics, the economy,
- * society, tourism, culture, sport. Its graphic charter gives one certain
- * fact about its identity: the address `www.bomainfos.com`. What the owner
+ * society, tourism, culture, sport. What the owner
  * has not communicated — publishing company, newsroom phone number, postal
  * address — is declared `null` below and is **not displayed** anywhere; the
  * legal notice lists it as still to be provided. Nothing is invented.
  */
 
 /** Absolute origin, needed by canonicals, Open Graph and the sitemap. */
+export const PUBLIC_SITE_URL = "https://www.boma-infos.com";
+
 export const siteUrl = (): string => {
-  const raw =
+  if (process.env.VERCEL_ENV === "production") return PUBLIC_SITE_URL;
+  return (
     process.env.NEXT_PUBLIC_SITE_URL ??
-    (process.env.VERCEL_PROJECT_PRODUCTION_URL
-      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-      : undefined) ??
-    "http://localhost:3040";
-  return raw.replace(/\/+$/, "");
+    (process.env.NODE_ENV === "production"
+      ? PUBLIC_SITE_URL
+      : "http://localhost:3040")
+  ).replace(/\/+$/, "");
 };
 
 export const absoluteUrl = (path: string): string =>
@@ -36,7 +37,7 @@ type SiteIdentity = {
   readonly title: string;
   readonly description: string;
   readonly descriptionEn: string;
-  /** Public address of the charter, without protocol — printed as is. */
+  /** Public address without protocol. */
   readonly domain: string;
   readonly email: string;
   /** Newsroom phone. `null` until the owner provides it: nothing is shown. */
@@ -51,7 +52,7 @@ type SiteIdentity = {
 export const SITE: SiteIdentity = {
   name: "BOMA Infos",
   publisher: null,
-  locale: "fr_FR",
+  locale: "fr_GA",
   tagline: "Toute l'actualité du Gabon",
   taglineEn: "All the news from Gabon",
   title: "BOMA Infos — toute l'actualité du Gabon",
@@ -59,7 +60,7 @@ export const SITE: SiteIdentity = {
     "Politique, économie, société, tourisme, culture et sport : l'actualité du Gabon, suivie et expliquée par la rédaction de BOMA Infos.",
   descriptionEn:
     "Politics, the economy, society, tourism, culture and sport: news from Gabon, followed and explained by the BOMA Infos newsroom.",
-  domain: "www.bomainfos.com",
+  domain: new URL(PUBLIC_SITE_URL).hostname,
   /**
    * Déduite du domaine de la charte, sur le modèle habituel d'une rédaction.
    * À confirmer par le propriétaire : la boîte doit exister avant la mise en
@@ -77,12 +78,7 @@ export const PUBLISHER_NAME: string = SITE.publisher ?? SITE.name;
 
 /**
  * The demonstration corpus of `convex/seed/` is fictional — people, quotes
- * and figures are invented. A reader must not be able to mistake it for
- * reporting, so the notice is printed on every page of the journal (footer),
- * at the top of every article, and wherever the invented bylines are
- * introduced as people (the team on « À propos », an author's page). Set to
- * `null` when the newsroom publishes
- * its own articles and the demonstration dataset is retired.
+ * and figures are invented. The notice accompanies those articles and bylines.
  */
 export const DEMO_CONTENT_NOTICE: {
   readonly fr: string;
@@ -95,7 +91,7 @@ export const DEMO_CONTENT_NOTICE: {
   readonly teamEn: string;
   readonly authorFr: string;
   readonly authorEn: string;
-} | null = {
+} = {
   fr: "Site en préparation : les articles affichés sont un contenu de démonstration. Personnes, citations et chiffres y sont fictifs.",
   en: "Site in preparation: the articles shown are demonstration content. The people, quotes and figures in them are fictional.",
   articleFr:
@@ -113,17 +109,23 @@ export const DEMO_CONTENT_NOTICE: {
 };
 
 /**
- * Whether search engines may index the site.
- *
- * Not while the demonstration corpus is online. Its articles are fiction, and
- * a search engine — or an aggregator reading the news sitemap — would list
- * them as reporting from a Gabonese outlet, whatever the notice on the page
- * says. Every response then carries `X-Robots-Tag: noindex, nofollow`
- * (`next.config.ts`), the pages carry the same robots metadata, and
- * `robots.txt` stops advertising the sitemaps. Indexing opens by itself the
- * day `DEMO_CONTENT_NOTICE` is set to `null`.
+ * Index the canonical production edition. Previews and development have a
+ * site-wide noindex; individual demo articles and authors have their own.
  */
-export const SEARCH_INDEXABLE: boolean = DEMO_CONTENT_NOTICE === null;
+export const SEARCH_INDEXABLE =
+  process.env.NODE_ENV === "production" &&
+  (!process.env.VERCEL_ENV || process.env.VERCEL_ENV === "production") &&
+  siteUrl() === PUBLIC_SITE_URL;
+
+export const EDITORIAL_ROBOTS = {
+  index: SEARCH_INDEXABLE,
+  follow: SEARCH_INDEXABLE,
+  googleBot: {
+    index: SEARCH_INDEXABLE,
+    follow: SEARCH_INDEXABLE,
+    "max-image-preview": "large",
+  },
+} as const;
 
 /**
  * Social reach. WhatsApp first — it is the sharing channel of the audience

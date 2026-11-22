@@ -12,7 +12,11 @@ import {
 import { insertArticle, patchArticle } from "./model/articleWrites";
 import { queueNotification, recordAudit } from "./model/audit";
 import { articleStatus, blockValidator } from "./model/content";
-import { syncArticleMedia } from "./model/media";
+import {
+  hasSharePhoto,
+  SHARE_PHOTO_REQUIRED,
+  syncArticleMedia,
+} from "./model/media";
 import { plainText, readingMinutes, searchText, slugify } from "./model/text";
 
 /**
@@ -617,6 +621,9 @@ export const publishSubmission = mutation({
       updatedAt: now,
       searchText: searchText(row.title, row.dek, tags, row.body),
     };
+
+    if (!(await hasSharePhoto(ctx, common)))
+      throw new Error(SHARE_PHOTO_REQUIRED);
 
     let articleId: Id<"articles">;
     if (existing) {

@@ -29,7 +29,12 @@ export default function PrivateLayout({
   return (
     <ConvexClientProvider>
       {children}
-      <Toaster position="bottom-right" closeButton richColors />
+      <Toaster
+        position="bottom-right"
+        mobileOffset={{ bottom: "calc(4rem + env(safe-area-inset-bottom))" }}
+        closeButton
+        richColors
+      />
     </ConvexClientProvider>
   );
 }

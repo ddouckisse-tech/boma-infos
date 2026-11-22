@@ -18,7 +18,13 @@ import {
   insertArticle,
   patchArticle,
 } from "./model/articleWrites";
-import { countMissingAlt, syncArticleMedia } from "./model/media";
+import {
+  articleMediaKeys,
+  hasSharePhoto,
+  SHARE_PHOTO_REQUIRED,
+  countMissingAlt,
+  syncArticleMedia,
+} from "./model/media";
 import { recordAudit } from "./model/audit";
 import { AUDIENCE_DAYS, computeAudience, viewsOver } from "./model/audience";
 import {
@@ -618,6 +624,16 @@ export const create = mutation({
   },
 });
 
+async function publicationProblem(ctx: QueryCtx, article: Doc<"articles">) {
+  if (article.dek.trim() === "") {
+    return "Un article publié doit porter un chapô.";
+  }
+  if (plainText(article.body).trim().length < 200) {
+    return "Le corps de l'article est trop court pour une publication.";
+  }
+  return (await hasSharePhoto(ctx, article)) ? null : SHARE_PHOTO_REQUIRED;
+}
+
 export const save = mutation({
   args: {
     id: v.id("articles"),
@@ -643,6 +659,17 @@ export const save = mutation({
     if (!row) throw accessError("FORBIDDEN");
     assertSection(viewer, row.categorySlug);
     assertSection(viewer, args.categorySlug);
+
+    if (row.status === "published" || row.status === "scheduled") {
+      const previous = articleMediaKeys(row);
+      const next = articleMediaKeys(args);
+      const changed =
+        next.size !== previous.size ||
+        [...next].some((key) => !previous.has(key));
+      if (changed && !(await hasSharePhoto(ctx, args))) {
+        throw new Error(SHARE_PHOTO_REQUIRED);
+      }
+    }
 
     await snapshot(
       ctx,
@@ -705,13 +732,9 @@ export const setStatus = mutation({
     if (!row) throw accessError("FORBIDDEN");
     assertSection(viewer, row.categorySlug);
 
-    if (status === "published" && row.dek.trim() === "") {
-      throw new Error("Un article publié doit porter un chapô.");
-    }
-    if (status === "published" && plainText(row.body).trim().length < 200) {
-      throw new Error(
-        "Le corps de l'article est trop court pour une publication."
-      );
+    if (status === "published" || status === "scheduled") {
+      const problem = await publicationProblem(ctx, row);
+      if (problem) throw new Error(problem);
     }
 
     await snapshot(ctx, row, viewer, `Passage en « ${status} »`);
@@ -751,9 +774,9 @@ export const setStatusMany = mutation({
   handler: async (ctx, { ids, status }) => {
     const viewer = await requirePermission(ctx, PERMISSIONS.articlesPublish);
     let done = 0;
-    for (const id of ids.slice(0, 50)) {
+    for (const id of [...new Set(ids)].slice(0, 50)) {
       const row = await ctx.db.get(id);
-      if (!row) continue;
+      if (!row || row.status === status) continue;
       const allowed = viewer.profile.sectionSlugs ?? [];
       if (
         viewer.role.slug !== "administrateur" &&
@@ -762,7 +785,17 @@ export const setStatusMany = mutation({
       ) {
         continue;
       }
-      await patchArticle(ctx, row, { status, updatedAt: Date.now() });
+      if (
+        (status === "published" || status === "scheduled") &&
+        (await publicationProblem(ctx, row))
+      )
+        continue;
+      const now = Date.now();
+      await patchArticle(ctx, row, {
+        status,
+        updatedAt: now,
+        publishedAt: status === "published" ? now : row.publishedAt,
+      });
       await recordAudit(
         ctx,
         viewer,

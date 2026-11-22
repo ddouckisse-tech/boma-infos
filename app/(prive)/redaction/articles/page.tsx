@@ -16,6 +16,7 @@ import { OfficeHeader } from "@/components/custom/office-header";
 import { PartnerTag } from "@/components/custom/partner-tag";
 import { StatusPill } from "@/components/custom/status-pill";
 import { STATUS_LABEL, formatDateTime, humanError } from "@/lib/private";
+import { useDebouncedValue } from "@/lib/use-debounced-value";
 
 const STATUS_OPTIONS = [
   { value: "", label: "Tous les statuts" },
@@ -63,6 +64,7 @@ function ArticlesList() {
   const [authorSlug, setAuthorSlug] = useState("");
   const [origin, setOrigin] = useState("");
   const [term, setTerm] = useState("");
+  const searchTerm = useDebouncedValue(term.trim());
   const [selected, setSelected] = useState<Id<"articles">[]>([]);
   const [creating, setCreating] = useState(false);
 
@@ -73,7 +75,7 @@ function ArticlesList() {
     categorySlug: categorySlug || undefined,
     authorSlug: authorSlug || undefined,
     origin: origin || undefined,
-    term: term || undefined,
+    term: searchTerm || undefined,
   });
   const setStatusMany = useMutation(api.newsroom.setStatusMany);
 
@@ -101,9 +103,14 @@ function ArticlesList() {
     if (selected.length === 0) return;
     try {
       const done = await setStatusMany({ ids: selected, status: next });
-      toast.success(
-        `${done} article(s) ${next === "published" ? "publié(s)" : "repassé(s) en brouillon"}.`
-      );
+      const message = `${done} sur ${selected.length} ${next === "published" ? "publié(s)" : "repassé(s) en brouillon"}.`;
+      if (next === "published" && done < selected.length) {
+        toast.warning(
+          `${message} Vérifiez le statut, le chapô, le texte et l’image des articles restants.`
+        );
+      } else {
+        toast.success(message);
+      }
       setSelected([]);
     } catch (error) {
       toast.error(humanError(error));

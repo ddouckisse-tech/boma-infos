@@ -10,10 +10,7 @@ import { absoluteUrl, SEARCH_INDEXABLE } from "@/lib/site";
  * an infinite space of query strings dilutes a crawl budget for no gain;
  * `/design-system` is an internal reference.
  *
- * While the demonstration corpus is online (`SEARCH_INDEXABLE` false) the
- * sitemaps are no longer advertised. Crawling itself stays open on purpose:
- * a robot has to fetch a page to read the `noindex` it carries, and a page
- * closed here could still be listed by its bare address.
+ * Crawling stays open so robots can read page-level noindex directives.
  */
 export default function robots(): MetadataRoute.Robots {
   const rules: MetadataRoute.Robots["rules"] = [
@@ -27,6 +24,5 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules,
     sitemap: [absoluteUrl("/sitemap.xml"), absoluteUrl("/news-sitemap.xml")],
-    host: absoluteUrl("/").replace(/\/$/, ""),
   };
 }

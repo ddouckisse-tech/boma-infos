@@ -1,5 +1,6 @@
 import { getLatest, REVALIDATE_SECONDS } from "@/lib/content/server";
-import { absoluteUrl, SITE } from "@/lib/site";
+import { isDemoArticle } from "@/lib/content/demo";
+import { absoluteUrl, SEARCH_INDEXABLE, SITE } from "@/lib/site";
 
 // Littéral et non `REVALIDATE_SECONDS` : Next analyse statiquement les
 // exports de configuration de segment et n'en résout pas les identifiants
@@ -25,9 +26,15 @@ const escape = (value: string) =>
     .replace(/"/g, "&quot;");
 
 export async function GET() {
-  const articles = await getLatest(100);
-  const cutoff = Date.now() - TWO_DAYS;
-  const recent = articles.filter((article) => article.publishedAt >= cutoff);
+  const articles = SEARCH_INDEXABLE ? await getLatest(100) : [];
+  const now = Date.now();
+  const recent = articles.filter(
+    (article) =>
+      article.publishedAt >= now - TWO_DAYS &&
+      article.publishedAt <= now &&
+      article.origin === "redaction" &&
+      !isDemoArticle(article.slug)
+  );
 
   const entries = recent
     .map(

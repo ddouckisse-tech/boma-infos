@@ -3,8 +3,10 @@ import {
   getAuthors,
   getNavigation,
   getPublishedSlugs,
+  getSectionCounts,
 } from "@/lib/content/server";
-import { absoluteUrl, ARTICLES_PER_PAGE } from "@/lib/site";
+import { isDemoArticle, isDemoAuthor } from "@/lib/content/demo";
+import { absoluteUrl, ARTICLES_PER_PAGE, SEARCH_INDEXABLE } from "@/lib/site";
 
 // Littéral et non `REVALIDATE_SECONDS` : Next analyse statiquement les
 // exports de configuration de segment et n'en résout pas les identifiants
@@ -23,25 +25,27 @@ export const revalidate = 300;
  * the sort is generated here.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [slugs, categories, authors] = await Promise.all([
+  if (!SEARCH_INDEXABLE) return [];
+  const [published, categories, authors, sectionCounts] = await Promise.all([
     getPublishedSlugs(),
     getNavigation(),
     getAuthors(),
+    getSectionCounts(),
   ]);
 
-  const newest = slugs[0]?.publishedAt ?? Date.now();
-  const perCategory = new Map<string, number>();
-  for (const item of slugs) {
-    perCategory.set(
-      item.categorySlug,
-      (perCategory.get(item.categorySlug) ?? 0) + 1
-    );
-  }
+  const slugs = published.filter(({ slug }) => !isDemoArticle(slug));
+  const demoCategories = new Set(
+    published
+      .filter(({ slug }) => isDemoArticle(slug))
+      .map(({ categorySlug }) => categorySlug)
+  );
+  const newest = slugs[0]?.publishedAt;
+  const counts = new Map(sectionCounts.map(({ slug, count }) => [slug, count]));
 
   const entries: MetadataRoute.Sitemap = [
     {
       url: absoluteUrl("/"),
-      lastModified: new Date(newest),
+      lastModified: newest === undefined ? undefined : new Date(newest),
       changeFrequency: "daily",
       priority: 1,
     },
@@ -78,31 +82,33 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   for (const category of categories) {
+    const count = counts.get(category.slug) ?? 0;
+    if (count === 0 || demoCategories.has(category.parentSlug ?? category.slug))
+      continue;
     const base = category.parentSlug
       ? `/rubrique/${category.parentSlug}/${category.slug}`
       : `/rubrique/${category.slug}`;
     entries.push({
       url: absoluteUrl(base),
-      lastModified: new Date(newest),
       changeFrequency: "daily",
       priority: category.parentSlug ? 0.6 : 0.8,
     });
 
-    if (!category.parentSlug) {
-      const pages = Math.ceil(
-        (perCategory.get(category.slug) ?? 0) / ARTICLES_PER_PAGE
-      );
-      for (let page = 2; page <= pages; page += 1) {
-        entries.push({
-          url: absoluteUrl(`${base}/page/${page}`),
-          changeFrequency: "weekly",
-          priority: 0.4,
-        });
-      }
+    for (
+      let page = 2;
+      page <= Math.ceil(count / ARTICLES_PER_PAGE);
+      page += 1
+    ) {
+      entries.push({
+        url: absoluteUrl(`${base}/page/${page}`),
+        changeFrequency: "weekly",
+        priority: 0.4,
+      });
     }
   }
 
   for (const author of authors) {
+    if (isDemoAuthor(author.slug)) continue;
     entries.push({
       url: absoluteUrl(`/auteur/${author.slug}`),
       changeFrequency: "weekly",

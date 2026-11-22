@@ -933,6 +933,32 @@ dialog.lc-auth[open] {
   flex-direction: column;
 }
 
+dialog.lc-article-preview {
+  inset: 0;
+  margin: auto;
+  inline-size: min(52rem, calc(100vw - 2rem));
+  max-block-size: calc(100dvh - 2rem);
+  background-color: var(--background);
+  overflow: hidden;
+}
+
+dialog.lc-article-preview[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (width < 40rem) {
+  dialog.lc-article-preview {
+    inline-size: 100%;
+    block-size: 100dvh;
+    max-block-size: 100dvh;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    border: 0;
+    border-radius: 0;
+  }
+}
+
 .lc-auth-body {
   /* `0 1 auto` et non `1 1 auto` : le corps garde sa hauteur naturelle et ne
      rétrécit que s'il dépasse le plafond. Avec `flex-grow: 1` il gonflait pour

@@ -22,11 +22,22 @@ import {
   NewsArticleStructuredData,
 } from "@/components/custom/structured-data";
 import { TableOfContents } from "@/components/custom/table-of-contents";
+import {
+  articleImageSources,
+  socialImageSize,
+  socialImageUrl,
+} from "@/lib/content/article-images";
+import { isDemoArticle } from "@/lib/content/demo";
 import { getArticle, getRecentSlugs, getRelated } from "@/lib/content/server";
 import { formatViews } from "@/lib/format";
-import { fallbackVariant, getMediaAsset, SIZES, variantUrl } from "@/lib/media";
+import { getMediaAsset, SIZES } from "@/lib/media";
 import { sectionHref, subSectionHref } from "@/lib/navigation";
-import { absoluteUrl, DEMO_CONTENT_NOTICE, SITE } from "@/lib/site";
+import {
+  absoluteUrl,
+  DEMO_CONTENT_NOTICE,
+  EDITORIAL_ROBOTS,
+  SITE,
+} from "@/lib/site";
 
 // Littéral et non `REVALIDATE_SECONDS` : Next analyse statiquement les
 // exports de configuration de segment et n'en résout pas les identifiants
@@ -64,35 +75,51 @@ export async function generateMetadata({
   if (!article) return { title: "Article introuvable" };
 
   const path = `/article/${article.slug}`;
-  const title = article.seo.title ?? article.title;
+  const title = article.seo.title?.trim() || article.title;
+  const description =
+    article.seo.description.trim() || article.dek.trim() || article.title;
+  const shareTitle = article.title.trim() || title;
+  const shareSummary = article.dek.trim() || description;
+  const shareDescription = article.authorName.trim()
+    ? `Par ${article.authorName.trim()} — ${shareSummary}`
+    : shareSummary;
+  const image = {
+    url: socialImageUrl(article.slug, article.updatedAt),
+    ...socialImageSize,
+    type: "image/jpeg",
+    alt: articleImageSources(article)[0]?.media.alt || article.title,
+  };
 
   return {
     title,
-    description: article.seo.description,
+    description,
     keywords: [...article.seo.keywords],
     authors: [
       { name: article.authorName, url: `/auteur/${article.authorSlug}` },
     ],
     alternates: { canonical: path },
+    robots: isDemoArticle(article.slug)
+      ? { index: false, follow: true }
+      : EDITORIAL_ROBOTS,
     openGraph: {
       type: "article",
       url: path,
-      title,
-      description: article.seo.description,
+      title: shareTitle,
+      description: shareDescription,
       siteName: SITE.name,
       locale: SITE.locale,
       publishedTime: new Date(article.publishedAt).toISOString(),
       modifiedTime: new Date(article.updatedAt).toISOString(),
-      authors: [article.authorName],
+      authors: [absoluteUrl(`/auteur/${article.authorSlug}`)],
       section: article.categoryName,
       tags: [...article.tags],
-      // L'image 1200×630 est produite par opengraph-image.tsx ; Next l'ajoute
-      // automatiquement à ces métadonnées.
+      images: [image],
     },
     twitter: {
       card: "summary_large_image",
-      title,
-      description: article.seo.description,
+      title: shareTitle,
+      description: shareDescription,
+      images: [image],
     },
   };
 }
@@ -104,18 +131,19 @@ export default async function ArticlePage({
   const article = await getArticle(slug);
   if (!article) notFound();
 
-  const related = await getRelated(slug, 2);
+  const demo = isDemoArticle(article.slug);
+  const related = (await getRelated(slug, 2)).filter(
+    (item) => demo || !isDemoArticle(item.slug)
+  );
   const hero = getMediaAsset(article.heroMediaKey);
   const url = absoluteUrl(`/article/${article.slug}`);
-  // Image des données structurées : la plus large rendition disponible. Une
-  // image envoyée depuis la médiathèque a déjà une adresse absolue (stockage
-  // Convex) ; celle de la bibliothèque est un chemin du site.
-  const heroImageUrl = hero
-    ? (() => {
-        const address = variantUrl(hero, fallbackVariant(hero, 1280).w, "webp");
-        return address.startsWith("http") ? address : absoluteUrl(address);
-      })()
-    : undefined;
+  const preferredImage = articleImageSources(article)[0];
+  const imageUrls = preferredImage
+    ? [
+        socialImageUrl(article.slug, article.updatedAt),
+        new URL(preferredImage.source, url).href,
+      ]
+    : [];
 
   const trail = [
     { name: "Accueil", href: "/" },
@@ -161,26 +189,21 @@ export default async function ArticlePage({
         data-slot="reading-progress"
       />
 
-      <NewsArticleStructuredData
-        headline={article.title}
-        description={article.seo.description}
-        slug={article.slug}
-        imageUrls={
-          heroImageUrl
-            ? [
-                heroImageUrl,
-                absoluteUrl(`/article/${article.slug}/opengraph-image`),
-              ]
-            : [absoluteUrl(`/article/${article.slug}/opengraph-image`)]
-        }
-        publishedAt={article.publishedAt}
-        updatedAt={article.updatedAt}
-        authorName={article.authorName}
-        authorSlug={article.authorSlug}
-        sectionName={article.categoryName}
-        keywords={article.seo.keywords}
-        wordCount={wordCount}
-      />
+      {!demo && (
+        <NewsArticleStructuredData
+          headline={article.title}
+          description={article.seo.description.trim() || article.dek}
+          slug={article.slug}
+          imageUrls={imageUrls}
+          publishedAt={article.publishedAt}
+          updatedAt={article.updatedAt}
+          authorName={article.authorName}
+          authorSlug={article.authorSlug}
+          sectionName={article.categoryName}
+          keywords={article.seo.keywords}
+          wordCount={wordCount}
+        />
+      )}
       <BreadcrumbStructuredData trail={trail} />
 
       <article lang="fr">
@@ -307,7 +330,7 @@ export default async function ArticlePage({
             <div className="max-w-reading min-w-0">
               {/* Tant que le corpus de démonstration est en ligne, chaque
                   article le dit avant sa première ligne. */}
-              {DEMO_CONTENT_NOTICE && (
+              {demo && (
                 <p
                   role="note"
                   className="mb-8 rounded-md border border-warning-token/40 bg-warning-token/10 px-4 py-3 type-small text-foreground"

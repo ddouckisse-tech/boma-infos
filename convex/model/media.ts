@@ -1,5 +1,6 @@
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
+import { MEDIA } from "../mediaManifest";
 
 /**
  * Pictures uploaded from the back office (12/09/2026).
@@ -95,6 +96,27 @@ export function articleMediaKeys(
   }
   return keys;
 }
+
+export async function hasSharePhoto(
+  ctx: QueryCtx,
+  article: Parameters<typeof articleMediaKeys>[0]
+): Promise<boolean> {
+  for (const key of articleMediaKeys(article)) {
+    if (Object.hasOwn(MEDIA, key) && MEDIA[key].webp.length > 0) return true;
+    const media = await ctx.db
+      .query("media")
+      .withIndex("by_key", (index) => index.eq("key", key))
+      .unique();
+    if (!media?.storage) continue;
+    for (const rendition of media.storage) {
+      if (await ctx.storage.getUrl(rendition.storageId)) return true;
+    }
+  }
+  return false;
+}
+
+export const SHARE_PHOTO_REQUIRED =
+  "Ajoutez une image principale ou une photo dans l’article avant de publier.";
 
 /** Keys of every picture a set of articles displays, with how many articles show each. */
 export function mediaKeysUsedBy(

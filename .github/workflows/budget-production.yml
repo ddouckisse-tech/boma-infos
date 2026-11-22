@@ -1,10 +1,5 @@
 # Budget de performance du site en production — CAHIER-DES-CHARGES.md §5.4.
 #
-# Ce contrôle planifié n'a de sens qu'une fois le site en ligne à l'adresse
-# ci-dessous : tant que www.bomainfos.com ne répond pas, il échoue chaque
-# matin. Le désactiver (onglet Actions) jusqu'à la mise en ligne, ou le
-# lancer à la main sur une autre adresse.
-#
 # La compilation refuse déjà un dépassement (`bun run build`), mais l'accueil
 # et les articles se régénèrent depuis Convex toutes les cinq minutes (ISR) :
 # une photographie plus lourde en une change le poids servi sans aucune
@@ -23,7 +18,7 @@ on:
       site:
         description: Adresse du site à mesurer
         required: false
-        default: https://www.bomainfos.com
+        default: https://www.boma-infos.com
 
 permissions:
   contents: read
@@ -44,5 +39,5 @@ jobs:
           bun-version: 1.3.14
       - name: Mesurer le site servi
         env:
-          SITE: ${{ inputs.site || 'https://www.bomainfos.com' }}
+          SITE: ${{ inputs.site || 'https://www.boma-infos.com' }}
         run: bun run scripts/check-live-budget.ts "$SITE"

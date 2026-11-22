@@ -62,7 +62,7 @@ export const organizationNode = (): JsonLd => ({
         parentOrganization: { "@type": "Organization", name: SITE.publisher },
       }
     : {}),
-  inLanguage: "fr-FR",
+  inLanguage: "fr-GA",
 });
 
 export function SiteStructuredData() {
@@ -77,7 +77,7 @@ export function SiteStructuredData() {
             "@id": absoluteUrl("/#site"),
             name: SITE.name,
             url: absoluteUrl("/"),
-            inLanguage: "fr-FR",
+            inLanguage: "fr-GA",
             publisher: { "@id": absoluteUrl("/#organisation") },
             potentialAction: {
               "@type": "SearchAction",
@@ -149,9 +149,9 @@ export function NewsArticleStructuredData({
           "@type": "WebPage",
           "@id": absoluteUrl(`/article/${slug}`),
         },
-        headline: headline.slice(0, 110),
+        headline,
         description,
-        image: imageUrls,
+        ...(imageUrls.length > 0 ? { image: imageUrls } : {}),
         datePublished: new Date(publishedAt).toISOString(),
         dateModified: new Date(updatedAt).toISOString(),
         author: {
@@ -163,7 +163,7 @@ export function NewsArticleStructuredData({
         articleSection: sectionName,
         keywords: keywords.join(", "),
         wordCount,
-        inLanguage: "fr-FR",
+        inLanguage: "fr-GA",
         isAccessibleForFree: true,
       }}
     />

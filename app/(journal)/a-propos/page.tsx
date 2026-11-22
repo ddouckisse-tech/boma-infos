@@ -8,7 +8,8 @@ import { PageHeader } from "@/components/custom/page-header";
 import { Section } from "@/components/custom/section";
 import { BreadcrumbStructuredData } from "@/components/custom/structured-data";
 import { getAuthors } from "@/lib/content/server";
-import { DEMO_CONTENT_NOTICE, SITE } from "@/lib/site";
+import { isDemoAuthor } from "@/lib/content/demo";
+import { DEMO_CONTENT_NOTICE, SEARCH_INDEXABLE, SITE } from "@/lib/site";
 
 // Littéral et non `REVALIDATE_SECONDS` : Next analyse statiquement les
 // exports de configuration de segment et n'en résout pas les identifiants
@@ -29,7 +30,9 @@ export const metadata: Metadata = {
 
 /** À propos (CDC §4.1) — qui écrit, comment, et selon quelles règles. */
 export default async function AboutPage() {
-  const authors = await getAuthors();
+  const authors = (await getAuthors()).filter(
+    ({ slug }) => !SEARCH_INDEXABLE || !isDemoAuthor(slug)
+  );
 
   return (
     <>
@@ -130,7 +133,7 @@ export default async function AboutPage() {
         tone="muted"
         title={<LocalizedText fr="La rédaction" en="Editorial team" />}
         description={
-          DEMO_CONTENT_NOTICE && (
+          authors.some(({ slug }) => isDemoAuthor(slug)) && (
             <span role="note">
               <LocalizedText
                 fr={DEMO_CONTENT_NOTICE.teamFr}

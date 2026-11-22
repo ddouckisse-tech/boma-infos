@@ -18,6 +18,7 @@ import {
   NAV_LEGAL_PAGES,
   NAV_STATIC_PAGES,
   PUBLISHER_NAME,
+  SEARCH_INDEXABLE,
   SITE,
 } from "@/lib/site";
 
@@ -88,7 +89,7 @@ export function Footer() {
     <footer className="dark mt-16 boma-field text-foreground">
       <span aria-hidden="true" className="boma-rule rounded-none" />
       <Container className="pt-8 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
-        {DEMO_CONTENT_NOTICE && (
+        {!SEARCH_INDEXABLE && (
           <p
             role="note"
             className="mb-6 rounded-md border border-border bg-card px-4 py-3 type-small text-muted-foreground"
