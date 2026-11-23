@@ -3,9 +3,9 @@ import {
   getAuthors,
   getNavigation,
   getPublishedSlugs,
-  getSectionCounts,
 } from "@/lib/content/server";
 import { isDemoArticle, isDemoAuthor } from "@/lib/content/demo";
+import { buildSections, sectionHref, subSectionHref } from "@/lib/navigation";
 import { absoluteUrl, ARTICLES_PER_PAGE, SEARCH_INDEXABLE } from "@/lib/site";
 
 // Littéral et non `REVALIDATE_SECONDS` : Next analyse statiquement les
@@ -26,21 +26,30 @@ export const revalidate = 300;
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (!SEARCH_INDEXABLE) return [];
-  const [published, categories, authors, sectionCounts] = await Promise.all([
+  const [published, categories, authors] = await Promise.all([
     getPublishedSlugs(),
     getNavigation(),
     getAuthors(),
-    getSectionCounts(),
   ]);
 
   const slugs = published.filter(({ slug }) => !isDemoArticle(slug));
-  const demoCategories = new Set(
-    published
-      .filter(({ slug }) => isDemoArticle(slug))
-      .map(({ categorySlug }) => categorySlug)
-  );
   const newest = slugs[0]?.publishedAt;
-  const counts = new Map(sectionCounts.map(({ slug, count }) => [slug, count]));
+  const sections = buildSections(categories);
+  const categoriesByPath = new Map<string, typeof published>();
+  for (const section of sections) {
+    categoriesByPath.set(sectionHref(section.slug), []);
+    for (const child of section.children) {
+      categoriesByPath.set(subSectionHref(section.slug, child.slug), []);
+    }
+  }
+  for (const item of published) {
+    categoriesByPath.get(sectionHref(item.categorySlug))?.push(item);
+    if (item.subCategorySlug) {
+      categoriesByPath
+        .get(subSectionHref(item.categorySlug, item.subCategorySlug))
+        ?.push(item);
+    }
+  }
 
   const entries: MetadataRoute.Sitemap = [
     {
@@ -81,28 +90,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  for (const category of categories) {
-    const count = counts.get(category.slug) ?? 0;
-    if (count === 0 || demoCategories.has(category.parentSlug ?? category.slug))
-      continue;
-    const base = category.parentSlug
-      ? `/rubrique/${category.parentSlug}/${category.slug}`
-      : `/rubrique/${category.slug}`;
-    entries.push({
-      url: absoluteUrl(base),
-      changeFrequency: "daily",
-      priority: category.parentSlug ? 0.6 : 0.8,
-    });
+  // Mirror the recent-first listing, including the slots occupied by demos.
+  for (const [base, items] of categoriesByPath) {
+    for (let start = 0; start < items.length; start += ARTICLES_PER_PAGE) {
+      const pageArticles = items
+        .slice(start, start + ARTICLES_PER_PAGE)
+        .filter(({ slug }) => !isDemoArticle(slug));
+      if (pageArticles.length === 0) continue;
 
-    for (
-      let page = 2;
-      page <= Math.ceil(count / ARTICLES_PER_PAGE);
-      page += 1
-    ) {
+      const page = start / ARTICLES_PER_PAGE + 1;
+      const lastModified = Math.max(
+        ...pageArticles.map(({ updatedAt }) => updatedAt)
+      );
       entries.push({
-        url: absoluteUrl(`${base}/page/${page}`),
-        changeFrequency: "weekly",
-        priority: 0.4,
+        url: absoluteUrl(page === 1 ? base : `${base}/page/${page}`),
+        lastModified: new Date(lastModified),
       });
     }
   }
