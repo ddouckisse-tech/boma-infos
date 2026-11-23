@@ -22,6 +22,7 @@ import {
   NewsArticleStructuredData,
 } from "@/components/custom/structured-data";
 import { TableOfContents } from "@/components/custom/table-of-contents";
+import type { ArticleDetail } from "@/convex/model/content";
 import {
   articleImageSources,
   socialImageSize,
@@ -30,7 +31,7 @@ import {
 import { isDemoArticle } from "@/lib/content/demo";
 import { getArticle, getRecentSlugs, getRelated } from "@/lib/content/server";
 import { formatViews } from "@/lib/format";
-import { getMediaAsset, SIZES } from "@/lib/media";
+import { fallbackVariant, getMediaAsset, SIZES, type MediaAsset } from "@/lib/media";
 import { sectionHref, subSectionHref } from "@/lib/navigation";
 import {
   absoluteUrl,
@@ -47,6 +48,45 @@ export const dynamicParams = true;
 
 const formatViewsEn = (views: number) =>
   `${new Intl.NumberFormat("en-GB").format(views)} ${views === 1 ? "view" : "views"}`;
+
+const ARTICLE_HERO_WIDTH = 960;
+const ARTICLE_UPLOAD_BUDGET = 72 * 1024;
+
+function articleMediaFor(article: ArticleDetail) {
+  const widths = new Map<string, number>();
+  if (article.heroMediaKey) widths.set(article.heroMediaKey, ARTICLE_HERO_WIDTH);
+
+  for (const block of article.body) {
+    if (block.type !== "image" && block.type !== "video") continue;
+    const key = block.type === "image" ? block.mediaKey : block.posterMediaKey;
+    if (!widths.has(key)) widths.set(key, 768);
+  }
+
+  const uploads = [...widths].flatMap(([key, width]) => {
+    const media = getMediaAsset(key);
+    if (!media?.urls || media.webp.length === 0) return [];
+    return [{ key, media, width, preferred: fallbackVariant(media, width) }];
+  });
+  const preferredBytes = uploads.reduce((sum, { preferred }) => sum + preferred.bytes, 0);
+  if (preferredBytes <= ARTICLE_UPLOAD_BUDGET) return getMediaAsset;
+
+  // Reserve the smallest rendition for each picture, then allot more of the
+  // remaining transfer budget to the lead. Originals stay available for sharing.
+  const minimumBytes = uploads.reduce((sum, { media }) => sum + media.webp[0].bytes, 0);
+  const available = Math.max(0, ARTICLE_UPLOAD_BUDGET - minimumBytes);
+  const totalWeight = uploads.reduce((sum, { key }) => sum + (key === article.heroMediaKey ? 2 : 1), 0);
+  const capped = new Map<string, MediaAsset>();
+
+  for (const { key, media, width } of uploads) {
+    const smallest = media.webp[0];
+    const weight = key === article.heroMediaKey ? 2 : 1;
+    const limit = smallest.bytes + Math.floor(available * weight / totalWeight);
+    const webp = media.webp.filter((variant) => variant.w <= width && variant.bytes <= limit);
+    capped.set(key, { ...media, webp: webp.length ? webp : [smallest] });
+  }
+
+  return (key: string | undefined) => (key && capped.get(key)) || getMediaAsset(key);
+}
 
 /**
  * Article page — the most important page of the site (CDC §4.2).
@@ -135,7 +175,8 @@ export default async function ArticlePage({
   const related = (await getRelated(slug, 2)).filter(
     (item) => demo || !isDemoArticle(item.slug)
   );
-  const hero = getMediaAsset(article.heroMediaKey);
+  const mediaFor = articleMediaFor(article);
+  const hero = mediaFor(article.heroMediaKey);
   const url = absoluteUrl(`/article/${article.slug}`);
   const preferredImage = articleImageSources(article)[0];
   const imageUrls = preferredImage
@@ -215,7 +256,7 @@ export default async function ArticlePage({
             <ResponsiveImage
               media={hero}
               sizes={SIZES.articleHero}
-              maxWidth={960}
+              maxWidth={ARTICLE_HERO_WIDTH}
               priority
             />
           )}
@@ -353,16 +394,16 @@ export default async function ArticlePage({
 
               {adBreak >= 0 ? (
                 <>
-                  <ArticleBody blocks={article.body.slice(0, adBreak + 1)} />
+                  <ArticleBody blocks={article.body.slice(0, adBreak + 1)} mediaFor={mediaFor} />
                   <Advertising
                     placement="article-inline"
                     pageKey={`/article/${article.slug}`}
                     className="my-10"
                   />
-                  <ArticleBody blocks={article.body.slice(adBreak + 1)} />
+                  <ArticleBody blocks={article.body.slice(adBreak + 1)} mediaFor={mediaFor} />
                 </>
               ) : (
-                <ArticleBody blocks={article.body} />
+                <ArticleBody blocks={article.body} mediaFor={mediaFor} />
               )}
 
               {article.tags.length > 0 && (
