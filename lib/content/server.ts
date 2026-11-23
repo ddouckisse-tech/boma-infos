@@ -8,6 +8,13 @@ import type {
   FunctionReturnType,
 } from "convex/server";
 import type { LocaleChoice } from "@/lib/preferences";
+import {
+  demoArticleEnglish,
+  demoEnglishSearch,
+  withDemoArticle,
+  withDemoProfile,
+  withDemoSummary,
+} from "@/lib/content/demo-edition";
 import { registerMedia, type MediaAsset } from "@/lib/media";
 
 /**
@@ -139,7 +146,20 @@ export const getNavigation = cache(() =>
 );
 
 export const getHomepage = cache(() =>
-  withMedia(run(api.journal.homepage, {}, "journal.homepage"))
+  withMedia(
+    run(api.journal.homepage, {}, "journal.homepage").then((home) => ({
+      ...home,
+      lead: withDemoSummary(home.lead),
+      dossier: withDemoSummary(home.dossier),
+      top: home.top.map(withDemoSummary),
+      latest: home.latest.map(withDemoSummary),
+      bySection: home.bySection.map((section) => ({
+        ...section,
+        articles: section.articles.map(withDemoSummary),
+      })),
+      espacePro: home.espacePro.map(withDemoSummary),
+    }))
+  )
 );
 
 type SlugPage = FunctionReturnType<typeof api.journal.publishedSlugPage>;
@@ -174,7 +194,11 @@ export const getRecentSlugs = cache(async (count: number) => {
 });
 
 export const getLatest = cache((limit: number) =>
-  withMedia(run(api.journal.latest, { limit }, "journal.latest"))
+  withMedia(
+    run(api.journal.latest, { limit }, "journal.latest").then((rows) =>
+      rows.map(withDemoSummary)
+    )
+  )
 );
 
 export const getSectionPage = cache(
@@ -190,7 +214,10 @@ export const getSectionPage = cache(
         api.journal.bySection,
         { categorySlug, subCategorySlug, page, perPage, order },
         "journal.bySection"
-      )
+      ).then((section) => ({
+        ...section,
+        items: section.items.map(withDemoSummary),
+      }))
     )
 );
 
@@ -199,43 +226,98 @@ export const getSectionCounts = cache(() =>
 );
 
 export const getArticle = cache((slug: string) =>
-  withMedia(run(api.journal.article, { slug }, "journal.article"))
+  withMedia(
+    run(api.journal.article, { slug }, "journal.article").then(withDemoArticle)
+  )
 );
 
 export const getRelated = cache((slug: string, limit: number) =>
-  withMedia(run(api.journal.related, { slug, limit }, "journal.related"))
+  withMedia(
+    run(api.journal.related, { slug, limit }, "journal.related").then((rows) =>
+      rows.map(withDemoSummary)
+    )
+  )
 );
 
 export const getAuthor = cache((slug: string) =>
-  withMedia(run(api.journal.authorBySlug, { slug }, "journal.authorBySlug"))
+  withMedia(
+    run(api.journal.authorBySlug, { slug }, "journal.authorBySlug").then(
+      (result) =>
+        result && {
+          ...result,
+          author: withDemoProfile(result.author),
+          articles: result.articles.map(withDemoSummary),
+        }
+    )
+  )
 );
 
 export const getAuthors = cache(() =>
-  run(api.journal.authors, {}, "journal.authors")
+  run(api.journal.authors, {}, "journal.authors").then((authors) =>
+    authors.map(withDemoProfile)
+  )
 );
 
 export const getDocuments = cache(() =>
   run(api.journal.documents, {}, "journal.documents")
 );
 
-export const searchArticles = (
+export async function searchArticles(
   term: string,
   categorySlug: string | undefined,
   limit: number,
   locale: LocaleChoice = "fr"
-) =>
-  withMedia(
-    run(
-      api.journal.search,
-      {
-        term,
-        categorySlug,
-        limit,
-        ...(locale === "en" ? { locale } : {}),
-      },
-      "journal.search"
-    )
+) {
+  const args = { term, categorySlug, limit };
+  const search = async () => {
+    if (locale === "fr") return run(api.journal.search, args, "journal.search");
+    try {
+      return await run(
+        api.journal.search,
+        { ...args, locale },
+        "journal.search"
+      );
+    } catch (error) {
+      // The web edition can be deployed before the optional Convex index.
+      if (
+        !(error instanceof ContentUnavailableError) ||
+        !/(extra field|unexpected property)[^\n]*locale/i.test(
+          String(error.cause)
+        )
+      )
+        throw error;
+      return run(api.journal.search, args, "journal.search");
+    }
+  };
+
+  return withMedia(
+    (async () => {
+      const matches = await search();
+      if (locale === "fr" || term.trim().length < 2)
+        return matches.map(withDemoSummary);
+      const found = new Map(
+        matches.map((article) => [article.slug, withDemoSummary(article)])
+      );
+      const missing = demoEnglishSearch(term)
+        .filter((slug) => !found.has(slug))
+        .slice(0, limit);
+      const bundled = await Promise.all(
+        missing.map((slug) =>
+          run(api.journal.article, { slug }, "journal.article")
+        )
+      );
+      for (const article of bundled) {
+        if (
+          article &&
+          (!categorySlug || article.categorySlug === categorySlug) &&
+          demoArticleEnglish(article)
+        )
+          found.set(article.slug, withDemoSummary(article));
+      }
+      return [...found.values()].slice(0, limit);
+    })()
   );
+}
 
 /* ------------------------------------------------------------------ écriture */
 

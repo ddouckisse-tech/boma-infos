@@ -444,6 +444,7 @@ export async function ArticlePage({
               <ShareBar
                 url={url}
                 title={article.title}
+                locale={locale}
                 className="mb-8 border-b border-border pb-3"
               />
 
@@ -504,6 +505,7 @@ export async function ArticlePage({
                 <ShareBar
                   url={url}
                   title={article.title}
+                  locale={locale}
                   className="mt-8 border-t border-border pt-3"
                 />
               )}

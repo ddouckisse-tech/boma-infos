@@ -7,7 +7,7 @@ import {
   LinkedInIcon,
   WhatsAppIcon,
 } from "@/components/custom/brand-icons";
-import { usePreferences } from "@/components/providers/preferences-provider";
+import type { LocaleChoice } from "@/lib/preferences";
 import { localize } from "@/lib/i18n";
 import { cx } from "@/lib/cx";
 
@@ -30,13 +30,14 @@ const subscribeNothing = () => () => {};
 export function ShareBar({
   url,
   title,
+  locale,
   className,
 }: {
   url: string;
   title: string;
+  locale: LocaleChoice;
   className?: string;
 }) {
-  const { locale } = usePreferences();
   const [copied, setCopied] = useState(false);
   // Lu par `useSyncExternalStore` : le serveur rend `false`, le client la
   // vraie valeur, sans effet ni rendu en cascade — et sans divergence
