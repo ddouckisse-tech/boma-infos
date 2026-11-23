@@ -182,6 +182,7 @@ export const publishedSlugPage = query({
         publishedAt: v.number(),
         updatedAt: v.number(),
         categorySlug: v.string(),
+        subCategorySlug: v.optional(v.string()),
       })
     ),
     continueCursor: v.string(),
@@ -195,11 +196,12 @@ export const publishedSlugPage = query({
       .paginate({ cursor, numItems: cap(numItems, 200) });
     return {
       page: result.page.map(
-        ({ slug, publishedAt, updatedAt, categorySlug }) => ({
+        ({ slug, publishedAt, updatedAt, categorySlug, subCategorySlug }) => ({
           slug,
           publishedAt,
           updatedAt,
           categorySlug,
+          subCategorySlug,
         })
       ),
       continueCursor: result.continueCursor,
