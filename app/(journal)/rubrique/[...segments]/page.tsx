@@ -58,6 +58,58 @@ export const dynamicParams = true;
 
 const OLDEST = "anciens";
 
+const sectionSearch: Partial<
+  Record<string, { title: string; description: string }>
+> = {
+  politique: {
+    title: "Actualités politiques au Gabon",
+    description:
+      "Suivez les décisions du gouvernement, la vie des institutions, les débats publics et la diplomatie du Gabon avec BOMA Infos.",
+  },
+  economie: {
+    title: "Actualités économiques du Gabon",
+    description:
+      "Suivez l’économie gabonaise avec BOMA Infos. Entreprises, emploi, investissements, pétrole, mines et finances publiques.",
+  },
+  societe: {
+    title: "Actualités de société au Gabon",
+    description:
+      "BOMA Infos couvre l’éducation, la santé, l’environnement et la vie quotidienne à Libreville et dans les provinces.",
+  },
+  tourisme: {
+    title: "Tourisme au Gabon",
+    description:
+      "Retrouvez les actualités et reportages de BOMA Infos sur les destinations du Gabon, ses parcs nationaux, son patrimoine naturel et l’écotourisme.",
+  },
+  culture: {
+    title: "Actualités culturelles du Gabon",
+    description:
+      "Retrouvez les sorties, la musique, les arts, les livres et le patrimoine du Gabon dans la rubrique culture de BOMA Infos.",
+  },
+  sport: {
+    title: "Actualités sportives du Gabon",
+    description:
+      "Suivez les Panthères du Gabon, le football et les compétitions sportives nationales et internationales avec BOMA Infos.",
+  },
+};
+
+function sectionCopy(section: EditorialSection, child?: SubSection) {
+  const search = sectionSearch[section.slug];
+  if (!child) {
+    return search ?? { title: section.label, description: section.description };
+  }
+
+  const title =
+    search && !/gabon/i.test(child.label)
+      ? `${child.label} au Gabon`
+      : child.label;
+  return {
+    title,
+    description:
+      child.description || search?.description || section.description,
+  };
+}
+
 type Resolved = {
   section: EditorialSection;
   child?: SubSection;
@@ -135,35 +187,36 @@ export async function generateMetadata({
   if (!resolved) return { title: "Rubrique introuvable" };
 
   const { section, child, page, order } = resolved;
-  const { items } = await getSectionPage(
+  const { items, page: actualPage } = await getSectionPage(
     section.slug,
     child?.slug,
     page,
     ARTICLES_PER_PAGE,
     order
   );
-  const label = child ? `${child.label} — ${section.label}` : section.label;
-  const suffix = page > 1 ? ` (page ${page})` : "";
+  const copy = sectionCopy(section, child);
+  const title =
+    actualPage > 1 ? `${copy.title} (page ${actualPage})` : copy.title;
+  const canonical = buildHref(section.slug, child?.slug, "recent", actualPage);
+  const indexable =
+    order === "recent" &&
+    page === actualPage &&
+    items.some(({ slug }) => !isDemoArticle(slug));
 
   return {
-    title: `${label}${suffix}`,
-    description: child?.description || section.description,
+    title,
+    description: copy.description,
     alternates: {
       // L'ordre inverse est une commodité de lecture, pas une page distincte :
       // sa valeur canonique est celle de l'ordre par défaut.
-      canonical: buildHref(section.slug, child?.slug, "recent", page),
+      canonical,
     },
-    robots:
-      order === "ancien" ||
-      items.length === 0 ||
-      items.some(({ slug }) => isDemoArticle(slug))
-        ? { index: false, follow: true }
-        : EDITORIAL_ROBOTS,
+    robots: indexable ? EDITORIAL_ROBOTS : { index: false, follow: true },
     openGraph: {
       type: "website",
-      title: `${label}${suffix}`,
-      description: child?.description || section.description,
-      url: buildHref(section.slug, child?.slug, "recent", page),
+      title,
+      description: copy.description,
+      url: canonical,
     },
   };
 }
@@ -177,6 +230,7 @@ export default async function SectionPage({
   if (!resolved) notFound();
 
   const { section, child, page, order } = resolved;
+  const copy = sectionCopy(section, child);
   const [list, counts] = await Promise.all([
     getSectionPage(section.slug, child?.slug, page, ARTICLES_PER_PAGE, order),
     getSectionCounts(),
@@ -218,7 +272,7 @@ export default async function SectionPage({
         }
         title={
           <LocalizedText
-            fr={child ? child.label : section.label}
+            fr={copy.title}
             en={categoryLabel(
               "en",
               child ? child.slug : section.slug,
@@ -228,7 +282,7 @@ export default async function SectionPage({
         }
         description={
           <LocalizedText
-            fr={child?.description || section.description}
+            fr={copy.description}
             en={categoryDescription(
               "en",
               child ? child.slug : section.slug,
@@ -372,15 +426,16 @@ export default async function SectionPage({
 
       <Section spacing="compact">
         {list.items.some(({ slug }) => isDemoArticle(slug)) && (
-          <p
+          <div
             role="note"
+            data-nosnippet=""
             className="mb-5 rounded-md border border-border bg-surface-muted p-3 type-small text-muted-foreground"
           >
             <LocalizedText
               fr={DEMO_CONTENT_NOTICE.articleFr}
               en={DEMO_CONTENT_NOTICE.articleEn}
             />
-          </p>
+          </div>
         )}
         {list.items.length === 0 ? (
           <>
@@ -442,15 +497,26 @@ export default async function SectionPage({
               </span>
             </p>
             <ul lang="fr" className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {list.items.map((article) => (
-                <li key={article.slug} className="min-w-0">
+              {list.items.map((article) => {
+                const card = (
                   <ArticleCard
                     article={article}
                     headingLevel={2}
                     showCategory={!child}
                   />
-                </li>
-              ))}
+                );
+                return (
+                  <li key={article.slug} className="min-w-0">
+                    {isDemoArticle(article.slug) ? (
+                      <div data-nosnippet="" className="h-full">
+                        {card}
+                      </div>
+                    ) : (
+                      card
+                    )}
+                  </li>
+                );
+              })}
             </ul>
             <Pagination
               page={list.page}
