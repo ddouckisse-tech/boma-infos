@@ -72,7 +72,7 @@ export const GOLD_RAMP: Swatch[] = [
   { token: "gold-950", value: "#332400", label: "gold-950" },
 ];
 
-/** Les deux autres couleurs du filet tricolore, avec leur cran textuel. */
+/** Les couleurs du logo et leurs déclinaisons textuelles. */
 export const FLAG_RAMP: Swatch[] = [
   {
     token: "green-400",
@@ -129,19 +129,19 @@ export const BRAND_SWATCHES: Swatch[] = [
     token: "flag-green",
     value: "#38AA75",
     label: "Vert du filet",
-    note: "filet tricolore et pastille du logo",
+    note: "pastille du logo",
   },
   {
     token: "flag-yellow",
     value: "#FCC546",
     label: "Jaune du filet",
-    note: "filet tricolore et pastille du logo",
+    note: "pastille du logo",
   },
   {
     token: "flag-blue",
     value: "#1765E6",
     label: "Bleu du filet",
-    note: "filet tricolore, pastille du logo, anneau de focus",
+    note: "pastille du logo et anneau de focus",
   },
   { token: "white", value: "#FFFFFF", label: "Blanc", note: "fond de lecture" },
   {

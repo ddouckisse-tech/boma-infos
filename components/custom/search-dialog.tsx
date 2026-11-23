@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Search } from "lucide-react";
 import { CloseButton } from "@/components/custom/close-button";
 import { Modal } from "@/components/custom/modal";
+import { articlePath } from "@/lib/article-locale";
 import { usePreferences } from "@/components/providers/preferences-provider";
 import { cx } from "@/lib/cx";
 import { categoryLabel, localize } from "@/lib/i18n";
@@ -23,6 +24,7 @@ const FIELD_INPUT =
 type Hit = {
   slug: string;
   title: string;
+  language: "en" | "fr";
   categorySlug: string;
   categoryName: string;
   readingMinutes: number;
@@ -92,7 +94,7 @@ export function SearchDialog({ className }: { className?: string }) {
       abort.current = controller;
       try {
         const response = await fetch(
-          `/api/recherche?q=${encodeURIComponent(value)}`,
+          `/api/recherche?q=${encodeURIComponent(value)}&lang=${locale}`,
           { signal: controller.signal }
         );
         if (!response.ok) throw new Error(String(response.status));
@@ -106,11 +108,14 @@ export function SearchDialog({ className }: { className?: string }) {
       }
     }, 250);
 
-    return () => window.clearTimeout(timer);
-  }, [term]);
+    return () => {
+      window.clearTimeout(timer);
+      abort.current?.abort();
+    };
+  }, [term, locale]);
 
   const statusId = `${inputId}-etat`;
-  const resultsHref = `/recherche${term.trim() ? `?q=${encodeURIComponent(term.trim())}` : ""}`;
+  const resultsHref = `/recherche?lang=${locale}&q=${encodeURIComponent(term.trim())}`;
 
   return (
     <>
@@ -122,10 +127,8 @@ export function SearchDialog({ className }: { className?: string }) {
           event.preventDefault();
           setOpen(true);
         }}
-        // Le `className` de l'appelant porte l'affichage (l'en-tête passe
-        // `hidden sm:inline-flex`) ; sans lui, `inline-flex`.
         className={cx(
-          "items-center gap-2 rounded-md border border-border px-3 text-muted-foreground transition-colors touch-target hover:border-border-strong hover:text-foreground",
+          "items-center justify-center gap-2 rounded-md border border-border px-2 text-foreground transition-colors touch-target hover:border-border-strong hover:text-foreground min-[380px]:px-3",
           className ?? "inline-flex"
         )}
       >
@@ -133,9 +136,6 @@ export function SearchDialog({ className }: { className?: string }) {
         <span className="hidden type-small lg:inline">
           {localize(locale, { fr: "Rechercher", en: "Search" })}
         </span>
-        <kbd className="ml-1 hidden rounded-xs border border-border px-1.5 py-0.5 text-[0.75rem] text-muted-foreground lg:inline">
-          ⌘ K
-        </kbd>
         <span className="sr-only lg:hidden">
           {localize(locale, {
             fr: "Rechercher sur le site",
@@ -239,12 +239,13 @@ export function SearchDialog({ className }: { className?: string }) {
               {hits.map((hit) => (
                 <li key={hit.slug}>
                   <Link
-                    href={`/article/${hit.slug}`}
+                    href={articlePath(hit.slug, locale)}
+                    prefetch={false}
                     onClick={() => setOpen(false)}
                     className="flex min-h-11 flex-col justify-center rounded-md px-2 py-2 hover:bg-surface-muted"
                   >
                     <span
-                      lang="fr"
+                      lang={hit.language}
                       className="type-small font-semibold text-foreground"
                     >
                       {hit.title}

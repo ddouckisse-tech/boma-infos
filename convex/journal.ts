@@ -4,6 +4,7 @@ import type { Doc } from "./_generated/dataModel";
 import { readCount, readCounts } from "./model/articleCounts";
 import { displayedViews } from "./model/audience";
 import { blockValidator, seoValidator } from "./model/content";
+import { englishArticleValidator } from "./model/translation";
 
 /**
  * Public read API of the journal.
@@ -36,6 +37,13 @@ const summaryFields = {
   slug: v.string(),
   title: v.string(),
   dek: v.string(),
+  englishSummary: v.optional(
+    v.object({
+      title: v.string(),
+      dek: v.string(),
+      readingMinutes: v.number(),
+    })
+  ),
   categorySlug: v.string(),
   categoryName: v.string(),
   categoryAccent: v.string(),
@@ -61,6 +69,7 @@ const detailValidator = v.object({
   ...summaryFields,
   /** Only the article page shows it: a list would have to read the audience of every card. */
   views: v.number(),
+  english: v.optional(englishArticleValidator),
   body: v.array(blockValidator),
   keyPoints: v.array(v.string()),
   galleryMediaKeys: v.array(v.string()),
@@ -80,11 +89,14 @@ const categoryValidator = v.object({
   description: v.string(),
 });
 
+const englishProfileValidator = v.object({ role: v.string(), bio: v.string() });
+
 const authorValidator = v.object({
   slug: v.string(),
   name: v.string(),
   role: v.string(),
   bio: v.string(),
+  englishProfile: v.optional(englishProfileValidator),
   portraitMediaKey: v.optional(v.string()),
   links: v.array(v.object({ label: v.string(), url: v.string() })),
 });
@@ -125,6 +137,13 @@ function toSummary(article: Doc<"articles">, lookup: Lookup) {
     slug: article.slug,
     title: article.title,
     dek: article.dek,
+    ...(article.english && {
+      englishSummary: {
+        title: article.english.title,
+        dek: article.english.dek,
+        readingMinutes: article.english.readingMinutes,
+      },
+    }),
     categorySlug: article.categorySlug,
     categoryName: category?.name ?? article.categorySlug,
     categoryAccent: category?.accent ?? "navy-900",
@@ -138,6 +157,17 @@ function toSummary(article: Doc<"articles">, lookup: Lookup) {
     origin: article.origin,
     feature: article.feature,
   };
+}
+
+function englishProfile(author: Doc<"authors">) {
+  const entry = author.englishProfile;
+  if (
+    !entry ||
+    entry.sourceRole !== author.role ||
+    entry.sourceBio !== author.bio
+  )
+    return {};
+  return { englishProfile: { role: entry.role, bio: entry.bio } };
 }
 
 /* -------------------------------------------------------------------------
@@ -181,6 +211,7 @@ export const publishedSlugPage = query({
         slug: v.string(),
         publishedAt: v.number(),
         updatedAt: v.number(),
+        hasEnglish: v.optional(v.literal(true)),
         categorySlug: v.string(),
         subCategorySlug: v.optional(v.string()),
       })
@@ -196,10 +227,18 @@ export const publishedSlugPage = query({
       .paginate({ cursor, numItems: cap(numItems, 200) });
     return {
       page: result.page.map(
-        ({ slug, publishedAt, updatedAt, categorySlug, subCategorySlug }) => ({
+        ({
           slug,
           publishedAt,
           updatedAt,
+          categorySlug,
+          subCategorySlug,
+          english,
+        }) => ({
+          slug,
+          publishedAt,
+          updatedAt,
+          ...(english ? { hasEnglish: true as const } : {}),
           categorySlug,
           subCategorySlug,
         })
@@ -433,6 +472,7 @@ export const article = query({
     return {
       ...toSummary(row, lookup),
       views: displayedViews(row, stats),
+      ...(row.english && { english: row.english }),
       body: row.body,
       keyPoints: row.keyPoints,
       galleryMediaKeys: row.galleryMediaKeys,
@@ -600,6 +640,7 @@ export const authorBySlug = query({
         name: author.name,
         role: author.role,
         bio: author.bio,
+        ...englishProfile(author),
         portraitMediaKey: author.portraitMediaKey,
         links: author.links,
       },
@@ -622,6 +663,7 @@ export const authors = query({
       name: v.string(),
       role: v.string(),
       bio: v.string(),
+      englishProfile: v.optional(englishProfileValidator),
       articleCount: v.number(),
     })
   ),
@@ -635,6 +677,7 @@ export const authors = query({
       name: row.name,
       role: row.role,
       bio: row.bio,
+      ...englishProfile(row),
       articleCount: counts.get(row.slug) ?? 0,
     }));
   },
@@ -704,21 +747,40 @@ export const search = query({
     term: v.string(),
     categorySlug: v.optional(v.string()),
     limit: v.number(),
+    locale: v.optional(v.literal("en")),
   },
   returns: v.array(summaryValidator),
-  handler: async (ctx, { term, categorySlug, limit }) => {
+  handler: async (ctx, { term, categorySlug, limit, locale }) => {
     const trimmed = term.trim();
     if (trimmed.length < 2) return [];
 
-    const lookup = await loadLookup(ctx);
-    const rows = await ctx.db
-      .query("articles")
-      .withSearchIndex("search_articles", (q) => {
-        const base = q.search("searchText", trimmed).eq("status", PUBLISHED);
-        return categorySlug ? base.eq("categorySlug", categorySlug) : base;
-      })
-      .take(cap(limit, 50));
+    const size = cap(limit, 50);
+    const find = (language: "fr" | "en") =>
+      ctx.db
+        .query("articles")
+        .withSearchIndex(
+          language === "en" ? "search_english_articles" : "search_articles",
+          (q) => {
+            const base = q
+              .search(
+                language === "en" ? "englishSearchText" : "searchText",
+                trimmed
+              )
+              .eq("status", PUBLISHED);
+            return categorySlug ? base.eq("categorySlug", categorySlug) : base;
+          }
+        )
+        .take(size);
 
-    return rows.map((row) => toSummary(row, lookup));
+    const [lookup, source, translated] = await Promise.all([
+      loadLookup(ctx),
+      find("fr"),
+      locale === "en" ? find("en") : [],
+    ]);
+    const rows = new Map(translated.map((row) => [row._id, row]));
+    for (const row of source) rows.set(row._id, row);
+    return [...rows.values()]
+      .slice(0, size)
+      .map((row) => toSummary(row, lookup));
   },
 });

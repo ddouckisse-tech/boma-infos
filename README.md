@@ -283,12 +283,28 @@ tests/                         bun test tests/ — gestionnaires Convex, base si
 next.config.ts                 en-têtes, cache des médias, redirections 301
 ```
 
+### Édition anglaise
+
+La tâche planifiée Convex `translate published articles` traite jusqu’à quatre
+articles publiés par minute, des plus récents aux plus anciens. Elle traduit
+aussi les archives déjà présentes. Indiquez `ARTICLE_TRANSLATION_API_KEY` dans
+l’environnement **Convex**, ou utilisez la clé `ANTHROPIC_API_KEY` déjà
+configurée. Le modèle par défaut est `claude-haiku-4-5`. La variable
+`ARTICLE_TRANSLATION_MODEL` permet de sélectionner un autre modèle Anthropic.
+
+Les traductions sont stockées avec l’article et indexées pour la recherche en
+anglais. Une modification éditoriale remet l’article en file. L’édition anglaise
+indique quand une traduction est en préparation et donne accès à l’original.
+Les archives et les nouvelles parutions se traitent sans appel au fournisseur
+durant la navigation.
+
 ### Conventions
 
 - **Code en anglais, interface en français.** Toute chaîne visible existe en
   français. Une bascule FR/EN (`components/custom/locale-toggle.tsx`,
   `lib/i18n.ts`) propose une version anglaise de l'interface du journal public
-  et de l'espace entreprise ; le contenu des articles n'est pas traduit.
+  et de l'espace entreprise. Les articles disposent d’une édition anglaise
+  sous `/en/article/<slug>` lorsque la traduction est disponible.
 - TypeScript strict, jamais de `any` non justifié par un commentaire.
 - `components/ui/` (shadcn) n'est jamais modifié : toute personnalisation
   passe par composition dans `components/custom/`.

@@ -4,12 +4,7 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 import { usePreferences } from "@/components/providers/preferences-provider";
-import {
-  accentBorderClass,
-  sectionHref,
-  subSectionHref,
-  type Section,
-} from "@/lib/navigation";
+import { sectionHref, subSectionHref, type Section } from "@/lib/navigation";
 import { categoryLabel, localize } from "@/lib/i18n";
 import { cx } from "@/lib/cx";
 
@@ -161,10 +156,7 @@ export function MegaMenu({
               <div
                 id={panelId}
                 hidden={!isOpen}
-                className={cx(
-                  "absolute top-full left-0 z-50 w-[min(20rem,80vw)] rounded-md border-t-2 bg-popover p-2 shadow-floating",
-                  accentBorderClass[section.accent]
-                )}
+                className="absolute top-full left-0 z-50 w-[min(20rem,80vw)] border border-border bg-popover p-2 shadow-floating"
               >
                 <ul>
                   <li>

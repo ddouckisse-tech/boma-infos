@@ -12,10 +12,7 @@ import { localize } from "@/lib/i18n";
 /**
  * The classes shadcn's `Label`, `Input` and the house `ActionButton` produced
  * here once merged with this form's overrides — computed with the `cn`
- * engine and frozen on native elements. The form sits on the home page and
- * in the footer of every page: it no longer pulls Radix, the shadcn button,
- * class-variance-authority or the merge engine into what readers download
- * (§5.4). Visually identical.
+ * engine and frozen on native elements to limit the frontend bundle (§5.4).
  */
 const FIELD_LABEL =
   "flex items-center gap-2 text-sm leading-none select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50 type-small font-medium";
@@ -40,7 +37,7 @@ function newsletterError(message: string, locale: "fr" | "en") {
 }
 
 /**
- * Newsletter sign-up, with double opt-in (CDC §4.2).
+ * Newsletter sign-up with on-screen confirmation.
  *
  * The form posts to a server action, so it works with JavaScript disabled and
  * ships no validation library to the browser. No mail provider exists in
@@ -49,12 +46,10 @@ function newsletterError(message: string, locale: "fr" | "en") {
  */
 export function NewsletterForm({
   className,
-  source = "pied-de-page",
-  variant = "inline",
+  source,
 }: {
   className?: string;
-  source?: string;
-  variant?: "inline" | "block";
+  source: string;
 }) {
   const id = useId();
   const { locale } = usePreferences();
@@ -125,8 +120,8 @@ export function NewsletterForm({
     <form action={action} className={cx("grid gap-2", className)}>
       <label htmlFor={id} data-slot="label" className={FIELD_LABEL}>
         {localize(locale, {
-          fr: "Recevoir la lettre hebdomadaire",
-          en: "Receive the weekly newsletter",
+          fr: "Adresse électronique",
+          en: "Email address",
         })}
       </label>
 
@@ -155,12 +150,7 @@ export function NewsletterForm({
       {/* `flex-1` sur le champ ne vaut qu'en ligne : dans un conteneur en
           colonne, il s'applique à la hauteur et écrase les 44 px de la
           cible tactile (§3.5). D'où la grille en dessous de `sm`. */}
-      <div
-        className={cx(
-          "gap-2",
-          variant === "inline" ? "flex flex-wrap" : "grid sm:flex"
-        )}
-      >
+      <div className="grid gap-2 sm:flex">
         <input
           data-slot="input"
           id={id}
@@ -175,7 +165,7 @@ export function NewsletterForm({
             en: "you@example.com",
           })}
           aria-invalid={hasError || undefined}
-          aria-describedby={hasError ? errorId : `${id}-aide`}
+          aria-describedby={hasError ? `${errorId} ${id}-aide` : `${id}-aide`}
           className={FIELD_INPUT}
         />
         <button
@@ -201,9 +191,17 @@ export function NewsletterForm({
 
       <p id={`${id}-aide`} className="type-small text-muted-foreground">
         {localize(locale, {
-          fr: "Un courriel par semaine. Confirmation demandée, désinscription en un clic.",
-          en: "One email a week. Confirmation required, unsubscribe in one click.",
-        })}
+          fr: "Votre adresse sert à gérer votre inscription à la lettre. La confirmation se fait à l’écran.",
+          en: "Your email address is used to manage your newsletter subscription. Confirmation takes place on screen.",
+        })}{" "}
+        <Link
+          href="/confidentialite#lettre-hebdomadaire"
+          prefetch={false}
+          className="underline underline-offset-4 hover:text-foreground"
+        >
+          {localize(locale, { fr: "Données et droits", en: "Data and rights" })}
+        </Link>
+        .
       </p>
     </form>
   );

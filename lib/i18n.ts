@@ -39,6 +39,14 @@ const CATEGORY_EN: Readonly<Record<string, string>> = {
   territoires: "Regions",
   economie: "Economy",
   entreprises: "Business",
+  "business-lifestyle": "Business & lifestyle",
+  "succes-story": "Success stories",
+  "dossier-special": "Special reports",
+  "intelligence-economique": "Business intelligence",
+  "non-classe": "General news",
+  "big-deal": "Major deals",
+  leader: "Leadership",
+  "femme-dirigeante": "Women in leadership",
   "mines-energie": "Mining & energy",
   "finances-publiques": "Public finances",
   numerique: "Digital",
@@ -81,6 +89,16 @@ const CATEGORY_DESCRIPTION_EN: Readonly<Record<string, string>> = {
     "Provinces, departments and communes: public decision-making seen from the ground.",
   economie:
     "Companies, industries and public finances: what keeps the Gabonese economy running.",
+  "business-lifestyle": "Companies, entrepreneurs and business life in Gabon.",
+  "succes-story":
+    "Profiles of people and businesses building something new in Gabon.",
+  "dossier-special": "In-depth coverage of issues shaping Gabon.",
+  "intelligence-economique":
+    "Analysis, data and developments relevant to Gabonese businesses.",
+  "non-classe": "The latest news and developments from Gabon.",
+  "big-deal": "Major transactions and investment deals.",
+  leader: "Profiles and interviews with business leaders.",
+  "femme-dirigeante": "Profiles and interviews with women in leadership.",
   entreprises:
     "Starting, financing and growing a company in Gabon: operations, markets, procedures.",
   "mines-energie":
@@ -135,6 +153,8 @@ const NAV_EN: Readonly<Record<string, string>> = {
   "/confidentialite": "Privacy policy",
   "/newsletter": "Newsletter",
   "/design-system": "Design system",
+  "/publicite": "Advertising",
+  "/installer": "Install the app",
 };
 
 export const categoryLabel = (

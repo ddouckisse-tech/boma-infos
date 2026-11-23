@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { cookies } from "next/headers";
+import { isLocaleChoice, LOCALE_COOKIE } from "@/lib/preferences";
 import { ArticleCard } from "@/components/custom/article-card";
 import { EmptyState } from "@/components/custom/empty-state";
 import { LocalizedText } from "@/components/custom/localized-text";
@@ -28,18 +30,22 @@ export default async function SearchPage({
   searchParams,
 }: PageProps<"/recherche">) {
   const params = await searchParams;
+  const locale = isLocaleChoice(params.lang)
+    ? params.lang
+    : (await cookies()).get(LOCALE_COOKIE)?.value === "en"
+      ? "en"
+      : "fr";
   const raw = params.q;
   const term = (Array.isArray(raw) ? raw[0] : (raw ?? "")).trim().slice(0, 120);
 
   const results =
-    term.length >= 2 ? await searchArticles(term, undefined, 30) : [];
+    term.length >= 2 ? await searchArticles(term, undefined, 30, locale) : [];
   const suggestions =
     term.length >= 2 && results.length === 0 ? await getLatest(3) : [];
 
   return (
     <>
       <PageHeader
-        eyebrow={<LocalizedText fr="Recherche" en="Search" />}
         title={
           term ? (
             <>
@@ -80,55 +86,54 @@ export default async function SearchPage({
         <SearchForm defaultValue={term} />
       </Section>
 
-      <Section spacing="compact">
-        {term.length < 2 ? null : results.length === 0 ? (
-          <>
-            <div className="lc-fr" lang="fr">
-              <EmptyState
-                title="Aucun article ne correspond"
-                description="Essayez un terme plus court, ou parcourez les rubriques depuis le menu. Rien d'autre ne vous est présenté à la place de ce que vous cherchiez."
-                action={
-                  <Link
-                    href="/"
-                    className="inline-flex items-center rounded-md bg-primary px-4 type-small font-semibold text-primary-foreground transition-colors touch-target hover:bg-primary/90"
-                  >
-                    Revenir à l&apos;accueil
-                  </Link>
-                }
-              />
-            </div>
-            <div className="lc-en" lang="en">
-              <EmptyState
-                title="No matching article"
-                description="Try a shorter term or browse the sections from the menu. We do not substitute unrelated content for what you searched for."
-                action={
-                  <Link
-                    href="/"
-                    className="inline-flex items-center rounded-md bg-primary px-4 type-small font-semibold text-primary-foreground transition-colors touch-target hover:bg-primary/90"
-                  >
-                    Back to home
-                  </Link>
-                }
-              />
-            </div>
-          </>
-        ) : (
-          <ul
-            lang="fr"
-            className="divide-y divide-border border-y border-border"
-          >
-            {results.map((article) => (
-              <li key={article.slug}>
-                <ArticleCard
-                  article={article}
-                  variant="list"
-                  headingLevel={2}
+      {term.length >= 2 && (
+        <Section width="reading" spacing="compact">
+          {results.length === 0 ? (
+            <>
+              <div className="lc-fr" lang="fr">
+                <EmptyState
+                  title="Aucun article ne correspond"
+                  description="Essayez un mot-clé plus court ou parcourez les rubriques depuis le menu."
+                  action={
+                    <Link
+                      href="/"
+                      className="inline-flex items-center rounded-md bg-primary px-4 type-small font-semibold text-primary-foreground transition-colors touch-target hover:bg-primary/90"
+                    >
+                      Revenir à l&apos;accueil
+                    </Link>
+                  }
                 />
-              </li>
-            ))}
-          </ul>
-        )}
-      </Section>
+              </div>
+              <div className="lc-en" lang="en">
+                <EmptyState
+                  title="No matching article"
+                  description="Try a shorter term or browse the sections from the menu."
+                  action={
+                    <Link
+                      href="/"
+                      className="inline-flex items-center rounded-md bg-primary px-4 type-small font-semibold text-primary-foreground transition-colors touch-target hover:bg-primary/90"
+                    >
+                      Back to home
+                    </Link>
+                  }
+                />
+              </div>
+            </>
+          ) : (
+            <ul className="divide-y divide-border border-y border-border">
+              {results.map((article) => (
+                <li key={article.slug}>
+                  <ArticleCard
+                    article={article}
+                    variant="list"
+                    headingLevel={2}
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
+        </Section>
+      )}
 
       {suggestions.length > 0 && (
         <Section
@@ -136,14 +141,8 @@ export default async function SearchPage({
           title={
             <LocalizedText fr="Les derniers articles" en="Latest articles" />
           }
-          description={
-            <LocalizedText
-              fr="À défaut de résultat, voici ce qui vient de paraître."
-              en="While there are no matches, here are the latest publications."
-            />
-          }
         >
-          <ul lang="fr" className="grid gap-6 sm:grid-cols-3">
+          <ul className="news-card-grid">
             {suggestions.map((article) => (
               <li key={article.slug} className="min-w-0">
                 <ArticleCard article={article} />

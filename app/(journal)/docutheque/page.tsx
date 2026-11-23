@@ -2,10 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Download, FileText } from "lucide-react";
 import { EmptyState } from "@/components/custom/empty-state";
-import { LocalizedText } from "@/components/custom/localized-text";
+import {
+  EditorialText,
+  LocalizedText,
+} from "@/components/custom/localized-text";
 import { PageHeader } from "@/components/custom/page-header";
 import { Section } from "@/components/custom/section";
 import { BreadcrumbStructuredData } from "@/components/custom/structured-data";
+import { ENGLISH_DOCUMENTS } from "@/lib/content/document-labels";
 import { getDocuments } from "@/lib/content/server";
 import { formatBytes, formatDate, isoDate } from "@/lib/format";
 import { SITE } from "@/lib/site";
@@ -117,10 +121,7 @@ export default async function DocuthequePage() {
           <ul className="grid gap-4 lg:grid-cols-2">
             {documents.map((document) => (
               <li key={document.slug}>
-                <article
-                  lang="fr"
-                  className="flex h-full flex-col rounded-md border border-border bg-card p-5"
-                >
+                <article className="flex h-full flex-col rounded-md border border-border bg-card p-5">
                   <div className="flex items-start gap-4">
                     <span
                       aria-hidden="true"
@@ -130,16 +131,25 @@ export default async function DocuthequePage() {
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="type-small font-semibold tracking-wide text-accent uppercase">
-                        {document.kind}
+                        <EditorialText
+                          fr={document.kind}
+                          en={ENGLISH_DOCUMENTS[document.slug]?.kind}
+                        />
                       </p>
                       <h2 className="mt-1 font-display type-h3 text-balance">
-                        {document.title}
+                        <EditorialText
+                          fr={document.title}
+                          en={ENGLISH_DOCUMENTS[document.slug]?.title}
+                        />
                       </h2>
                     </div>
                   </div>
 
                   <p className="mt-3 flex-1 type-small text-muted-foreground">
-                    {document.description}
+                    <EditorialText
+                      fr={document.description}
+                      en={ENGLISH_DOCUMENTS[document.slug]?.description}
+                    />
                   </p>
 
                   <dl className="mt-4 flex flex-wrap gap-x-6 gap-y-1 type-small text-muted-foreground">
@@ -169,7 +179,10 @@ export default async function DocuthequePage() {
                         <LocalizedText fr="Poids :" en="Size:" />
                       </dt>
                       <dd data-numeric className="font-medium text-foreground">
-                        {formatBytes(document.fileBytes)}
+                        <LocalizedText
+                          fr={formatBytes(document.fileBytes)}
+                          en={formatBytes(document.fileBytes, "en")}
+                        />
                       </dd>
                     </div>
                     <div className="flex gap-1">
@@ -179,7 +192,6 @@ export default async function DocuthequePage() {
                       <dd>
                         <time
                           className="lc-fr"
-                          lang="fr"
                           dateTime={isoDate(document.publishedAt)}
                         >
                           {formatDate(document.publishedAt)}
@@ -201,11 +213,18 @@ export default async function DocuthequePage() {
                     className="mt-5 inline-flex items-center justify-center gap-2 self-start rounded-md bg-primary px-4 type-small font-semibold text-primary-foreground transition-colors touch-target hover:bg-primary/90"
                   >
                     <Download aria-hidden="true" className="size-4" />
-                    <LocalizedText fr="Télécharger" en="Download" />
+                    <LocalizedText fr="Télécharger" en="Download original" />
                     <span className="sr-only">
                       {" "}
-                      {document.title} — {document.fileFormat},{" "}
-                      {formatBytes(document.fileBytes)}
+                      <EditorialText
+                        fr={document.title}
+                        en={ENGLISH_DOCUMENTS[document.slug]?.title}
+                      />{" "}
+                      — {document.fileFormat},{" "}
+                      <LocalizedText
+                        fr={formatBytes(document.fileBytes)}
+                        en={formatBytes(document.fileBytes, "en")}
+                      />
                     </span>
                   </a>
                 </article>

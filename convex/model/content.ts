@@ -156,6 +156,7 @@ export type ArticleSummary = {
   slug: string;
   title: string;
   dek: string;
+  englishSummary?: { title: string; dek: string; readingMinutes: number };
   categorySlug: string;
   categoryName: string;
   categoryAccent: string;
@@ -172,6 +173,7 @@ export type ArticleSummary = {
 
 export type ArticleDetail = ArticleSummary & {
   views: number;
+  english?: import("./translation").EnglishArticle;
   body: Block[];
   keyPoints: string[];
   galleryMediaKeys: string[];

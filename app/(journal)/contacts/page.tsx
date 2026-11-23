@@ -180,6 +180,17 @@ export default function ContactsPage() {
                 )}
               </ul>
 
+              <Link
+                href="/publicite"
+                prefetch={false}
+                className="mt-3 inline-flex min-h-11 items-center type-small text-accent underline-offset-4 hover:underline"
+              >
+                <LocalizedText
+                  fr="Publicité et régie"
+                  en="Advertising enquiries"
+                />
+              </Link>
+
               <div className="mt-6 rounded-md border border-border bg-surface-muted p-4">
                 <h3 className="font-display type-h3">
                   <LocalizedText

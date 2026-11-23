@@ -4,6 +4,7 @@ import {
   getNavigation,
   getPublishedSlugs,
 } from "@/lib/content/server";
+import { articlePath } from "@/lib/article-locale";
 import { isDemoArticle, isDemoAuthor } from "@/lib/content/demo";
 import { buildSections, sectionHref, subSectionHref } from "@/lib/navigation";
 import { absoluteUrl, ARTICLES_PER_PAGE, SEARCH_INDEXABLE } from "@/lib/site";
@@ -120,11 +121,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   for (const item of slugs) {
     entries.push({
-      url: absoluteUrl(`/article/${item.slug}`),
+      url: absoluteUrl(articlePath(item.slug)),
       lastModified: new Date(item.updatedAt),
       changeFrequency: "monthly",
       priority: 0.7,
     });
+    if (item.hasEnglish) {
+      entries.push({
+        url: absoluteUrl(articlePath(item.slug, "en")),
+        lastModified: new Date(item.updatedAt),
+        changeFrequency: "monthly",
+        priority: 0.7,
+      });
+    }
   }
 
   return entries;

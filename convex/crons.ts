@@ -85,4 +85,12 @@ crons.interval(
   {}
 );
 
+// Process published stories independently of reader traffic.
+crons.interval(
+  "translate published articles",
+  { minutes: 1 },
+  internal.translationWorker.run,
+  {}
+);
+
 export default crons;

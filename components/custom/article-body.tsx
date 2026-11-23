@@ -1,3 +1,4 @@
+import { LocalizedText } from "@/components/custom/localized-text";
 import { HeavyMedia } from "@/components/custom/heavy-media";
 import { ResponsiveImage } from "@/components/custom/responsive-image";
 import { RichText } from "@/components/custom/rich-text";
@@ -22,22 +23,19 @@ function PullQuote({
   text: string;
   attribution?: string;
 }) {
-  // L'emphase de la charte — serif grasse italique, en or — se balise comme
+  // L'emphase de la citation se balise comme
   // dans un paragraphe : `*les mots à retenir*`. Sa fonte n'est jamais
   // préchargée : seule une citation qui s'en sert la fait télécharger, et
   // `data-face` le signale au contrôle de budget (CDC §5.4), qui la compte.
   const emphasised = /\*[^*]+\*/.test(text);
   return (
-    // La carte « citation » de la charte : île marine, trame de points,
-    // serif blanche, filet tricolore.
     <figure
       data-face={emphasised ? "emphase" : undefined}
-      className="boma-quote dark my-8 rounded-md border border-border boma-field px-5 py-6 text-foreground sm:px-8 sm:py-8"
+      className="boma-quote my-8 border-s-2 border-border-strong ps-5 text-foreground sm:ps-6"
     >
       <blockquote className="font-display type-h2 leading-snug text-balance">
         <RichText text={text} />
       </blockquote>
-      <span aria-hidden="true" className="mt-5 boma-rule" />
       {attribution && (
         <figcaption className="mt-4 type-small text-muted-foreground">
           — {attribution}
@@ -57,7 +55,7 @@ function StatBlock({
   source?: string;
 }) {
   return (
-    <div className="my-8 rounded-md border border-border bg-surface-muted p-5">
+    <div className="my-8 border-s-2 border-border-strong ps-5 sm:ps-6">
       <p
         data-numeric
         className="font-display type-display leading-none text-foreground"
@@ -67,7 +65,8 @@ function StatBlock({
       <p className="mt-2 type-body text-foreground">{label}</p>
       {source && (
         <p className="mt-1 type-small text-muted-foreground">
-          Source : {source}
+          <LocalizedText fr="Source : " en="Source: " />
+          {source}
         </p>
       )}
     </div>
@@ -84,7 +83,7 @@ function Figure({ media, caption }: { media?: MediaAsset; caption?: string }) {
         media={media}
         sizes={SIZES.inline}
         maxWidth={768}
-        wrapperClassName="aspect-[16/9] rounded-md"
+        wrapperClassName="aspect-video"
       />
       {(legend || media.credit) && (
         <figcaption className="mt-2 type-small text-muted-foreground">
@@ -106,9 +105,11 @@ function Figure({ media, caption }: { media?: MediaAsset; caption?: string }) {
 
 export function ArticleBody({
   blocks,
+  sourceBlocks = blocks,
   mediaFor = getMediaAsset,
 }: {
   blocks: readonly Block[];
+  sourceBlocks?: readonly Block[];
   mediaFor?: (key: string) => MediaAsset | undefined;
 }) {
   return (
@@ -125,7 +126,10 @@ export function ArticleBody({
             );
 
           case "heading": {
-            const id = slugifyHeading(block.text);
+            const source = sourceBlocks[index];
+            const id = slugifyHeading(
+              source?.type === "heading" ? source.text : block.text
+            );
             return block.level === 2 ? (
               <h2 key={key} id={id} className="font-display type-h2">
                 {block.text}

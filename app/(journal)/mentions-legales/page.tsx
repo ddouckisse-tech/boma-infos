@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { AlertTriangle } from "lucide-react";
-import { Container } from "@/components/custom/container";
+import Link from "next/link";
 import { LocalizedText } from "@/components/custom/localized-text";
 import { PageHeader } from "@/components/custom/page-header";
 import { Section } from "@/components/custom/section";
@@ -8,66 +7,30 @@ import { SITE } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Mentions légales",
-  description: `Éditeur, directeur de publication, hébergeur et conditions d'utilisation du site ${SITE.name}.`,
+  description: `Identification de l’éditeur, droit de réponse et textes gabonais applicables à ${SITE.name}.`,
   alternates: { canonical: "/mentions-legales" },
 };
 
-/**
- * Legal notice.
- *
- * The fields only the publisher can supply (publication director, publishing
- * company, RCCM and NIF, HAC receipt, postal address, newsroom phone number,
- * final newsroom email address, hosting provider, ISSN) are listed as
- * explicitly missing rather than invented, because a legal notice filled with
- * plausible-looking fiction would be worse than none. A field that
- * `lib/site.ts` declares `null` is never printed: it appears in this list
- * until the owner provides it.
- */
-const TO_PROVIDE: readonly { fr: string; en: string }[] = [
+const gaboneseTexts = [
   {
-    fr: "Nom du directeur de la publication",
-    en: "Name of the publication director",
-  },
-  SITE.publisher
-    ? {
-        fr: "Raison sociale complète et forme juridique de l'éditeur",
-        en: "Publisher's full legal name and legal form",
-      }
-    : {
-        fr: `Société éditrice de ${SITE.name} : raison sociale complète et forme juridique`,
-        en: `Company that publishes ${SITE.name}: full legal name and legal form`,
-      },
-  {
-    fr: "Numéro d'immatriculation au registre du commerce (RCCM) et NIF",
-    en: "Trade register number (RCCM) and tax identification number",
+    href: "https://journal-officiel.ga/18190-025-2021-/",
+    fr: "Loi n° 025/2021 sur les transactions électroniques, notamment les articles 23 et 24 sur l’identification de l’éditeur et le droit de réponse.",
+    en: "Law No. 025/2021 on electronic transactions, including sections 23 and 24 on publisher identification and the right of reply.",
   },
   {
-    fr: "Numéro de récépissé ou d'agrément auprès de la Haute Autorité de la Communication (HAC)",
-    en: "Receipt or accreditation number from the High Authority for Communication (HAC)",
+    href: "https://www.journal-officiel.ga/22405-0012-pr-2026-/",
+    fr: "Code de la communication (loi n° 019/2016), modifié notamment par l’ordonnance n° 0012/PR/2026, ratifiée par la loi n° 0017/2026.",
+    en: "Communications Code (Law No. 019/2016), as amended, including by Ordinance No. 0012/PR/2026, ratified by Law No. 0017/2026.",
   },
   {
-    fr: "Adresse postale précise du siège de la rédaction",
-    en: "Full postal address of the editorial office",
-  },
-  ...(SITE.phone
-    ? []
-    : [
-        {
-          fr: "Numéro de téléphone de la rédaction",
-          en: "Newsroom phone number",
-        },
-      ]),
-  {
-    fr: `Adresse de courriel définitive de la rédaction (l'adresse affichée, ${SITE.email}, est déduite du nom de domaine et reste à confirmer)`,
-    en: `Final newsroom email address (the address shown, ${SITE.email}, is inferred from the domain name and remains to be confirmed)`,
+    href: "https://journal-officiel.ga/20866-0011-pr-2024-/",
+    fr: "Ordonnance n° 0011/PR/2024 sur le droit d’auteur et les droits voisins, ratifiée par la loi n° 007/2024.",
+    en: "Ordinance No. 0011/PR/2024 on copyright and related rights, ratified by Law No. 007/2024.",
   },
   {
-    fr: "Raison sociale et coordonnées de l'hébergeur retenu",
-    en: "Legal name and contact details of the hosting provider",
-  },
-  {
-    fr: "Numéro ISSN, le cas échéant",
-    en: "ISSN, where applicable",
+    href: "https://journal-officiel.ga/20085-025-2023-/",
+    fr: "Loi n° 001/2011 sur les données à caractère personnel, modifiée par la loi n° 025/2023.",
+    en: "Law No. 001/2011 on personal data protection, as amended by Law No. 025/2023.",
   },
 ];
 
@@ -75,154 +38,130 @@ export default function LegalPage() {
   return (
     <>
       <PageHeader
-        eyebrow={
-          <LocalizedText fr="Informations légales" en="Legal information" />
-        }
         title={<LocalizedText fr="Mentions légales" en="Legal notice" />}
         description={
           <LocalizedText
-            fr="Identification de l'éditeur et conditions d'utilisation du site."
-            en="Publisher identification and terms of use for this site."
+            fr="Éditeur, droit de réponse et textes gabonais de référence."
+            en="Publisher, right of reply and the relevant Gabonese legislation."
           />
         }
         width="reading"
       />
 
       <Section width="reading">
-        <Container width="reading" className="px-0">
-          <div
-            role="note"
-            className="flex gap-3 rounded-md border border-warning-token/40 bg-warning-token/10 p-4"
-          >
-            <AlertTriangle
-              aria-hidden="true"
-              className="mt-0.5 size-5 shrink-0 text-warning-token"
+        <div className="article-body type-body">
+          <h2 className="type-h2">
+            <LocalizedText fr="Éditeur du site" en="Site publisher" />
+          </h2>
+          <p>
+            <LocalizedText
+              fr={`${SITE.name} (${SITE.domain}) est un journal en ligne consacré à l’actualité du Gabon.`}
+              en={`${SITE.name} (${SITE.domain}) is an online newspaper covering news from Gabon.`}
+            />{" "}
+            <Link href="/a-propos" prefetch={false}>
+              <LocalizedText fr="À propos du journal" en="About the journal" />
+            </Link>
+            .
+          </p>
+          <ul className="list-disc space-y-2 ps-6">
+            {SITE.publisher && (
+              <li>
+                <LocalizedText fr="Éditeur" en="Publisher" />
+                {": "}
+                {SITE.publisher}
+              </li>
+            )}
+            {SITE.address && (
+              <li>
+                <LocalizedText
+                  fr="Adresse de la rédaction"
+                  en="Editorial office"
+                />
+                {": "}
+                {SITE.address}
+              </li>
+            )}
+            {SITE.phone && SITE.phoneHref && (
+              <li>
+                <LocalizedText fr="Téléphone" en="Phone" />
+                {": "}
+                <a href={SITE.phoneHref}>{SITE.phone}</a>
+              </li>
+            )}
+            <li>
+              <Link href="/contacts" prefetch={false}>
+                <LocalizedText
+                  fr="Contacter la rédaction"
+                  en="Contact the newsroom"
+                />
+              </Link>
+            </li>
+          </ul>
+          <p>
+            <LocalizedText
+              fr="L’éditeur doit encore confirmer son identité légale complète et ses coordonnées, le nom du directeur de publication, l’identité et les coordonnées de l’hébergeur, ainsi que les références administratives applicables auprès de la HAC et de l’APDPVP. Les numéros d’immatriculation (RCCM, NIF) et l’ISSN sont à préciser le cas échéant."
+              en="The publisher still needs to confirm its full legal identity and contact details, the publication director’s name, the hosting provider’s identity and contact details, and any applicable HAC and APDPVP registration references. Trade register and tax numbers (RCCM, NIF) and the ISSN should also be provided where applicable."
             />
-            <p className="type-small">
+          </p>
+
+          <h2 className="type-h2">
+            <LocalizedText
+              fr="Droit de réponse et correction"
+              en="Right of reply and corrections"
+            />
+          </h2>
+          <p>
+            <LocalizedText
+              fr="Si un article vous cite ou vous désigne, vous pouvez adresser une demande de réponse ou de correction à la rédaction. Indiquez le lien de l’article, le passage concerné et, le cas échéant, le texte de votre réponse."
+              en="If you are named or identified in an article, you can ask the newsroom for a right of reply or a correction. Include the article link, the passage in question and, where relevant, the text of your reply."
+            />{" "}
+            <Link href="/contacts" prefetch={false}>
               <LocalizedText
-                fr="Page en cours de constitution. Les mentions ci-dessous sont celles dont la rédaction dispose ; les éléments listés plus bas doivent être fournis par l'éditeur avant la mise en ligne publique. Aucune information n'est inventée ici."
-                en="This page is still being completed. The information below is what the editorial team currently has; the publisher must supply the remaining items. No information has been invented."
+                fr="Écrire à la rédaction"
+                en="Write to the newsroom"
               />
-            </p>
-          </div>
+            </Link>
+            .
+          </p>
 
-          <div className="lc-fr article-body mt-8 type-body" lang="fr">
-            <h2 className="font-display type-h2">Éditeur du site</h2>
-            <p>
-              {SITE.name} ({SITE.domain}) est un média d&apos;information
-              générale en ligne, consacré à l&apos;actualité du Gabon.
-              {SITE.publisher && ` Il est édité par ${SITE.publisher}.`}
-            </p>
-            <ul className="list-disc space-y-2 ps-6">
-              <li>
-                Courriel de la rédaction&nbsp;:{" "}
-                <a href={`mailto:${SITE.email}`}>{SITE.email}</a>
+          <h2 className="type-h2">
+            <LocalizedText
+              fr="Droit d’auteur et crédits"
+              en="Copyright and credits"
+            />
+          </h2>
+          <p>
+            <LocalizedText
+              fr="L’utilisation des textes, images et autres contenus dépend des droits de leurs auteurs et des licences indiquées. Une reproduction peut nécessiter une autorisation, sous réserve des exceptions légales. Consultez les crédits associés aux images."
+              en="Use of text, images and other content is governed by the rights of their authors and the licences shown. Reproduction may require permission, subject to statutory exceptions. See the credits provided with images."
+            />
+          </p>
+
+          <h2 className="type-h2">
+            <LocalizedText
+              fr="Textes applicables au Gabon"
+              en="Relevant legislation in Gabon"
+            />
+          </h2>
+          <ul className="list-disc space-y-2 ps-6">
+            {gaboneseTexts.map(({ href, fr, en }) => (
+              <li key={href}>
+                <a href={href}>
+                  <LocalizedText fr={fr} en={en} />
+                </a>
               </li>
-              {SITE.phone && SITE.phoneHref && (
-                <li>
-                  Téléphone&nbsp;: <a href={SITE.phoneHref}>{SITE.phone}</a>
-                </li>
-              )}
-              {SITE.address && (
-                <li>Adresse de la rédaction&nbsp;: {SITE.address}</li>
-              )}
-            </ul>
-
-            <h2 className="font-display type-h2">Éléments à compléter</h2>
-            <p>
-              Un organe de presse doit pouvoir être identifié par son lecteur.
-              Les mentions suivantes relèvent de l&apos;éditeur et seront
-              publiées ici dès leur transmission&nbsp;:
-            </p>
-            <ul className="list-disc space-y-2 ps-6">
-              {TO_PROVIDE.map((item) => (
-                <li key={item.fr}>{item.fr}</li>
-              ))}
-            </ul>
-
-            <h2 className="font-display type-h2">Propriété intellectuelle</h2>
-            <p>
-              Les textes publiés sur ce site sont la propriété de leur auteur et
-              de l&apos;éditeur. Toute reproduction intégrale est soumise à
-              autorisation&nbsp;; la citation courte avec lien vers
-              l&apos;article d&apos;origine est libre.
-            </p>
-            <p>
-              Les photographies proviennent de Wikimedia Commons et sont
-              publiées sous licence libre&nbsp;: l&apos;auteur et la licence
-              sont indiqués sous chaque image, conformément aux termes de
-              celle-ci.
-            </p>
-
-            <h2 className="font-display type-h2">Responsabilité</h2>
-            <p>
-              Les tribunes signées n&apos;engagent que leurs auteurs. Les
-              contenus d&apos;origine commerciale portent la mention
-              «&nbsp;Contenu partenaire&nbsp;» et sont identifiés comme tels
-              partout où ils apparaissent.
-            </p>
-
-            <h2 className="font-display type-h2">Droit de réponse</h2>
-            <p>
-              Toute personne nommée dans un article dispose d&apos;un droit de
-              réponse. Adressez votre demande à la rédaction&nbsp;: elle sera
-              traitée dans les délais prévus par la loi gabonaise.
-            </p>
-          </div>
-          <div className="lc-en article-body mt-8 type-body" lang="en">
-            <h2 className="font-display type-h2">Site publisher</h2>
-            <p>
-              {SITE.name} ({SITE.domain}) is an online general news outlet
-              devoted to the news from Gabon.
-              {SITE.publisher && ` It is published by ${SITE.publisher}.`}
-            </p>
-            <ul className="list-disc space-y-2 ps-6">
-              <li>
-                Editorial email:{" "}
-                <a href={`mailto:${SITE.email}`}>{SITE.email}</a>
-              </li>
-              {SITE.phone && SITE.phoneHref && (
-                <li>
-                  Phone: <a href={SITE.phoneHref}>{SITE.phone}</a>
-                </li>
-              )}
-              {SITE.address && <li>Editorial office: {SITE.address}</li>}
-            </ul>
-            <h2 className="font-display type-h2">
-              Information to be completed
-            </h2>
-            <p>
-              A press publication must be identifiable to its readers. The
-              publisher must provide:
-            </p>
-            <ul className="list-disc space-y-2 ps-6">
-              {TO_PROVIDE.map((item) => (
-                <li key={item.en}>{item.en}</li>
-              ))}
-            </ul>
-            <h2 className="font-display type-h2">Intellectual property</h2>
-            <p>
-              Texts published on this site belong to their authors and the
-              publisher. Full reproduction requires permission; short quotations
-              with a link to the original article are permitted.
-            </p>
-            <p>
-              Photographs from Wikimedia Commons are published under open
-              licences. The author and licence are shown beneath each image.
-            </p>
-            <h2 className="font-display type-h2">Liability</h2>
-            <p>
-              Signed opinion pieces commit only their authors. Commercial
-              material is labelled “Partner content” wherever it appears.
-            </p>
-            <h2 className="font-display type-h2">Right of reply</h2>
-            <p>
-              Anyone named in an article has a right of reply. Send your request
-              to the editorial team; it will be handled within the time limits
-              set by Gabonese law.
-            </p>
-          </div>
-        </Container>
+            ))}
+          </ul>
+          <p>
+            <Link href="/confidentialite#vos-droits" prefetch={false}>
+              <LocalizedText
+                fr="Données personnelles, vos droits et recours auprès de l’APDPVP"
+                en="Personal data, your rights and complaints to the APDPVP"
+              />
+            </Link>
+            .
+          </p>
+        </div>
       </Section>
     </>
   );

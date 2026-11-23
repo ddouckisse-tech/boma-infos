@@ -7,6 +7,7 @@ import type {
   FunctionReference,
   FunctionReturnType,
 } from "convex/server";
+import type { LocaleChoice } from "@/lib/preferences";
 import { registerMedia, type MediaAsset } from "@/lib/media";
 
 /**
@@ -220,10 +221,20 @@ export const getDocuments = cache(() =>
 export const searchArticles = (
   term: string,
   categorySlug: string | undefined,
-  limit: number
+  limit: number,
+  locale: LocaleChoice = "fr"
 ) =>
   withMedia(
-    run(api.journal.search, { term, categorySlug, limit }, "journal.search")
+    run(
+      api.journal.search,
+      {
+        term,
+        categorySlug,
+        limit,
+        ...(locale === "en" ? { locale } : {}),
+      },
+      "journal.search"
+    )
   );
 
 /* ------------------------------------------------------------------ écriture */

@@ -6,6 +6,7 @@ import { Advertising } from "@/components/custom/advertising";
 import { ArticleCard } from "@/components/custom/article-card";
 import { Container } from "@/components/custom/container";
 import { EmptyState } from "@/components/custom/empty-state";
+import { FeaturedHero } from "@/components/custom/featured-hero";
 import { LocalizedText } from "@/components/custom/localized-text";
 import { PageHeader } from "@/components/custom/page-header";
 import { Pagination } from "@/components/custom/pagination";
@@ -252,6 +253,10 @@ export default async function SectionPage({
       : []),
   ];
 
+  const lead =
+    list.page === 1 && order === "recent" ? list.items[0] : undefined;
+  const remaining = lead ? list.items.slice(1) : list.items;
+
   const filterClass =
     "inline-flex items-center gap-2 rounded-md border px-3 type-small font-medium transition-colors touch-target";
 
@@ -260,16 +265,6 @@ export default async function SectionPage({
       <BreadcrumbStructuredData trail={trail} />
 
       <PageHeader
-        eyebrow={
-          child ? (
-            <LocalizedText
-              fr={section.label}
-              en={categoryLabel("en", section.slug, section.label)}
-            />
-          ) : (
-            <LocalizedText fr="Rubrique" en="Section" />
-          )
-        }
         title={
           <LocalizedText
             fr={copy.title}
@@ -291,7 +286,7 @@ export default async function SectionPage({
           />
         }
         breadcrumb={
-          <nav aria-label="Navigation">
+          <nav aria-label="Fil d’Ariane / Breadcrumb">
             <ol className="flex flex-wrap items-center gap-x-1">
               {trail.slice(0, -1).map((item) => (
                 <li key={item.href} className="flex items-center gap-1">
@@ -337,9 +332,12 @@ export default async function SectionPage({
       />
 
       <Container className="pt-6">
-        <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="space-y-4">
           {section.children.length > 0 && (
-            <nav aria-label="Sections" className="min-w-0">
+            <nav
+              aria-label="Sous-rubriques / Subsections"
+              className="min-w-0 border-b border-border pb-4"
+            >
               <ul className="flex flex-wrap gap-2">
                 <li>
                   <Link
@@ -388,7 +386,7 @@ export default async function SectionPage({
             </nav>
           )}
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="type-small text-muted-foreground">
               <LocalizedText fr="Trier" en="Sort" />
             </span>
@@ -442,7 +440,7 @@ export default async function SectionPage({
             <div className="lc-fr" lang="fr">
               <EmptyState
                 title="Aucun article publié dans cette rubrique"
-                description="Cette rubrique existe dans l'arborescence mais n'a pas encore d'article. Elle ne présente volontairement aucun contenu d'une autre rubrique à la place."
+                description="Retrouvez les dernières publications sur la page d’accueil."
                 action={
                   <Link
                     href="/"
@@ -457,7 +455,7 @@ export default async function SectionPage({
             <div className="lc-en" lang="en">
               <EmptyState
                 title="No published articles in this section"
-                description="This section exists but does not have an article yet. It deliberately does not substitute content from another section."
+                description="Find our latest stories on the home page."
                 action={
                   <Link
                     href="/"
@@ -496,28 +494,33 @@ export default async function SectionPage({
                 )}
               </span>
             </p>
-            <ul lang="fr" className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {list.items.map((article) => {
-                const card = (
-                  <ArticleCard
-                    article={article}
-                    headingLevel={2}
-                    showCategory={!child}
-                  />
-                );
-                return (
-                  <li key={article.slug} className="min-w-0">
-                    {isDemoArticle(article.slug) ? (
-                      <div data-nosnippet="" className="h-full">
-                        {card}
-                      </div>
-                    ) : (
-                      card
-                    )}
+            {lead && (
+              <div
+                className="mb-6"
+                data-nosnippet={isDemoArticle(lead.slug) ? "" : undefined}
+              >
+                <FeaturedHero article={lead} showCategory={!child} />
+              </div>
+            )}
+            {remaining.length > 0 && (
+              <ul className="news-card-grid news-card-grid--listing">
+                {remaining.map((article) => (
+                  <li
+                    key={article.slug}
+                    className="min-w-0"
+                    data-nosnippet={
+                      isDemoArticle(article.slug) ? "" : undefined
+                    }
+                  >
+                    <ArticleCard
+                      article={article}
+                      headingLevel={2}
+                      showCategory={!child}
+                    />
                   </li>
-                );
-              })}
-            </ul>
+                ))}
+              </ul>
+            )}
             <Pagination
               page={list.page}
               pageCount={list.pageCount}

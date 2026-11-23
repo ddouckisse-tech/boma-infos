@@ -103,7 +103,7 @@ export function AccessMenu() {
         href="/connexion"
         onClick={open}
         data-tab="connexion"
-        className="hidden items-center gap-1.5 rounded-md border border-border px-3 type-small font-semibold text-foreground transition-colors touch-target hover:bg-surface-muted md:inline-flex"
+        className="journal-control hidden items-center gap-1.5 rounded-md px-3 type-small font-semibold text-foreground transition-colors touch-target hover:bg-surface-muted md:inline-flex"
       >
         <LogIn aria-hidden="true" className="size-4" />
         {localize(locale, { fr: "Connexion", en: "Sign in" })}

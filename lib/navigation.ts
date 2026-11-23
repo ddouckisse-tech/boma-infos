@@ -12,7 +12,7 @@
 
 /**
  * Accent token of a section, restricted to the hues of the charter: the navy
- * (two steps), and the three colours of the tricolour rule — gold, green,
+ * (two steps), and the three colours of the wordmark — gold, green,
  * blue — each at the step that carries text on a white page.
  */
 export type SectionAccent =
@@ -101,14 +101,6 @@ export const accentTextClass: Record<SectionAccent, string> = {
   "gold-800": "text-gold-800 dark:text-gold-400",
   "green-700": "text-green-700 dark:text-green-400",
   "blue-600": "text-blue-600 dark:text-blue-400",
-};
-
-export const accentBorderClass: Record<SectionAccent, string> = {
-  "navy-900": "border-navy-900 dark:border-navy-300",
-  "navy-700": "border-navy-700 dark:border-navy-300",
-  "gold-800": "border-gold-500 dark:border-gold-400",
-  "green-700": "border-green-600 dark:border-green-400",
-  "blue-600": "border-blue-600 dark:border-blue-400",
 };
 
 /**

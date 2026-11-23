@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useId, useRef } from "react";
+import Link from "next/link";
 import { CheckCircle2, Send } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -14,8 +15,8 @@ import { antiRobot } from "@/lib/anti-robot";
  * Contact form (CDC §4.2).
  *
  * Four things the audit found missing on the legacy form are here: a consent
- * checkbox, a statement of what the data is used for and how long it is
- * kept, native `required` attributes so the browser helps before anything is
+ * checkbox, a statement of what the data is used for, native `required`
+ * attributes so the browser helps before anything is
  * sent, and an anti-robot that actually runs — a honeypot plus a minimum time
  * on the page, rather than a CAPTCHA that would tax every real reader.
  *
@@ -203,10 +204,16 @@ export function ContactForm() {
             id={`${id}-finalite`}
             className="mt-1 type-small text-muted-foreground"
           >
-            Finalité : répondre à votre message. Destinataire : la rédaction de
-            BOMA Infos, elle seule. Conservation : douze mois. Vous pouvez
-            demander l&apos;accès, la rectification ou la suppression de vos
-            données en écrivant à la rédaction.
+            La rédaction utilise ces informations pour répondre à votre message
+            et assurer son suivi.{" "}
+            <Link
+              href="/confidentialite#formulaires"
+              prefetch={false}
+              className="underline underline-offset-4 hover:text-foreground"
+            >
+              Données et droits
+            </Link>
+            .
           </p>
         </div>
       </div>

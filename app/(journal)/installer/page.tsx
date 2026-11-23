@@ -13,6 +13,7 @@ import {
   WifiOff,
   Zap,
 } from "lucide-react";
+import { LocalizedText } from "@/components/custom/localized-text";
 import { Container } from "@/components/custom/container";
 import { PwaInstallAction } from "@/components/custom/pwa-install";
 import { Section } from "@/components/custom/section";
@@ -35,21 +36,30 @@ export const metadata: Metadata = {
 const BENEFITS = [
   {
     icon: Zap,
-    title: "Le journal en un geste",
-    description:
-      "Touchez l’icône BOMA Infos pour retrouver les articles et les rubriques, sans rechercher l’adresse du site.",
+    title: {
+      fr: "Le journal en un geste",
+      en: "One tap to open the newspaper",
+    },
+    description: {
+      fr: "Touchez l’icône BOMA Infos pour retrouver les articles et les rubriques, sans rechercher l’adresse du site.",
+      en: "Tap the BOMA Infos icon to open articles and sections directly.",
+    },
   },
   {
     icon: WifiOff,
-    title: "Retrouver vos lectures",
-    description:
-      "Seuls les articles déjà ouverts et conservés sur cet appareil peuvent être relus hors connexion. Une connexion reste nécessaire pour de nouvelles lectures.",
+    title: { fr: "Retrouver vos lectures", en: "Read articles offline" },
+    description: {
+      fr: "Seuls les articles déjà ouverts et conservés sur cet appareil peuvent être relus hors connexion. Une connexion reste nécessaire pour de nouvelles lectures.",
+      en: "You can reread articles saved on this device after opening them. You’ll need a connection to open new articles.",
+    },
   },
   {
     icon: RefreshCw,
-    title: "Un journal qui reste à jour",
-    description:
-      "Les améliorations arrivent automatiquement lors de vos prochaines connexions. Vous retrouvez le même journal et ses nouvelles publications.",
+    title: { fr: "Un journal qui reste à jour", en: "Automatic updates" },
+    description: {
+      fr: "Les améliorations arrivent automatiquement lors de vos prochaines connexions. Vous retrouvez le même journal et ses nouvelles publications.",
+      en: "The app updates automatically when you reconnect. Open it as usual to see the latest stories.",
+    },
   },
 ] as const;
 
@@ -74,22 +84,25 @@ function InstallationSteps({ children }: { children: readonly ReactNode[] }) {
 /** Public installation guide; only the contextual install action needs client code. */
 export default function InstallPage() {
   return (
-    <div lang="fr">
+    <div>
       <header className="dark border-b border-border bg-night py-8 text-foreground md:py-14">
         <Container>
-          <nav aria-label="Fil d’Ariane" className="mb-8 type-small">
+          <nav
+            aria-label="Breadcrumb / Fil d’Ariane"
+            className="mb-8 type-small"
+          >
             <Link
               href="/"
               prefetch={false}
               className="inline-flex min-h-11 items-center text-accent underline-offset-4 hover:underline"
             >
-              Accueil
+              <LocalizedText fr="Accueil" en="Home" />
             </Link>
             <span aria-hidden="true" className="px-2 text-muted-foreground">
               /
             </span>
             <span aria-current="page" className="text-muted-foreground">
-              Installer le journal
+              <LocalizedText fr="Installer le journal" en="Install the app" />
             </span>
           </nav>
 
@@ -108,20 +121,25 @@ export default function InstallPage() {
                 <div>
                   <p className="font-display type-h3">{SITE.name}</p>
                   <p className="mt-1 type-small text-muted-foreground">
-                    Votre journal à portée de main
+                    <LocalizedText
+                      fr="Votre journal à portée de main"
+                      en="Your newspaper at your fingertips"
+                    />
                   </p>
                 </div>
               </div>
 
               <h1 className="max-w-[22ch] font-display type-h1 text-balance">
-                BOMA Infos sur votre écran d’accueil
+                <LocalizedText
+                  fr="BOMA Infos sur votre écran d’accueil"
+                  en="BOMA Infos on your home screen"
+                />
               </h1>
-              <span aria-hidden="true" className="mt-5 boma-rule w-24" />
               <p className="mt-5 max-w-reading type-body text-muted-foreground">
-                Retrouvez toute l’actualité du Gabon depuis une icône sur votre
-                téléphone. L’installation est gratuite et se fait directement
-                depuis votre navigateur, sans passer par une boutique
-                d’applications.
+                <LocalizedText
+                  fr="Retrouvez toute l’actualité du Gabon depuis une icône sur votre téléphone. L’installation est gratuite et se fait directement depuis votre navigateur, sans passer par une boutique d’applications."
+                  en="Get the latest news from Gabon from an icon on your phone. You can install the app free of charge from your browser without visiting an app store."
+                />
               </p>
               <div className="mt-7 flex flex-col items-start gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                 <PwaInstallAction className="w-full sm:w-auto" />
@@ -129,7 +147,10 @@ export default function InstallPage() {
                   href="#instructions"
                   className="inline-flex items-center justify-center gap-2 rounded-md border border-border-strong px-4 type-small font-semibold text-foreground transition-colors touch-target hover:bg-surface-muted"
                 >
-                  Voir les étapes
+                  <LocalizedText
+                    fr="Voir les étapes"
+                    en="See installation steps"
+                  />
                   <ArrowRight aria-hidden="true" className="size-4" />
                 </a>
               </div>
@@ -138,20 +159,32 @@ export default function InstallPage() {
             <aside className="rounded-xl border border-border bg-card p-5 sm:p-6">
               <Smartphone aria-hidden="true" className="size-9 text-accent" />
               <h2 className="mt-4 font-display type-h3">
-                Votre écran, votre journal
+                <LocalizedText
+                  fr="Votre écran, votre journal"
+                  en="Your newspaper on your device"
+                />
               </h2>
               <ul className="mt-4 grid gap-3 type-small text-muted-foreground">
                 {[
-                  "Une icône parmi vos applications",
-                  "Le même journal sur Android, iPhone et iPad",
-                  "Des mises à jour automatiques",
+                  {
+                    fr: "Une icône parmi vos applications",
+                    en: "An icon alongside your apps",
+                  },
+                  {
+                    fr: "Le même journal sur Android, iPhone et iPad",
+                    en: "The same newspaper on Android, iPhone and iPad",
+                  },
+                  {
+                    fr: "Des mises à jour automatiques",
+                    en: "Automatic updates",
+                  },
                 ].map((benefit) => (
-                  <li key={benefit} className="flex items-start gap-2">
+                  <li key={benefit.fr} className="flex items-start gap-2">
                     <Check
                       aria-hidden="true"
                       className="mt-0.5 size-4 shrink-0 text-success-token"
                     />
-                    <span>{benefit}</span>
+                    <LocalizedText {...benefit} />
                   </li>
                 ))}
               </ul>
@@ -160,19 +193,21 @@ export default function InstallPage() {
         </Container>
       </header>
 
-      <Section aria-label="Les avantages de l’installation">
+      <Section aria-label="Installation">
         <div className="grid gap-4 md:grid-cols-3">
           {BENEFITS.map(({ icon: Icon, title, description }) => (
             <article
-              key={title}
+              key={title.fr}
               className="min-w-0 rounded-xl border border-border bg-card p-5 sm:p-6"
             >
               <span className="inline-flex size-11 items-center justify-center rounded-lg bg-accent-surface text-accent">
                 <Icon aria-hidden="true" className="size-5" />
               </span>
-              <h2 className="mt-4 font-display type-h3">{title}</h2>
+              <h2 className="mt-4 font-display type-h3">
+                <LocalizedText {...title} />
+              </h2>
               <p className="mt-2 type-small text-muted-foreground">
-                {description}
+                <LocalizedText {...description} />
               </p>
             </article>
           ))}
@@ -181,8 +216,18 @@ export default function InstallPage() {
 
       <Section
         id="instructions"
-        title="Installer sur votre téléphone"
-        description="Choisissez les étapes qui correspondent à votre appareil. Les libellés peuvent varier légèrement selon votre navigateur."
+        title={
+          <LocalizedText
+            fr="Installer sur votre téléphone"
+            en="Install on your phone"
+          />
+        }
+        description={
+          <LocalizedText
+            fr="Choisissez les étapes qui correspondent à votre appareil. Les libellés peuvent varier légèrement selon votre navigateur."
+            en="Follow the steps for your device. Menu labels may vary slightly depending on your browser."
+          />
+        }
         tone="muted"
         className="scroll-mt-28"
       >
@@ -196,13 +241,16 @@ export default function InstallPage() {
           />
           <div className="min-w-0">
             <h3 className="font-display type-h3">
-              Vous arrivez de WhatsApp ou Facebook ?
+              <LocalizedText
+                fr="Vous arrivez de WhatsApp ou Facebook ?"
+                en="Coming from WhatsApp or Facebook?"
+              />
             </h3>
             <p className="mt-2 type-small text-muted-foreground">
-              Ouvrez d’abord cette page dans Safari sur iPhone ou iPad, ou dans
-              Chrome sur Android. Depuis le menu de l’application, choisissez
-              l’option qui ouvre la page dans votre navigateur. Vous pourrez
-              ensuite suivre les étapes ci-dessous.
+              <LocalizedText
+                fr="Ouvrez d’abord cette page dans Safari sur iPhone ou iPad, ou dans Chrome sur Android. Depuis le menu de l’application, choisissez l’option qui ouvre la page dans votre navigateur. Vous pourrez ensuite suivre les étapes ci-dessous."
+                en="Open this page in Safari on iPhone or iPad, or in Chrome on Android. Use the app’s menu to open the page in your browser. Then follow the steps below."
+              />
             </p>
           </div>
         </aside>
@@ -220,24 +268,32 @@ export default function InstallPage() {
               <div>
                 <h3 className="font-display type-h2">Android</h3>
                 <p className="mt-1 type-small text-muted-foreground">
-                  Chrome ou un navigateur compatible
+                  <LocalizedText
+                    fr="Chrome ou un navigateur compatible"
+                    en="Chrome or another compatible browser"
+                  />
                 </p>
               </div>
             </div>
             <InstallationSteps>
               {[
                 <p key="open">
-                  Ouvrez ce site dans <strong>Chrome</strong>, ou dans un
-                  navigateur Android compatible avec l’installation.
+                  <LocalizedText
+                    fr="Ouvrez ce site dans Chrome, ou dans un navigateur Android compatible avec l’installation."
+                    en="Open this site in Chrome or another Android browser that supports installation."
+                  />
                 </p>,
                 <p key="menu">
-                  Ouvrez le <strong>menu du navigateur</strong>, puis choisissez{" "}
-                  <strong>« Installer l’application »</strong> ou{" "}
-                  <strong>« Ajouter à l’écran d’accueil »</strong>.
+                  <LocalizedText
+                    fr="Ouvrez le menu du navigateur, puis choisissez « Installer l’application » ou « Ajouter à l’écran d’accueil »."
+                    en="Open the browser menu and select “Install app” or “Add to Home screen”."
+                  />
                 </p>,
                 <p key="confirm">
-                  Validez l’installation ou l’ajout. Ouvrez ensuite BOMA Infos
-                  depuis l’icône ajoutée à votre téléphone.
+                  <LocalizedText
+                    fr="Validez l’installation ou l’ajout. Ouvrez ensuite BOMA Infos depuis l’icône ajoutée à votre téléphone."
+                    en="Confirm, then open BOMA Infos using the new icon on your phone."
+                  />
                 </p>,
               ]}
             </InstallationSteps>
@@ -254,34 +310,43 @@ export default function InstallPage() {
                 className="size-7 shrink-0 text-accent"
               />
               <div>
-                <h3 className="font-display type-h2">iPhone et iPad</h3>
+                <h3 className="font-display type-h2">
+                  <LocalizedText fr="iPhone et iPad" en="iPhone and iPad" />
+                </h3>
                 <p className="mt-1 type-small text-muted-foreground">
-                  Depuis Safari
+                  <LocalizedText fr="Depuis Safari" en="Using Safari" />
                 </p>
               </div>
             </div>
             <InstallationSteps>
               {[
                 <p key="open">
-                  Ouvrez le journal dans <strong>Safari</strong> sur votre
-                  iPhone ou votre iPad.
+                  <LocalizedText
+                    fr="Ouvrez le journal dans Safari sur votre iPhone ou votre iPad."
+                    en="Open the newspaper in Safari on your iPhone or iPad."
+                  />
                 </p>,
                 <p key="share">
-                  Touchez <strong>« Partager »</strong>{" "}
+                  <LocalizedText
+                    fr="Touchez « Partager » dans le navigateur."
+                    en="Tap “Share” in the browser."
+                  />{" "}
                   <Share2
                     aria-hidden="true"
                     className="inline size-4 align-text-bottom"
-                  />{" "}
-                  dans le navigateur.
+                  />
                 </p>,
                 <p key="home">
-                  Choisissez <strong>« Sur l’écran d’accueil »</strong>. Si
-                  l’option <strong>« Ouvrir comme app web »</strong> est
-                  proposée, activez-la.
+                  <LocalizedText
+                    fr="Choisissez « Sur l’écran d’accueil ». Si l’option « Ouvrir comme app web » est proposée, activez-la."
+                    en="Select “Add to Home Screen”. If “Open as Web App” appears, switch it on."
+                  />
                 </p>,
                 <p key="add">
-                  Touchez <strong>« Ajouter »</strong>, puis ouvrez BOMA Infos
-                  depuis la nouvelle icône sur votre écran d’accueil.
+                  <LocalizedText
+                    fr="Touchez « Ajouter », puis ouvrez BOMA Infos depuis la nouvelle icône sur votre écran d’accueil."
+                    en="Tap “Add”, then open BOMA Infos using the new icon on your home screen."
+                  />
                 </p>,
               ]}
             </InstallationSteps>
@@ -297,17 +362,26 @@ export default function InstallPage() {
               className="mt-1 size-6 shrink-0 text-accent"
             />
             <div className="min-w-0">
-              <h2 className="font-display type-h3">Et sur ordinateur ?</h2>
+              <h2 className="font-display type-h3">
+                <LocalizedText
+                  fr="Et sur ordinateur ?"
+                  en="Using a computer?"
+                />
+              </h2>
               <p className="mt-2 type-small text-muted-foreground">
-                Un navigateur compatible peut proposer une icône d’installation
-                dans la barre d’adresse, ou une option dans son menu. Vous
-                pouvez aussi retrouver le journal dans votre onglet habituel.
+                <LocalizedText
+                  fr="Un navigateur compatible peut proposer une icône d’installation dans la barre d’adresse, ou une option dans son menu. Vous pouvez aussi retrouver le journal dans votre onglet habituel."
+                  en="A compatible browser may show an install icon in the address bar or an install option in its menu. You can also keep reading in a regular browser tab."
+                />
               </p>
             </div>
           </article>
           <article className="min-w-0 rounded-xl border border-border bg-surface-muted p-5 sm:p-6">
             <h2 className="font-display type-h3">
-              Une question avant de commencer ?
+              <LocalizedText
+                fr="Une question avant de commencer ?"
+                en="Need help getting started?"
+              />
             </h2>
             <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 type-small">
               <Link
@@ -315,14 +389,17 @@ export default function InstallPage() {
                 prefetch={false}
                 className="inline-flex min-h-11 items-center gap-2 text-accent underline underline-offset-4"
               >
-                Comprendre la lecture hors ligne
+                <LocalizedText
+                  fr="Comprendre la lecture hors ligne"
+                  en="Learn how offline reading works"
+                />
               </Link>
               <Link
                 href="/contacts"
                 prefetch={false}
                 className="inline-flex min-h-11 items-center gap-2 text-accent underline underline-offset-4"
               >
-                Demander de l’aide
+                <LocalizedText fr="Demander de l’aide" en="Get help" />
               </Link>
             </div>
           </article>
@@ -333,7 +410,7 @@ export default function InstallPage() {
             prefetch={false}
             className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-5 type-small font-semibold text-primary-foreground transition-colors touch-target hover:bg-primary/90"
           >
-            Lire le journal
+            <LocalizedText fr="Lire le journal" en="Read the newspaper" />
             <ArrowRight aria-hidden="true" className="size-4" />
           </Link>
         </div>

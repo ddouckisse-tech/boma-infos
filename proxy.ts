@@ -9,6 +9,8 @@ import {
   downgradeMediaPath,
 } from "@/lib/data-saver";
 import { getAdSenseRuntimeConfig } from "@/lib/ads/adsense-config";
+import { articleLocale } from "@/lib/article-locale";
+import { LOCALE_COOKIE } from "@/lib/preferences";
 import { contentSecurityPolicy } from "@/lib/security-headers";
 
 /**
@@ -66,7 +68,23 @@ function countView(pathname: string): Promise<unknown> | null {
 export function proxy(request: NextRequest, event: NextFetchEvent) {
   const { pathname } = request.nextUrl;
 
-  const counted = countView(pathname);
+  const language = articleLocale(pathname);
+  // Keep two independent ISR and offline entries for each article.
+  if (
+    language === "fr" &&
+    (request.method === "GET" || request.method === "HEAD") &&
+    request.cookies.get(LOCALE_COOKIE)?.value === "en" &&
+    !request.nextUrl.searchParams.has("original")
+  ) {
+    const english = request.nextUrl.clone();
+    english.pathname = `/en${pathname}`;
+    const response = NextResponse.redirect(english);
+    response.headers.set("Cache-Control", "private, no-store");
+    response.headers.set("Vary", "Cookie");
+    return response;
+  }
+
+  const counted = countView(language === "en" ? pathname.slice(3) : pathname);
   if (counted) event.waitUntil(counted);
 
   const advertising = getAdSenseRuntimeConfig();

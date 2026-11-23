@@ -58,11 +58,13 @@ export const formatViews = (value: number): string =>
   `${numbers.format(value)} ${value > 1 ? "vues" : "vue"}`;
 
 /** « 1,6 Mo » — the reader is told what a download will cost before clicking. */
-export function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} octets`;
+export function formatBytes(bytes: number, locale: "fr" | "en" = "fr"): string {
+  if (bytes < 1024) return `${bytes} ${locale === "en" ? "B" : "octets"}`;
   const kb = bytes / 1024;
-  if (kb < 1024) return `${kb.toFixed(kb < 10 ? 1 : 0).replace(".", ",")} Ko`;
-  return `${(kb / 1024).toFixed(1).replace(".", ",")} Mo`;
+  const megabytes = kb >= 1024;
+  const raw = megabytes ? (kb / 1024).toFixed(1) : kb.toFixed(kb < 10 ? 1 : 0);
+  if (locale === "en") return `${raw} ${megabytes ? "MB" : "KB"}`;
+  return `${raw.replace(".", ",")} ${megabytes ? "Mo" : "Ko"}`;
 }
 
 /** « il y a 3 jours » — coarse on purpose, so it never needs a live clock. */

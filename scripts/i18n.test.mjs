@@ -8,7 +8,7 @@ import {
 } from "../lib/i18n.ts";
 import { PREFERENCES_SCRIPT } from "../lib/preferences.ts";
 
-function runBoot(locale, browserLanguage = "fr-FR") {
+function runBoot(locale, browserLanguage = "fr-FR", entry) {
   const dataset = {};
   const state = { dark: false };
   const root = {
@@ -23,13 +23,25 @@ function runBoot(locale, browserLanguage = "fr-FR") {
   };
   const documentStub = { documentElement: root, cookie: "" };
   const localStorageStub = {
+    setItem() {},
     getItem(key) {
       if (key === "bomainfos.locale") return locale;
       if (key === "bomainfos.theme") return "light";
       return null;
     },
   };
-  const windowStub = { matchMedia: () => ({ matches: false }) };
+  let redirect;
+  const windowStub = {
+    matchMedia: () => ({ matches: false }),
+    location: entry && {
+      search: "",
+      hash: "",
+      ...entry,
+      replace(path) {
+        redirect = path;
+      },
+    },
+  };
   const execute = new Function(
     "document",
     "localStorage",
@@ -45,6 +57,7 @@ function runBoot(locale, browserLanguage = "fr-FR") {
     lang: root.lang,
     theme: dataset.theme,
     dark: state.dark,
+    ...(redirect && { redirect }),
   };
 }
 
@@ -56,6 +69,33 @@ describe("interface locale", () => {
       theme: "light",
       dark: false,
     });
+  });
+
+  test("an English article URL or search link selects English before paint", () => {
+    expect(
+      runBoot("fr", "fr-FR", { pathname: "/en/article/archives" }).lang
+    ).toBe("en");
+    expect(
+      runBoot("fr", "fr-FR", {
+        pathname: "/recherche",
+        search: "?lang=en&q=ports",
+      }).lang
+    ).toBe("en");
+  });
+
+  test("existing English preferences carry direct article links to their English edition", () => {
+    expect(
+      runBoot("en", "fr-FR", {
+        pathname: "/article/archives",
+        hash: "#sommaire",
+      }).redirect
+    ).toBe("/en/article/archives#sommaire");
+    expect(
+      runBoot("en", "fr-FR", {
+        pathname: "/article/archives",
+        search: "?original=1",
+      }).redirect
+    ).toBeUndefined();
   });
 
   test("uses the browser language only until the reader makes a choice", () => {

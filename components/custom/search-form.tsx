@@ -34,6 +34,7 @@ export function SearchForm({ defaultValue }: { defaultValue?: string }) {
       <div lang="en" className="lc-en">
         <SearchFormFields
           id="recherche-en"
+          english
           defaultValue={defaultValue}
           placeholder="E.g. Libreville, national parks, football…"
         />
@@ -44,15 +45,18 @@ export function SearchForm({ defaultValue }: { defaultValue?: string }) {
 
 function SearchFormFields({
   id,
+  english = false,
   defaultValue,
   placeholder,
 }: {
   id: string;
+  english?: boolean;
   defaultValue?: string;
   placeholder: string;
 }) {
   return (
     <form method="get" action="/recherche" role="search" className="grid gap-2">
+      <input type="hidden" name="lang" value={english ? "en" : "fr"} />
       <label htmlFor={id} data-slot="label" className={FIELD_LABEL}>
         <LocalizedText fr="Mots-clés" en="Keywords" />
       </label>

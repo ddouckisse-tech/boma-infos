@@ -1,4 +1,6 @@
 import { absoluteUrl, SITE } from "@/lib/site";
+import { articlePath } from "@/lib/article-locale";
+import type { LocaleChoice } from "@/lib/preferences";
 import { BRAND_LOGO } from "@/lib/brand";
 import { headers } from "next/headers";
 import { getAdSenseRuntimeConfig } from "@/lib/ads/adsense-config";
@@ -122,6 +124,7 @@ export function NewsArticleStructuredData({
   headline,
   description,
   slug,
+  locale = "fr",
   imageUrls,
   publishedAt,
   updatedAt,
@@ -134,6 +137,7 @@ export function NewsArticleStructuredData({
   headline: string;
   description: string;
   slug: string;
+  locale?: LocaleChoice;
   imageUrls: readonly string[];
   publishedAt: number;
   updatedAt: number;
@@ -150,7 +154,7 @@ export function NewsArticleStructuredData({
         "@type": "NewsArticle",
         mainEntityOfPage: {
           "@type": "WebPage",
-          "@id": absoluteUrl(`/article/${slug}`),
+          "@id": absoluteUrl(articlePath(slug, locale)),
         },
         headline,
         description,
@@ -166,7 +170,7 @@ export function NewsArticleStructuredData({
         articleSection: sectionName,
         keywords: keywords.join(", "),
         wordCount,
-        inLanguage: "fr-GA",
+        inLanguage: locale === "en" ? "en" : "fr-GA",
         isAccessibleForFree: true,
       }}
     />

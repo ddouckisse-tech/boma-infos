@@ -17,10 +17,8 @@ const subscribeNothing = () => () => {};
 /**
  * Sharing, WhatsApp first.
  *
- * At Libreville an article travels by WhatsApp, so it is the first control
- * and the only one with a filled button — not a small icon at the end of a
- * row (CDC §2.2). LinkedIn and Facebook follow, then copying the link, which
- * is what people actually use when the share sheet is in the way.
+ * WhatsApp is the first channel, followed by LinkedIn, Facebook and the
+ * copy action.
  *
  * `navigator.share` is offered when the browser has it: on Android it opens
  * the system sheet, which is faster than any of these buttons.
@@ -76,8 +74,8 @@ export function ShareBar({
     }
   };
 
-  const secondary =
-    "inline-flex items-center gap-2 rounded-md border border-border bg-background px-3 type-small font-medium text-foreground transition-colors touch-target hover:border-border-strong";
+  const control =
+    "inline-flex items-center gap-2 rounded-xs px-2 type-small font-medium text-foreground transition-colors touch-target hover:bg-surface-muted";
 
   return (
     <div className={cx("flex flex-wrap items-center gap-2", className)}>
@@ -90,7 +88,7 @@ export function ShareBar({
         data-partage="whatsapp"
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex items-center gap-2 rounded-md bg-success-token px-4 type-small font-semibold text-white transition-opacity touch-target hover:opacity-90 dark:text-neutral-950"
+        className={control}
       >
         <WhatsAppIcon className="size-4 shrink-0" />
         WhatsApp
@@ -107,7 +105,7 @@ export function ShareBar({
         data-partage="linkedin"
         target="_blank"
         rel="noopener noreferrer"
-        className={secondary}
+        className={control}
       >
         <LinkedInIcon className="size-4 shrink-0" />
         LinkedIn
@@ -124,7 +122,7 @@ export function ShareBar({
         data-partage="facebook"
         target="_blank"
         rel="noopener noreferrer"
-        className={secondary}
+        className={control}
       >
         <FacebookIcon className="size-4 shrink-0" />
         Facebook
@@ -140,7 +138,7 @@ export function ShareBar({
         type="button"
         onClick={copy}
         data-partage="lien"
-        className={secondary}
+        className={control}
       >
         {copied ? (
           <Check aria-hidden="true" className="size-4 shrink-0" />
@@ -162,7 +160,7 @@ export function ShareBar({
       )}
 
       {canShareNatively && (
-        <button type="button" onClick={nativeShare} className={secondary}>
+        <button type="button" onClick={nativeShare} className={control}>
           <Share2 aria-hidden="true" className="size-4 shrink-0" />
           {localize(locale, { fr: "Autre", en: "More" })}
         </button>

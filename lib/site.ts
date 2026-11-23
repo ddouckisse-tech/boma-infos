@@ -135,18 +135,6 @@ export const EDITORIAL_ROBOTS = {
   },
 } as const;
 
-/**
- * Social reach. WhatsApp first — it is the sharing channel of the audience
- * (CDC §2.2). The URLs are generic placeholders: the real accounts were not
- * communicated, and inventing them would reproduce the dead links the audit
- * found in the legacy footer.
- */
-export const SOCIAL = [
-  { label: "WhatsApp", href: "https://wa.me/", key: "whatsapp" },
-  { label: "LinkedIn", href: "https://www.linkedin.com/", key: "linkedin" },
-  { label: "Facebook", href: "https://www.facebook.com/", key: "facebook" },
-] as const;
-
 export const NAV_STATIC_PAGES = [
   { label: "À propos", href: "/a-propos" },
   { label: "Docuthèque", href: "/docutheque" },
@@ -154,10 +142,13 @@ export const NAV_STATIC_PAGES = [
 ] as const;
 
 export const NAV_LEGAL_PAGES = [
-  { label: "Mentions légales", href: "/mentions-legales" },
-  { label: "Politique de confidentialité", href: "/confidentialite" },
-  { label: "Newsletter", href: "/newsletter" },
-  { label: "Design system", href: "/design-system" },
+  { label: "Mentions légales", en: "Legal notice", href: "/mentions-legales" },
+  { label: "Confidentialité", en: "Privacy", href: "/confidentialite" },
+  {
+    label: "Vos droits (APDPVP)",
+    en: "Your rights (APDPVP)",
+    href: "/confidentialite#vos-droits",
+  },
 ] as const;
 
 /** Articles per page on a section list. */

@@ -6,7 +6,7 @@ import { ArticleCard } from "@/components/custom/article-card";
 import { AuthorMonogram } from "@/components/custom/author-byline";
 import { Container } from "@/components/custom/container";
 import { EmptyState } from "@/components/custom/empty-state";
-import { LocalizedText } from "@/components/custom/localized-text";
+import { EditorialText, LocalizedText } from "@/components/custom/localized-text";
 import { Section } from "@/components/custom/section";
 import { BreadcrumbStructuredData } from "@/components/custom/structured-data";
 import { isDemoArticle, isDemoAuthor } from "@/lib/content/demo";
@@ -142,17 +142,16 @@ export default async function AuthorPage({
             <span className="text-muted-foreground">{author.name}</span>
           </nav>
 
-          <div lang="fr" className="flex flex-wrap items-start gap-5">
+          <div className="flex flex-wrap items-start gap-5">
             <AuthorMonogram
               name={author.name}
               className="size-16 type-h2 sm:size-20"
             />
             <div className="min-w-0 flex-1">
               <p className="type-small font-semibold tracking-wide text-accent uppercase">
-                {author.role}
+                <EditorialText fr={author.role} en={author.englishProfile?.role} />
               </p>
               <h1 className="mt-1 font-display type-h1">{author.name}</h1>
-              <span aria-hidden="true" className="mt-4 boma-rule w-20" />
               {/* Tant que le corpus de démonstration est en ligne, la page
                   d'une signature dit qu'elle est inventée, avant sa notice. */}
               {demo && (
@@ -167,7 +166,7 @@ export default async function AuthorPage({
                 </p>
               )}
               <p className="mt-4 max-w-reading type-body text-muted-foreground">
-                {author.bio}
+                <EditorialText fr={author.bio} en={author.englishProfile?.bio} />
               </p>
               <p className="mt-4 type-small text-muted-foreground">
                 <span className="lc-fr" lang="fr">
@@ -229,7 +228,7 @@ export default async function AuthorPage({
             </div>
           </>
         ) : (
-          <ul lang="fr" className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {articles.map((article) => (
               <li key={article.slug} className="min-w-0">
                 <ArticleCard article={article} headingLevel={2} />

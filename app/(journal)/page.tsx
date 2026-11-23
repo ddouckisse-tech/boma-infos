@@ -1,19 +1,20 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Advertising } from "@/components/custom/advertising";
+import { ArticleLink } from "@/components/custom/article-link";
 import { ArticleCard } from "@/components/custom/article-card";
 import { Container } from "@/components/custom/container";
 import { EmptyState } from "@/components/custom/empty-state";
 import { FeaturedHero } from "@/components/custom/featured-hero";
 import { NewsletterForm } from "@/components/custom/newsletter-form";
-import { LocalizedText } from "@/components/custom/localized-text";
+import { EditorialText, LocalizedText } from "@/components/custom/localized-text";
 import { Section } from "@/components/custom/section";
 import { SiteStructuredData } from "@/components/custom/structured-data";
 import { isDemoArticle } from "@/lib/content/demo";
 import { getHomepage } from "@/lib/content/server";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatReadingTime, isoDate } from "@/lib/format";
 import { categoryDescription, categoryLabel } from "@/lib/i18n";
-import { accentTextClass, sectionHref, toAccent } from "@/lib/navigation";
+import { sectionHref } from "@/lib/navigation";
 import { SEARCH_INDEXABLE, SITE } from "@/lib/site";
 import { cn } from "@/lib/utils";
 import { PwaInstallInvitation } from "@/components/custom/pwa-install";
@@ -31,23 +32,10 @@ const formatDateEn = (value: number) =>
     timeZone: "Africa/Libreville",
   }).format(value);
 
-/**
- * Home page (CDC §4.2).
- *
- * The order answers one question — what matters today: the lead story, then
- * "À la une", then the standing dossier, then the latest, then one rail per
- * section, then "Espace pro". Nine `<h1>` on the legacy home page become
- * exactly one here, carried by the positioning line under the masthead
- * (CDC §3.5).
- *
- * Fully static, revalidated every five minutes: a reader in Libreville gets a
- * cached document, not a database round trip.
- */
 export default async function HomePage() {
   const edition = await getHomepage();
   const visible = ({ slug }: { slug: string }) =>
     !SEARCH_INDEXABLE || !isDemoArticle(slug);
-  const lead = edition.lead && visible(edition.lead) ? edition.lead : null;
   const dossier =
     edition.dossier && visible(edition.dossier) ? edition.dossier : null;
   const top = edition.top.filter(visible);
@@ -59,43 +47,90 @@ export default async function HomePage() {
     }))
     .filter((section) => section.articles.length > 0);
   const espacePro = edition.espacePro.filter(visible);
-  const empty =
-    !lead &&
-    !dossier &&
-    !top.length &&
-    !latest.length &&
-    !bySection.length &&
-    !espacePro.length;
 
-  // Date de la dernière publication, et non l'horloge du serveur : c'est la
-  // date d'édition du journal, et le rendu reste pur (règle React 19).
-  const editionDate =
-    lead?.publishedAt ?? top[0]?.publishedAt ?? latest[0]?.publishedAt;
+  const editorialLead =
+    edition.lead && visible(edition.lead) ? edition.lead : null;
+  const stories = [
+    editorialLead,
+    ...top,
+    ...latest,
+    dossier,
+    ...bySection.flatMap(({ articles }) => articles),
+    ...espacePro,
+  ].filter((article) => article !== null);
+  const lead = stories[0];
+  const picks = top.filter((article) => article.slug !== lead?.slug);
+  const recent = latest.filter((article) => article.slug !== lead?.slug);
+  const separateDossier = dossier?.slug === lead?.slug ? null : dossier;
+  const frontSlugs = new Set([
+    lead?.slug,
+    separateDossier?.slug,
+    ...picks.map(({ slug }) => slug),
+    ...recent.map(({ slug }) => slug),
+  ]);
+  const sections = bySection
+    .map((section) => ({
+      ...section,
+      articles: section.articles.filter(({ slug }) => !frontSlugs.has(slug)),
+    }))
+    .filter(({ articles }) => articles.length > 0);
+  const professional = espacePro.filter(({ slug }) => !frontSlugs.has(slug));
+
+  const editionDate = lead
+    ? Math.max(...stories.map(({ publishedAt }) => publishedAt))
+    : undefined;
 
   return (
     <>
       <SiteStructuredData />
 
-      {/* Bandeau de une : porte l'unique <h1> de la page. */}
-      <div className="border-b border-border bg-surface-subtle py-4">
-        <Container className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-          <h1 className="font-display type-h3 text-foreground">
-            <LocalizedText fr={SITE.tagline} en={SITE.taglineEn} />
-          </h1>
-          {editionDate !== undefined && (
-            <p className="type-small text-muted-foreground">
-              <span className="lc-fr" lang="fr">
-                Édition du {formatDate(editionDate)}
-              </span>
-              <span className="lc-en" lang="en">
-                Edition of {formatDateEn(editionDate)}
-              </span>
-            </p>
-          )}
-        </Container>
-      </div>
+      <Container className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 py-4">
+        <h1 className="news-edition__title font-display">
+          <LocalizedText fr={SITE.tagline} en={SITE.taglineEn} />
+        </h1>
+        {editionDate !== undefined && (
+          <time className="news-edition__date" dateTime={isoDate(editionDate)}>
+            <LocalizedText
+              fr={`Édition du ${formatDate(editionDate)}`}
+              en={`Edition of ${formatDateEn(editionDate)}`}
+            />
+          </time>
+        )}
+      </Container>
 
-      {empty && (
+      {lead ? (
+        <Container as="section" className="news-front">
+          <h2 className="news-section-title">
+            <LocalizedText fr="À la une" en="Top story" />
+          </h2>
+          <div
+            className={cn(
+              "news-front__grid",
+              recent.length > 0 && "news-front__grid--with-rail"
+            )}
+          >
+            <FeaturedHero
+              article={lead}
+              stacked={recent.length > 0}
+              headingLevel={3}
+            />
+            {recent.length > 0 && (
+              <section id="derniers-articles" className="news-latest">
+                <h2 className="news-latest__title font-display">
+                  <LocalizedText fr="Derniers articles" en="Latest articles" />
+                </h2>
+                <ul className="divide-y divide-border">
+                  {recent.map((article) => (
+                    <li key={article.slug}>
+                      <ArticleCard article={article} variant="compact" />
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+          </div>
+        </Container>
+      ) : (
         <Section>
           <div className="lc-fr" lang="fr">
             <EmptyState
@@ -112,35 +147,16 @@ export default async function HomePage() {
         </Section>
       )}
 
-      {/* Pleine largeur, hors `Section` : la photo tapisse le bandeau d'un
-          bord à l'autre de l'écran, le texte reste dans la grille. */}
-      {lead && <FeaturedHero article={lead} />}
-
-      {top.length > 0 && (
+      {picks.length > 0 && (
         <Section
-          tone="muted"
-          title={<LocalizedText fr="À la une" en="Top stories" />}
-          description={
-            <LocalizedText
-              fr="La sélection de la rédaction."
-              en="Selected by our editorial team."
-            />
-          }
-          action={
-            // Il n'existe pas de rubrique « tout » : le lien descend aux
-            // derniers articles, toutes rubriques confondues, sur cette page.
-            <Link
-              href="#derniers-articles"
-              prefetch={false}
-              className="inline-flex min-h-11 items-center gap-1 type-small font-semibold text-accent underline-offset-4 hover:underline"
-            >
-              <LocalizedText fr="Les derniers articles" en="Latest articles" />
-              <ArrowRight aria-hidden="true" className="size-4" />
-            </Link>
+          className="news-section"
+          spacing="compact"
+          title={
+            <LocalizedText fr="Le choix de la rédaction" en="Editor’s picks" />
           }
         >
-          <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {top.map((article) => (
+          <ul className="news-card-grid">
+            {picks.map((article) => (
               <li key={article.slug} className="min-w-0">
                 <ArticleCard article={article} />
               </li>
@@ -149,94 +165,43 @@ export default async function HomePage() {
         </Section>
       )}
 
-      <Container><PwaInstallInvitation /></Container>
-
       <Advertising
         placement="home-primary"
         pageKey="/"
         className="mx-auto my-10 w-[calc(100%-2rem)] max-w-[728px] md:my-14"
       />
 
-      {dossier && (
-        <Section spacing="loose">
-          <div className="grid gap-6 rounded-md border border-l-2 border-border border-l-brand-gold bg-card p-6 lg:grid-cols-[2fr_1fr] lg:items-center lg:gap-10 lg:p-8">
-            <div className="min-w-0" lang="fr">
-              <p className="type-small font-semibold tracking-wide text-accent uppercase">
-                <LocalizedText fr="Dossier spécial" en="Special report" />
-              </p>
-              <h2 className="mt-3 font-display type-h1 text-balance">
-                <Link
-                  href={`/article/${dossier.slug}`}
-                  prefetch={false}
-                  className="underline-offset-4 hover:underline"
-                >
-                  {dossier.title}
-                </Link>
-              </h2>
-              <p className="mt-3 max-w-reading type-body text-muted-foreground">
-                {dossier.dek}
-              </p>
-              <Link
-                href={`/article/${dossier.slug}`}
-                prefetch={false}
-                className="mt-5 inline-flex items-center gap-2 rounded-md border border-border px-4 type-small font-semibold transition-colors touch-target hover:bg-surface-muted"
-              >
-                <LocalizedText fr="Ouvrir le dossier" en="Open the report" />
-                <ArrowRight aria-hidden="true" className="size-4" />
-              </Link>
-            </div>
-            <dl className="grid grid-cols-2 gap-4 lg:grid-cols-1">
-              <div className="rounded-md bg-surface-muted p-4">
-                <dt className="type-small text-muted-foreground">
-                  <LocalizedText fr="Signature" en="Byline" />
-                </dt>
-                <dd className="mt-1 type-body font-semibold">
-                  {dossier.authorName}
-                </dd>
-              </div>
-              <div className="rounded-md bg-surface-muted p-4">
-                <dt className="type-small text-muted-foreground">
-                  <LocalizedText fr="Lecture" en="Reading time" />
-                </dt>
-                <dd data-numeric className="mt-1 type-body font-semibold">
-                  <span className="lc-fr" lang="fr">
-                    {dossier.readingMinutes} minutes
-                  </span>
-                  <span className="lc-en" lang="en">
-                    {dossier.readingMinutes} min
-                  </span>
-                </dd>
-              </div>
-            </dl>
-          </div>
-        </Section>
-      )}
-
-      {latest.length > 0 && (
+      {separateDossier && (
         <Section
-          id="derniers-articles"
-          title={<LocalizedText fr="Derniers articles" en="Latest articles" />}
-          description={
-            <LocalizedText
-              fr="Ce qui vient d'être publié, toutes rubriques confondues."
-              en="The latest articles from across the journal."
-            />
-          }
+          className="news-section"
+          spacing="compact"
+          title={<LocalizedText fr="Dossier spécial" en="Special report" />}
         >
-          <ul
-            lang="fr"
-            className="divide-y divide-border border-y border-border"
-          >
-            {latest.map((article) => (
-              <li key={article.slug}>
-                <ArticleCard article={article} variant="list" />
-              </li>
-            ))}
-          </ul>
+          <article>
+            <h3 className="font-display type-h1 text-balance">
+              <ArticleLink
+                slug={separateDossier.slug}
+                className="underline-offset-4 hover:underline"
+              >
+                <EditorialText fr={separateDossier.title} en={separateDossier.englishSummary?.title} />
+              </ArticleLink>
+            </h3>
+            <p className="mt-3 max-w-reading type-body text-muted-foreground">
+              <EditorialText fr={separateDossier.dek} en={separateDossier.englishSummary?.dek} />
+            </p>
+            <p className="mt-3 type-small text-muted-foreground">
+              {separateDossier.authorName}
+              <span aria-hidden="true"> · </span>
+              <LocalizedText
+                fr={formatReadingTime(separateDossier.readingMinutes)}
+                en={`${separateDossier.englishSummary?.readingMinutes ?? separateDossier.readingMinutes} min read`}
+              />
+            </p>
+          </article>
         </Section>
       )}
 
-      {latest.length >= 4 && (
+      {recent.length >= 4 && (
         <Advertising
           placement="home-secondary"
           pageKey="/"
@@ -244,15 +209,15 @@ export default async function HomePage() {
         />
       )}
 
-      {bySection.map((section, index) => (
+      {sections.map((section, index) => (
         <Section
           key={section.slug}
-          tone={index % 2 === 0 ? "muted" : "default"}
+          className="news-section"
+          spacing="compact"
           title={
             <LocalizedText
               fr={section.name}
               en={categoryLabel("en", section.slug, section.name)}
-              className={cn(accentTextClass[toAccent(section.accent)])}
             />
           }
           description={
@@ -278,7 +243,12 @@ export default async function HomePage() {
               sur un téléphone haute densité, un demi-mégaoctet : le §5.4 en
               plafonne 600 Ko pour la page entière. La densité d'images
               décroît donc en descendant, comme sur une une imprimée. */}
-          <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr] lg:gap-10">
+          <div
+            className={cn(
+              "grid gap-4 lg:gap-10",
+              section.articles.length > 1 && "lg:grid-cols-[1.2fr_1fr]"
+            )}
+          >
             <ArticleCard
               article={section.articles[0]}
               variant="list"
@@ -299,8 +269,10 @@ export default async function HomePage() {
         </Section>
       ))}
 
-      {espacePro.length > 0 && (
+      {professional.length > 0 && (
         <Section
+          className="news-section"
+          spacing="compact"
           title={<LocalizedText fr="Espace pro" en="Professional resources" />}
           description={
             <LocalizedText
@@ -323,14 +295,14 @@ export default async function HomePage() {
           }
         >
           <div className="grid gap-8 lg:grid-cols-[1.4fr_1fr]">
-            <ul className="divide-y divide-border rounded-md border border-border px-4">
-              {espacePro.map((article) => (
+            <ul className="divide-y divide-border">
+              {professional.map((article) => (
                 <li key={article.slug}>
                   <ArticleCard article={article} variant="compact" />
                 </li>
               ))}
             </ul>
-            <div className="rounded-md border border-border bg-surface-muted p-6">
+            <div className="border-t border-border pt-4 lg:border-s lg:border-t-0 lg:ps-6 lg:pt-0">
               <h3 className="font-display type-h3">
                 <LocalizedText fr="Docuthèque" en="Document library" />
               </h3>
@@ -343,7 +315,7 @@ export default async function HomePage() {
               <Link
                 href="/docutheque"
                 prefetch={false}
-                className="mt-4 inline-flex items-center gap-2 rounded-md bg-primary px-4 type-small font-semibold text-primary-foreground transition-colors touch-target hover:bg-primary/90"
+                className="mt-2 inline-flex items-center gap-2 type-small font-semibold text-accent underline-offset-4 touch-target hover:underline"
               >
                 <LocalizedText
                   fr="Ouvrir la docuthèque"
@@ -356,7 +328,11 @@ export default async function HomePage() {
         </Section>
       )}
 
-      <Section tone="muted" spacing="loose">
+      <Container>
+        <PwaInstallInvitation />
+      </Container>
+
+      <Section className="news-newsletter" spacing="loose">
         <div className="grid gap-6 lg:grid-cols-[1fr_1fr] lg:items-center lg:gap-12">
           <div className="min-w-0">
             <h2 className="font-display type-h2">
@@ -367,12 +343,12 @@ export default async function HomePage() {
             </h2>
             <p className="mt-2 max-w-reading type-body text-muted-foreground">
               <LocalizedText
-                fr="Un courriel par semaine : l'essentiel de l'actualité du Gabon — politique, économie, société, tourisme, culture, sport. Inscription confirmée par courriel, désinscription en un clic."
-                en="One email a week with the essential news from Gabon: politics, the economy, society, tourism, culture and sport. Confirm by email and unsubscribe in one click."
+                fr="L’essentiel de l’actualité du Gabon, chaque semaine dans votre boîte mail."
+                en="The essential news from Gabon, in your inbox every week."
               />
             </p>
           </div>
-          <NewsletterForm source="accueil" variant="block" />
+          <NewsletterForm source="accueil" />
         </div>
       </Section>
     </>

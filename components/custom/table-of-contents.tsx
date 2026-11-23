@@ -13,15 +13,25 @@ import type { Block } from "@/convex/model/content";
  */
 export function TableOfContents({
   blocks,
+  sourceBlocks = blocks,
   className,
 }: {
   blocks: readonly Block[];
+  sourceBlocks?: readonly Block[];
   className?: string;
 }) {
-  const headings = blocks.filter(
-    (block): block is Extract<Block, { type: "heading" }> =>
-      block.type === "heading" && block.level === 2
-  );
+  const headings = blocks.flatMap((block, index) => {
+    if (block.type !== "heading" || block.level !== 2) return [];
+    const source = sourceBlocks[index];
+    return [
+      {
+        text: block.text,
+        id: slugifyHeading(
+          source?.type === "heading" ? source.text : block.text
+        ),
+      },
+    ];
+  });
 
   if (headings.length < 3) return null;
 
@@ -40,15 +50,13 @@ export function TableOfContents({
         {headings.map((heading, index) => (
           <li key={index}>
             <a
-              href={`#${slugifyHeading(heading.text)}`}
+              href={`#${heading.id}`}
               className="flex min-h-[44px] items-center gap-2 type-small text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
             >
               <span aria-hidden="true" data-numeric className="text-accent">
                 {String(index + 1).padStart(2, "0")}
               </span>
-              <span lang="fr" className="min-w-0">
-                {heading.text}
-              </span>
+              <span className="min-w-0">{heading.text}</span>
             </a>
           </li>
         ))}

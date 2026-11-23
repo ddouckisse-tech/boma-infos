@@ -31,17 +31,23 @@ export async function GET(request: Request) {
   }
 
   try {
-    const results = await searchArticles(term, undefined, 8);
+    const locale =
+      new URL(request.url).searchParams.get("lang") === "en" ? "en" : "fr";
+    const results = await searchArticles(term, undefined, 8, locale);
     return NextResponse.json(
       {
         term,
-        results: results.map((item) => ({
-          slug: item.slug,
-          title: item.title,
-          categorySlug: item.categorySlug,
-          categoryName: item.categoryName,
-          readingMinutes: item.readingMinutes,
-        })),
+        results: results.map((item) => {
+          const english = locale === "en" ? item.englishSummary : undefined;
+          return {
+            slug: item.slug,
+            title: english?.title ?? item.title,
+            language: english ? "en" : "fr",
+            categorySlug: item.categorySlug,
+            categoryName: item.categoryName,
+            readingMinutes: english?.readingMinutes ?? item.readingMinutes,
+          };
+        }),
       },
       {
         headers: {

@@ -5,6 +5,7 @@ import {
   dataSaverCookie,
   isThemeChoice,
   isLocaleChoice,
+  localeCookie,
   type LocaleChoice,
   type ResolvedTheme,
   type ThemeChoice,
@@ -129,11 +130,16 @@ export const setDataSaver = (enabled: boolean) => {
   emit();
 };
 
+export const rememberLocale = (locale: LocaleChoice) => {
+  persist(LOCALE_STORAGE_KEY, locale);
+  document.cookie = localeCookie(locale);
+};
+
 export const setLocale = (locale: LocaleChoice) => {
   const root = document.documentElement;
   root.dataset.locale = locale;
   root.lang = locale === "en" ? "en" : "fr-FR";
   snapshot = { ...snapshot, locale, ready: true };
-  persist(LOCALE_STORAGE_KEY, locale);
+  rememberLocale(locale);
   emit();
 };

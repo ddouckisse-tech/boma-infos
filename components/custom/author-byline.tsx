@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { LocalizedText } from "@/components/custom/localized-text";
 import { formatDate, formatReadingTime, isoDate } from "@/lib/format";
+import type { LocaleChoice } from "@/lib/preferences";
 import { localeDate } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +19,7 @@ type AuthorBylineProps = {
   authorSlug: string;
   authorName: string;
   authorRole?: string;
+  locale?: LocaleChoice;
   publishedAt: number;
   updatedAt?: number;
   readingMinutes?: number;
@@ -64,6 +66,7 @@ export function AuthorByline({
   authorSlug,
   authorName,
   authorRole,
+  locale = "fr",
   publishedAt,
   updatedAt,
   readingMinutes,
@@ -94,7 +97,7 @@ export function AuthorByline({
             {authorName}
           </Link>
           {authorRole && size === "default" && (
-            <span lang="fr" className="text-muted-foreground">
+            <span lang={locale} className="text-muted-foreground">
               {" "}
               — {authorRole}
             </span>

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { AuthorMonogram } from "@/components/custom/author-byline";
 import { Container } from "@/components/custom/container";
-import { LocalizedText } from "@/components/custom/localized-text";
+import { EditorialText, LocalizedText } from "@/components/custom/localized-text";
 import { PageHeader } from "@/components/custom/page-header";
 import { Section } from "@/components/custom/section";
 import { BreadcrumbStructuredData } from "@/components/custom/structured-data";
@@ -126,6 +126,20 @@ export default async function AboutPage() {
               en="In Gabon, every megabyte matters. We cap the home page at 600 kilobytes and an article at 400 kilobytes. Data saver further reduces image resolution and never downloads video without your consent."
             />
           </p>
+          <p className="flex flex-wrap gap-x-4 gap-y-2">
+            <Link href="/installer" prefetch={false}>
+              <LocalizedText
+                fr="Installer l’application"
+                en="Install the app"
+              />
+            </Link>
+            <a href="/rss.xml">
+              <LocalizedText fr="Flux RSS" en="RSS feed" />
+            </a>
+            <Link href="/newsletter" prefetch={false}>
+              <LocalizedText fr="Lettre hebdomadaire" en="Weekly newsletter" />
+            </Link>
+          </p>
         </div>
       </Section>
 
@@ -143,7 +157,7 @@ export default async function AboutPage() {
           )
         }
       >
-        <ul lang="fr" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {authors.map((author) => (
             <li key={author.slug}>
               <article className="flex h-full flex-col rounded-md border border-border bg-card p-5">
@@ -160,12 +174,12 @@ export default async function AboutPage() {
                       </Link>
                     </h3>
                     <p className="type-small text-muted-foreground">
-                      {author.role}
+                      <EditorialText fr={author.role} en={author.englishProfile?.role} />
                     </p>
                   </div>
                 </div>
                 <p className="mt-3 flex-1 type-small text-muted-foreground">
-                  {author.bio}
+                  <EditorialText fr={author.bio} en={author.englishProfile?.bio} />
                 </p>
                 <p className="mt-4 type-small text-muted-foreground">
                   <span className="lc-fr" lang="fr">

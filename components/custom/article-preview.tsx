@@ -105,38 +105,38 @@ function PreviewContent({ article }: { article: PreviewArticle }) {
 
   return (
     <div className="min-h-0 overflow-y-auto overscroll-contain">
-      <article className="bg-background [overflow-wrap:anywhere]">
-        <div className="lc-hero dark">
+      <article className="journal-main news-article">
+        <div className="px-4 py-6 sm:px-8">
+          <div className="news-article__intro">
+            {(article.category || article.isPartner) && (
+              <div className="mb-2 flex flex-wrap items-center gap-2 type-small font-semibold text-accent">
+                {article.category}
+                {article.isPartner && <PartnerTag size="small" />}
+              </div>
+            )}
+            <h3 className="news-article__title font-display text-balance">
+              {article.title || "Sans titre"}
+            </h3>
+            {article.dek && (
+              <p className="news-article__dek text-muted-foreground">
+                {article.dek}
+              </p>
+            )}
+            {article.author && (
+              <p className="mt-4 border-t border-border pt-3 type-small text-muted-foreground">
+                Par {article.author}
+              </p>
+            )}
+          </div>
           {cover && (
             <ResponsiveImage
               media={cover}
               sizes="(min-width: 768px) 760px, 100vw"
+              wrapperClassName="news-article__photo mt-5"
             />
           )}
-          <div className="lc-hero-body px-4 pt-10 pb-7 sm:px-8">
-            <div className="max-w-reading">
-              <div className="flex flex-wrap items-center gap-2 type-small font-semibold text-foreground/90">
-                {article.category}
-                {article.isPartner && <PartnerTag size="small" />}
-              </div>
-              <h3 className="mt-3 font-display type-display text-balance text-foreground">
-                {article.title || "Sans titre"}
-              </h3>
-              <span aria-hidden="true" className="mt-5 boma-rule w-40" />
-              {article.dek && (
-                <p className="mt-4 type-body font-medium text-foreground/90">
-                  {article.dek}
-                </p>
-              )}
-              {article.author && (
-                <p className="mt-4 type-small text-foreground/90">
-                  Par {article.author}
-                </p>
-              )}
-            </div>
-          </div>
         </div>
-        <div className="mx-auto max-w-reading px-4 py-6 sm:px-8 sm:py-8">
+        <div className="news-article__reading mx-auto px-4 pb-6 sm:px-8 sm:pb-8">
           {article.keyPoints.length > 0 && (
             <KeyPoints points={article.keyPoints} className="mb-6" />
           )}

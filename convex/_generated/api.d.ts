@@ -36,6 +36,7 @@ import type * as model_content from "../model/content.js";
 import type * as model_media from "../model/media.js";
 import type * as model_password from "../model/password.js";
 import type * as model_text from "../model/text.js";
+import type * as model_translation from "../model/translation.js";
 import type * as model_watch from "../model/watch.js";
 import type * as newsletter from "../newsletter.js";
 import type * as newsletterDraft from "../newsletterDraft.js";
@@ -55,6 +56,8 @@ import type * as seeding from "../seeding.js";
 import type * as settings from "../settings.js";
 import type * as stats from "../stats.js";
 import type * as taxonomy from "../taxonomy.js";
+import type * as translation from "../translation.js";
+import type * as translationWorker from "../translationWorker.js";
 import type * as wordpressImport from "../wordpressImport.js";
 
 import type {
@@ -92,6 +95,7 @@ declare const fullApi: ApiFromModules<{
   "model/media": typeof model_media;
   "model/password": typeof model_password;
   "model/text": typeof model_text;
+  "model/translation": typeof model_translation;
   "model/watch": typeof model_watch;
   newsletter: typeof newsletter;
   newsletterDraft: typeof newsletterDraft;
@@ -111,6 +115,8 @@ declare const fullApi: ApiFromModules<{
   settings: typeof settings;
   stats: typeof stats;
   taxonomy: typeof taxonomy;
+  translation: typeof translation;
+  translationWorker: typeof translationWorker;
   wordpressImport: typeof wordpressImport;
 }>;
 

@@ -235,7 +235,7 @@ export default function DesignSystemPage() {
         id="couleurs"
         tone="muted"
         title="Couleurs"
-        description="Le marine porte l'identité (bandeau, une, pied de page, tout le thème sombre), l'or souligne, et le filet tricolore vert-jaune-bleu — les couleurs du drapeau gabonais — signe la page. Viennent ensuite leurs échelles dérivées, des neutres légèrement teintés marine et quatre couleurs fonctionnelles. Aucune autre couleur n'existe dans le projet : la palette par défaut de Tailwind est remise à zéro."
+        description="Les surfaces neutres servent de fond au journal. Les couleurs de marque, leurs nuances et les couleurs fonctionnelles sont présentées ci-dessous."
       >
         <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {BRAND_SWATCHES.map((swatch) => (
@@ -255,10 +255,7 @@ export default function DesignSystemPage() {
           title="Échelle or — gold-400 pour l'emphase et les aplats, gold-800 pour le texte sur blanc"
           swatches={GOLD_RAMP}
         />
-        <Ramp
-          title="Vert et bleu du filet tricolore — avec leur cran textuel"
-          swatches={FLAG_RAMP}
-        />
+        <Ramp title="Vert et bleu du logo" swatches={FLAG_RAMP} />
 
         <div className="mt-8 grid gap-4 lg:grid-cols-2">
           <div>
@@ -383,16 +380,7 @@ export default function DesignSystemPage() {
         id="signature"
         tone="muted"
         title="Signature de la charte"
-        description={
-          <>
-            Le logo, le filet tricolore et la trame de points : ce qui distingue
-            BOMA Infos au premier coup d&apos;œil. L&apos;emphase en or vit dans
-            la carte « citation » de la colonne de lecture. Un bloc qui pose la
-            classe <code className="font-mono">dark</code> devient une « île »
-            marine : il garde les couleurs de la charte quel que soit le thème
-            de la page.
-          </>
-        }
+        description="Le logo s’adapte au thème de la page. Les trois pastilles conservent leurs couleurs."
       >
         <div>
           <h3 className="font-display type-h3 text-foreground">Le logo</h3>
@@ -414,42 +402,13 @@ export default function DesignSystemPage() {
               </figcaption>
             </figure>
             <figure>
-              <div className="dark rounded-md boma-field p-6 text-foreground">
+              <div className="dark rounded-md bg-background p-6 text-foreground">
                 <BrandWordmark />
               </div>
               <figcaption className="mt-2 type-small text-muted-foreground">
                 Dans une île marine : lettres blanches
               </figcaption>
             </figure>
-          </div>
-        </div>
-
-        <div className="mt-8 grid gap-8 lg:grid-cols-2">
-          <div>
-            <h3 className="font-display type-h3 text-foreground">
-              Le filet tricolore
-            </h3>
-            <span aria-hidden="true" className="mt-4 boma-rule w-56" />
-            <p className="mt-3 max-w-reading type-small text-muted-foreground">
-              Vert, jaune, bleu, dans les proportions de la charte : 24 / 37 /
-              39 %. Il est décoratif — toujours masqué aux technologies
-              d&apos;assistance, jamais porteur d&apos;information.
-            </p>
-          </div>
-
-          <div>
-            <h3 className="font-display type-h3 text-foreground">
-              La trame de points
-            </h3>
-            <div
-              aria-hidden="true"
-              className="mt-4 h-24 rounded-md boma-field"
-            />
-            <p className="mt-3 max-w-reading type-small text-muted-foreground">
-              Un point de 1 px tous les 14 px, à 9 % d&apos;opacité, que le halo
-              du projecteur éclaire en haut à droite. Elle est réservée aux îles
-              marine : la une, la carte « citation » et le pied de page.
-            </p>
           </div>
         </div>
       </Section>
@@ -570,12 +529,11 @@ export default function DesignSystemPage() {
             et les jambages ; celui des titres descend à 1,15 pour qu&apos;un
             titre sur trois lignes reste un bloc et non un empilement.
           </p>
-          <figure className="boma-quote dark mt-6 max-w-reading rounded-md border border-border boma-field px-5 py-6 text-foreground sm:px-8 sm:py-8">
+          <figure className="boma-quote mt-6 max-w-reading border-s-2 border-border-strong ps-5 text-foreground sm:ps-6">
             <blockquote className="font-display type-h2 leading-snug text-balance">
               Une information se vérifie <em>avant</em> d&apos;être publiée,{" "}
               <em>jamais après</em>.
             </blockquote>
-            <span aria-hidden="true" className="mt-5 boma-rule" />
             <figcaption className="mt-4 type-small text-muted-foreground">
               — Exemple de carte « citation »
             </figcaption>
@@ -839,9 +797,8 @@ export default function DesignSystemPage() {
           <div className="rounded-md border border-border bg-card p-4">
             <dt className="font-display type-h3">PageHeader</dt>
             <dd className="mt-1 type-small text-muted-foreground">
-              Émet l&apos;unique h1 de la page, son surtitre et, dessous, le
-              filet tricolore de la charte. Le bloc en tête de cette page en est
-              un.
+              Émet l&apos;unique h1 de la page et réunit le surtitre, le fil
+              d&apos;Ariane et les actions quand ils sont présents.
             </dd>
           </div>
         </dl>

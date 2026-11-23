@@ -21,6 +21,10 @@ export type LocaleChoice = "fr" | "en";
 export const THEME_STORAGE_KEY = "bomainfos.theme";
 export const DATA_SAVER_STORAGE_KEY = "bomainfos.data-saver";
 export const LOCALE_STORAGE_KEY = "bomainfos.locale";
+export const LOCALE_COOKIE = "bomainfos-locale";
+
+export const localeCookie = (locale: LocaleChoice): string =>
+  `${LOCALE_COOKIE}=${locale}; Path=/; Max-Age=31536000; SameSite=Lax`;
 
 /**
  * Le mode économie est aussi écrit dans un cookie : c'est `proxy.ts` qui le
@@ -75,6 +79,14 @@ d.dataset.dataSaver=s?"on":"off";
 document.cookie=${JSON.stringify(DATA_SAVER_COOKIE)}+"="+(s?"1":"0")+"; Path=/; Max-Age="+(s?31536000:0)+"; SameSite=Lax";
 var l=localStorage.getItem(${JSON.stringify(LOCALE_STORAGE_KEY)});
 if(l!=="fr"&&l!=="en"){l=navigator.language&&navigator.language.toLowerCase().startsWith("en")?"en":"fr";}
+var p=window.location&&window.location.pathname;
+if(/^\\/en\\/article\\/[^/]+\\/?$/.test(p||"")){l="en";}
+if(p==="/recherche"){var q=new URLSearchParams(window.location.search).get("lang");if(q==="en"||q==="fr"){l=q;}}
+if(p==="/recherche"||(p&&p.indexOf("/en/article/")===0)){localStorage.setItem(${JSON.stringify(LOCALE_STORAGE_KEY)},l);}
+document.cookie=${JSON.stringify(LOCALE_COOKIE)}+"="+l+"; Path=/; Max-Age=31536000; SameSite=Lax";
 d.dataset.locale=l;
 d.lang=l==="en"?"en":"fr-FR";
+if(l==="en"&&/^\\/article\\/[a-z0-9-]+\\/?$/.test(p||"")&&!new URLSearchParams(window.location.search).has("original")){
+  window.location.replace("/en"+p+window.location.search+window.location.hash);
+}
 }catch(e){}})();` + AD_PREFERENCES_SCRIPT;

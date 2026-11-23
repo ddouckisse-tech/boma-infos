@@ -3,7 +3,6 @@ import { LocalizedText } from "@/components/custom/localized-text";
 import { categoryLabel } from "@/lib/i18n";
 import {
   accentFillClass,
-  accentTextClass,
   sectionHref,
   subSectionHref,
   toAccent,
@@ -59,7 +58,7 @@ export function CategoryBadge({
           "truncate rounded-xs",
           variant === "fill"
             ? cn("px-2 py-1 leading-tight", accentFillClass[token])
-            : cn("tracking-wide uppercase", accentTextClass[token])
+            : "text-muted-foreground underline-offset-4 hover:underline"
         )}
       >
         <LocalizedText fr={name} en={categoryLabel("en", slug, name)} />

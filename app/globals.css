@@ -1,29 +1,29 @@
 @import "tailwindcss";
 @import "shadcn/tailwind.css";
+@import "./journal.css";
 
 /* The saved language is applied in <head>, before the browser paints. */
 .lc-en {
   display: none;
 }
 
-html[data-locale="en"] .lc-fr {
+html[data-locale="en"] .lc-fr,
+article[data-edition="en"] .lc-fr {
   display: none;
 }
 
-html[data-locale="en"] .lc-en {
+html[data-locale="en"] .lc-en,
+article[data-edition="en"] .lc-en {
   display: revert;
 }
 
 /* ==========================================================================
    BOMA Infos — jetons de design
    Référence : la charte graphique du titre (carte « citation » sur fond
-   marine) et CAHIER-DES-CHARGES.md §3. Trois partis pris en découlent :
-     - le MARINE de la charte porte l'identité — bandeau, une, pied de page
-       et tout le thème sombre ;
-     - l'OR souligne : il est l'emphase sur le marine, un ornement sur le
-       blanc, où il ne porte jamais de texte courant ;
-     - le FILET TRICOLORE vert-jaune-bleu, couleurs du drapeau gabonais, signe
-       la page. Il est décoratif : aucune information ne passe par lui seul.
+   marine) et CAHIER-DES-CHARGES.md §3.
+     - le MARINE de la charte porte l'identité et le thème sombre ;
+     - les trois couleurs du drapeau gabonais restent disponibles pour le
+       logo et les accents de la charte.
    Aucune couleur hors de celles déclarées ici n'est admise : la palette
    Tailwind par défaut est remise à zéro plus bas (`--color-*: initial`).
    ========================================================================== */
@@ -32,8 +32,7 @@ html[data-locale="en"] .lc-en {
    script anti-clignotement (components/custom/preferences-script.tsx).
    `:where(.dark, .dark *)` — et non `.dark *` — pour que l'élément racine
    lui-même soit ciblé. La même classe posée sur un sous-arbre en fait une
-   « île marine » : le bandeau, la une et le pied de page la portent, et
-   gardent les couleurs de la charte quel que soit le thème de la page. */
+   « île marine » pour les aperçus qui l'utilisent. */
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* --------------------------------------------------------------------------
@@ -76,7 +75,7 @@ html[data-locale="en"] .lc-en {
   --color-gold-900: #553e00;
   --color-gold-950: #332400;
 
-  /* Vert du filet (teinte 159°) */
+  /* Vert de marque (teinte 159°) */
   --color-green-100: #d9f7e5;
   --color-green-300: #90dfb3;
   --color-green-400: #61c994; /* vert porteur de texte sur fond nuit — 9,36:1 */
@@ -86,7 +85,7 @@ html[data-locale="en"] .lc-en {
   --color-green-800: #055031;
   --color-green-950: #042616;
 
-  /* Bleu du filet (teinte 261°) */
+  /* Bleu de marque (teinte 261°) */
   --color-blue-100: #e1ecff;
   --color-blue-300: #9dbff8;
   --color-blue-400: #6097f4; /* bleu porteur de texte sur fond nuit — 6,58:1 */
@@ -334,20 +333,20 @@ html[data-locale="en"] .lc-en {
 @theme {
   /* Deux familles seulement (§3.2), auto-hébergées via next/font. */
   --font-sans:
-    var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    var(--font-inter, Inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
     sans-serif;
   /* Titres : Source Serif 4, la serif de la charte (« BOMA », la citation).
      Une seule graisse statique, 600 — celle mesurée sur la charte —, soit
      22 Ko : demander deux graisses ferait servir le fichier variable, de
      51 Ko. */
   --font-display:
-    var(--font-source-serif), "Iowan Old Style", "Palatino Linotype", Georgia,
+    var(--font-source-serif, "Source Serif 4"), "Iowan Old Style", "Palatino Linotype", Georgia,
     "Times New Roman", serif;
   /* L'emphase de la charte : serif grasse italique, en or. Une face à part,
      jamais préchargée — elle n'est téléchargée que par une page qui s'en
      sert (`.boma-quote em`), et le contrôle de budget la compte alors. */
   --font-emphasis:
-    var(--font-source-serif-italic), var(--font-source-serif), Georgia, serif;
+    var(--font-source-serif-italic, var(--font-display));
   --font-heading: var(--font-display);
   --font-mono:
     ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
@@ -588,59 +587,11 @@ html[data-locale="en"] .lc-en {
       color-mix(in oklab, var(--color-neutral-950) 30%, transparent);
 }
 
-/* --------------------------------------------------------------------------
-   Signature de la charte
-
-   Trois éléments, relevés sur l'image de référence, et rien d'autre :
-
-   1. le FILET TRICOLORE — vert, jaune, bleu, dans les proportions de la
-      charte (24 / 37 / 39 %). Un dégradé à arrêts francs : un seul élément,
-      aucune requête. Décoratif, donc toujours `aria-hidden`.
-   2. la TRAME DE POINTS du fond marine, à peine visible, et le halo du
-      projecteur. Réservés aux îles marine (une, citation, pied).
-   3. l'EMPHASE — serif grasse italique, or sur le marine. Elle n'existe
-      que sur le marine : sur la page claire l'or ne porte pas de texte
-      (1,58:1), et la carte « citation » est donc une île marine.
-   -------------------------------------------------------------------------- */
-@utility boma-rule {
-  display: block;
-  block-size: 3px;
-  border-radius: 1.5px;
-  background-image: linear-gradient(
-    to right,
-    var(--color-flag-green) 0 24%,
-    var(--color-flag-yellow) 24% 61%,
-    var(--color-flag-blue) 61% 100%
-  );
-}
-
-/* La trame : un point de 1 px tous les 14 px, à 9 % d'opacité, que le halo
-   du projecteur éclaire en haut à droite — comme sur la charte. */
-@utility boma-field {
-  background-color: var(--color-night);
-  background-image:
-    radial-gradient(
-      ellipse 70% 90% at 78% 0%,
-      color-mix(in oklab, var(--color-navy-700) 70%, transparent) 0%,
-      transparent 70%
-    ),
-    radial-gradient(
-      circle at 1px 1px,
-      color-mix(in oklab, var(--color-white) 9%, transparent) 1px,
-      transparent 1.5px
-    );
-  background-size:
-    100% 100%,
-    14px 14px;
-}
-
-/* L'emphase vit dans la carte « citation » (`PullQuote`) : `*les mots à
-   retenir*` y deviennent la serif grasse italique, en or, de la charte. */
+/* Emphase des citations, identique dans les deux thèmes. */
 .boma-quote em {
   font-family: var(--font-emphasis);
   font-style: italic;
   font-weight: 700;
-  color: var(--color-brand-gold);
 }
 
 /* Lien d'évitement : hors écran jusqu'au focus clavier. */
@@ -688,140 +639,6 @@ html[data-locale="en"] .lc-en {
   display: block;
   inline-size: 100%;
   block-size: 100%;
-}
-
-/* --------------------------------------------------------------------------
-   7 bis (suite). Bandeau photographique — une de l'accueil, en-tête d'article
-
-   C'est la charte, mise en page : le texte à gauche sur le marine, en serif
-   blanche ; la photo à droite, qui se fond dans le panneau par un dégradé
-   horizontal ; le filet tricolore sous le titre. Le tout tient dans un
-   écran, texte centré verticalement. Sous 768 px, il n'y a pas de place pour
-   deux colonnes : la photo passe derrière le texte, avec un voile vertical.
-
-   Le voile n'est pas décoratif : il porte le contraste. Sous la colonne de
-   texte son opacité dépasse 0,72 (≥ 3:1 pour le titre large) et dépasse
-   0,9 là où vivent le chapeau et la signature (≥ 4,5:1 pour le blanc et le
-   texte atténué, même sur une photo blanche). Avant le premier octet, le
-   bandeau est déjà peint (le marine, puis la couleur dominante de la
-   photo) : le texte n'attend jamais l'image pour être lisible, et la
-   hauteur est dictée par le texte, jamais par l'image — rien ne bouge.
-
-   Le bandeau est une ÎLE MARINE : le composant pose la classe `dark` sur la
-   section, les jetons du thème sombre s'y appliquent quel que soit le thème
-   de la page, et les composants qu'il contient (pastille de rubrique,
-   mention partenaire, signature) suivent. Le dégradé reste tiré de
-   `--background`, qui vaut ici le marine de la charte.
-   -------------------------------------------------------------------------- */
-.lc-hero {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  background-color: var(--background);
-  color: var(--foreground);
-}
-
-/* La trame de points de la charte, sur le panneau de texte seulement : un
-   masque l'efface là où la photo commence. Sous le voile, donc sans effet
-   sur le contraste du texte (elle éclaircit le fond de moins de 1 %). */
-.lc-hero::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background-image: radial-gradient(
-    circle at 1px 1px,
-    color-mix(in oklab, var(--color-white) 8%, transparent) 1px,
-    transparent 1.5px
-  );
-  background-size: 14px 14px;
-  mask-image: linear-gradient(to right, black 0%, black 28%, transparent 62%);
-}
-
-/* Un écran, pas plus : la bande tient sous l'en-tête (deux rangées et le
-   bandeau d'édition, ≈ 12 rem). `vh` d'abord, pour les navigateurs sans
-   `svh` ; le contenu peut toujours l'allonger. */
-.lc-hero-body {
-  min-block-size: clamp(28rem, calc(100vh - 12rem), 44rem);
-  min-block-size: clamp(28rem, calc(100svh - 12rem), 44rem);
-}
-
-/* La photo tapisse le fond ; sa boîte ne dicte plus la hauteur. `.lc-media`
-   étant hors couche, la surcharge doit l'être aussi, et venir après. */
-.lc-hero > .lc-media {
-  position: absolute;
-  inset: 0;
-  z-index: -2;
-}
-
-.lc-hero > .lc-media img {
-  /* Un peu au-dessus du centre : les visages sont rarement en bas. */
-  object-position: 50% 35%;
-}
-
-/* Petit écran — deux couches : du bas vers le haut, la zone de texte ; du
-   haut vers le bas, le fil d'Ariane. */
-.lc-hero::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background-image:
-    linear-gradient(
-      to top,
-      color-mix(in oklab, var(--background) 96%, transparent) 0%,
-      color-mix(in oklab, var(--background) 90%, transparent) 35%,
-      color-mix(in oklab, var(--background) 55%, transparent) 65%,
-      color-mix(in oklab, var(--background) 30%, transparent) 100%
-    ),
-    linear-gradient(
-      to bottom,
-      color-mix(in oklab, var(--background) 75%, transparent) 0%,
-      color-mix(in oklab, var(--background) 50%, transparent) 8%,
-      color-mix(in oklab, var(--background) 0%, transparent) 30%
-    );
-}
-
-/* À partir de 768 px : la photo occupe les trois quarts droits et se fond,
-   vers la gauche, dans le panneau qui porte le texte. Le panneau est opaque
-   jusqu'à 30 %, la photo n'apparaît franchement qu'au-delà de 55 % — là où
-   la colonne de texte (54–58 % de la grille) s'arrête. Un léger fondu en
-   bas adoucit la jonction avec la section suivante. */
-@media (min-width: 768px) {
-  .lc-hero > .lc-media {
-    inset-inline-start: 26%;
-  }
-
-  .lc-hero::before {
-    background-image:
-      linear-gradient(
-        to right,
-        color-mix(in oklab, var(--background) 100%, transparent) 0%,
-        color-mix(in oklab, var(--background) 100%, transparent) 30%,
-        color-mix(in oklab, var(--background) 94%, transparent) 42%,
-        color-mix(in oklab, var(--background) 72%, transparent) 56%,
-        color-mix(in oklab, var(--background) 40%, transparent) 70%,
-        color-mix(in oklab, var(--background) 22%, transparent) 85%,
-        color-mix(in oklab, var(--background) 22%, transparent) 100%
-      ),
-      linear-gradient(
-        to top,
-        color-mix(in oklab, var(--background) 60%, transparent) 0%,
-        color-mix(in oklab, var(--background) 0%, transparent) 28%
-      );
-  }
-}
-
-/* Contraste renforcé demandé par le système : la photo passe au second plan. */
-@media (prefers-contrast: more) {
-  .lc-hero::before {
-    background-image: linear-gradient(
-      color-mix(in oklab, var(--background) 92%, transparent),
-      color-mix(in oklab, var(--background) 92%, transparent)
-    );
-  }
 }
 
 /* Média lourd (vidéo, galerie) : remplacé par un espace réservé cliquable. */
@@ -1004,20 +821,14 @@ dialog.lc-dialog[open] {
   text-decoration-thickness: 2px;
 }
 
-/* Progression de lecture : un filet de 3 px, sans ombre ni animation. */
+/* Indicateur de progression en haut de l’article. */
 .reading-progress {
   position: fixed;
   inset-block-start: 0;
   inset-inline: 0;
   z-index: 50;
-  block-size: 3px;
-  /* Le filet de la charte, dans ses proportions (24 / 37 / 39 %). */
-  background-image: linear-gradient(
-    to right,
-    var(--color-flag-green) 0 24%,
-    var(--color-flag-yellow) 24% 61%,
-    var(--color-flag-blue) 61% 100%
-  );
+  block-size: 2px;
+  background: var(--muted-foreground);
   transform-origin: 0 50%;
   /* La mise à l'échelle est pilotée par `scroll-timeline` quand le navigateur
      la gère : aucun JavaScript, aucune écoute d'événement de défilement. */

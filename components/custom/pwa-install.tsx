@@ -3,6 +3,9 @@
 import { useState, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { LocalizedText } from "@/components/custom/localized-text";
+import { usePreferences } from "@/components/providers/preferences-provider";
+import { localize } from "@/lib/i18n";
 import {
   dismissPwaInvitation,
   getPwaServerSnapshot,
@@ -34,20 +37,26 @@ export function PwaInstallAction({ className = "" }: { className?: string }) {
   if (state.installed || state.standalone)
     return (
       <p className="type-small" role="status">
-        L’application est installée.{" "}
+        <LocalizedText
+          fr="L’application est installée."
+          en="The app is installed."
+        />{" "}
         <Link
           href="/"
           prefetch={false}
           className="underline underline-offset-4"
         >
-          Ouvrir le journal
+          <LocalizedText fr="Ouvrir le journal" en="Open the newspaper" />
         </Link>
       </p>
     );
   if (state.requested)
     return (
       <p className="type-small" role="status">
-        Installation demandée. Suivez la confirmation de votre navigateur.
+        <LocalizedText
+          fr="Installation demandée. Suivez la confirmation de votre navigateur."
+          en="Follow your browser’s prompt to finish installation."
+        />
       </p>
     );
   return (
@@ -62,20 +71,38 @@ export function PwaInstallAction({ className = "" }: { className?: string }) {
             setFailed(result === "error" || result === "unavailable");
           }}
         >
-          {state.busy ? "Installation en cours…" : "Installer l’application"}
+          {state.busy ? (
+            <LocalizedText fr="Installation en cours…" en="Installing…" />
+          ) : (
+            <LocalizedText fr="Installer l’application" en="Install the app" />
+          )}
         </button>
       ) : (
         <a className="boma-pwa-button" href={href}>
-          {state.platform === "ios"
-            ? "Ajouter à l’écran d’accueil"
-            : "Comment installer l’application"}
+          {state.platform === "ios" ? (
+            <LocalizedText
+              fr="Ajouter à l’écran d’accueil"
+              en="Add to Home Screen"
+            />
+          ) : (
+            <LocalizedText
+              fr="Comment installer l’application"
+              en="How to install the app"
+            />
+          )}
         </a>
       )}
       {failed && (
         <p className="mt-3 type-small" role="status">
-          La fenêtre d’installation n’a pas pu s’ouvrir.{" "}
+          <LocalizedText
+            fr="La fenêtre d’installation n’a pas pu s’ouvrir."
+            en="The installation prompt could not be opened."
+          />{" "}
           <a href={href} className="underline underline-offset-4">
-            Suivez les étapes d’installation.
+            <LocalizedText
+              fr="Suivez les étapes d’installation."
+              en="Follow the installation steps."
+            />
           </a>
         </p>
       )}
@@ -87,6 +114,7 @@ export function PwaInstallAction({ className = "" }: { className?: string }) {
 export function PwaInstallInvitation() {
   const state = useInstall();
   const pathname = usePathname();
+  const { locale } = usePreferences();
   if (
     !state.ready ||
     state.installed ||
@@ -109,14 +137,19 @@ export function PwaInstallInvitation() {
       />
       <div className="boma-pwa-copy">
         <p className="type-small text-muted-foreground">
-          Votre journal, à portée de main
+          <LocalizedText
+            fr="Votre journal, à portée de main"
+            en="Your newspaper at your fingertips"
+          />
         </p>
         <h2 id="boma-pwa-title" className="font-display type-h3">
-          Installez BOMA Infos
+          <LocalizedText fr="Installez BOMA Infos" en="Install BOMA Infos" />
         </h2>
         <p className="mt-2 type-small text-muted-foreground">
-          Ajoutez gratuitement l’application à votre écran d’accueil pour
-          retrouver le journal en un geste.
+          <LocalizedText
+            fr="Ajoutez gratuitement l’application à votre écran d’accueil pour retrouver le journal en un geste."
+            en="Add the free app to your home screen and open the newspaper with one tap."
+          />
         </p>
         <PwaInstallAction className="mt-4" />
       </div>
@@ -129,9 +162,12 @@ export function PwaInstallInvitation() {
             document.getElementById("contenu")?.focus({ preventScroll: true })
           );
         }}
-        aria-label="Masquer la proposition d’installation pendant 14 jours"
+        aria-label={localize(locale, {
+          fr: "Masquer la proposition d’installation pendant 14 jours",
+          en: "Dismiss the installation invitation for 14 days",
+        })}
       >
-        Plus tard
+        <LocalizedText fr="Plus tard" en="Later" />
       </button>
     </aside>
   );

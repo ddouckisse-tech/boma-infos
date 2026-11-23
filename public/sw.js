@@ -167,7 +167,11 @@ async function networkFirstDocument(request) {
         if (canCacheDocument(response)) {
           // On ne conserve que le HTML : les charges utiles RSC des navigations
           // clientes changent de nom à chaque déploiement.
-          await cache.put(request, response.clone());
+          // Locale redirects must not cache English HTML under the French URL.
+          const redirectedToEnglish = response.redirected && response.url &&
+            new URL(response.url).pathname.startsWith("/en/article/");
+          const key = redirectedToEnglish ? response.url : request;
+          await cache.put(key, response.clone());
           await trim(PAGES_CACHE, MAX_PAGES);
         } else {
           // A page which has switched to nonce rendering supersedes its old copy.

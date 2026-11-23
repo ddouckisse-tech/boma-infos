@@ -165,9 +165,11 @@ function ArticleEditor({ articleId }: { articleId: Id<"articles"> }) {
     });
   }
 
+  const editable = article?.editable;
+  const galleryMediaKeys = article?.galleryMediaKeys;
   const persist = useCallback(
     async (auto: boolean) => {
-      if (!form || !article?.editable) return;
+      if (!form || !editable || !galleryMediaKeys) return;
       const savedRevision = revision.current;
       const pendingSave = saveQueue.current.then(() =>
         save({
@@ -179,7 +181,7 @@ function ArticleEditor({ articleId }: { articleId: Id<"articles"> }) {
           subCategorySlug: form.subCategorySlug || undefined,
           authorSlug: form.authorSlug,
           heroMediaKey: form.heroMediaKey || undefined,
-          galleryMediaKeys: article.galleryMediaKeys,
+          galleryMediaKeys,
           keyPoints: form.keyPoints.split("\n").filter((line) => line.trim()),
           seo: {
             title: form.seoTitle || undefined,
@@ -205,7 +207,7 @@ function ArticleEditor({ articleId }: { articleId: Id<"articles"> }) {
       if (revision.current === savedRevision) setDirty(false);
       return result;
     },
-    [articleId, article?.editable, article?.galleryMediaKeys, form, save]
+    [articleId, editable, form, galleryMediaKeys, save]
   );
 
   // Enregistrement automatique après quatre secondes de calme.

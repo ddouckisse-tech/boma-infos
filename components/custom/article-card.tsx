@@ -1,6 +1,9 @@
-import Link from "next/link";
 import { CategoryBadge } from "@/components/custom/category-badge";
-import { LocalizedText } from "@/components/custom/localized-text";
+import { ArticleLink } from "@/components/custom/article-link";
+import {
+  EditorialText,
+  LocalizedText,
+} from "@/components/custom/localized-text";
 import { PartnerTag } from "@/components/custom/partner-tag";
 import { ResponsiveImage } from "@/components/custom/responsive-image";
 import { formatDate, formatReadingTime, isoDate } from "@/lib/format";
@@ -66,7 +69,7 @@ export function ArticleCard({
   const Heading = headingLevel === 2 ? "h2" : "h3";
 
   const meta = (
-    <p className="type-small text-muted-foreground">
+    <p className="news-card-meta text-muted-foreground">
       <time dateTime={isoDate(article.publishedAt)}>
         <LocalizedText
           fr={formatDate(article.publishedAt)}
@@ -76,34 +79,30 @@ export function ArticleCard({
       <span aria-hidden="true"> · </span>
       <LocalizedText
         fr={formatReadingTime(article.readingMinutes)}
-        en={englishReadingTime(article.readingMinutes)}
+        en={englishReadingTime(
+          article.englishSummary?.readingMinutes ?? article.readingMinutes
+        )}
       />
     </p>
   );
 
   if (variant === "compact") {
     return (
-      <article lang="fr" className={cn("group/card relative py-3", className)}>
-        <div className="flex items-baseline gap-3">
-          <span
-            aria-hidden="true"
-            className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-gold"
-          />
-          <div className="min-w-0">
-            <Heading className="font-display type-body font-semibold text-balance">
-              <Link
-                href={`/article/${article.slug}`}
-                prefetch={false}
-                className="underline-offset-4 after:absolute after:inset-0 hover:underline"
-              >
-                {article.title}
-              </Link>
-            </Heading>
-            <div className="mt-1 flex flex-wrap items-center gap-x-2">
-              {article.origin === "partenaire" && <PartnerTag size="small" />}
-              {meta}
-            </div>
-          </div>
+      <article className={cn("group/card relative py-3", className)}>
+        <Heading className="news-brief-title font-display text-pretty">
+          <ArticleLink
+            slug={article.slug}
+            className="underline-offset-4 after:absolute after:inset-0 hover:underline"
+          >
+            <EditorialText
+              fr={article.title}
+              en={article.englishSummary?.title}
+            />
+          </ArticleLink>
+        </Heading>
+        <div className="mt-1 flex flex-wrap items-center gap-x-2">
+          {article.origin === "partenaire" && <PartnerTag size="small" />}
+          {meta}
         </div>
       </article>
     );
@@ -112,34 +111,31 @@ export function ArticleCard({
   if (variant === "list") {
     return (
       <article
-        lang="fr"
         className={cn(
           "group/card relative py-4",
           showImage &&
-            "grid grid-cols-[96px_1fr] gap-4 sm:grid-cols-[160px_1fr] sm:gap-6",
+            media &&
+            "grid grid-cols-[minmax(0,1fr)_96px] gap-3 sm:grid-cols-[160px_minmax(0,1fr)] sm:gap-5",
           className
         )}
       >
-        {showImage && (
-          <div>
-            {media ? (
-              <ResponsiveImage
-                media={media}
-                alt=""
-                sizes={SIZES.thumb}
-                // 240 et non 320 : la vignette fait 96 px de large sur un
-                // téléphone (192 px physiques) et 160 px au-delà. La
-                // rendition de 240 px pèse un tiers de moins, et le budget
-                // facture la plus grande que le <picture> peut demander.
-                maxWidth={240}
-                wrapperClassName="aspect-[16/9] rounded-md"
-              />
-            ) : (
-              <span className="block aspect-[16/9] rounded-md bg-surface-muted" />
-            )}
+        {showImage && media && (
+          <div className="col-start-2 row-start-1 self-start sm:col-start-1">
+            <ResponsiveImage
+              media={media}
+              alt=""
+              sizes={SIZES.thumb}
+              maxWidth={240}
+              wrapperClassName="aspect-[4/3] sm:aspect-video"
+            />
           </div>
         )}
-        <div className="min-w-0">
+        <div
+          className={cn(
+            "min-w-0",
+            showImage && media && "col-start-1 row-start-1 sm:col-start-2"
+          )}
+        >
           <div className="flex flex-wrap items-center gap-2">
             {showCategory && (
               <CategoryBadge
@@ -155,16 +151,18 @@ export function ArticleCard({
             {article.origin === "partenaire" && <PartnerTag size="small" />}
           </div>
           <Heading className="mt-1 font-display type-h3 text-balance">
-            <Link
-              href={`/article/${article.slug}`}
-              prefetch={false}
+            <ArticleLink
+              slug={article.slug}
               className="underline-offset-4 after:absolute after:inset-0 hover:underline"
             >
-              {article.title}
-            </Link>
+              <EditorialText
+                fr={article.title}
+                en={article.englishSummary?.title}
+              />
+            </ArticleLink>
           </Heading>
           <p className="mt-2 line-clamp-2 type-small text-muted-foreground">
-            {article.dek}
+            <EditorialText fr={article.dek} en={article.englishSummary?.dek} />
           </p>
           <div className="mt-2">{meta}</div>
         </div>
@@ -174,32 +172,28 @@ export function ArticleCard({
 
   return (
     <article
-      lang="fr"
       className={cn(
-        "group/card relative flex h-full flex-col overflow-hidden rounded-md border border-border bg-card",
+        "news-card group/card relative flex h-full flex-col border-t border-border",
         className
       )}
     >
-      <div>
-        {media ? (
-          <ResponsiveImage
-            media={media}
-            alt=""
-            sizes={SIZES.card}
-            maxWidth={640}
-            wrapperClassName="aspect-[16/9]"
-          />
-        ) : (
-          <span className="block aspect-[16/9] bg-surface-muted" />
-        )}
-      </div>
-      <div className="flex flex-1 flex-col p-4">
+      {showImage && media && (
+        <ResponsiveImage
+          media={media}
+          alt=""
+          sizes={SIZES.card}
+          maxWidth={640}
+          wrapperClassName="aspect-video"
+        />
+      )}
+      <div className="flex flex-1 flex-col py-2.5">
         <div className="flex flex-wrap items-center gap-2">
           {showCategory && (
             <CategoryBadge
               slug={article.subCategorySlug ?? article.categorySlug}
               name={article.subCategoryName ?? article.categoryName}
               accent={article.categoryAccent}
+              variant="text"
               parentSlug={
                 article.subCategorySlug ? article.categorySlug : undefined
               }
@@ -207,19 +201,21 @@ export function ArticleCard({
           )}
           {article.origin === "partenaire" && <PartnerTag size="small" />}
         </div>
-        <Heading className="mt-3 font-display type-h3 text-balance">
-          <Link
-            href={`/article/${article.slug}`}
-            prefetch={false}
+        <Heading className="font-display type-h3 text-pretty">
+          <ArticleLink
+            slug={article.slug}
             className="underline-offset-4 after:absolute after:inset-0 hover:underline"
           >
-            {article.title}
-          </Link>
+            <EditorialText
+              fr={article.title}
+              en={article.englishSummary?.title}
+            />
+          </ArticleLink>
         </Heading>
         <p className="mt-2 line-clamp-3 flex-1 type-small text-muted-foreground">
-          {article.dek}
+          <EditorialText fr={article.dek} en={article.englishSummary?.dek} />
         </p>
-        <div className="mt-4 border-t border-border pt-3">{meta}</div>
+        <div className="mt-3">{meta}</div>
       </div>
     </article>
   );

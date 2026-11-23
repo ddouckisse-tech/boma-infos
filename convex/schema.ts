@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import { agentKey } from "./model/agents";
 import { campaignFields } from "./model/advertising";
 import { articleCountGroup } from "./model/articleCounts";
+import { englishArticleValidator } from "./model/translation";
 import {
   articleFeature,
   articleOrigin,
@@ -52,6 +53,14 @@ export default defineSchema({
     /** Job title shown in the byline ("Rédactrice en chef"…). */
     role: v.string(),
     bio: v.string(),
+    englishProfile: v.optional(
+      v.object({
+        role: v.string(),
+        bio: v.string(),
+        sourceRole: v.string(),
+        sourceBio: v.string(),
+      })
+    ),
     portraitMediaKey: v.optional(v.string()),
     links: v.array(linkValidator),
   }).index("by_slug", ["slug"]),
@@ -168,6 +177,9 @@ export default defineSchema({
     views: v.number(),
     /** Title + dek + body, flattened once so the search index stays cheap. */
     searchText: v.string(),
+    english: v.optional(englishArticleValidator),
+    englishSearchText: v.optional(v.string()),
+    englishRetryAt: v.optional(v.number()),
     /** Stable source identity, used to safely resume the WordPress migration. */
     wordpressId: v.optional(v.number()),
     sourceUrl: v.optional(v.string()),
@@ -185,6 +197,7 @@ export default defineSchema({
      * The newsroom's lists, "last modified" first: one per filter, so the
      * list reads the narrowest (`newsroom.list`) instead of the table.
      */
+    .index("by_english_queue", ["status", "englishRetryAt", "publishedAt"])
     .index("by_updated", ["updatedAt"])
     .index("by_status_updated", ["status", "updatedAt"])
     .index("by_category_updated", ["categorySlug", "updatedAt"])
@@ -192,6 +205,10 @@ export default defineSchema({
     .index("by_origin_updated", ["origin", "updatedAt"])
     .searchIndex("search_articles", {
       searchField: "searchText",
+      filterFields: ["status", "categorySlug"],
+    })
+    .searchIndex("search_english_articles", {
+      searchField: "englishSearchText",
       filterFields: ["status", "categorySlug"],
     }),
 

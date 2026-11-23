@@ -25,8 +25,8 @@ export async function JournalChrome({
 }) {
   const sections = buildSections(await getNavigation());
   const overlays = (await getAdvertising()).filter((campaign) =>
-    campaign.placements.some((placement) =>
-      placement === "popup" || placement === "floating"
+    campaign.placements.some(
+      (placement) => placement === "popup" || placement === "floating"
     )
   );
   // Keep the public layout and global not-found on the same client graph;
@@ -46,7 +46,7 @@ export async function JournalChrome({
       <main
         id="contenu"
         tabIndex={-1}
-        className="flex-1 focus-visible:outline-none"
+        className="journal-main flex-1 focus-visible:outline-none"
       >
         {children}
       </main>

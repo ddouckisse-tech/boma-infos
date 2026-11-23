@@ -43,7 +43,7 @@ export function ThemeToggle({
       type="button"
       role="switch"
       aria-checked={dark}
-      aria-label={action}
+      aria-label={locale === "en" ? "Dark mode" : "Mode sombre"}
       title={action}
       onClick={() => setTheme(dark ? "light" : "dark")}
       className={cx(
@@ -57,30 +57,30 @@ export function ThemeToggle({
         <span className="type-small text-muted-foreground">
           {locale === "en" ? (
             <>
-              <span className="dark:hidden">Light</span>
-              <span className="hidden dark:inline">Dark</span>
+              <span className="[html.dark_&]:hidden">Light</span>
+              <span className="hidden [html.dark_&]:inline">Dark</span>
             </>
           ) : (
             <>
-              <span className="dark:hidden">Clair</span>
-              <span className="hidden dark:inline">Sombre</span>
+              <span className="[html.dark_&]:hidden">Clair</span>
+              <span className="hidden [html.dark_&]:inline">Sombre</span>
             </>
           )}
         </span>
       )}
       {compact ? (
         <span aria-hidden="true" className="text-foreground">
-          <Sun className="size-5 dark:hidden" />
-          <Moon className="hidden size-5 dark:block" />
+          <Moon className="size-5 [html.dark_&]:hidden" />
+          <Sun className="hidden size-5 [html.dark_&]:block" />
         </span>
       ) : (
         <span
           aria-hidden="true"
-          className="relative inline-flex h-7 w-12 shrink-0 items-center rounded-full border border-border-strong bg-surface-muted transition-colors group-hover:border-foreground/40 dark:bg-primary/30"
+          className="relative inline-flex h-7 w-12 shrink-0 items-center rounded-full border border-border-strong bg-surface-muted transition-colors group-hover:border-foreground/40 [html.dark_&]:bg-primary/30"
         >
-          <span className="absolute top-0.5 left-0.5 inline-flex size-6 items-center justify-center rounded-full bg-background text-foreground shadow-xs transition-transform dark:translate-x-5 dark:bg-primary dark:text-primary-foreground">
-            <Sun className="size-3.5 dark:hidden" />
-            <Moon className="hidden size-3.5 dark:block" />
+          <span className="absolute top-0.5 left-0.5 inline-flex size-6 items-center justify-center rounded-full bg-background text-foreground shadow-xs transition-transform [html.dark_&]:translate-x-5 [html.dark_&]:bg-primary [html.dark_&]:text-primary-foreground">
+            <Sun className="size-3.5 [html.dark_&]:hidden" />
+            <Moon className="hidden size-3.5 [html.dark_&]:block" />
           </span>
         </span>
       )}

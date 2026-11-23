@@ -21,33 +21,15 @@ export function KeyPoints({
   return (
     <aside
       aria-labelledby="essentiel"
-      className={cn(
-        "rounded-md border border-l-2 border-border border-l-brand-gold bg-surface-muted p-5",
-        className
-      )}
+      className={cn("border-y border-border py-4", className)}
     >
-      <h2
-        id="essentiel"
-        className="font-display type-small font-semibold tracking-wide text-foreground uppercase"
-      >
-        <LocalizedText
-          fr={`L'essentiel en ${points.length} points`}
-          en={`${points.length} key points`}
-        />
+      <h2 id="essentiel" className="font-display type-h3 text-foreground">
+        <LocalizedText fr="L’essentiel" en="Key points" />
       </h2>
-      <ul className="mt-3 space-y-2">
+      <ul className="mt-3 list-disc space-y-2 ps-5">
         {points.map((point, index) => (
-          <li key={index} className="flex gap-3 type-body">
-            <span
-              aria-hidden="true"
-              data-numeric
-              className="mt-0.5 inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-navy-900 type-small font-semibold text-white dark:bg-navy-300 dark:text-navy-950"
-            >
-              {index + 1}
-            </span>
-            <span lang="fr" className="min-w-0">
-              {point}
-            </span>
+          <li key={index} className="type-body">
+            {point}
           </li>
         ))}
       </ul>

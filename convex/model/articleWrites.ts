@@ -3,9 +3,10 @@ import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { applyCountDelta } from "./articleCounts";
 import { syncStatSection } from "./audience";
+import { translationSourceKey } from "./translation";
 
 /**
- * The only way `convex/` writes to `articles`.
+ * Editorial writes to `articles` go through these helpers.
  *
  * What is derived from an article is moved in the same transaction: the
  * counts of `articleCounts` (status, sections, author) and the section of
@@ -33,8 +34,22 @@ export async function patchArticle(
   row: Doc<"articles">,
   patch: Partial<ArticleFields>
 ): Promise<void> {
-  await ctx.db.patch(row._id, patch);
   const after = { ...row, ...patch };
+  const translationChanged =
+    after.heroMediaKey !== row.heroMediaKey ||
+    after.authorSlug !== row.authorSlug ||
+    translationSourceKey(row) !== translationSourceKey(after);
+  await ctx.db.patch(
+    row._id,
+    translationChanged
+      ? {
+          ...patch,
+          english: undefined,
+          englishSearchText: undefined,
+          englishRetryAt: undefined,
+        }
+      : patch
+  );
   await applyCountDelta(ctx, row, after);
   if (after.categorySlug !== row.categorySlug) {
     // The audience stays under the slug it was counted with.

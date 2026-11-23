@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LocalizedText } from "@/components/custom/localized-text";
 import { Fragment } from "react";
 
 /**
@@ -73,7 +74,12 @@ export function RichText({ text }: { text: string }) {
               >
                 {label}
                 {!href.startsWith("mailto:") && (
-                  <span className="sr-only"> (nouvelle fenêtre)</span>
+                  <span className="sr-only">
+                    <LocalizedText
+                      fr=" (nouvelle fenêtre)"
+                      en=" (new window)"
+                    />
+                  </span>
                 )}
               </a>
             );

@@ -43,7 +43,7 @@ export function MobileNav({
         onClick={() => setOpen(true)}
         aria-expanded={open}
         aria-haspopup="dialog"
-        className="inline-flex items-center justify-center rounded-md border border-border text-foreground transition-colors touch-target hover:bg-surface-muted lg:hidden"
+        className="journal-control inline-flex items-center justify-center rounded-md border border-border text-foreground transition-colors touch-target hover:bg-surface-muted lg:hidden"
       >
         <Menu aria-hidden="true" className="size-5" />
         <span className="sr-only">
@@ -61,11 +61,6 @@ export function MobileNav({
         <div className="flex items-center justify-between gap-4 border-b border-border p-4">
           <div className="min-w-0">
             <p className="font-display type-h3">Navigation</p>
-            <p className="type-small text-muted-foreground">
-              {english
-                ? `The ${sections.length} sections of the site.`
-                : `Les ${sections.length} rubriques du journal.`}
-            </p>
           </div>
           <CloseButton onClick={close} />
         </div>
@@ -135,11 +130,6 @@ export function MobileNav({
             <li>
               <Link href="/newsletter" onClick={close} className={leafLink}>
                 Newsletter
-              </Link>
-            </li>
-            <li className="sm:hidden">
-              <Link href="/recherche" onClick={close} className={leafLink}>
-                {english ? "Search" : "Rechercher"}
               </Link>
             </li>
             <li className="sm:hidden">

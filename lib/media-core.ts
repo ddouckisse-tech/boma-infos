@@ -89,19 +89,8 @@ export const DATA_SAVER_MAX_WIDTH = 480;
  * guessing (see `scripts/check-budget.ts`).
  */
 export const SIZES = {
-  /**
-   * Lead picture on the home page: the background of the `.lc-hero` band —
-   * the right three quarters of the viewport from 768 px, the whole width
-   * below, gutters included. Its worst case is bounded by the call site
-   * (`maxWidth={1280}`, the largest rendition).
-   */
-  hero: "(min-width: 768px) 74vw, 100vw",
-  /**
-   * Article opening picture — the same band. Bounded at 960 px by the call
-   * site: the article page runs 12 Ko under its 400 Ko ceiling, and the
-   * dark scrim hides the mild upscale on wide screens.
-   */
-  articleHero: "(min-width: 768px) 74vw, 100vw",
+  /** Lead image in the article header, within the editorial frame. */
+  articleHero: "(min-width: 1120px) 1056px, calc(100vw - 32px)",
   /** Three-per-row card grid. */
   card: "(min-width: 1024px) 380px, (min-width: 640px) 46vw, 92vw",
   /**

@@ -14,10 +14,7 @@ type PageHeaderProps = {
   width?: "page" | "reading" | "wide";
 };
 
-/**
- * Page opening block. Emits the single <h1> and, under it, the tricolour
- * rule of the charter — decorative, never relied upon for meaning.
- */
+/** Shared title, description and navigation for the journal’s public pages. */
 export function PageHeader({
   title,
   eyebrow,
@@ -28,23 +25,21 @@ export function PageHeader({
   width = "page",
 }: PageHeaderProps) {
   return (
-    <header className={cn("border-b border-border py-8 md:py-10", className)}>
+    <header className={cn("news-page-header border-b", className)}>
       <Container width={width}>
-        {breadcrumb && <div className="mb-4 type-small">{breadcrumb}</div>}
+        {breadcrumb && <div className="mb-2 type-small">{breadcrumb}</div>}
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div className="min-w-0">
             {eyebrow && (
-              <p className="mb-2 type-small font-semibold tracking-wide text-accent uppercase">
+              <p className="mb-2 type-small font-semibold text-muted-foreground">
                 {eyebrow}
               </p>
             )}
-            <h1 className="font-display type-h1 text-foreground">{title}</h1>
-            <span
-              aria-hidden="true"
-              className="mt-4 boma-rule w-20"
-            />
+            <h1 className="news-page-title font-display text-foreground">
+              {title}
+            </h1>
             {description && (
-              <p className="mt-4 max-w-reading type-body text-muted-foreground">
+              <p className="mt-3 max-w-reading type-body text-muted-foreground">
                 {description}
               </p>
             )}

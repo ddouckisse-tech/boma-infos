@@ -25,3 +25,12 @@ export function LocalizedText({
     </>
   );
 }
+
+/** A missing edition leaves the original available with its proper language. */
+export function EditorialText({ fr, en }: { fr: string; en?: string }) {
+  return en === undefined ? (
+    <span lang="fr">{fr}</span>
+  ) : (
+    <LocalizedText fr={fr} en={en} />
+  );
+}

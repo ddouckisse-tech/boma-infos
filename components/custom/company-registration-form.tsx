@@ -335,6 +335,21 @@ export function CompanyRegistrationForm({
         />
       </div>
 
+      <p className="type-small text-muted-foreground">
+        {localize(locale, {
+          fr: "Ces informations servent à examiner votre demande de compte et à gérer votre accès.",
+          en: "This information is used to review your account request and manage your access.",
+        })}{" "}
+        <Link
+          href="/confidentialite#espace-entreprise"
+          prefetch={false}
+          className="underline underline-offset-4 hover:text-foreground"
+        >
+          {localize(locale, { fr: "Données et droits", en: "Data and rights" })}
+        </Link>
+        .
+      </p>
+
       <ActionButton type="submit" disabled={pending} className="w-full">
         <Building2 aria-hidden="true" className="size-4" />
         {pending
