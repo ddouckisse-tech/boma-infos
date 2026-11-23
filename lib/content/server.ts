@@ -9,12 +9,13 @@ import type {
 } from "convex/server";
 import type { LocaleChoice } from "@/lib/preferences";
 import {
-  demoArticleEnglish,
-  demoEnglishSearch,
-  withDemoArticle,
-  withDemoProfile,
-  withDemoSummary,
-} from "@/lib/content/demo-edition";
+  bundledArticleEnglish,
+  bundledEnglishSearch,
+  hasBundledEditorialEdition,
+  withArticleEdition,
+  withArticleSummaryEdition,
+  withAuthorEdition,
+} from "@/lib/content/article-editions";
 import { registerMedia, type MediaAsset } from "@/lib/media";
 
 /**
@@ -149,20 +150,24 @@ export const getHomepage = cache(() =>
   withMedia(
     run(api.journal.homepage, {}, "journal.homepage").then((home) => ({
       ...home,
-      lead: withDemoSummary(home.lead),
-      dossier: withDemoSummary(home.dossier),
-      top: home.top.map(withDemoSummary),
-      latest: home.latest.map(withDemoSummary),
+      lead: withArticleSummaryEdition(home.lead),
+      dossier: withArticleSummaryEdition(home.dossier),
+      top: home.top.map(withArticleSummaryEdition),
+      latest: home.latest.map(withArticleSummaryEdition),
       bySection: home.bySection.map((section) => ({
         ...section,
-        articles: section.articles.map(withDemoSummary),
+        articles: section.articles.map(withArticleSummaryEdition),
       })),
-      espacePro: home.espacePro.map(withDemoSummary),
+      espacePro: home.espacePro.map(withArticleSummaryEdition),
     }))
   )
 );
 
 type SlugPage = FunctionReturnType<typeof api.journal.publishedSlugPage>;
+
+const readArticleEdition = cache((slug: string) =>
+  run(api.journal.article, { slug }, "journal.article").then(withArticleEdition)
+);
 
 /**
  * Every published slug, newest first — the sitemap. Read 200 at a time: one
@@ -178,9 +183,16 @@ export const getPublishedSlugs = cache(async () => {
       "journal.publishedSlugPage"
     );
     slugs.push(...result.page);
-    if (result.isDone) return slugs;
+    if (result.isDone) break;
     cursor = result.continueCursor;
   }
+  return Promise.all(
+    slugs.map(async (item) => {
+      if (item.hasEnglish || !hasBundledEditorialEdition(item.slug)) return item;
+      const article = await readArticleEdition(item.slug);
+      return article?.english ? { ...item, hasEnglish: true as const } : item;
+    })
+  );
 });
 
 /** The newest published slugs — what the build prerenders. */
@@ -196,7 +208,7 @@ export const getRecentSlugs = cache(async (count: number) => {
 export const getLatest = cache((limit: number) =>
   withMedia(
     run(api.journal.latest, { limit }, "journal.latest").then((rows) =>
-      rows.map(withDemoSummary)
+      rows.map(withArticleSummaryEdition)
     )
   )
 );
@@ -216,7 +228,7 @@ export const getSectionPage = cache(
         "journal.bySection"
       ).then((section) => ({
         ...section,
-        items: section.items.map(withDemoSummary),
+        items: section.items.map(withArticleSummaryEdition),
       }))
     )
 );
@@ -226,15 +238,13 @@ export const getSectionCounts = cache(() =>
 );
 
 export const getArticle = cache((slug: string) =>
-  withMedia(
-    run(api.journal.article, { slug }, "journal.article").then(withDemoArticle)
-  )
+  withMedia(readArticleEdition(slug))
 );
 
 export const getRelated = cache((slug: string, limit: number) =>
   withMedia(
     run(api.journal.related, { slug, limit }, "journal.related").then((rows) =>
-      rows.map(withDemoSummary)
+      rows.map(withArticleSummaryEdition)
     )
   )
 );
@@ -245,8 +255,8 @@ export const getAuthor = cache((slug: string) =>
       (result) =>
         result && {
           ...result,
-          author: withDemoProfile(result.author),
-          articles: result.articles.map(withDemoSummary),
+          author: withAuthorEdition(result.author),
+          articles: result.articles.map(withArticleSummaryEdition),
         }
     )
   )
@@ -254,7 +264,7 @@ export const getAuthor = cache((slug: string) =>
 
 export const getAuthors = cache(() =>
   run(api.journal.authors, {}, "journal.authors").then((authors) =>
-    authors.map(withDemoProfile)
+    authors.map(withAuthorEdition)
   )
 );
 
@@ -294,11 +304,11 @@ export async function searchArticles(
     (async () => {
       const matches = await search();
       if (locale === "fr" || term.trim().length < 2)
-        return matches.map(withDemoSummary);
+        return matches.map(withArticleSummaryEdition);
       const found = new Map(
-        matches.map((article) => [article.slug, withDemoSummary(article)])
+        matches.map((article) => [article.slug, withArticleSummaryEdition(article)])
       );
-      const missing = demoEnglishSearch(term)
+      const missing = bundledEnglishSearch(term)
         .filter((slug) => !found.has(slug))
         .slice(0, limit);
       const bundled = await Promise.all(
@@ -310,9 +320,9 @@ export async function searchArticles(
         if (
           article &&
           (!categorySlug || article.categorySlug === categorySlug) &&
-          demoArticleEnglish(article)
+          bundledArticleEnglish(article)
         )
-          found.set(article.slug, withDemoSummary(article));
+          found.set(article.slug, withArticleSummaryEdition(article));
       }
       return [...found.values()].slice(0, limit);
     })()

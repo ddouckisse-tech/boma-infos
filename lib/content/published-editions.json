@@ -1,0 +1,71 @@
+{
+  "gabon-production-locale-poulets-chair-reception-poussins": {
+    "title": "Poulet de chair : cap sur la production locale",
+    "dek": "Dans le cadre de sa politique de souveraineté alimentaire, le gouvernement gabonais a réceptionné un nouveau lot de poussins destiné au développement de la filière avicole nationale. Cette initiative s'inscrit dans la vision du Président Brice Clotaire Oligui Nguema visant à réduire progressivement les importations de poulets de chair et à renforcer la production locale.",
+    "source": "8355165e6bc05c77627adbde79acfb9ca1b2803c70fe34cf5275cc5cbff079ab",
+    "english": {
+      "authorRole": "Senior reporter covering energy, mining and the environment",
+      "authorBio": "Based in Port-Gentil, he specialises in extractive industries and covers oil contracts, the manganese sector, the coast and Gabon’s transition in electricity generation.",
+      "title": "Gabon steps up local broiler production",
+      "dek": "As part of its food sovereignty policy, Gabon’s government has received another shipment of chicks to develop the national poultry sector. The initiative is part of President Brice Clotaire Oligui Nguema’s plan to gradually reduce broiler chicken imports and strengthen local production.",
+      "keyPoints": [
+        "The initiative aims to increase domestic production and reduce poultry imports."
+      ],
+      "tags": [
+        "Gabon",
+        "poultry farming",
+        "livestock farming",
+        "food sovereignty",
+        "broiler chickens",
+        "local production",
+        "agriculture",
+        "economic diversification",
+        "imports",
+        "food security"
+      ],
+      "seo": {
+        "title": "Broiler production: Gabon accelerates its push for self-sufficiency",
+        "description": "Gabon is taking another step in developing its poultry industry with a shipment of chicks to boost local production and reduce imports of broiler chickens.",
+        "keywords": [
+          "poultry farming in Gabon, food sovereignty, chicken imports, Gabonese agriculture, poultry development, Oligui Nguema, Gabonese economy"
+        ]
+      },
+      "body": [
+        {
+          "caption": "",
+          "mediaKey": "1001992499-87hw",
+          "type": "image"
+        },
+        {
+          "text": "The arrival of another shipment of chicks marks a further step in Gabon’s national poultry development strategy. By expanding local production capacity, the authorities aim to reduce the country’s reliance on imported broiler chickens over time and strengthen its food sovereignty.\nBeyond its impact on the food supply, a stronger poultry sector could help diversify the economy. Expanding domestic production could create direct and indirect jobs, increase farmers’ incomes and reduce the amount of foreign currency spent on imports.\nSuccess will depend on several factors, including access to inputs, the quality of infrastructure, training for producers, and the industry’s ability to maintain consistent and competitive production levels.\nThe latest shipment shows that the authorities see poultry farming as one of the strategic industries that could help reshape Gabon’s economy.",
+          "type": "paragraph"
+        },
+        {
+          "label": "",
+          "type": "stat",
+          "value": "37,600 chicks"
+        },
+        {
+          "caption": "Ministry of the Economy",
+          "mediaKey": "1001992502-sykx",
+          "type": "image"
+        }
+      ],
+      "media": {
+        "1001992501-1n21": {
+          "alt": "",
+          "caption": ""
+        },
+        "1001992499-87hw": {
+          "alt": "",
+          "caption": ""
+        },
+        "1001992502-sykx": {
+          "alt": "",
+          "caption": ""
+        }
+      },
+      "readingMinutes": 1
+    }
+  }
+}

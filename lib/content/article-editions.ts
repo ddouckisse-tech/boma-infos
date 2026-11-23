@@ -5,12 +5,14 @@ import {
   translationSourceKey,
   type EnglishArticle,
 } from "@/convex/model/translation";
-import data from "./demo-editions.json";
+import demoData from "./demo-editions.json";
+import publishedData from "./published-editions.json";
 
 type Edition = {
   title: string;
   dek: string;
   source: string;
+  alternateSources?: string[];
   english: EnglishArticle;
 };
 
@@ -20,10 +22,17 @@ type Profile = {
   english: { role: string; bio: string };
 };
 
-const { editions, profiles } = data as unknown as {
+const demo = demoData as unknown as {
   editions: Record<string, Edition>;
   profiles: Record<string, Profile>;
 };
+const published = publishedData as unknown as Record<string, Edition>;
+const editions = { ...demo.editions, ...published };
+const { profiles } = demo;
+
+export function hasBundledEditorialEdition(slug: string) {
+  return Object.hasOwn(published, slug);
+}
 
 const comparable = (text: string) =>
   text.replace(/[\u00a0\u202f]/g, " ").toLowerCase();
@@ -40,7 +49,7 @@ function editionFor(article: Pick<ArticleSummary, "slug" | "title" | "dek">) {
 }
 
 /** Only attach translations to the published source they were written for. */
-export function withDemoSummary<T extends ArticleSummary | null>(
+export function withArticleSummaryEdition<T extends ArticleSummary | null>(
   article: T
 ): T {
   if (!article || article.englishSummary) return article;
@@ -50,7 +59,7 @@ export function withDemoSummary<T extends ArticleSummary | null>(
   return { ...article, englishSummary: { title, dek, readingMinutes } };
 }
 
-export function demoArticleEnglish(
+export function bundledArticleEnglish(
   article: ArticleDetail
 ): EnglishArticle | undefined {
   const edition = editionFor(article);
@@ -58,16 +67,19 @@ export function demoArticleEnglish(
   const source = createHash("sha256")
     .update(comparable(translationSourceKey(article)))
     .digest("hex");
-  return source === edition.source ? edition.english : undefined;
+  if (source === edition.source || edition.alternateSources?.includes(source)) {
+    return edition.english;
+  }
+  return undefined;
 }
 
-export function withDemoArticle(article: ArticleDetail | null) {
+export function withArticleEdition(article: ArticleDetail | null) {
   if (!article || article.english) return article;
-  const english = demoArticleEnglish(article);
-  return english ? { ...withDemoSummary(article), english } : article;
+  const english = bundledArticleEnglish(article);
+  return english ? { ...withArticleSummaryEdition(article), english } : article;
 }
 
-export function withDemoProfile<
+export function withAuthorEdition<
   T extends {
     slug: string;
     role: string;
@@ -98,7 +110,7 @@ const indexedEditions = Object.entries(editions).map(([slug, { english }]) => ({
 }));
 
 /** The caller still checks publication status and the current source in Convex. */
-export function demoEnglishSearch(term: string): string[] {
+export function bundledEnglishSearch(term: string): string[] {
   const query = [...new Set(words(term))];
   if (query.length === 0) return [];
   return indexedEditions

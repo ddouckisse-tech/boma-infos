@@ -1069,7 +1069,7 @@
           },
           {
             "type": "paragraph",
-            "text": "A less visible obstacle is guide training. Ecoguides are the public face of the parks. They read tracks, anticipate encounters and protect visitors and animals alike. Much of their training takes place in the field, with short courses that vary in quality from site to site. ‘They teach us how to identify species,’ says Landry MABIKA, an ecoguide for nine years. ‘We get less practice in explaining the forest, managing a tired group or speaking English after three days of rain.’ Several operators want an accredited programme with different levels so young people can build a career across seasons. They say too many trained guides leave after a few years because they see no prospect of a stable income."
+            "text": "A subtler obstacle is guide training. Ecoguides are the public face of the parks. They read tracks, anticipate encounters and protect visitors and animals alike. Much of their training takes place in the field, with short courses that vary in quality from site to site. ‘They teach us how to identify species,’ says Landry MABIKA, an ecoguide for nine years. ‘We get less practice in explaining the forest, managing a tired group or speaking English after three days of rain.’ Several operators want an accredited programme with different levels so young people can build a career across seasons. They say too many trained guides leave after a few years because they see no prospect of a stable income."
           },
           {
             "type": "heading",
@@ -1109,7 +1109,10 @@
           }
         },
         "readingMinutes": 4
-      }
+      },
+      "alternateSources": [
+        "2a42c4191cd738aa35c33bfa5482c503a1452ec311265d4e71309e4a3543e7c7"
+      ]
     },
     "pointe-denis-week-end-plage-tortues-luth": {
       "title": "Pointe-Denis : à vingt minutes de Libreville, un week-end entre plage et tortues luth",
@@ -3082,8 +3085,8 @@
       "role": "Grand reporter — énergie, mines et environnement",
       "bio": "Spécialiste des industries extractives, il suit depuis Port-Gentil les contrats pétroliers, la filière manganèse, le littoral et la transition électrique du pays.",
       "english": {
-        "role": "Grand Reporter — Energy, Mines and Environment",
-        "bio": "Specialist in extractive industries, he follows from Port Gentil oil contracts, the manganese sector, the coast and the electric transition of the country."
+        "role": "Senior reporter covering energy, mining and the environment",
+        "bio": "Based in Port-Gentil, he specialises in extractive industries and covers oil contracts, the manganese sector, the coast and Gabon’s transition in electricity generation."
       }
     },
     "clarisse-ivanga": {
