@@ -42,6 +42,7 @@ export const organizationNode = (): JsonLd => ({
   "@type": "NewsMediaOrganization",
   "@id": absoluteUrl("/#organisation"),
   name: SITE.name,
+  alternateName: SITE.alternateNames,
   url: absoluteUrl("/"),
   description: SITE.description,
   logo: {
@@ -51,6 +52,7 @@ export const organizationNode = (): JsonLd => ({
     height: BRAND_LOGO.socialHeight,
   },
   email: SITE.email,
+  areaServed: { "@type": "Country", name: "Gabon" },
   ...(SITE.phone ? { telephone: SITE.phone } : {}),
   address: {
     "@type": "PostalAddress",
@@ -76,6 +78,7 @@ export function SiteStructuredData() {
             "@type": "WebSite",
             "@id": absoluteUrl("/#site"),
             name: SITE.name,
+            alternateName: SITE.alternateNames,
             url: absoluteUrl("/"),
             inLanguage: "fr-GA",
             publisher: { "@id": absoluteUrl("/#organisation") },
