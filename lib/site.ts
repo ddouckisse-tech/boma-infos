@@ -29,6 +29,7 @@ export const absoluteUrl = (path: string): string =>
 
 type SiteIdentity = {
   readonly name: string;
+  readonly alternateNames: readonly string[];
   /** Publishing company. `null` until the owner provides it. */
   readonly publisher: string | null;
   readonly locale: string;
@@ -51,13 +52,20 @@ type SiteIdentity = {
 
 export const SITE: SiteIdentity = {
   name: "BOMA Infos",
+  alternateNames: [
+    "Boma Info",
+    "Boma-Infos",
+    "Boma-Info",
+    "Boma",
+    "boma-infos.com",
+  ],
   publisher: null,
   locale: "fr_GA",
   tagline: "Toute l'actualité du Gabon",
   taglineEn: "All the news from Gabon",
-  title: "BOMA Infos — toute l'actualité du Gabon",
+  title: "BOMA Infos — Actualités du Gabon",
   description:
-    "Politique, économie, société, tourisme, culture et sport : l'actualité du Gabon, suivie et expliquée par la rédaction de BOMA Infos.",
+    "Retrouvez les dernières infos du Gabon sur BOMA Infos, journal gabonais en ligne. Politique, économie, société, tourisme, culture et sport à Libreville et en province.",
   descriptionEn:
     "Politics, the economy, society, tourism, culture and sport: news from Gabon, followed and explained by the BOMA Infos newsroom.",
   domain: new URL(PUBLIC_SITE_URL).hostname,
